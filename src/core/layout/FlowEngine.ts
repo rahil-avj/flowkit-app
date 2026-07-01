@@ -8,6 +8,41 @@ import type {
 } from '@platform/types/index'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+// ─── Flowplan gating (optional — engine stays flowplan-agnostic otherwise) ────
+//
+// FlowMaster passes this in when the active flow is a compiled flowplan. The
+// engine never imports flowplan types — it only reads the three primitives it
+// needs to gate a "user"-origin navigation against the planned step.
+
+export interface FlowplanGate {
+  /** Planned tap target element id for the current step, or undefined (tap-anywhere). */
+  currentOn?: string
+  /** Resolved advance target for the current step — a screen id, "__complete__",
+   *  or a fork resolver function called fresh at gate-check time with {db, flowState}. */
+  currentNext: InteractionRule['goTo'] | undefined
+  strictMode: boolean
+}
+
+export interface FlowEngineOptions {
+  flowplanGate?: FlowplanGate | null
+  /**
+   * Delay (ms) before the completion navigateTo/onComplete fires, once the
+   * flow reaches '__complete__' or runs out of screens on 'next'. Default 0
+   * (today's synchronous behavior). FlowMaster sets this when Blind Mode is
+   * active so the pass/fail summary has a visible window before FlowMaster
+   * unmounts — without this, navigateTo fires in the same tick as the
+   * completion transitionLog entry and there is no render opportunity at all.
+   */
+  completionDelayMs?: number
+}
+
+/** Distinguishes navigation the engine drives itself (auto-play/auto-advance —
+ *  never gated) from navigation triggered by the user (tap/keyboard/programmatic —
+ *  gated when Strict Mode is on). Defaults to 'user' so existing call sites that
+ *  don't pass it keep their current (ungated unless flowplanGate says otherwise)
+ *  behavior. */
+export type NavigationOrigin = 'engine' | 'user'
+
 // ─── Animation maps (shared with FlowMaster renderer) ─────────────────────────
 
 export const ANIM_DURATION = 280
@@ -55,7 +90,8 @@ export interface FlowEngineReturn {
     animation: TransitionAnimation,
     timestamp: string,
     actionName: string,
-    warnings: string[]
+    warnings: string[],
+    origin?: NavigationOrigin
   ) => void
   fireRule: (rule: InteractionRule, elementId: string, triggerName: string) => void
   buildCtx: () => InteractionCtx
@@ -72,7 +108,16 @@ export interface FlowEngineReturn {
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useFlowEngine(flow: FlowConfig): FlowEngineReturn {
+export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): FlowEngineReturn {
+  const flowplanGate = options?.flowplanGate ?? null
+  const completionDelayMs = options?.completionDelayMs ?? 0
+  const completionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(
+    () => () => {
+      if (completionTimerRef.current) clearTimeout(completionTimerRef.current)
+    },
+    []
+  )
   const {
     db,
     updateDb,
@@ -269,9 +314,44 @@ export function useFlowEngine(flow: FlowConfig): FlowEngineReturn {
       animation: TransitionAnimation,
       timestamp: string,
       actionName: string,
-      warnings: string[]
+      warnings: string[],
+      origin: NavigationOrigin = 'user'
     ) => {
       if (target === '__state__') return
+
+      // ─── Flowplan Strict Mode gate ─────────────────────────────────────────
+      // Only gates user-origin navigation (tap/keyboard/programmatic) — the
+      // engine's own auto-play/auto-advance timers pass origin:'engine' and are
+      // never gated, since they're the flow advancing itself, not a bypass.
+      if (flowplanGate?.strictMode && origin === 'user' && target !== 'back') {
+        // Fork-aware: currentNext may be a resolver function (forking step) —
+        // call it fresh against live db/flowState rather than string-comparing,
+        // since a forking step has no single static "the" planned target.
+        const resolvedPlanned =
+          typeof flowplanGate.currentNext === 'function'
+            ? flowplanGate.currentNext({ db, flowState: localState })
+            : flowplanGate.currentNext
+        if (resolvedPlanned !== undefined && target !== resolvedPlanned) {
+          warnings.push(`Navigation to "${target}" blocked — outside the planned flowplan step.`)
+          setTransitionLog(prev => [
+            ...prev,
+            {
+              timestamp,
+              action: actionName,
+              fromScreen: activeScreenLabel,
+              toScreen: `[Blocked: ${target}]`,
+              warnings,
+            },
+          ])
+          recorder.current?.logEvent('screen.blocked', {
+            screenId: target,
+            flowId: flow.id,
+            fromScreen: activeScreenLabel,
+            strict: true,
+          })
+          return
+        }
+      }
 
       if (target === '__complete__') {
         setTransitionLog(prev => [
@@ -288,8 +368,11 @@ export function useFlowEngine(flow: FlowConfig): FlowEngineReturn {
           flowId: flow.id,
           fromScreen: activeScreenLabel,
         })
-        if (flow.onComplete) flow.onComplete(navigateTo)
-        else navigateTo(firstViewId || 'home')
+        if (completionTimerRef.current) clearTimeout(completionTimerRef.current)
+        completionTimerRef.current = setTimeout(() => {
+          if (flow.onComplete) flow.onComplete(navigateTo)
+          else navigateTo(firstViewId || 'home')
+        }, completionDelayMs)
         return
       }
       if (target === 'next') {
@@ -306,21 +389,24 @@ export function useFlowEngine(flow: FlowConfig): FlowEngineReturn {
               warnings,
             },
           ])
-          if (flow.onComplete) flow.onComplete(navigateTo)
-          else navigateTo(firstViewId || 'home')
-        } else {
-          navigateToScreen(
-            nextIndex,
-            {
-              timestamp,
-              action: actionName,
-              fromScreen: activeScreenLabel,
-              toScreen: '',
-              warnings,
-            },
-            animation
-          )
+          if (completionTimerRef.current) clearTimeout(completionTimerRef.current)
+          completionTimerRef.current = setTimeout(() => {
+            if (flow.onComplete) flow.onComplete(navigateTo)
+            else navigateTo(firstViewId || 'home')
+          }, completionDelayMs)
+          return
         }
+        navigateToScreen(
+          nextIndex,
+          {
+            timestamp,
+            action: actionName,
+            fromScreen: activeScreenLabel,
+            toScreen: '',
+            warnings,
+          },
+          animation
+        )
         return
       }
       if (target === 'back') {
@@ -420,7 +506,8 @@ export function useFlowEngine(flow: FlowConfig): FlowEngineReturn {
       )
     },
     // recorder.current and setTransitionLog are stable refs/setters and correctly
-    // omitted. All varying state is captured in the dep list below.
+    // omitted. All varying state is captured in the dep list below. localState and
+    // db are read only inside the flowplan gate branch (fork resolver call).
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       activeScreenLabel,
@@ -432,6 +519,10 @@ export function useFlowEngine(flow: FlowConfig): FlowEngineReturn {
       navigateTo,
       navigateToScreen,
       screenPassesGuard,
+      flowplanGate,
+      localState,
+      db,
+      completionDelayMs,
     ]
   )
 
@@ -592,7 +683,7 @@ export function useFlowEngine(flow: FlowConfig): FlowEngineReturn {
         delayMs: delay,
         flowId: flow.id,
       })
-      commitNavigation('next', 'none', timestamp, `auto-advance (${delay}ms)`, [])
+      commitNavigation('next', 'none', timestamp, `auto-advance (${delay}ms)`, [], 'engine')
     }, delay)
     return () => {
       if (autoTimerRef.current) clearTimeout(autoTimerRef.current)
@@ -636,7 +727,7 @@ export function useFlowEngine(flow: FlowConfig): FlowEngineReturn {
           else navigateTo(firstViewId || 'home')
         }
       } else {
-        commitNavigation('next', animation, timestamp, 'auto-play', [])
+        commitNavigation('next', animation, timestamp, 'auto-play', [], 'engine')
       }
     }, delay)
 

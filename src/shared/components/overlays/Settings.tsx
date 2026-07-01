@@ -1,13 +1,23 @@
 import { useFeedback } from '@platform/features/feedback'
+import { type HighlightColor, useFlowplanSettings } from '@platform/features/flowplan'
 import { useSessionSettings } from '@platform/features/flowTracer'
 import { LS_LEFT_PANEL_W, LS_RIGHT_PANEL_W } from '@platform/shared/constants/storageKeys'
 import type { ColorBlindMode } from '@platform/types/index'
-import { LayoutPanelLeft, MessageSquare, Monitor, SlidersHorizontal, Video, X } from 'lucide-react'
+import {
+  LayoutPanelLeft,
+  MessageSquare,
+  Monitor,
+  SlidersHorizontal,
+  Video,
+  Workflow,
+  X,
+} from 'lucide-react'
 import { useCallback, useState } from 'react'
 
 import { useSimulator } from '../../contexts/DashboardContext'
 import { useTheme } from '../../contexts/ThemeContext'
 import Input from '../ui/Input'
+import SegmentedControl from '../ui/SegmentedControl'
 import Select from '../ui/Select'
 import Toggle from '../ui/Toggle'
 import type { ActionCtx } from './appActions'
@@ -15,7 +25,7 @@ import OverlayShell from './OverlayShell'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SectionId = 'interface' | 'panel' | 'feedback' | 'sessions'
+type SectionId = 'interface' | 'panel' | 'flowplans' | 'feedback' | 'sessions'
 
 interface Section {
   id: SectionId
@@ -211,6 +221,113 @@ function PanelSection() {
   )
 }
 
+const WRONG_CLICK_SWATCHES: { value: HighlightColor; hex: string }[] = [
+  { value: 'orange', hex: '#f97316' },
+  { value: 'red', hex: '#ef4444' },
+  { value: 'purple', hex: '#a855f7' },
+  { value: 'yellow', hex: '#eab308' },
+]
+
+function FlowPlansSection() {
+  const {
+    strictMode,
+    setStrictMode,
+    showHints,
+    setShowHints,
+    blindMode,
+    setBlindMode,
+    divergedHint,
+    setDivergedHint,
+    showWrongClickHighlight,
+    setShowWrongClickHighlight,
+    wrongClickColor,
+    setWrongClickColor,
+    hintPosition,
+    setHintPosition,
+  } = useFlowplanSettings()
+
+  return (
+    <div>
+      <SectionHeader
+        icon={<Workflow size={15} />}
+        title="Flow Plans"
+        description="Control how flowplan playback is gated, hinted, and displayed."
+      />
+
+      <SettingGroup title="Playback">
+        <SettingRow label="Strict Mode" hint="Block taps that don't match the planned step.">
+          <Toggle size="sm" checked={strictMode} onChange={() => setStrictMode(!strictMode)} />
+        </SettingRow>
+        <SettingRow
+          label="Show Hints"
+          hint="Highlight the planned element and show the action caption."
+        >
+          <Toggle size="sm" checked={showHints} onChange={() => setShowHints(!showHints)} />
+        </SettingRow>
+        <SettingRow
+          label="Blind / Test Mode"
+          hint="Hide all hints; show a pass/fail summary when the flow completes."
+        >
+          <Toggle size="sm" checked={blindMode} onChange={() => setBlindMode(!blindMode)} />
+        </SettingRow>
+        <SettingRow
+          label="Diverged Hint"
+          hint="In Blind Mode, show a soft warning after a delay if you've wandered off the planned path."
+        >
+          <Toggle
+            size="sm"
+            checked={divergedHint}
+            onChange={() => setDivergedHint(!divergedHint)}
+          />
+        </SettingRow>
+      </SettingGroup>
+
+      <SettingGroup title="Appearance">
+        <SettingRow
+          label="Show Wrong-Click Highlight"
+          hint="Glow the element you tapped when it wasn't the planned one."
+        >
+          <Toggle
+            size="sm"
+            checked={showWrongClickHighlight}
+            onChange={() => setShowWrongClickHighlight(!showWrongClickHighlight)}
+          />
+        </SettingRow>
+        <SettingRow label="Wrong-Click Color" hint="Color used for the wrong-click glow.">
+          <div className="flex items-center gap-1.5">
+            {WRONG_CLICK_SWATCHES.map(s => (
+              <button
+                key={s.value}
+                onClick={() => setWrongClickColor(s.value)}
+                title={s.value}
+                aria-label={s.value}
+                className="rounded-full cursor-pointer size-[18px]"
+                style={{
+                  background: s.hex,
+                  border:
+                    wrongClickColor === s.value
+                      ? '2px solid var(--color-theme-text-primary)'
+                      : '2px solid transparent',
+                  outline: wrongClickColor === s.value ? '1px solid ' + s.hex : 'none',
+                  outlineOffset: 1,
+                }}
+              />
+            ))}
+          </div>
+        </SettingRow>
+        <SettingRow label="Hint Position" hint="Where the action caption and toasts render.">
+          <SegmentedControl
+            value={hintPosition}
+            onChange={v => setHintPosition(v as 'top' | 'bottom')}
+            options={['top', 'bottom']}
+            style={{ width: 140 }}
+          />
+        </SettingRow>
+      </SettingGroup>
+    </div>
+  )
+}
+
 function FeedbackSection({ ctx }: { ctx: ActionCtx }) {
   const { lastReviewerName, setLastReviewerName } = useFeedback()
   const [name, setName] = useState(lastReviewerName)
@@ -395,6 +512,7 @@ function SessionsSection({ ctx }: { ctx: ActionCtx }) {
 const SECTIONS: Section[] = [
   { id: 'interface', label: 'Interface', icon: <SlidersHorizontal size={14} /> },
   { id: 'panel', label: 'Panel', icon: <LayoutPanelLeft size={14} /> },
+  { id: 'flowplans', label: 'Flow Plans', icon: <Workflow size={14} /> },
   { id: 'feedback', label: 'Feedback', icon: <MessageSquare size={14} /> },
   { id: 'sessions', label: 'Sessions', icon: <Video size={14} /> },
 ]
@@ -451,6 +569,7 @@ export default function Settings({ onClose, ctx, initialSection = 'interface' }:
   const panel = {
     interface: <InterfaceSection ctx={ctx} />,
     panel: <PanelSection />,
+    flowplans: <FlowPlansSection />,
     feedback: <FeedbackSection ctx={ctx} />,
     sessions: <SessionsSection ctx={ctx} />,
   }[active]

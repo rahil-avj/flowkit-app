@@ -9,6 +9,7 @@ import {
 } from '@platform/core/layout/KitSideInspector'
 import { useFeedback } from '@platform/features/feedback/context/FeedbackContext'
 import { FlowDebuggerContent } from '@platform/features/flow-debugger'
+import { MobilePlaybackBar, useFlowPlaybackOptional } from '@platform/features/flowplan'
 import { useSessionSettings } from '@platform/features/flowTracer/components/useSessionSettings'
 import { GoToOverlayContent } from '@platform/features/go-to-overlay'
 import { Z } from '@platform/shared/constants/zIndex'
@@ -131,7 +132,9 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
     toggleOrientation,
     resetToFirst,
     resetDb,
+    firstViewId,
   } = useDashboard()
+  const playback = useFlowPlaybackOptional()
   const { totalCommentCount, setOpenFeedbackTab, cloudExportEnabled, toggleCloudExport } =
     useFeedback()
 
@@ -280,6 +283,19 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       <div className="absolute inset-0 flex flex-col" style={{ filter: combinedFilter }}>
         {ActiveComponent && <ActiveComponent />}
       </div>
+
+      {/* Flowplan playback bar — mobile has no side-panel Play/Stop button
+          (see desktop's FlowLibrary.tsx), so this sticky top bar is the mobile
+          Stop control. Only renders while a flowplan is actively gating. */}
+      <MobilePlaybackBar
+        onStop={() => {
+          if (!playback?.isGating) return
+          const sourceScreenId =
+            playback.activeFlowplan?.__flowplan.steps[playback.currentStepIndex]?.sourceScreenId
+          playback.exit()
+          navigateTo(sourceScreenId ?? firstViewId ?? 'home')
+        }}
+      />
 
       {/* Bottom-left — back button + screen label (thumb zone, same row as FAB) */}
       <div

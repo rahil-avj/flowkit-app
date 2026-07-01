@@ -1,29 +1,84 @@
+import { useFlowplanSettings } from '@features/flowplan/FlowplanSettingsContext'
+import { useFlowPlaybackOptional } from '@features/flowplan/FlowPlaybackContext'
+import { useFlowplanElementCheck } from '@features/flowplan/useFlowplanElementCheck'
 import type { CompiledFlowplan } from '@platform/features/flow-library'
 import { useSessionRecorderOptional } from '@platform/features/flowTracer/context'
 import PanelErrorBoundary from '@platform/shared/components/errors/PanelErrorBoundary'
 import { type FlowNavContextValue, FlowNavCtx } from '@platform/shared/contexts/FlowNavContext'
-import { useFlowPlaybackOptional } from '@platform/shared/contexts/FlowPlaybackContext'
 import { useTheme } from '@platform/shared/contexts/ThemeContext'
 import { useSwipeGesture } from '@platform/shared/utils/useSwipeGesture'
 import type { FlowConfig, FlowScreenProps, Hotspot } from '@platform/types/index'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
-import { ANIM_DURATION, useFlowEngine } from './FlowEngine'
+import { ANIM_DURATION, type FlowplanGate, useFlowEngine } from './FlowEngine'
+
+const WRONG_CLICK_HEX: Record<string, string> = {
+  orange: '#f97316',
+  red: '#ef4444',
+  purple: '#a855f7',
+  yellow: '#eab308',
+}
 
 export default function FlowMaster({ flow }: { flow: FlowConfig }) {
-  const engine = useFlowEngine(flow)
   const { theme } = useTheme()
 
   // ─── Flowplan playback integration ───────────────────────────────────────────
   // A compiled flowplan carries a `__flowplan` field; flows without it leave
-  // the entire playback branch dormant.
+  // the entire playback branch dormant. Derived from `flow` directly (not from
+  // the engine's activeScreenId) so this is available BEFORE useFlowEngine is
+  // called — the engine needs currentOn/currentNext/strictMode to build its gate.
   const flowplan = (flow as Partial<CompiledFlowplan>).__flowplan
   const playback = useFlowPlaybackOptional()
+  const {
+    strictMode,
+    showHints,
+    blindMode,
+    divergedHint,
+    showWrongClickHighlight,
+    wrongClickColor,
+    hintPosition,
+  } = useFlowplanSettings()
+
+  // The engine needs the flowplan gate (which depends on the CURRENT step, i.e.
+  // activeScreenId) but activeScreenId is only known once the engine itself has
+  // run. Broken via a ref: the gate reads the latest resolved step off a ref that
+  // FlowMaster updates every render (see the sync effect below), so the engine
+  // always has a fresh gate without a circular render dependency or a second
+  // hook instance. useFlowEngine's activeScreenId is read via engine.activeScreenId
+  // AFTER the single hook call below; the ref exists solely so `commitNavigation`
+  // (built during THIS call to useFlowEngine) can look up an up-to-date step.
+  const currentStepRef = useRef<{
+    currentOn?: string
+    currentNext: CompiledFlowplan['__flowplan']['steps'][number]['next'] | undefined
+  }>({ currentOn: undefined, currentNext: undefined })
+
+  const flowplanGate: FlowplanGate | null = useMemo(() => {
+    if (!flowplan) return null
+    return {
+      get currentOn() {
+        return currentStepRef.current.currentOn
+      },
+      get currentNext() {
+        return currentStepRef.current.currentNext
+      },
+      strictMode,
+    }
+  }, [flowplan, strictMode])
+
+  // Blind Mode: hold the completion navigate-away for a few seconds so the
+  // pass/fail summary below has a visible render window — without this,
+  // navigateTo fires synchronously in the same tick as the completion
+  // transitionLog entry and FlowMaster unmounts before anything can render.
+  const engine = useFlowEngine(flow, {
+    flowplanGate,
+    completionDelayMs: flowplan && blindMode ? 4000 : 0,
+  })
   const {
     activeScreenIndex,
     activeScreen,
     activeScreenId,
     localState,
+    transitionLog,
     animClass,
     isAllowed,
     screenContainerRef,
@@ -34,6 +89,7 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
     onAction,
     skipToLast,
     setIsAutoPlayPaused,
+    history,
   } = engine
 
   // The current flowplan step, derived SYNCHRONOUSLY from activeScreenId + the
@@ -45,6 +101,27 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
     : -1
   const currentStep =
     flowplan && currentStepIndex >= 0 ? flowplan.steps[currentStepIndex] : undefined
+
+  // Planned advance element id / target for the current step (undefined = tap-
+  // anywhere). Synced onto currentStepRef via useLayoutEffect (never mutate a
+  // ref during render) — must be current before the next paint/interaction so
+  // the gate object built above (whose identity is stable across renders)
+  // always resolves the CURRENT step when commitNavigation reads it.
+  const currentOn = flowplan ? currentStep?.on : undefined
+  const currentNext = flowplan ? currentStep?.next : undefined
+  useLayoutEffect(() => {
+    currentStepRef.current = { currentOn, currentNext }
+  }, [currentOn, currentNext])
+
+  // Authoring diagnostic — independent of Show Hints/Blind Mode, since a
+  // broken flowplan↔screen id contract is a signal for the author, not a
+  // hint for the tester. See useFlowplanElementCheck for the full rationale.
+  const { missing: elementCheckMissing } = useFlowplanElementCheck(screenContainerRef, {
+    flowplanId: flowplan?.flowplanId,
+    stepIndex: currentStepIndex,
+    screenId: activeScreenId,
+    on: currentOn,
+  })
 
   // ── Per-step db patch: when the active screen changes during flowplan
   // playback, apply that step's db patch (silently) + advance currentStep.
@@ -70,24 +147,33 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
   }, [restartSignal])
 
   // ── Off-script feedback (gating): a non-blocking toast shown briefly when a
-  // tap during playback lands outside the step's planned element.
+  // tap during playback lands outside the step's planned element. The glow
+  // color is configurable (wrongClickColor); visibility is a separate toggle
+  // (showWrongClickHighlight) from the toast itself — the toast/blocking still
+  // happens even with the highlight off, only the glow is suppressed.
   const [offScript, setOffScript] = useState(false)
   const offScriptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const offScriptElTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const flashOffScript = useCallback((el: HTMLElement | null) => {
-    if (el) {
-      el.setAttribute('data-off-script', 'true')
-      if (offScriptElTimerRef.current) clearTimeout(offScriptElTimerRef.current)
-      offScriptElTimerRef.current = setTimeout(() => {
-        if (el.isConnected) {
-          el.removeAttribute('data-off-script')
-        }
-      }, 300)
-    }
-    setOffScript(true)
-    if (offScriptTimerRef.current) clearTimeout(offScriptTimerRef.current)
-    offScriptTimerRef.current = setTimeout(() => setOffScript(false), 1500)
-  }, [])
+  const flashOffScript = useCallback(
+    (el: HTMLElement | null) => {
+      if (el && showWrongClickHighlight && !blindMode) {
+        el.style.setProperty('--fm-offscript-color', WRONG_CLICK_HEX[wrongClickColor])
+        el.setAttribute('data-off-script', 'true')
+        if (offScriptElTimerRef.current) clearTimeout(offScriptElTimerRef.current)
+        offScriptElTimerRef.current = setTimeout(() => {
+          if (el.isConnected) {
+            el.removeAttribute('data-off-script')
+          }
+        }, 300)
+      }
+      // The toast (`offScript` state) itself is Show Hints/Blind Mode aware —
+      // suppressed entirely in Blind Mode (see the JSX render guard below).
+      setOffScript(true)
+      if (offScriptTimerRef.current) clearTimeout(offScriptTimerRef.current)
+      offScriptTimerRef.current = setTimeout(() => setOffScript(false), 1500)
+    },
+    [showWrongClickHighlight, wrongClickColor, blindMode]
+  )
   useEffect(
     () => () => {
       if (offScriptTimerRef.current) clearTimeout(offScriptTimerRef.current)
@@ -96,9 +182,88 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
     []
   )
 
-  // Planned advance element id for the current step (undefined = tap-anywhere).
-  const currentOn = flowplan ? currentStep?.on : undefined
-  const currentNext = flowplan ? currentStep?.next : undefined
+  // ── Planned-element highlight (Show Hints): a persistent (not one-shot) glow
+  // on the element the current step expects to be tapped. Unlike flashOffScript,
+  // this must have explicit cleanup tied to element identity — activeScreenId is
+  // in the deps (even though currentOn derives from it) so cleanup-then-reapply
+  // happens on every screen transition, not just when the currentOn string value
+  // differs. Without this, a Hotspot button (outside the per-screen
+  // PanelErrorBoundary remount boundary) or a reused ScreenComp could keep a
+  // stale glow after the plan has moved past that element.
+  useEffect(() => {
+    if (!flowplan || blindMode || !showHints || !currentOn) return
+    const el = screenContainerRef.current?.querySelector<HTMLElement>(`#${CSS.escape(currentOn)}`)
+    el?.classList.add('fm-planned-highlight')
+    return () => el?.classList.remove('fm-planned-highlight')
+  }, [flowplan, showHints, blindMode, currentOn, activeScreenId, screenContainerRef])
+
+  // ── Diverged Hint (Blind Mode only): a soft, low-emphasis warning shown after
+  // a delay of no progress toward the next planned step. Must resolve
+  // currentStep.next fresh (calling it if it's a fork resolver function) rather
+  // than indexing flowplan.steps[currentStepIndex + 1] positionally — the "+1"
+  // entry in the flattened steps array is not necessarily where a forking
+  // branch would actually route to.
+  const [diverged, setDiverged] = useState(false)
+  const divergedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const divergedResetRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    // setDiverged must only be called from a callback (setTimeout), never
+    // synchronously in the effect body — schedule the "clear" as a zero-delay
+    // callback rather than calling it directly here.
+    if (divergedResetRef.current) clearTimeout(divergedResetRef.current)
+    divergedResetRef.current = setTimeout(() => setDiverged(false), 0)
+    if (divergedTimerRef.current) clearTimeout(divergedTimerRef.current)
+    if (!flowplan || !blindMode || !divergedHint || currentNext === undefined) return
+    const expectedNext =
+      typeof currentNext === 'function'
+        ? currentNext({ db: engine.buildCtx().db, flowState: localState })
+        : currentNext
+    divergedTimerRef.current = setTimeout(() => {
+      if (activeScreenId !== expectedNext) setDiverged(true)
+    }, 9000)
+    return () => {
+      if (divergedTimerRef.current) clearTimeout(divergedTimerRef.current)
+      if (divergedResetRef.current) clearTimeout(divergedResetRef.current)
+    }
+    // engine/localState/db intentionally omitted from the trigger set — this
+    // timer should reset only on genuine progress (activeScreenId change) or
+    // relevant setting changes, not on every localState mutation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flowplan, blindMode, divergedHint, currentNext, activeScreenId])
+
+  // ── Blind Mode pass/fail: edge-validity check against the compiled step
+  // graph, NOT a linear sequence diff — flowplan.steps is a flattened array
+  // containing every fork branch's steps concatenated, so there is no single
+  // canonical "planned sequence" to diff history against once forks exist. For
+  // each consecutive pair in the actual recorded history, verify some step
+  // with that screenId resolves (fresh, at verdict time) to the next screenId.
+  const blindModeVerdict = useMemo(() => {
+    if (!flowplan || !blindMode) return null
+    for (let i = 0; i < history.length - 1; i++) {
+      const from = history[i]
+      const to = history[i + 1]
+      const step = flowplan.steps.find(s => s.screenId === from)
+      if (!step) return { pass: false, reason: `"${from}" is not a step in this flowplan.` }
+      const resolved =
+        typeof step.next === 'function'
+          ? step.next({ db: engine.buildCtx().db, flowState: localState })
+          : step.next
+      if (resolved !== to) {
+        return { pass: false, reason: `Unexpected path: "${from}" → "${to}".` }
+      }
+    }
+    return { pass: true, reason: 'Followed a valid path through the flowplan.' }
+    // engine/localState omitted — verdict only needs to reflect the final
+    // recorded history once completion fires (transitionLog gains the
+    // '[Flow Completed]' entry); it is not meant to track flowState drift.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flowplan, blindMode, history])
+  // Completion is only knowable from the transitionLog's terminal marker —
+  // history itself never records it (the flow just stops advancing).
+  const isFlowComplete = useMemo(
+    () => transitionLog.some(e => e.toScreen === '[Flow Completed]'),
+    [transitionLog]
+  )
 
   // ─── FlowNavCtx — programmatic nav from screens goes through commitNavigation
   const flowNavValue = useMemo(
@@ -346,10 +511,15 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
         .fm-scale-in         { animation: fm-scale-in        ${ANIM_DURATION}ms cubic-bezier(.4,0,.2,1) both }
         .fm-scale-out        { animation: fm-scale-out       ${ANIM_DURATION}ms cubic-bezier(.4,0,.2,1) both }
 
-        /* Off-script tap feedback (flowplan gating) */
-        @keyframes fm-offscript-pulse { 0%{outline-color:rgba(239,68,68,0)} 30%{outline-color:rgba(239,68,68,.9)} 100%{outline-color:rgba(239,68,68,0)} }
-        [data-off-script] { outline: 2px solid rgba(239,68,68,0); outline-offset: 2px; animation: fm-offscript-pulse 300ms ease both; }
+        /* Off-script tap feedback (flowplan gating) — color driven by --fm-offscript-color,
+           set inline per-element in flashOffScript() from the configurable wrongClickColor. */
+        @keyframes fm-offscript-pulse { 0%{outline-color:rgba(0,0,0,0)} 30%{outline-color:var(--fm-offscript-color, #ef4444)} 100%{outline-color:rgba(0,0,0,0)} }
+        [data-off-script] { outline: 2px solid rgba(0,0,0,0); outline-offset: 2px; animation: fm-offscript-pulse 300ms ease both; }
         @keyframes fm-toast-in { from{opacity:0;transform:translate(-50%,8px)} to{opacity:1;transform:translate(-50%,0)} }
+
+        /* Planned-element highlight (Show Hints) — calm, persistent, fixed blue. */
+        @keyframes fm-planned-pulse { 0%,100%{outline-color:rgba(59,130,246,.55)} 50%{outline-color:rgba(59,130,246,.9)} }
+        .fm-planned-highlight { outline: 2px solid rgba(59,130,246,.7) !important; outline-offset: 2px; animation: fm-planned-pulse 1.4s ease-in-out infinite; border-radius: 4px; }
       `}</style>
 
       <div
@@ -456,10 +626,31 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
           </div>
         )}
 
-        {/* Flowplan: actionNote caption for the current step */}
-        {flowplan && currentStep?.actionNote && (
+        {/* Flowplan: authoring diagnostic — visible regardless of Show Hints/
+            Blind Mode (this is a signal for the author, not a playback hint),
+            dev-only since it's a build-time content issue, not a runtime state
+            a shipped/exported build's viewer needs to see. */}
+        {flowplan && elementCheckMissing && import.meta.env.DEV && (
           <div
-            className="absolute top-4 left-1/2 z-50 px-3 py-1.5 rounded-full text-xs font-semibold pointer-events-none"
+            className={`absolute ${hintPosition === 'top' ? 'bottom-6' : 'top-4'} left-1/2 z-50 px-3 py-1.5 rounded-full text-xs font-semibold pointer-events-none`}
+            style={{
+              transform: 'translateX(-50%)',
+              background: '#eab308ee',
+              color: '#1a1400',
+              whiteSpace: 'nowrap',
+            }}
+            role="status"
+            aria-live="polite"
+          >
+            ⚠ Missing #{currentOn} on this screen
+          </div>
+        )}
+
+        {/* Flowplan: actionNote caption for the current step (Show Hints only,
+            hidden entirely in Blind Mode) */}
+        {flowplan && showHints && !blindMode && currentStep?.actionNote && (
+          <div
+            className={`absolute ${hintPosition === 'top' ? 'top-4' : 'bottom-6'} left-1/2 z-50 px-3 py-1.5 rounded-full text-xs font-semibold pointer-events-none`}
             style={{
               transform: 'translateX(-50%)',
               background: theme.bg.elevated + 'd9',
@@ -472,10 +663,13 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
           </div>
         )}
 
-        {/* Flowplan: off-script toast */}
-        {flowplan && offScript && (
+        {/* Flowplan: off-script / blocked toast — hidden in Blind Mode (the
+            Diverged Hint toast below is Blind Mode's equivalent soft signal).
+            Copy reflects whether Strict Mode actually refused the navigation
+            or this is just Guided-mode advisory feedback. */}
+        {flowplan && offScript && !blindMode && (
           <div
-            className="absolute bottom-6 left-1/2 z-50 px-3 py-1.5 rounded-full text-xs font-semibold pointer-events-none"
+            className={`absolute ${hintPosition === 'top' ? 'top-4' : 'bottom-6'} left-1/2 z-50 px-3 py-1.5 rounded-full text-xs font-semibold pointer-events-none`}
             style={{
               transform: 'translateX(-50%)',
               background: theme.accent.red + 'eb',
@@ -485,7 +679,52 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
             role="status"
             aria-live="polite"
           >
-            Outside planned flow
+            {strictMode ? 'Blocked — outside planned flow' : 'Outside planned flow'}
+          </div>
+        )}
+
+        {/* Blind Mode: soft divergence nudge — a lower-emphasis signal than the
+            Strict Mode toast above, since Blind Mode is meant to let the user
+            wander before telling them anything. */}
+        {flowplan && blindMode && diverged && !isFlowComplete && (
+          <div
+            className={`absolute ${hintPosition === 'top' ? 'top-4' : 'bottom-6'} left-1/2 z-50 px-3 py-1.5 rounded-full text-xs font-semibold pointer-events-none`}
+            style={{
+              transform: 'translateX(-50%)',
+              background: theme.bg.elevated + 'd9',
+              color: theme.accent.amber,
+              border: `1px solid ${theme.accent.amber}55`,
+              animation: 'fm-toast-in 150ms ease both',
+            }}
+            role="status"
+            aria-live="polite"
+          >
+            Still on track?
+          </div>
+        )}
+
+        {/* Blind Mode: pass/fail summary — rendered during the completionDelayMs
+            window (see useFlowEngine options above) between the completion
+            transitionLog entry and the actual navigate-away. */}
+        {flowplan && blindMode && isFlowComplete && blindModeVerdict && (
+          <div
+            className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
+            style={{ background: 'rgba(0,0,0,0.55)' }}
+          >
+            <div
+              className="px-5 py-4 rounded-xl text-center max-w-[80%]"
+              style={{ background: theme.bg.elevated, border: `1px solid ${theme.bg.border}` }}
+            >
+              <div
+                className="text-base font-bold mb-1"
+                style={{ color: blindModeVerdict.pass ? theme.accent.green : theme.accent.red }}
+              >
+                {blindModeVerdict.pass ? 'Pass' : 'Fail'}
+              </div>
+              <div className="text-xs" style={{ color: theme.text.secondary }}>
+                {blindModeVerdict.reason}
+              </div>
+            </div>
           </div>
         )}
       </div>
