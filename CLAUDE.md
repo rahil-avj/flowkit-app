@@ -53,7 +53,8 @@ Browser-based UI prototyping platform (React 19 + Vite 8 + Tailwind v4) for mult
 │   │   ├── canvas/
 │   │   │   ├── PreviewCanvas.tsx   ⚠️ 1158 LOC — main interactive canvas; pan/zoom/mode switch
 │   │   │   ├── CanvasView.tsx      Multi-screen grid (Figma export mode)
-│   │   │   └── canvasConfig.ts     CANVAS_W/H, ZOOM_MIN/MAX, panel width defaults
+│   │   │   ├── canvasConfig.ts     CANVAS_W/H, ZOOM_MIN/MAX, panel width defaults
+│   │   │   └── canvasReducer.ts    Canvas pan/zoom/mode state reducer; unit-tested
 │   │   ├── layout/
 │   │   │   ├── FlowEngine.ts       ⚠️ 716 LOC — useFlowEngine() interaction state machine
 │   │   │   ├── FlowMaster.tsx      Single-flow renderer; swipe + hotspot + off-script toasts
@@ -65,7 +66,7 @@ Browser-based UI prototyping platform (React 19 + Vite 8 + Tailwind v4) for mult
 │   │   │   │   └── usePanelDrag.ts    Single-side drag handle primitive
 │   │   │   └── index.ts            Public barrel
 │   │   ├── config/defineConfig.ts  defineConfig() + defineFlow() identity helpers for workspace authors
-│   │   └── shortcuts/              Global keyboard shortcuts (Cmd+Alt+Shift+P canvas toggle)
+│   │   └── shortcuts/              Global keyboard shortcuts (Cmd+Alt+Shift+P canvas toggle); useKeyboardShortcuts.ts is unit-tested
 │   ├── features/
 │   │   ├── command-palette/        Global quick-action overlay (PaletteItem, PaletteGroup)
 │   │   ├── feedback/
@@ -264,7 +265,7 @@ npm run dev
 **Build**
 
 - `npm run build` — tsc + vite build (runs `plan:check` prebuild gate automatically)
-- `npm run build:standalone` — single-file HTML via inline.js post-process
+- `npm run build:standalone` — single-file HTML via `vite.config.standalone.ts` (requires `FLOWKIT_WORKSPACE` env var) + `inline.js` post-process
 - `npm run build:lib` — builds the publishable `flowkit` npm package (`tsc -p tsconfig.build.json && vite build --config vite.lib.config.ts`) — see Package/Publish Mode below
 - `VITE_ENABLE_FLOWLENS=true npm run build` — includes FlowLens analytics chunk
 
@@ -302,6 +303,8 @@ npm run dev
 - `flowkit checkpoint` — tag a pre-release checkpoint
 - `flowkit release` — cut a release (wraps checkpoint + git tagging)
 - `flowkit sync:deployment` — strip dev files and sync to the deployment branch
+- `flowkit kit:check` — pre-build kit validation (`scripts/build/kit-check.js`)
+- `flowkit create/remove/list/rename/move/add/screen/flowplan/components` — lower-level scaffolding sub-verbs used internally by `nw`/other commands (router.js) — prefer the higher-level commands above unless you need fine-grained control
 
 ---
 
@@ -356,7 +359,9 @@ Set in `.env.local` (not committed).
 
 ---
 
-## Package / Publish Mode (branch: `flowkit/Package`, not yet merged)
+## Package / Publish Mode
+
+> The dual-mode support described below (`isRepoMode()`, `assertScopedWorkspaceDir()`, lib build `exports`/`files`) is present on `main`. `Documentation/deployment-plans/PACKAGE-ARCHITECTURE.md` refers to this work as living on a `flowkit/Package` branch, but no such branch currently exists locally or on `origin` — it likely merged already; treat that doc's branch references as historical.
 
 FlowKit ships two ways from one repo — every path in `scripts/lib/` and `scripts/cli/` must work under both:
 
@@ -376,7 +381,7 @@ FlowKit ships two ways from one repo — every path in `scripts/lib/` and `scrip
 - **`sessionDb.ts` `getSnapshots()`** — full IndexedDB store scan; degrades with large session counts ⚠️
 - **`FeedbackContext.tsx`** — `JSONBIN_CONFIG` master key is bundled into the client build 🔴
 - **`applyDotPathPatch.ts`** — dot-path setter has no `__proto__` guard; prototype pollution possible on untrusted input ⚠️
-- **vitest coverage** — thresholds apply only to `scripts/tests/` files (8 test files); `src/` logic has zero unit test coverage ⚠️
+- **vitest scope** — `vitest.config.ts` only includes `scripts/tests/**/*.test.ts` (4 files as of this writing: `applyDotPathPatch`, `canvasReducer`, `compileFlowplan`, `useKeyboardShortcuts`), but those files import and test `src/` modules directly — despite the directory name, this is where `src/` unit coverage lives. Coverage thresholds (91/86/95/93 stmts/branches/funcs/lines) apply only to what those 4 files exercise; most `src/` logic (UI components, contexts, most of `core/`) has no coverage ⚠️
 - **playwright** — installed as devDependency, no tests exist; ignore 🔴
 - **`prebuild` gate** — `npm run build` always runs `flowkit plan:check`; exits non-zero on blocking plan issues
 - **`@workspace` alias** — resolves to the active workspace at build/dev start; switching workspace requires dev server restart
@@ -444,6 +449,8 @@ export const screenMeta = { id: 'welcome', label: 'Welcome' }
 | `@kit`       | `src/kits/shared/`     | `/*` only in tsconfig; always used as `@kit/<path>`             |
 | `@platform`  | `src/`                 | prefer scoped aliases above                                     |
 | `@workspace` | `workspaces/<active>/` | falls back to `src/workspace-stub/` when no workspace is active |
+
+> `vite.config.ts` also declares a bare `flowkit` alias → `src/core/config/index.ts`, used only for internal self-reference (mirrors the published package name); not for general app code.
 
 All 7 aliases are declared in `vite.config.ts` and mirrored in `tsconfig.app.json`. `vitest.config.ts` mirrors all except `@workspace` (not needed for CLI tests).
 
