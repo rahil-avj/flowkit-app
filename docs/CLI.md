@@ -546,30 +546,6 @@ Lists comments from the committed snapshot: reviewer, screen, status, short text
 
 ---
 
-## Workspace dump
-
-### `dump` — Full workspace data export
-
-```bash
-flowkit dump
-flowkit dump --sessions --feedback --report
-flowkit dump --dest ./handoff/
-```
-
-All-in-one export: runs `sessions:export` (all committed sessions), `feedback:dump`, and `sessions:report` in one shot. Writes everything to `--dest` directory (default: `./flowkit-dump-<ws>-<date>/`).
-
-Flags control what is included — omit all three to dump everything:
-
-- `--sessions` — export all committed session JSON files
-- `--feedback` — export committed feedback snapshot
-- `--report` — export FlowLens analytics report
-
-If every requested section is skipped (e.g. no sessions and no feedback snapshot exist), the command prints `⚠ Dump complete — nothing to export` so the empty run is visible rather than silently successful.
-
-Use before archiving a workspace or handing off to a client.
-
----
-
 ## Kit
 
 ### `kit:check` — Verify theme coverage
@@ -747,7 +723,6 @@ Commands grouped by item type. Click the heading to jump to the full section.
 | `export[:<name>]`      | —     | Standalone HTML viewer            |
 | `export:full[:<name>]` | —     | Standalone HTML + FlowLens replay |
 | `handoff[:<name>]`     | —     | Developer handoff zip             |
-| `dump`                 | —     | Full workspace data export        |
 
 ### [Agent](#agent-onboarding)
 

@@ -64,10 +64,6 @@ ${b('Feedback:')}
   ${c('feedback:dump')} / ${c('fd')}            Export committed feedback to disk
   ${c('feedback:ls')}                      List committed comments
 
-${b('Workspace dump:')}
-  ${c('dump')}  ${d('[--sessions] [--feedback] [--report] [--dest <dir>]')}
-              Export all workspace data in one shot (omit flags = dump everything)
-
 ${b('Export & handoff:')}
   ${c('export')}                           Standalone HTML viewer (no FlowLens)
   ${c('export:full')}                      Standalone HTML viewer + FlowLens included

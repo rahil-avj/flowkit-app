@@ -24,7 +24,6 @@ import { cmdPlanLs, cmdPlanCheck, cmdProjectLs } from './plans.js'
 import { cmdFeedbackImport, cmdFeedbackDump, cmdFeedbackLs } from './feedback.js'
 import { cmdHelp } from './help.js'
 import { cmdStatus } from './status.js'
-import { cmdDump } from './dump.js'
 import { cmdCreateFlow, cmdRemoveFlow, cmdListFlows } from './agent/flows.js'
 import {
   cmdCreateScreen,
@@ -89,9 +88,6 @@ export async function route(argv) {
     cmdStatus(p.val)
 
     // ── Dump ──
-  } else if (p.cmd === 'dump') {
-    await cmdDump(p.val, rest)
-
     // ── Export / Handoff ──
   } else if (p.cmd === 'export' && (p.val === 'full' || p.val?.startsWith('full:'))) {
     const wsVal = p.val === 'full' ? '' : p.val.slice('full:'.length)

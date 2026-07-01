@@ -22,7 +22,6 @@ Browser-based UI prototyping platform (React 19 + Vite 8 + Tailwind v4) for mult
 │   │   ├── plans.js          plan:check prebuild gate + plan CRUD
 │   │   ├── sessions/         session subcommands split across crud/analytics/validate/sample
 │   │   ├── export.js         export / export:full commands
-│   │   ├── dump.js           dump command
 │   │   ├── feedback.js       feedback commands
 │   │   ├── handoff.js        handoff command
 │   │   ├── status.js         status command
@@ -293,7 +292,6 @@ npm run dev
 - `flowkit export` — standalone HTML viewer (no FlowLens)
 - `flowkit export:full` — standalone HTML viewer + FlowLens included
 - `flowkit handoff` — developer handoff zip
-- `flowkit dump [--sessions] [--feedback] [--report] [--dest <dir>]` — export all workspace data
 - `flowkit sessions:ls/import/export/check/stats/sample/rm/brief/purge` — session management
 - `flowkit lens:report` — export FlowLens analytics JSON
 - `flowkit plan:ls/check` — flowplan discovery and validation (short alias `fp:*`)
