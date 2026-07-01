@@ -73,7 +73,9 @@ describe('Suite M — manifest.js / package.json files[] consistency', () => {
     )
 
     const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
-    const positives = (pkg.files ?? []).filter(f => !f.startsWith('!')).map(f => f.replace(/\/$/, ''))
+    const positives = (pkg.files ?? [])
+      .filter(f => !f.startsWith('!'))
+      .map(f => f.replace(/\/$/, ''))
     const wouldBeIncluded = positives.some(
       p => '.flowkit-repo-root' === p || '.flowkit-repo-root'.startsWith(p + '/')
     )

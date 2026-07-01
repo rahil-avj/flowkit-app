@@ -54,7 +54,7 @@ const AlertDialogAction = React.forwardRef<HTMLButtonElement, AlertDialogActionP
         'kit-button',
         variant === 'default' && 'bg-primary text-primary-foreground hover:bg-primary/90',
         variant === 'destructive' &&
-          'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+        'bg-destructive text-destructive-foreground hover:bg-destructive/90',
         variant === 'ghost' && 'hover:bg-accent hover:text-accent-foreground',
         className
       )}

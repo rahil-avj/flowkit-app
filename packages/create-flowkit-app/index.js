@@ -85,26 +85,17 @@ function parseStringFlag(argv, name) {
   return hit ? hit.slice(name.length + 3) : null
 }
 
-// ── Available kits ───────────────────────────────────────────────────────────
-// Kept as a small static list rather than read from the platform's src/kits/ —
-// once this package is published standalone it won't have a sibling src/ tree
-// to read from. Mirrors what's currently in src/kits/{shared,standalone}.
-
-const SHARED_KITS = ['apple', 'material', 'neo-brutalism']
-const STANDALONE_KITS = ['mobile-wireframe']
-const ALL_KIT_SLUGS = [...SHARED_KITS, ...STANDALONE_KITS]
-
 function usage() {
   console.log(`
   ${b('create-flowkit-app')} — scaffold a new FlowKit author project
 
   ${b('Usage:')}
-    npm create flowkit-app@latest ${c('<project-name>')} ${d('[--lang:ts|js] [--kit:<slug>|none]')}
+    npm create flowkit-app@latest ${c('<project-name>')} ${d('[--lang:ts|js]')}
     npx create-flowkit-app ${c('<project-name>')}
 
   ${b('Example:')}
     npm create flowkit-app@latest my-prototype
-    npm create flowkit-app@latest my-prototype -- --lang:js --kit:none
+    npm create flowkit-app@latest my-prototype -- --lang:js
 
   ${d('flowkit contributors: --local-dev points the generated project at your')}
   ${d('local flowkit checkout instead of the published package. Only works when')}
@@ -170,7 +161,7 @@ function resolveFlowkitDependency() {
 
 const FLOWKIT_DEP = resolveFlowkitDependency()
 
-// ── Preferences — language + kit, same flow as `flowkit nw` ────────────────────
+// ── Preferences — language, same flow as `flowkit nw` ──────────────────────────
 
 async function resolveLanguage() {
   const flag = parseStringFlag(args, 'lang')
@@ -187,21 +178,6 @@ async function resolveLanguage() {
   ])
   console.log('\n')
   return selection.startsWith('JavaScript') ? 'js' : 'ts'
-}
-
-async function resolveKit(language) {
-  const flag = parseStringFlag(args, 'kit')
-  if (flag) {
-    const clean = flag.toLowerCase().trim()
-    if (clean === 'none' || ALL_KIT_SLUGS.includes(clean)) return clean
-    console.error(r(`✗ Invalid kit: ${flag}. Supported: ${[...ALL_KIT_SLUGS, 'none'].join(', ')}.`))
-    process.exit(1)
-  }
-  const options = [...ALL_KIT_SLUGS.map((k) => `${k}${STANDALONE_KITS.includes(k) ? ' — standalone' : ' — shared kit'}`), 'none — plain tokens, no kit theme']
-  console.log(c('? ') + 'Design kit (↑↓ Enter):')
-  const selection = await selectFromList(options)
-  console.log('\n')
-  return selection.split(' —')[0].trim()
 }
 
 // ── Copy templates ─────────────────────────────────────────────────────────────
@@ -612,22 +588,9 @@ export const items = [
   )
 }
 
-function writeTokensCss(dir, kit) {
+function writeTokensCss(dir) {
   fs.mkdirSync(path.join(dir, 'lib', 'design-system'), { recursive: true })
-  // Direct node_modules path — same precedent already used by index.html's
-  // <script src="/node_modules/flowkit/src/main.tsx">. There's no @kit/@platform
-  // alias available in a flat-mode project, so this is the established way to
-  // reach into the installed engine package's bundled kit assets.
-  const kitImport =
-    kit === 'none'
-      ? ''
-      : STANDALONE_KITS.includes(kit)
-        ? `@import "/node_modules/flowkit/src/kits/standalone/${kit}/index.css";\n\n`
-        : `@import "/node_modules/flowkit/src/kits/shared/tokens/themes/${kit}.css";\n\n`
-  const content =
-    kit === 'none'
-      ? `/* ${projectName} — Design Tokens */\n/* No kit selected — add your own CSS variables here. */\n:root {\n  /* --my-brand: #1a1a2e; */\n}\n`
-      : `/* ${projectName} — Design Tokens */\n${kitImport}/* ── Project-level overrides ─────────────────────────────────────────────\n   Override kit variables here to customise the active theme.\n   ────────────────────────────────────────────────────────────────────────── */\n:root {\n}\n`
+  const content = `/* ${projectName} — Design Tokens */\n/* No UI kit is pre-installed. Add your own CSS variables here, or ask\n   Flowaid (see CLAUDE.md) to help you pick and wire up a component approach. */\n:root {\n  /* --my-brand: #1a1a2e; */\n}\n`
   fs.writeFileSync(path.join(dir, 'lib', 'design-system', 'tokens.css'), content)
 }
 
@@ -641,6 +604,8 @@ A FlowKit author project. Your work lives in:
 - \`flows/\` — Screen components, organized by flow then screen name
 - \`flowplans/\` — Playback scripts (sequences of screens with interaction definitions)
 - \`lib/\` — Shared data, components, and utilities for this project
+
+No UI kit is pre-installed — \`lib/design-system/tokens.css\` starts empty. See "First session" below.
 
 ## CLI Commands
 
@@ -659,6 +624,39 @@ flowkit export          # build standalone HTML viewer
 - Add screens under \`flows/<flow-name>/<screen-id>/\`
 - Add flowplan steps in \`flowplans/<flow-name>.ts\`
 - All CLI operations go through \`flowkit <command>\`
+
+## First session — onboarding
+
+If this is the first time you (the agent) are opening this project, introduce
+yourself as **Flowaid** — the FlowKit-native assistant for this project, not a
+generic coding agent — and run this short interview before writing any code.
+Keep it conversational, one or two questions at a time, not a form dump.
+
+1. **Name.** Ask what to call them. Use their name for the rest of the
+   session — this is a collaboration, not a prompt terminal.
+2. **Experience level.** Are they a developer, a designer who codes a little,
+   or non-technical (founder/PM/etc. testing an idea)? This sets how much you
+   explain vs. just do. Don't ask it clinically — something like "so I pitch
+   this right: are you more comfortable in the code, or would you rather I
+   just handle that side?"
+3. **What they're building.** A quick prototype for a pitch/demo, a client
+   deliverable, a personal project, something else? Shapes how much you
+   optimize for speed vs. polish.
+4. **Working style.** Do they want you to check in before changes, or move
+   fast and explain after the fact? Set your autonomy level for the rest of
+   the session based on the answer — don't re-ask this every time.
+5. **Look and feel.** There's no pre-installed component kit or design
+   system — ask in plain language what they're going for ("clean and
+   minimal", "playful", "enterprise/dashboard-y", or a reference link/screenshot
+   if they have one). Based on the answer, YOU decide and set up the actual
+   approach (e.g. plain Tailwind utility classes, shadcn/ui components, some
+   other library) — don't make them pick a library by name unless they bring
+   it up themselves.
+
+Once you have these answers, act on them immediately — set up
+\`lib/design-system/tokens.css\` and whatever component approach fits, then
+get to the actual flows/screens. Don't re-run this interview later in the
+project; refer back to what you learned instead.
 `,
   )
 }
@@ -706,7 +704,6 @@ async function main() {
   console.log('')
 
   const language = await resolveLanguage()
-  const kit = await resolveKit(language)
 
   try {
     fs.mkdirSync(targetDir, { recursive: true })
@@ -729,7 +726,7 @@ async function main() {
     writeHomeScreen(targetDir, language)
     writeDetailScreen(targetDir, language)
     writeDb(targetDir)
-    writeTokensCss(targetDir, kit)
+    writeTokensCss(targetDir)
     writePostcssConfig(targetDir)
     writeClaude(targetDir)
     writeGitignore(targetDir)
@@ -739,8 +736,6 @@ async function main() {
       `  ${g('✓')} Language: ` +
         b(language === 'js' ? 'JavaScript (.jsx / .js)' : 'TypeScript (.tsx / .ts)'),
     )
-    console.log(`  ${g('✓')} Kit: ` + b(kit === 'none' ? 'none' : `[${kit}]`))
-
     // Install dependencies.
     // --install-links only matters for --local-dev's file: dependency: npm's
     // default for a `file:` spec pointing at a directory is to SYMLINK it into
