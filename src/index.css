@@ -143,14 +143,20 @@ body,
    `height: 100%` on html/body resolves against the large viewport, which can
    exceed the visible area while the address bar is shown, turning the page
    itself into an unwanted scroll container. Pin to the small viewport and
-   disable page-level scroll/bounce; app content manages its own scroll regions. */
-html,
-body {
-  height: 100svh;
-  overflow: hidden;
-  position: fixed;
-  inset: 0;
-  width: 100%;
+   disable page-level scroll/bounce; app content manages its own scroll regions.
+   Scoped to mobile-width viewports only (matches MOBILE_BREAKPOINT in
+   useIsMobile.ts) — applying this unconditionally changed how the desktop
+   canvas's ancestor chain resolves percentage sizing, throwing off
+   PreviewCanvas's ResizeObserver-based fitScale/keepFit measurements. */
+@media (max-width: 768px) {
+  html,
+  body {
+    height: 100svh;
+    overflow: hidden;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+  }
 }
 
 /* Global scrollbar styling - 4px wide */
