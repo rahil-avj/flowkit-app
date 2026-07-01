@@ -175,14 +175,14 @@ One `@ts-ignore` in the entire codebase (suppressing a TS error on an HMR import
 
 These suppress the exhaustive-deps warning on `useEffect` and `useCallback` calls where the author intentionally omits deps that would cause infinite loops or unintended re-runs.
 
-| File                                           | Count |
-| ---------------------------------------------- | ----- |
-| `src/core/layout/FlowEngine.ts`                | 6     |
-| `src/core/layout/FlowMaster.tsx`               | 3     |
-| `src/core/canvas/PreviewCanvas.tsx`            | 2     |
-| `src/core/layout/KitSideExplorer.tsx`          | 1     |
-| `src/core/layout/hooks/usePanelDrag.ts`        | 1     |
-| `src/features/feedback/panel.tsx`              | 1     |
+| File                                        | Count |
+| ------------------------------------------- | ----- |
+| `src/core/layout/FlowEngine.ts`             | 6     |
+| `src/core/layout/FlowMaster.tsx`            | 3     |
+| `src/core/canvas/PreviewCanvas.tsx`         | 2     |
+| `src/core/layout/KitSideExplorer.tsx`       | 1     |
+| `src/core/layout/hooks/usePanelDrag.ts`     | 1     |
+| `src/features/feedback/panel.tsx`           | 1     |
 | `src/shared/utils/useWorkspaceHierarchy.ts` | 1     |
 
 **`react-hooks/set-state-in-effect`** — 5 occurrences

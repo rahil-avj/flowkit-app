@@ -162,8 +162,8 @@ if (import.meta.hot && !import.meta.hot.data.FeedbackContext) {
 }
 const FeedbackContext =
   (import.meta.hot?.data.FeedbackContext as
-    | ReturnType<typeof createContext<FeedbackContextValue | undefined>>
-    | undefined) ?? createContext<FeedbackContextValue | undefined>(undefined)
+    ReturnType<typeof createContext<FeedbackContextValue | undefined>> | undefined) ??
+  createContext<FeedbackContextValue | undefined>(undefined)
 
 export function useFeedback() {
   const context = useContext(FeedbackContext)

@@ -89,8 +89,8 @@ if (import.meta.hot && !import.meta.hot.data.SessionRecorderCtx) {
 }
 const Ctx =
   (import.meta.hot?.data.SessionRecorderCtx as
-    | ReturnType<typeof createContext<SessionRecorderValue | null>>
-    | undefined) ?? createContext<SessionRecorderValue | null>(null)
+    ReturnType<typeof createContext<SessionRecorderValue | null>> | undefined) ??
+  createContext<SessionRecorderValue | null>(null)
 const INACTIVITY_MS = 5 * 60 * 1000
 
 // ─── Provider ─────────────────────────────────────────────────────────────────

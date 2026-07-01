@@ -19,15 +19,15 @@ An agent or developer should be able to answer three questions from an import pa
 
 ## Alias Map
 
-| Alias        | Resolves to            | Use for                                                 |
-| ------------ | ---------------------- | ------------------------------------------------------- |
-| `@shared`    | `src/shared/`          | Contexts, UI components, utils — foundation layer       |
-| `@core`      | `src/core/`            | Canvas shell, layout panels, keyboard shortcuts         |
-| `@features`  | `src/features/`        | Isolated product features (feedback, sessions, etc.)    |
-| `@flowlens`  | `src/modes/flowlens/`  | FlowLens analytics mode (lazy-loaded chunk)             |
-| `@platform`  | `src/`                 | Prefer scoped aliases above                             |
-| `@workspace` | `workspaces/<active>/` | Active workspace screens and config                     |
-| `@kit`       | `src/kits/shared/`     | Shared kit utilities                                    |
+| Alias        | Resolves to            | Use for                                              |
+| ------------ | ---------------------- | ---------------------------------------------------- |
+| `@shared`    | `src/shared/`          | Contexts, UI components, utils — foundation layer    |
+| `@core`      | `src/core/`            | Canvas shell, layout panels, keyboard shortcuts      |
+| `@features`  | `src/features/`        | Isolated product features (feedback, sessions, etc.) |
+| `@flowlens`  | `src/modes/flowlens/`  | FlowLens analytics mode (lazy-loaded chunk)          |
+| `@platform`  | `src/`                 | Prefer scoped aliases above                          |
+| `@workspace` | `workspaces/<active>/` | Active workspace screens and config                  |
+| `@kit`       | `src/kits/shared/`     | Shared kit utilities                                 |
 
 **Rule:** always use the most specific alias available.
 `@shared/contexts/ThemeContext` beats `@platform/shared/contexts/ThemeContext`.

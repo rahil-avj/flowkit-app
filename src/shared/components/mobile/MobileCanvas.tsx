@@ -194,8 +194,7 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
   const combinedFilter = [colorFilter, blurFilter].filter(Boolean).join(' ') || undefined
 
   const ActiveComponent = activeView?.component as
-    | React.ComponentType<Record<string, unknown>>
-    | undefined
+    React.ComponentType<Record<string, unknown>> | undefined
 
   const actionCtx = useMemo<ActionCtx>(
     () => ({

@@ -23,8 +23,8 @@ if (import.meta.hot && !import.meta.hot.data.NavigationContext) {
 }
 export const NavigationContext =
   (import.meta.hot?.data.NavigationContext as
-    | ReturnType<typeof createContext<NavigationContextValue | null>>
-    | undefined) ?? createContext<NavigationContextValue | null>(null)
+    ReturnType<typeof createContext<NavigationContextValue | null>> | undefined) ??
+  createContext<NavigationContextValue | null>(null)
 
 export function useNavigation() {
   const ctx = useContext(NavigationContext)

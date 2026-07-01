@@ -49,7 +49,7 @@
 | -------------------------------------- | --------------------------------------------------------------------------------- | ----- |
 | Workspace scaffolding (`flowkit nw`)   | Creates full workspace directory structure with flows, flowplans, lib, config     | U2    |
 | Workspace removal (`flowkit rw`)       | Removes workspace and cleans registry                                             | U2    |
-| Active workspace switching             | Switch active workspace from browser UI                                          | U2    |
+| Active workspace switching             | Switch active workspace from browser UI                                           | U2    |
 | Workspace registry sync                | `workspaces.json` as runtime source of truth; Vite plugin reconciles on dev start | U1    |
 | File watcher (`flowkit watch`)         | Hot-watches workspace files for changes                                           | U2    |
 | Status snapshot (`flowkit status`)     | Health overview: flows, sessions, feedback, agent state                           | U2    |

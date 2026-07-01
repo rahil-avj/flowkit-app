@@ -43,8 +43,7 @@ interface FlowLensModeValue {
 // keeping the dynamic import path inside the glob (Rollup DCEs unused loaders).
 const _flowlensGlob = import.meta.glob('../../modes/flowlens/index.ts')
 const _flowlensLoader = Object.values(_flowlensGlob)[0] as
-  | (() => Promise<{ default: ComponentType<unknown> }>)
-  | undefined
+  (() => Promise<{ default: ComponentType<unknown> }>) | undefined
 export const FLOWLENS_AVAILABLE = _flowlensLoader !== undefined
 export { _flowlensLoader as flowlensLoader }
 
@@ -59,8 +58,8 @@ if (import.meta.hot && !import.meta.hot.data.FlowLensModeContext) {
 }
 const FlowLensModeContext =
   (import.meta.hot?.data.FlowLensModeContext as
-    | ReturnType<typeof createContext<FlowLensModeValue | null>>
-    | undefined) ?? createContext<FlowLensModeValue | null>(null)
+    ReturnType<typeof createContext<FlowLensModeValue | null>> | undefined) ??
+  createContext<FlowLensModeValue | null>(null)
 
 const SS_KEY = 'flowlens:persist'
 

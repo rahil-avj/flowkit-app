@@ -14,11 +14,11 @@ const CYAN = '\x1b[36m'
 const DIM = '\x1b[2m'
 const RED = '\x1b[31m'
 
-const g = (s) => GREEN + s + RESET
-const b = (s) => BOLD + s + RESET
-const c = (s) => CYAN + s + RESET
-const d = (s) => DIM + s + RESET
-const r = (s) => RED + s + RESET
+const g = s => GREEN + s + RESET
+const b = s => BOLD + s + RESET
+const c = s => CYAN + s + RESET
+const d = s => DIM + s + RESET
+const r = s => RED + s + RESET
 
 // ── Minimal self-contained prompt helpers ───────────────────────────────────────
 // Deliberately not imported from the platform's scripts/lib/prompt.js — this
@@ -26,15 +26,15 @@ const r = (s) => RED + s + RESET
 // dependency on the rest of the monorepo at runtime.
 
 function prompt(rl, question) {
-  return new Promise((resolve) => rl.question(question, resolve))
+  return new Promise(resolve => rl.question(question, resolve))
 }
 
 function selectFromList(items) {
   if (!process.stdin.isTTY) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       items.forEach((item, i) => console.log(`  ${d(String(i + 1) + '.')} ${item}`))
       const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
-      rl.question(c('? ') + `Select (1-${items.length}): `, (ans) => {
+      rl.question(c('? ') + `Select (1-${items.length}): `, ans => {
         rl.close()
         const n = parseInt(ans.trim(), 10) - 1
         resolve(items[Math.max(0, Math.min(isNaN(n) ? 0 : n, items.length - 1))])
@@ -42,7 +42,7 @@ function selectFromList(items) {
     })
   }
 
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     let idx = 0
     const render = () => {
       process.stdout.write('\x1b[?25l')
@@ -57,7 +57,7 @@ function selectFromList(items) {
     process.stdin.setRawMode(true)
     process.stdin.resume()
     process.stdin.setEncoding('utf8')
-    const onData = (key) => {
+    const onData = key => {
       if (key === '\x1b[A') {
         idx = (idx - 1 + items.length) % items.length
         render()
@@ -81,7 +81,7 @@ function selectFromList(items) {
 }
 
 function parseStringFlag(argv, name) {
-  const hit = argv.find((a) => a.startsWith(`--${name}:`))
+  const hit = argv.find(a => a.startsWith(`--${name}:`))
   return hit ? hit.slice(name.length + 3) : null
 }
 
@@ -104,7 +104,7 @@ function usage() {
   process.exit(0)
 }
 
-const args = process.argv.slice(2).filter((a) => a !== '--')
+const args = process.argv.slice(2).filter(a => a !== '--')
 const projectName = args[0]
 
 if (!projectName || projectName === '--help' || projectName === '-h') {
@@ -151,7 +151,9 @@ function resolveFlowkitDependency() {
   const monorepoRoot = path.resolve(__dirname, '..', '..')
   const markerPath = path.join(monorepoRoot, '.flowkit-repo-root')
   if (!fs.existsSync(markerPath)) {
-    console.error(r('✗ --local-dev requires this script to run from inside a flowkit monorepo checkout.'))
+    console.error(
+      r('✗ --local-dev requires this script to run from inside a flowkit monorepo checkout.')
+    )
     console.error(d(`  Expected a repo-root marker at: ${markerPath}`))
     process.exit(1)
   }
@@ -239,7 +241,7 @@ import { flowkit } from 'flowkit/vite'
 export default defineConfig({
   plugins: [react(), flowkit()],
 })
-`,
+`
   )
 }
 
@@ -263,8 +265,8 @@ function writeTsConfig(dir) {
         include: ['flows', 'flowplans', 'lib', 'flowkit.config.ts', 'vite.config.ts'],
       },
       null,
-      2,
-    ) + '\n',
+      2
+    ) + '\n'
   )
 }
 
@@ -289,7 +291,7 @@ export default defineConfig({
     home: ['home', 'detail'],
   },
 })
-`,
+`
   )
 }
 
@@ -309,7 +311,7 @@ export default defineFlow({
     { screenId: 'ready', on: 'go-to-home', actionNote: 'Proceeds to home' },
   ],
 })
-`,
+`
   )
   fs.writeFileSync(
     path.join(dir, 'flowplans', 'home.ts'),
@@ -324,7 +326,7 @@ export default defineFlow({
     { screenId: 'detail', on: 'back', actionNote: 'Goes back to list' },
   ],
 })
-`,
+`
   )
 }
 
@@ -379,7 +381,7 @@ function writeWelcomeScreen(dir, language) {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const screenMeta = { id: 'welcome', label: 'Welcome Screen' }
-`,
+`
   )
   writeScreen(dir, 'onboarding', 'welcome', 'WelcomeScreen', isJs, content)
 }
@@ -429,7 +431,7 @@ function writeSetupScreen(dir, language) {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const screenMeta = { id: 'setup', label: 'Setup Screen' }
-`,
+`
   )
   writeScreen(dir, 'onboarding', 'setup', 'SetupScreen', isJs, content)
 }
@@ -464,7 +466,7 @@ function writeReadyScreen(dir, language) {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const screenMeta = { id: 'ready', label: 'Ready Screen' }
-`,
+`
   )
   writeScreen(dir, 'onboarding', 'ready', 'ReadyScreen', isJs, content)
 }
@@ -516,7 +518,7 @@ function writeHomeScreen(dir, language) {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const screenMeta = { id: 'home', label: 'Home Screen' }
-`,
+`
   )
   writeScreen(dir, 'home', 'home', 'HomeScreen', isJs, content)
 }
@@ -564,7 +566,7 @@ function writeDetailScreen(dir, language) {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const screenMeta = { id: 'detail', label: 'Detail Screen' }
-`,
+`
   )
   writeScreen(dir, 'home', 'detail', 'DetailScreen', isJs, content)
 }
@@ -584,7 +586,7 @@ export const items = [
   { id: 2, title: 'Second Item', desc: 'Another item showing list rendering.', status: 'pending' },
   { id: 3, title: 'Third Item', desc: 'More items can be added in db.ts.', status: 'active' },
 ]
-`,
+`
   )
 }
 
@@ -657,7 +659,7 @@ Once you have these answers, act on them immediately — set up
 \`lib/design-system/tokens.css\` and whatever component approach fits, then
 get to the actual flows/screens. Don't re-run this interview later in the
 project; refer back to what you learned instead.
-`,
+`
   )
 }
 
@@ -669,7 +671,7 @@ function writePostcssConfig(dir) {
     '@tailwindcss/postcss': {},
   },
 }
-`,
+`
   )
 }
 
@@ -679,7 +681,7 @@ function writeGitignore(dir) {
     `node_modules/
 dist/
 .env.local
-`,
+`
   )
 }
 
@@ -711,7 +713,7 @@ async function main() {
     // Static, language-agnostic files
     fs.copyFileSync(
       path.join(__dirname, 'templates', 'index.html'),
-      path.join(targetDir, 'index.html'),
+      path.join(targetDir, 'index.html')
     )
 
     // Generated files
@@ -734,7 +736,7 @@ async function main() {
     console.log(`  ${g('✓')} Scaffolded project files`)
     console.log(
       `  ${g('✓')} Language: ` +
-        b(language === 'js' ? 'JavaScript (.jsx / .js)' : 'TypeScript (.tsx / .ts)'),
+        b(language === 'js' ? 'JavaScript (.jsx / .js)' : 'TypeScript (.tsx / .ts)')
     )
     // Install dependencies.
     // --install-links only matters for --local-dev's file: dependency: npm's

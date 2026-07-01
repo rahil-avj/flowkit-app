@@ -132,13 +132,7 @@ export interface FlowNode {
 // "slide-right" = new screen enters from the left (back navigation).
 
 export type TransitionAnimation =
-  | 'none'
-  | 'fade'
-  | 'slide-left'
-  | 'slide-right'
-  | 'slide-up'
-  | 'slide-down'
-  | 'scale'
+  'none' | 'fade' | 'slide-left' | 'slide-right' | 'slide-up' | 'slide-down' | 'scale'
 
 // ─── Interaction System ───────────────────────────────────────────────────────
 //

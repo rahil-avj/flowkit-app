@@ -18,8 +18,8 @@ if (import.meta.hot && !import.meta.hot.data.ThemeContext) {
 }
 const ThemeContext =
   (import.meta.hot?.data.ThemeContext as
-    | ReturnType<typeof createContext<ThemeContextType | null>>
-    | undefined) ?? createContext<ThemeContextType | null>(null)
+    ReturnType<typeof createContext<ThemeContextType | null>> | undefined) ??
+  createContext<ThemeContextType | null>(null)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>(() => {

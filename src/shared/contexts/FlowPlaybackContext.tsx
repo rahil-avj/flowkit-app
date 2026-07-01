@@ -64,8 +64,8 @@ if (import.meta.hot && !import.meta.hot.data.FlowPlaybackContext) {
 }
 const FlowPlaybackContext =
   (import.meta.hot?.data.FlowPlaybackContext as
-    | ReturnType<typeof createContext<FlowPlaybackValue | null>>
-    | undefined) ?? createContext<FlowPlaybackValue | null>(null)
+    ReturnType<typeof createContext<FlowPlaybackValue | null>> | undefined) ??
+  createContext<FlowPlaybackValue | null>(null)
 
 export function FlowPlaybackProvider({ children }: { children: React.ReactNode }) {
   const { flowPlaySetDb, resetDb, setActiveFlowHomeScreen } = useDashboard()

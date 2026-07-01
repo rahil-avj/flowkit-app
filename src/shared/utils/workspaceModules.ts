@@ -11,7 +11,12 @@ const isSingle = import.meta.env.VITE_SINGLE_WORKSPACE === 'true'
 // In repo mode the plugin still generates these from the active workspace dir,
 // so the imports are always resolvable regardless of mode.
 import { config as _virtualConfig } from 'virtual:flowkit/config'
-import { db as _virtualDb, loadSimulator as _virtualSim, loadTokens as _virtualTokens, workspaceName as _virtualWsName } from 'virtual:flowkit/workspace'
+import {
+  db as _virtualDb,
+  loadSimulator as _virtualSim,
+  loadTokens as _virtualTokens,
+  workspaceName as _virtualWsName,
+} from 'virtual:flowkit/workspace'
 
 // ─── Repo mode: glob maps (empty in flat mode — no workspaces/ dir present) ──
 

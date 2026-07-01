@@ -9,13 +9,7 @@ interface Props {
 }
 
 type CategoryFilter =
-  | 'all'
-  | 'flow'
-  | 'interaction'
-  | 'navigation'
-  | 'state'
-  | 'simulator'
-  | 'session'
+  'all' | 'flow' | 'interaction' | 'navigation' | 'state' | 'simulator' | 'session'
 
 const CATEGORY_COLORS: Record<string, string> = {
   flow: '#22c55e',

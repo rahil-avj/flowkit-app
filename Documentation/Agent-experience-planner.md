@@ -58,6 +58,7 @@ every other decision below serves.
 
 **`writeClaude(dir)` — modify.** Keep the existing "First session — onboarding" structure,
 add:
+
 - A cold-start clause with a short example turn (author asks for a login screen → Flowaid
   acknowledges in one line, states it's proceeding with sane defaults, starts building, and
   slots profiling questions into natural checkpoints instead of front-loading them).
@@ -76,6 +77,7 @@ add:
 
 **`writeFlowaidProfileStub(dir)` — new.** Writes `.flowaid/profile.md` with header/comment
 only, no interview content (interview logic is instructions and lives solely in CLAUDE.md):
+
 ```
 # Author Profile
 
@@ -86,6 +88,7 @@ only, no interview content (interview logic is instructions and lives solely in 
 ```
 
 **`writeAgentsStub(dir)` — new.** Writes `AGENTS.md`:
+
 ```
 # AGENTS.md
 
@@ -98,6 +101,7 @@ there; it is intentionally not duplicated here to avoid drift.
 **`writeCursorRules(dir)` — new.** Creates `.cursor/rules/` (`fs.mkdirSync(..., {
 recursive: true })`) and writes `flowkit.mdc` with standard Cursor rule frontmatter plus
 the same redirect body:
+
 ```
 ---
 description: FlowKit project agent instructions
@@ -111,6 +115,7 @@ including its "First session — onboarding" section and its `.flowaid/profile.m
 **`writeGitignore(dir)` — no change.** Explicitly do not add `.flowaid/` — decision 5.
 
 **`main()` — modify.** Add the three new writes alongside the existing calls:
+
 ```
 writeClaude(targetDir)
 writeFlowaidProfileStub(targetDir)

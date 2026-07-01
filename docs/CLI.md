@@ -698,12 +698,12 @@ Commands grouped by item type. Click the heading to jump to the full section.
 
 ### [Workspaces](#workspaces)
 
-| Command                     | Alias | Description                     |
-| --------------------------- | ----- | ------------------------------- |
-| `new-workspace[:<name>]`    | `nw`  | Create workspace                |
-| `remove-workspace[:<name>]` | `rw`  | Remove workspace                |
-| `watch[:<name>]`            | —     | Watch for file changes          |
-| `status[:<name>]`           | —     | Workspace health snapshot       |
+| Command                     | Alias | Description               |
+| --------------------------- | ----- | ------------------------- |
+| `new-workspace[:<name>]`    | `nw`  | Create workspace          |
+| `remove-workspace[:<name>]` | `rw`  | Remove workspace          |
+| `watch[:<name>]`            | —     | Watch for file changes    |
+| `status[:<name>]`           | —     | Workspace health snapshot |
 
 ### [FlowPlans](#flowplans)
 

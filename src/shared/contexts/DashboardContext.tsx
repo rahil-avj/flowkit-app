@@ -117,8 +117,8 @@ if (import.meta.hot && !import.meta.hot.data.DashboardContext) {
 }
 const DashboardContext =
   (import.meta.hot?.data.DashboardContext as
-    | ReturnType<typeof createContext<DashboardContextValue | null>>
-    | undefined) ?? createContext<DashboardContextValue | null>(null)
+    ReturnType<typeof createContext<DashboardContextValue | null>> | undefined) ??
+  createContext<DashboardContextValue | null>(null)
 
 export function DashboardProvider({
   children,

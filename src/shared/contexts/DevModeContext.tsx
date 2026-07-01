@@ -21,8 +21,8 @@ if (import.meta.hot && !import.meta.hot.data.DevModeContext) {
 }
 const DevModeContext =
   (import.meta.hot?.data.DevModeContext as
-    | ReturnType<typeof createContext<DevModeCtx | null>>
-    | undefined) ?? createContext<DevModeCtx | null>(null)
+    ReturnType<typeof createContext<DevModeCtx | null>> | undefined) ??
+  createContext<DevModeCtx | null>(null)
 
 export function DevModeProvider({ children }: { children: ReactNode }) {
   const [devMode, setDevMode] = useState(false)
