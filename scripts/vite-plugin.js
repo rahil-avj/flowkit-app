@@ -344,7 +344,16 @@ export function flowkit(options = {}) {
         },
         server: {
           fs: {
-            allow: [cwd, path.join(cwd, 'node_modules/flowkit/src')],
+            // cwd = the author project root (flat mode) or active workspace dir
+            // (repo mode) — the author/dev's own files.
+            // dirname(ENGINE_SRC) = wherever flowkit's own source physically
+            // lives: node_modules/flowkit (flat mode) or this repo's own root
+            // (repo mode, since ENGINE_SRC is computed from this plugin
+            // file's own location — see top of file). In repo mode this MUST
+            // resolve to the real repo root, not the workspace subdirectory,
+            // or Vite can't serve the root index.html once a workspace is
+            // active (server.fs.allow narrows away from it → 403).
+            allow: [cwd, path.dirname(ENGINE_SRC)],
           },
         },
       }
