@@ -1,0 +1,82 @@
+/* ── Kit CSS Entry Point ──────────────────────────────────────────────────────
+   Import order is the layering order:
+     1. Base tokens (fallback values, theme-agnostic scales)
+     2. Theme tokens (override base vars under [data-kit="..."])
+     3. Dark mode overrides (override theme vars under [data-mode="dark"])
+     4. Component structural styles (layout, spacing, states)
+     5. Utility classes (semantic surfaces, colors, typography)
+
+   Workspaces import this file first, then add their own overrides:
+     @import "@kit/index.css";
+     :root { --kit-brand: #1a1a2e; }   ← workspace-level override
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Layer 1 — Base */
+@import './tokens/base.css';
+
+/* Layer 2 — Themes */
+@import './tokens/themes/apple.css';
+@import './tokens/themes/material.css';
+@import './tokens/themes/neo-brutalism.css';
+
+/* Layer 3 — Dark mode */
+@import './tokens/dark.css';
+
+/* Layer 4 — Component styles */
+@import './styles/button.css';
+@import './styles/card.css';
+@import './styles/input.css';
+@import './styles/badge.css';
+@import './styles/avatar.css';
+@import './styles/modal.css';
+@import './styles/checkbox.css';
+@import './styles/switch.css';
+@import './styles/select.css';
+@import './styles/accordion.css';
+@import './styles/list-row.css';
+@import './styles/header.css';
+@import './styles/navigation.css';
+@import './styles/alert-dialog.css';
+
+/* Layer 5 — Utilities */
+@import './utilities.css';
+
+/* ── Shadcn/Tailwind bridge ──────────────────────────────────────────────────
+   Maps Shadcn's semantic Tailwind color names to --kit-* vars so Shadcn
+   components re-skin automatically when [data-kit] changes.
+
+   @theme inline means these override Tailwind's generated values at runtime
+   (they live in the same CSS file that [data-kit] vars apply to).
+   ─────────────────────────────────────────────────────────────────────────── */
+
+@theme inline {
+  --color-background: var(--kit-bg);
+  --color-foreground: var(--kit-text);
+
+  --color-card: var(--kit-bg-elevated);
+  --color-card-foreground: var(--kit-text);
+
+  --color-popover: var(--kit-bg-overlay);
+  --color-popover-foreground: var(--kit-text);
+
+  --color-primary: var(--kit-brand);
+  --color-primary-foreground: var(--kit-text-on-brand);
+
+  --color-secondary: var(--kit-bg-sunken);
+  --color-secondary-foreground: var(--kit-text);
+
+  --color-muted: var(--kit-bg-sunken);
+  --color-muted-foreground: var(--kit-text-muted);
+
+  --color-accent: var(--kit-bg-sunken);
+  --color-accent-foreground: var(--kit-text);
+
+  --color-destructive: var(--kit-color-critical);
+  --color-destructive-foreground: #ffffff;
+
+  --color-border: var(--kit-border);
+  --color-input: var(--kit-border);
+  --color-ring: var(--kit-brand);
+
+  --radius: var(--kit-radius-md);
+}

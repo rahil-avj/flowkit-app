@@ -1,0 +1,47 @@
+/* ── Checkbox ─────────────────────────────────────────────────────────────── */
+
+.kit-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--kit-space-2);
+  cursor: pointer;
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-sm);
+  color: var(--kit-text);
+  user-select: none;
+}
+
+.kit-checkbox__box {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--kit-radius-sm);
+  border: 2px solid var(--kit-border-strong);
+  background: var(--kit-bg-elevated);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.kit-checkbox--checked .kit-checkbox__box {
+  background: var(--kit-brand);
+  border-color: var(--kit-brand);
+}
+
+.kit-checkbox--indeterminate .kit-checkbox__box {
+  background: var(--kit-brand);
+  border-color: var(--kit-brand);
+}
+
+.kit-checkbox:hover .kit-checkbox__box {
+  border-color: var(--kit-brand);
+}
+
+.kit-checkbox--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}

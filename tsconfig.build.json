@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./dist/types",
+    "rootDir": "./src",
+    "paths": {
+      "@platform/types/index": ["./src/types/index.ts"],
+      "@platform/types/*": ["./src/types/*"],
+      "@platform/shared/contexts/*": ["./src/shared/contexts/*"],
+      "@platform/*": ["./src/*"]
+    },
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/core/config/defineConfig.ts",
+    "src/core/config/index.ts",
+    "src/types/index.ts",
+    "src/shared/contexts/FlowNavContext.tsx"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

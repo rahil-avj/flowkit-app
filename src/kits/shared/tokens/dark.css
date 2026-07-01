@@ -1,0 +1,86 @@
+/* ── Dark Mode Overrides ─────────────────────────────────────────────────────
+   Applied when [data-mode="dark"] is set on any ancestor — typically on the
+   canvas wrapper alongside data-kit. Works with all themes.
+
+   Usage:
+     <div data-kit="apple" data-mode="dark">...</div>
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── Apple dark ── */
+[data-kit='apple'][data-mode='dark'],
+[data-kit='apple'] [data-mode='dark'] {
+  --kit-bg: #000000;
+  --kit-bg-elevated: #1c1c1e;
+  --kit-bg-overlay: #2c2c2e;
+  --kit-bg-sunken: #0a0a0a;
+  --kit-scrim: rgba(0, 0, 0, 0.6);
+
+  --kit-text: #ffffff;
+  --kit-text-muted: #8e8e93;
+
+  --kit-brand: #0a84ff;
+  --kit-brand-hover: #409cff;
+  --kit-brand-active: #6ab0ff;
+
+  --kit-border: rgba(255, 255, 255, 0.15);
+  --kit-border-strong: rgba(255, 255, 255, 0.3);
+
+  --kit-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --kit-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --kit-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Material dark ── */
+[data-kit='material'][data-mode='dark'],
+[data-kit='material'] [data-mode='dark'] {
+  --kit-bg: #141218;
+  --kit-bg-elevated: #211f26;
+  --kit-bg-overlay: #2b2930;
+  --kit-bg-sunken: #0d0c11;
+  --kit-scrim: rgba(0, 0, 0, 0.55);
+
+  --kit-text: #e6e1e5;
+  --kit-text-muted: #938f99;
+
+  --kit-brand: #d0bcff;
+  --kit-brand-hover: #e8def8;
+  --kit-brand-active: #b69df8;
+
+  --kit-border: rgba(255, 255, 255, 0.12);
+  --kit-border-strong: #938f99;
+
+  --kit-shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.5);
+  --kit-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.55);
+  --kit-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Neo-brutalism dark ── */
+[data-kit='neo-brutalism'][data-mode='dark'],
+[data-kit='neo-brutalism'] [data-mode='dark'] {
+  --kit-bg: #000000;
+  --kit-bg-elevated: #111111;
+  --kit-bg-overlay: #1a1a1a;
+  --kit-bg-sunken: #0a0a0a;
+  --kit-scrim: rgba(0, 0, 0, 0.7);
+
+  --kit-text: #ffffff;
+  --kit-text-muted: #aaaaaa;
+  --kit-text-on-brand: #000000;
+
+  --kit-brand: #ffff00;
+  --kit-brand-hover: #ffff55;
+  --kit-brand-active: #cccc00;
+
+  --kit-border: #ffffff;
+  --kit-border-strong: #ffffff;
+
+  --kit-shadow-sm: 2px 2px 0 #ffffff;
+  --kit-shadow-md: 3px 3px 0 #ffffff;
+  --kit-shadow-lg: 5px 5px 0 #ffffff;
+}
+
+[data-kit='neo-brutalism'][data-mode='dark'] .kit-button,
+[data-kit='neo-brutalism'] [data-mode='dark'] .kit-button {
+  border-color: #ffffff;
+  box-shadow: var(--kit-shadow-md);
+}

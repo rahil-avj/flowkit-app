@@ -1,0 +1,70 @@
+/* ── Select ───────────────────────────────────────────────────────────────── */
+
+.kit-select {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.kit-select__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--kit-space-2);
+  width: 100%;
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-base);
+  color: var(--kit-text);
+  background: var(--kit-bg-elevated);
+  border: 1px solid var(--kit-border);
+  border-radius: var(--kit-radius-md);
+  padding: var(--kit-space-2) var(--kit-space-3);
+  cursor: pointer;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+  text-align: left;
+}
+
+.kit-select__trigger:focus,
+.kit-select--open .kit-select__trigger {
+  border-color: var(--kit-brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--kit-brand) 20%, transparent);
+}
+
+.kit-select__content {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: var(--kit-bg-overlay);
+  border: 1px solid var(--kit-border);
+  border-radius: var(--kit-radius-md);
+  box-shadow: var(--kit-shadow-md);
+  padding: var(--kit-space-1) 0;
+  overflow-y: auto;
+  max-height: 240px;
+}
+
+.kit-select__item {
+  display: flex;
+  align-items: center;
+  gap: var(--kit-space-2);
+  padding: var(--kit-space-2) var(--kit-space-3);
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-sm);
+  color: var(--kit-text);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.kit-select__item:hover {
+  background: var(--kit-bg-sunken);
+}
+
+.kit-select__item--selected {
+  color: var(--kit-brand);
+  font-weight: 500;
+}

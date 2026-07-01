@@ -1,0 +1,76 @@
+/* ── Button ───────────────────────────────────────────────────────────────── */
+
+.kit-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--kit-space-2);
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-sm);
+  font-weight: 500;
+  border-radius: var(--kit-radius-md);
+  padding: var(--kit-space-2) var(--kit-space-4);
+  background: var(--kit-brand);
+  color: var(--kit-text-on-brand);
+  border: 1px solid transparent;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s,
+    transform 0.1s;
+  white-space: nowrap;
+}
+
+.kit-button:hover {
+  background: var(--kit-brand-hover);
+}
+.kit-button:active {
+  background: var(--kit-brand-active);
+}
+.kit-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Variants */
+.kit-button--secondary {
+  background: var(--kit-bg-elevated);
+  color: var(--kit-text);
+  border-color: var(--kit-border);
+}
+.kit-button--secondary:hover {
+  background: var(--kit-bg-sunken);
+}
+.kit-button--secondary:active {
+  background: var(--kit-bg-sunken);
+}
+
+.kit-button--ghost {
+  background: transparent;
+  color: var(--kit-brand);
+  border-color: transparent;
+}
+.kit-button--ghost:hover {
+  background: var(--kit-bg-sunken);
+}
+
+.kit-button--destructive {
+  background: var(--kit-color-critical);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Sizes */
+.kit-button--sm {
+  font-size: var(--kit-text-xs);
+  padding: var(--kit-space-1) var(--kit-space-3);
+  border-radius: var(--kit-radius-sm);
+}
+
+.kit-button--lg {
+  font-size: var(--kit-text-base);
+  padding: var(--kit-space-3) var(--kit-space-6);
+  border-radius: var(--kit-radius-lg);
+}

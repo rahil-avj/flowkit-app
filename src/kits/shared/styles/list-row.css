@@ -1,0 +1,70 @@
+/* ── List Row ─────────────────────────────────────────────────────────────── */
+
+.kit-list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--kit-space-3);
+  padding: var(--kit-space-3) var(--kit-space-4);
+  background: var(--kit-bg-elevated);
+  border-bottom: 1px solid var(--kit-border);
+  cursor: pointer;
+  transition: background 0.1s;
+  text-decoration: none;
+  color: inherit;
+}
+
+.kit-list-row:hover {
+  background: var(--kit-bg-sunken);
+}
+
+.kit-list-row:active {
+  background: color-mix(in srgb, var(--kit-brand) 8%, var(--kit-bg-elevated));
+}
+
+.kit-list-row:last-child {
+  border-bottom: none;
+}
+
+.kit-list-row__lead {
+  flex-shrink: 0;
+}
+
+.kit-list-row__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kit-list-row__title {
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-sm);
+  font-weight: 500;
+  color: var(--kit-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kit-list-row__subtitle {
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-xs);
+  color: var(--kit-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kit-list-row__trail {
+  flex-shrink: 0;
+  color: var(--kit-text-muted);
+}
+
+/* List container */
+.kit-list {
+  border: 1px solid var(--kit-border);
+  border-radius: var(--kit-radius-lg);
+  overflow: hidden;
+  background: var(--kit-bg-elevated);
+}

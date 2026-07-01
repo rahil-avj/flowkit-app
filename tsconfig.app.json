@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": false,
+    "resolveJsonModule": true,
+    "types": ["vite/client"],
+    "paths": {
+      "@platform/*": ["./src/*"],
+      "@workspace/*": ["./src/workspace-stub/*"],
+      "@core": ["./src/core/index.ts"],
+      "@core/*": ["./src/core/*"],
+      "@features": ["./src/features/index.ts"],
+      "@features/*": ["./src/features/*"],
+      "@shared": ["./src/shared/index.ts"],
+      "@shared/*": ["./src/shared/*"],
+      "@flowlens": ["./src/modes/flowlens/index.ts"],
+      "@flowlens/*": ["./src/modes/flowlens/*"],
+      "@kit/*": ["./src/kits/shared/*"],
+      "flowkit": ["./src/core/config/index.ts"]
+    }
+  },
+  "include": ["src", "workspaces"]
+}

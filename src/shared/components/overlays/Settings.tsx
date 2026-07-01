@@ -1,0 +1,478 @@
+import { useFeedback } from '@platform/features/feedback'
+import { useSessionSettings } from '@platform/features/flowTracer'
+import { LS_LEFT_PANEL_W, LS_RIGHT_PANEL_W } from '@platform/shared/constants/storageKeys'
+import type { ColorBlindMode } from '@platform/types/index'
+import { LayoutPanelLeft, MessageSquare, Monitor, SlidersHorizontal, Video, X } from 'lucide-react'
+import { useCallback, useState } from 'react'
+
+import { useSimulator } from '../../contexts/DashboardContext'
+import { useTheme } from '../../contexts/ThemeContext'
+import Input from '../ui/Input'
+import Select from '../ui/Select'
+import Toggle from '../ui/Toggle'
+import type { ActionCtx } from './appActions'
+import OverlayShell from './OverlayShell'
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+type SectionId = 'interface' | 'panel' | 'feedback' | 'sessions'
+
+interface Section {
+  id: SectionId
+  label: string
+  icon: React.ReactNode
+}
+
+// ── Shared primitives ──────────────────────────────────────────────────────────
+
+interface RowProps {
+  label: string
+  hint?: string
+  children: React.ReactNode
+}
+
+function SettingRow({ label, hint, children }: RowProps) {
+  return (
+    <div className="flex items-center justify-between gap-6 py-[10px] border-b border-theme-border">
+      <div className="flex-1 min-w-0">
+        <div className="text-ui-sm text-theme-text-primary font-medium">{label}</div>
+        {hint && (
+          <div className="text-ui-xs text-theme-text-muted mt-[2px] leading-normal">{hint}</div>
+        )}
+      </div>
+      <div className="shrink-0">{children}</div>
+    </div>
+  )
+}
+
+interface GroupProps {
+  title: string
+  children: React.ReactNode
+}
+
+function SettingGroup({ title, children }: GroupProps) {
+  return (
+    <div className="mb-7">
+      <div className="text-ui-2xs font-extrabold tracking-[0.09em] uppercase text-theme-text-disabled mb-1 pb-[6px]">
+        {title}
+      </div>
+      <div>{children}</div>
+    </div>
+  )
+}
+
+interface SectionHeaderProps {
+  icon: React.ReactNode
+  title: string
+  description: string
+}
+
+function SectionHeader({ icon, title, description }: SectionHeaderProps) {
+  return (
+    <div className="flex items-start gap-3 mb-6 pb-5 border-b border-theme-border">
+      <div className="rounded-lg shrink-0 flex items-center justify-center bg-theme-elevated border border-theme-border text-theme-text-secondary size-8">
+        {icon}
+      </div>
+      <div>
+        <div className="text-ui-base font-bold text-theme-text-primary">{title}</div>
+        <div className="text-ui-xs text-theme-text-muted mt-[2px] leading-normal">
+          {description}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Section panels ─────────────────────────────────────────────────────────────
+
+interface InterfaceSectionProps {
+  ctx: ActionCtx
+}
+
+function InterfaceSection({ ctx }: InterfaceSectionProps) {
+  const { mode, setMode } = useTheme()
+  const { colorBlindMode, setColorBlindMode, blurryVision, setBlurryVision } = useSimulator()
+
+  return (
+    <div>
+      <SectionHeader
+        icon={<Monitor size={15} />}
+        title="Interface"
+        description="Visual appearance and accessibility settings."
+      />
+
+      <SettingGroup title="Appearance">
+        <SettingRow label="Theme" hint="Switches between dark and light mode globally.">
+          <Select
+            value={mode}
+            onChange={e => setMode(e.target.value as 'dark' | 'light')}
+            style={{ width: 120 }}
+          >
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </Select>
+        </SettingRow>
+        <SettingRow label="Auto-hide scrollbars" hint="Hides canvas scrollbars when not in use.">
+          <Toggle
+            size="sm"
+            checked={ctx.autoHideScrollbars}
+            onChange={ctx.toggleAutoHideScrollbars}
+          />
+        </SettingRow>
+      </SettingGroup>
+
+      <SettingGroup title="Accessibility">
+        <SettingRow
+          label="Color blind simulation"
+          hint="Applies a color filter over the canvas preview."
+        >
+          <Select
+            value={colorBlindMode}
+            onChange={e => setColorBlindMode(e.target.value as ColorBlindMode)}
+            style={{ width: 164 }}
+          >
+            <option value="none">None</option>
+            <option value="deuteranopia">Deuteranopia</option>
+            <option value="protanopia">Protanopia</option>
+            <option value="tritanopia">Tritanopia</option>
+            <option value="deuteranomaly">Deuteranomaly</option>
+            <option value="protanomaly">Protanomaly</option>
+            <option value="tritanomaly">Tritanomaly</option>
+            <option value="achromatopsia">Achromatopsia</option>
+          </Select>
+        </SettingRow>
+        <SettingRow
+          label="Blurry vision simulation"
+          hint="Blurs the canvas to simulate low visual acuity (0 = off)."
+        >
+          <Select
+            value={String(blurryVision)}
+            onChange={e => setBlurryVision(Number(e.target.value))}
+            style={{ width: 120 }}
+          >
+            <option value="0">Off</option>
+            <option value="1">Mild</option>
+            <option value="2">Moderate</option>
+            <option value="3">Severe</option>
+          </Select>
+        </SettingRow>
+      </SettingGroup>
+    </div>
+  )
+}
+
+function PanelSection() {
+  // Panel widths are drag-set by the user and persisted in canvasReducer.
+  // Here we show the current saved values as read-only info with a note.
+  const leftW = parseInt(localStorage.getItem(LS_LEFT_PANEL_W) ?? '260', 10)
+  const rightW = parseInt(localStorage.getItem(LS_RIGHT_PANEL_W) ?? '380', 10)
+
+  return (
+    <div>
+      <SectionHeader
+        icon={<LayoutPanelLeft size={15} />}
+        title="Panel"
+        description="Control panel layout and behaviour."
+      />
+
+      <SettingGroup title="Panel widths">
+        <SettingRow
+          label="Left panel width"
+          hint="Set by dragging the panel edge. Saved automatically."
+        >
+          <span className="text-ui-sm text-theme-text-muted [font-variant-numeric:tabular-nums]">
+            {leftW}px
+          </span>
+        </SettingRow>
+        <SettingRow
+          label="Right panel width"
+          hint="Set by dragging the panel edge. Saved automatically."
+        >
+          <span className="text-ui-sm text-theme-text-muted [font-variant-numeric:tabular-nums]">
+            {rightW}px
+          </span>
+        </SettingRow>
+        <SettingRow
+          label="Reset panel widths"
+          hint="Restore both panels to their default widths on next reload."
+        >
+          <button
+            onClick={() => {
+              localStorage.removeItem(LS_LEFT_PANEL_W)
+              localStorage.removeItem(LS_RIGHT_PANEL_W)
+            }}
+            className="text-ui-xs font-semibold py-1 px-[10px] rounded-[6px] border border-theme-border bg-theme-elevated text-theme-text-secondary cursor-pointer"
+          >
+            Reset
+          </button>
+        </SettingRow>
+      </SettingGroup>
+    </div>
+  )
+}
+
+function FeedbackSection({ ctx }: { ctx: ActionCtx }) {
+  const { lastReviewerName, setLastReviewerName } = useFeedback()
+  const [name, setName] = useState(lastReviewerName)
+
+  const commitName = useCallback(() => {
+    setLastReviewerName(name.trim())
+  }, [name, setLastReviewerName])
+
+  return (
+    <div>
+      <SectionHeader
+        icon={<MessageSquare size={15} />}
+        title="Feedback"
+        description="Comment identity and cloud sync preferences."
+      />
+
+      <SettingGroup title="Identity">
+        <SettingRow label="Your name" hint="Pre-fills the reviewer name when exporting feedback.">
+          <Input
+            value={name}
+            onChange={e => setName(e.target.value)}
+            onBlur={commitName}
+            onKeyDown={e => {
+              if (e.key === 'Enter') commitName()
+            }}
+            placeholder="Your name"
+            style={{ width: 180 }}
+          />
+        </SettingRow>
+      </SettingGroup>
+
+      <SettingGroup title="Cloud sync">
+        <SettingRow
+          label="Cloud push"
+          hint="Automatically syncs new comments to the configured cloud endpoint."
+        >
+          <Toggle size="sm" checked={ctx.cloudExportEnabled} onChange={ctx.toggleCloudExport} />
+        </SettingRow>
+      </SettingGroup>
+    </div>
+  )
+}
+
+function SessionsSection({ ctx }: { ctx: ActionCtx }) {
+  const { settings, saveSettings } = useSessionSettings()
+
+  function set<K extends keyof typeof settings>(key: K, value: (typeof settings)[K]) {
+    saveSettings({ ...settings, [key]: value })
+  }
+
+  return (
+    <div>
+      <SectionHeader
+        icon={<Video size={15} />}
+        title="Session Recording"
+        description="Control how sessions are captured and what data is collected."
+      />
+
+      <SettingGroup title="Recording">
+        <SettingRow
+          label="Enable session recording"
+          hint="Shows the Sessions tab and recording controls in the panel."
+        >
+          <Toggle
+            size="sm"
+            checked={ctx.showSessionsFeature}
+            onChange={ctx.toggleSessionsFeature}
+          />
+        </SettingRow>
+        <SettingRow
+          label="Auto-record on flow play"
+          hint="Starts a session automatically when a flow is played."
+        >
+          <Toggle size="sm" checked={ctx.autoRecordOnPlay} onChange={ctx.toggleAutoRecordOnPlay} />
+        </SettingRow>
+        <SettingRow
+          label="Session name template"
+          hint="Use {date} as a placeholder for the current date/time."
+        >
+          <Input
+            value={settings.nameTemplate}
+            onChange={e => set('nameTemplate', e.target.value)}
+            placeholder="Session · {date}"
+            style={{ width: 200 }}
+          />
+        </SettingRow>
+        <SettingRow
+          label="Quality threshold"
+          hint="Minimum score (0–100) for a session to be kept."
+        >
+          <Select
+            value={String(settings.qualityThreshold)}
+            onChange={e => set('qualityThreshold', Number(e.target.value))}
+            style={{ width: 130 }}
+          >
+            <option value="0">Off (keep all)</option>
+            <option value="20">Low (20)</option>
+            <option value="40">Medium (40)</option>
+            <option value="60">High (60)</option>
+            <option value="80">Strict (80)</option>
+          </Select>
+        </SettingRow>
+      </SettingGroup>
+
+      <SettingGroup title="Data channels">
+        <SettingRow
+          label="Cursor tracking"
+          hint="Records cursor position samples throughout the session."
+        >
+          <Toggle
+            size="sm"
+            checked={settings.cursorTracking}
+            onChange={() => set('cursorTracking', !settings.cursorTracking)}
+          />
+        </SettingRow>
+        <SettingRow
+          label="Cursor sampling rate"
+          hint="How often cursor position is sampled (ms). Lower = denser data."
+        >
+          <Select
+            value={String(settings.cursorSamplingRateMs)}
+            onChange={e => set('cursorSamplingRateMs', Number(e.target.value))}
+            style={{ width: 130 }}
+          >
+            <option value="16">16 ms (~60/s)</option>
+            <option value="50">50 ms (~20/s)</option>
+            <option value="100">100 ms (~10/s)</option>
+            <option value="250">250 ms (~4/s)</option>
+          </Select>
+        </SettingRow>
+        <SettingRow label="Interaction effects" hint="Logs tap/click effects and transitions.">
+          <Toggle
+            size="sm"
+            checked={settings.effects}
+            onChange={() => set('effects', !settings.effects)}
+          />
+        </SettingRow>
+        <SettingRow label="State changes" hint="Records db state mutations as session events.">
+          <Toggle
+            size="sm"
+            checked={settings.stateChanges}
+            onChange={() => set('stateChanges', !settings.stateChanges)}
+          />
+        </SettingRow>
+        <SettingRow
+          label="Simulator changes"
+          hint="Logs device, orientation, and accessibility changes."
+        >
+          <Toggle
+            size="sm"
+            checked={settings.simulatorChanges}
+            onChange={() => set('simulatorChanges', !settings.simulatorChanges)}
+          />
+        </SettingRow>
+        <SettingRow
+          label="Hover events"
+          hint="Logs hover interactions. Increases session size noticeably."
+        >
+          <Toggle
+            size="sm"
+            checked={settings.hoverEvents}
+            onChange={() => set('hoverEvents', !settings.hoverEvents)}
+          />
+        </SettingRow>
+        <SettingRow
+          label="Frustrated clicks"
+          hint="Detects rapid repeated clicks on the same target."
+        >
+          <Toggle
+            size="sm"
+            checked={settings.frustratedClicks}
+            onChange={() => set('frustratedClicks', !settings.frustratedClicks)}
+          />
+        </SettingRow>
+      </SettingGroup>
+    </div>
+  )
+}
+
+// ── Sidebar nav ────────────────────────────────────────────────────────────────
+
+const SECTIONS: Section[] = [
+  { id: 'interface', label: 'Interface', icon: <SlidersHorizontal size={14} /> },
+  { id: 'panel', label: 'Panel', icon: <LayoutPanelLeft size={14} /> },
+  { id: 'feedback', label: 'Feedback', icon: <MessageSquare size={14} /> },
+  { id: 'sessions', label: 'Sessions', icon: <Video size={14} /> },
+]
+
+function SidebarNav({
+  active,
+  onSelect,
+}: {
+  active: SectionId
+  onSelect: (id: SectionId) => void
+}) {
+  return (
+    <nav className="w-[168px] shrink-0 flex flex-col border-r border-theme-border p-[8px_6px] bg-theme-elevated">
+      <div className="p-[8px_6px_12px] mb-1">
+        <span className="text-ui-2xs font-extrabold tracking-[0.09em] uppercase text-theme-text-disabled">
+          Settings
+        </span>
+      </div>
+      {SECTIONS.map(s => {
+        const isActive = s.id === active
+        return (
+          <button
+            key={s.id}
+            onClick={() => onSelect(s.id)}
+            className={`flex items-center gap-[9px] py-[7px] px-[10px] rounded-[7px] border-none cursor-pointer text-ui-sm text-left w-full transition-[background,color] duration-[0.12s] outline-none ${isActive ? 'bg-theme-hover text-theme-text-primary font-semibold' : 'bg-transparent text-theme-text-secondary font-normal'}`}
+          >
+            <span
+              className="flex shrink-0"
+              style={{
+                color: isActive ? 'var(--color-theme-blue)' : 'var(--color-theme-text-muted)',
+              }}
+            >
+              {s.icon}
+            </span>
+            {s.label}
+          </button>
+        )
+      })}
+    </nav>
+  )
+}
+
+// ── Root ───────────────────────────────────────────────────────────────────────
+
+interface Props {
+  onClose: () => void
+  ctx: ActionCtx
+  initialSection?: SectionId
+}
+
+export default function Settings({ onClose, ctx, initialSection = 'interface' }: Props) {
+  const [active, setActive] = useState<SectionId>(initialSection)
+
+  const panel = {
+    interface: <InterfaceSection ctx={ctx} />,
+    panel: <PanelSection />,
+    feedback: <FeedbackSection ctx={ctx} />,
+    sessions: <SessionsSection ctx={ctx} />,
+  }[active]
+
+  return (
+    <OverlayShell onClose={onClose} width={720} height={540}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-theme-border bg-theme-elevated shrink-0">
+        <span className="text-ui-sm font-bold text-theme-text-primary">Settings</span>
+        <button
+          onClick={onClose}
+          className="flex items-center justify-center rounded-[6px] border-none bg-transparent cursor-pointer text-theme-text-muted size-[26px]"
+        >
+          <X size={14} />
+        </button>
+      </div>
+
+      {/* Sidebar + Body */}
+      <div className="flex flex-1 overflow-hidden min-h-0">
+        <SidebarNav active={active} onSelect={setActive} />
+        <div className="flex-1 overflow-y-auto p-[24px_28px]">{panel}</div>
+      </div>
+    </OverlayShell>
+  )
+}

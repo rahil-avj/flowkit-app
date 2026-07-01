@@ -1,0 +1,93 @@
+/* ── Neo-Brutalism Theme ─────────────────────────────────────────────────────
+   Sharp edges, high contrast, bold borders, hard offset shadows.
+   No border radius, no subtle gradients — everything is intentional and raw.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+[data-kit='neo-brutalism'] {
+  /* Surfaces */
+  --kit-bg: #ffffff;
+  --kit-bg-elevated: #ffffff;
+  --kit-bg-overlay: #ffffff;
+  --kit-bg-sunken: #f0f0f0;
+  --kit-scrim: rgba(0, 0, 0, 0.55);
+
+  /* Text */
+  --kit-text: #000000;
+  --kit-text-muted: #444444;
+  --kit-text-on-brand: #ffffff;
+
+  /* Brand — bold yellow-black pair for maximum contrast */
+  --kit-brand: #000000;
+  --kit-brand-hover: #222222;
+  --kit-brand-active: #444444;
+
+  /* Borders — thick and black */
+  --kit-border: #000000;
+  --kit-border-strong: #000000;
+
+  /* Radius — sharp everything */
+  --kit-radius-sm: 0px;
+  --kit-radius-md: 0px;
+  --kit-radius-lg: 0px;
+  --kit-radius-xl: 0px;
+  --kit-radius-full: 9999px;
+
+  /* Shadows — hard offset, no blur */
+  --kit-shadow-sm: 2px 2px 0 #000000;
+  --kit-shadow-md: 3px 3px 0 #000000;
+  --kit-shadow-lg: 5px 5px 0 #000000;
+
+  /* Typography — Inter, slightly tighter */
+  --kit-font: 'Inter', system-ui, -apple-system, sans-serif;
+  --kit-font-mono: 'Fira Code', 'Courier New', monospace;
+
+  /* Semantic */
+  --kit-color-critical: #e53e3e;
+  --kit-color-warning: #dd6b20;
+  --kit-color-success: #276749;
+  --kit-color-info: #2b6cb0;
+}
+
+/* Neo-brutalism component overrides — the kit-* escape hatch */
+[data-kit='neo-brutalism'] .kit-button {
+  border: 2px solid #000000;
+  box-shadow: var(--kit-shadow-md);
+  border-radius: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+[data-kit='neo-brutalism'] .kit-button:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #000000;
+}
+
+[data-kit='neo-brutalism'] .kit-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #000000;
+}
+
+[data-kit='neo-brutalism'] .kit-card,
+[data-kit='neo-brutalism'] .card {
+  border: 2px solid #000000;
+  box-shadow: var(--kit-shadow-md);
+  border-radius: 0;
+}
+
+[data-kit='neo-brutalism'] .kit-input {
+  border: 2px solid #000000;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-kit='neo-brutalism'] .kit-input:focus {
+  box-shadow: 3px 3px 0 #000000;
+  outline: none;
+}
+
+[data-kit='neo-brutalism'] .overlay {
+  border: 2px solid #000000;
+  box-shadow: var(--kit-shadow-lg);
+  border-radius: 0;
+}

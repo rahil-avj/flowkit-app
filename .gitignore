@@ -1,0 +1,25 @@
+node_modules
+dist
+handoff/
+.DS_Store
+.agents
+.claude
+.vite
+*.tsbuildinfo
+.env.local
+.env.*.local
+handoff
+dist-standalone/
+*.zip
+*-handoff-*/
+scripts/.flowkit-state.json
+
+# FlowLens generated reports (per-workspace, gitignored)
+workspaces/*/lib/flowLens/reports/
+
+# Temporary CLI artifacts
+.flowkit-backup.json
+flowkit-dump-*/
+flowlens-report-*.json
+sessions-brief-*.md
+test

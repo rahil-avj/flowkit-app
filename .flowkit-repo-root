@@ -1,0 +1,4 @@
+This file marks the real flowkit monorepo checkout. scripts/lib/paths.js's
+isRepoMode() checks for its existence relative to ROOT — it is deliberately
+excluded from package.json's "files" allowlist, so it never ships to an
+npm/git-dep install. Do not delete it; do not add it to "files".

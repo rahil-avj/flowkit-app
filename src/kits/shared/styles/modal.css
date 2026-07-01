@@ -1,0 +1,59 @@
+/* ── Modal ────────────────────────────────────────────────────────────────── */
+
+.kit-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--kit-scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  padding: var(--kit-space-4);
+}
+
+.kit-modal {
+  background: var(--kit-bg-overlay);
+  border: 1px solid var(--kit-border);
+  border-radius: var(--kit-radius-lg);
+  box-shadow: var(--kit-shadow-lg);
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - var(--kit-space-8));
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.kit-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--kit-space-5) var(--kit-space-5) var(--kit-space-4);
+  border-bottom: 1px solid var(--kit-border);
+  flex-shrink: 0;
+}
+
+.kit-modal__title {
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-base);
+  font-weight: 600;
+  color: var(--kit-text);
+}
+
+.kit-modal__body {
+  padding: var(--kit-space-5);
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-sm);
+  color: var(--kit-text-muted);
+  flex: 1;
+}
+
+.kit-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--kit-space-2);
+  padding: var(--kit-space-4) var(--kit-space-5);
+  border-top: 1px solid var(--kit-border);
+  flex-shrink: 0;
+}

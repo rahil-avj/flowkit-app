@@ -1,0 +1,64 @@
+/* ── Input ────────────────────────────────────────────────────────────────── */
+
+.kit-input {
+  display: block;
+  width: 100%;
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-base);
+  color: var(--kit-text);
+  background: var(--kit-bg-elevated);
+  border: 1px solid var(--kit-border);
+  border-radius: var(--kit-radius-md);
+  padding: var(--kit-space-2) var(--kit-space-3);
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.kit-input::placeholder {
+  color: var(--kit-text-muted);
+}
+
+.kit-input:focus {
+  border-color: var(--kit-brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--kit-brand) 20%, transparent);
+}
+
+.kit-input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.kit-input--error {
+  border-color: var(--kit-color-critical);
+}
+.kit-input--error:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--kit-color-critical) 20%, transparent);
+}
+
+/* Wrapper for label + input + hint */
+.kit-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--kit-space-1);
+}
+
+.kit-input-group__label {
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-sm);
+  font-weight: 500;
+  color: var(--kit-text);
+}
+
+.kit-input-group__hint {
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-xs);
+  color: var(--kit-text-muted);
+}
+
+.kit-input-group__error {
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-xs);
+  color: var(--kit-color-critical);
+}

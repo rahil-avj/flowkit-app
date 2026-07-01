@@ -1,0 +1,217 @@
+/* Mobile Wireframe — standalone kit
+   Self-contained cascade. Does not import @kit/index.css.
+   Scope: [data-kit="mobile-wireframe"] */
+
+@import 'tailwindcss';
+
+/* ── Tokens ───────────────────────────────────────────────────────────────── */
+
+[data-kit='mobile-wireframe'] {
+  /* Palette — strict grayscale */
+  --wf-bg: #ffffff;
+  --wf-bg-elevated: #f5f5f5;
+  --wf-bg-sunken: #ececec;
+  --wf-border: #c0c0c0;
+  --wf-border-strong: #888888;
+  --wf-text: #1a1a1a;
+  --wf-text-muted: #767676;
+  --wf-text-placeholder: #aaaaaa;
+  --wf-fill: #d0d0d0;
+  --wf-fill-dark: #a0a0a0;
+
+  /* Typography */
+  --wf-font: ui-monospace, 'SF Mono', 'Courier New', monospace;
+  --wf-text-xs: 11px;
+  --wf-text-sm: 13px;
+  --wf-text-md: 15px;
+  --wf-text-lg: 18px;
+  --wf-text-xl: 22px;
+
+  /* Spacing */
+  --wf-space-1: 4px;
+  --wf-space-2: 8px;
+  --wf-space-3: 12px;
+  --wf-space-4: 16px;
+  --wf-space-5: 20px;
+  --wf-space-6: 24px;
+
+  /* Shape — sharp, sketch-like */
+  --wf-radius-sm: 2px;
+  --wf-radius-md: 4px;
+  --wf-radius-lg: 6px;
+  --wf-radius-full: 9999px;
+
+  /* Shadows — flat / none */
+  --wf-shadow: none;
+  --wf-shadow-card: 0 0 0 1px var(--wf-border);
+
+  background: var(--wf-bg);
+  color: var(--wf-text);
+  font-family: var(--wf-font);
+  font-size: var(--wf-text-sm);
+}
+
+/* ── Layout primitives ────────────────────────────────────────────────────── */
+
+[data-kit='mobile-wireframe'] .wf-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--wf-bg);
+}
+
+[data-kit='mobile-wireframe'] .wf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--wf-space-3) var(--wf-space-4);
+  border-bottom: 1px solid var(--wf-border);
+  background: var(--wf-bg);
+  font-size: var(--wf-text-md);
+  font-weight: 600;
+  min-height: 48px;
+}
+
+[data-kit='mobile-wireframe'] .wf-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--wf-space-4);
+}
+
+[data-kit='mobile-wireframe'] .wf-footer {
+  border-top: 1px solid var(--wf-border);
+  padding: var(--wf-space-3) var(--wf-space-4);
+  background: var(--wf-bg);
+}
+
+/* ── Component placeholders ───────────────────────────────────────────────── */
+
+[data-kit='mobile-wireframe'] .wf-card {
+  background: var(--wf-bg-elevated);
+  border: 1px solid var(--wf-border);
+  border-radius: var(--wf-radius-md);
+  padding: var(--wf-space-4);
+  margin-bottom: var(--wf-space-3);
+}
+
+[data-kit='mobile-wireframe'] .wf-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--wf-space-2) var(--wf-space-4);
+  background: var(--wf-fill);
+  color: var(--wf-text);
+  border: 1.5px solid var(--wf-border-strong);
+  border-radius: var(--wf-radius-md);
+  font-family: var(--wf-font);
+  font-size: var(--wf-text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+
+[data-kit='mobile-wireframe'] .wf-button:hover {
+  background: var(--wf-fill-dark);
+}
+
+[data-kit='mobile-wireframe'] .wf-button-primary {
+  background: var(--wf-text);
+  color: var(--wf-bg);
+  border-color: var(--wf-text);
+}
+
+[data-kit='mobile-wireframe'] .wf-button-primary:hover {
+  background: var(--wf-text-muted);
+  border-color: var(--wf-text-muted);
+}
+
+[data-kit='mobile-wireframe'] .wf-input {
+  display: block;
+  width: 100%;
+  padding: var(--wf-space-2) var(--wf-space-3);
+  background: var(--wf-bg);
+  color: var(--wf-text);
+  border: 1.5px dashed var(--wf-border-strong);
+  border-radius: var(--wf-radius-sm);
+  font-family: var(--wf-font);
+  font-size: var(--wf-text-sm);
+}
+
+[data-kit='mobile-wireframe'] .wf-input::placeholder {
+  color: var(--wf-text-placeholder);
+}
+
+[data-kit='mobile-wireframe'] .wf-label {
+  display: block;
+  font-size: var(--wf-text-xs);
+  color: var(--wf-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: var(--wf-space-1);
+}
+
+[data-kit='mobile-wireframe'] .wf-divider {
+  border: none;
+  border-top: 1px solid var(--wf-border);
+  margin: var(--wf-space-3) 0;
+}
+
+[data-kit='mobile-wireframe'] .wf-tab-bar {
+  display: flex;
+  border-top: 1px solid var(--wf-border);
+  background: var(--wf-bg);
+}
+
+[data-kit='mobile-wireframe'] .wf-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--wf-space-2);
+  gap: var(--wf-space-1);
+  font-size: var(--wf-text-xs);
+  color: var(--wf-text-muted);
+  cursor: pointer;
+}
+
+[data-kit='mobile-wireframe'] .wf-tab.active {
+  color: var(--wf-text);
+}
+
+/* ── Annotation / redline helpers ─────────────────────────────────────────── */
+
+[data-kit='mobile-wireframe'] .wf-placeholder {
+  background: var(--wf-bg-sunken);
+  border: 1.5px dashed var(--wf-border-strong);
+  border-radius: var(--wf-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--wf-text-placeholder);
+  font-size: var(--wf-text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+[data-kit='mobile-wireframe'] .wf-annotation {
+  font-size: var(--wf-text-xs);
+  color: var(--wf-text-muted);
+  font-style: italic;
+  padding: var(--wf-space-1) 0;
+}
+
+/* ── Dark mode ────────────────────────────────────────────────────────────── */
+
+[data-kit='mobile-wireframe'][data-mode='dark'] {
+  --wf-bg: #1a1a1a;
+  --wf-bg-elevated: #242424;
+  --wf-bg-sunken: #111111;
+  --wf-border: #3a3a3a;
+  --wf-border-strong: #606060;
+  --wf-text: #e8e8e8;
+  --wf-text-muted: #888888;
+  --wf-text-placeholder: #555555;
+  --wf-fill: #333333;
+  --wf-fill-dark: #444444;
+}

@@ -1,0 +1,82 @@
+/* ── Header / Navigation Bar ─────────────────────────────────────────────── */
+
+.kit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--kit-space-4);
+  height: 56px;
+  background: var(--kit-bg-elevated);
+  border-bottom: 1px solid var(--kit-border);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.kit-header__start {
+  display: flex;
+  align-items: center;
+  gap: var(--kit-space-2);
+  flex: 1;
+}
+
+.kit-header__center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-base);
+  font-weight: 600;
+  color: var(--kit-text);
+  white-space: nowrap;
+}
+
+.kit-header__end {
+  display: flex;
+  align-items: center;
+  gap: var(--kit-space-2);
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.kit-header__back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--kit-space-1);
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-sm);
+  color: var(--kit-brand);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Bottom tab bar */
+.kit-tab-bar {
+  display: flex;
+  align-items: stretch;
+  background: var(--kit-bg-elevated);
+  border-top: 1px solid var(--kit-border);
+  height: 56px;
+  flex-shrink: 0;
+}
+
+.kit-tab-bar__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-xs);
+  color: var(--kit-text-muted);
+  cursor: pointer;
+  transition: color 0.15s;
+  border: none;
+  background: none;
+}
+
+.kit-tab-bar__item--active {
+  color: var(--kit-brand);
+}

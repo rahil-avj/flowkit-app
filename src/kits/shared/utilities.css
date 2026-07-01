@@ -1,0 +1,292 @@
+/* ── Kit Utility Classes ─────────────────────────────────────────────────────
+   Semantic utilities that consume --kit-* vars. Workspace custom components
+   use these so they automatically re-skin when the active theme changes.
+
+   Mental model:
+     Layout / structure  → Tailwind (flex, grid, w-full)
+     Visual identity     → these utilities (.card, .bg-elevated, .text-muted)
+     Per-component tweak → kit-* escape hatches (.kit-button, .kit-card, etc.)
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── Surfaces ────────────────────────────────────────────────────────────── */
+
+.surface {
+  background: var(--kit-bg);
+  color: var(--kit-text);
+}
+
+.surface-elevated {
+  background: var(--kit-bg-elevated);
+  color: var(--kit-text);
+  box-shadow: var(--kit-shadow-sm);
+}
+
+.surface-overlay {
+  background: var(--kit-bg-overlay);
+  color: var(--kit-text);
+  box-shadow: var(--kit-shadow-md);
+}
+
+.surface-sunken {
+  background: var(--kit-bg-sunken);
+  color: var(--kit-text-muted);
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+
+.card {
+  background: var(--kit-bg-elevated);
+  border: 1px solid var(--kit-border);
+  border-radius: var(--kit-radius-md);
+  padding: var(--kit-space-4);
+}
+
+/* No border — shadow only */
+.card-flat {
+  background: var(--kit-bg-elevated);
+  border-radius: var(--kit-radius-md);
+  padding: var(--kit-space-4);
+  box-shadow: var(--kit-shadow-sm);
+}
+
+/* No fill — border outline only */
+.card-ghost {
+  border: 1px solid var(--kit-border);
+  border-radius: var(--kit-radius-md);
+  padding: var(--kit-space-4);
+}
+
+/* ── Overlay / modal ─────────────────────────────────────────────────────── */
+
+.overlay {
+  background: var(--kit-bg-overlay);
+  border: 1px solid var(--kit-border);
+  border-radius: var(--kit-radius-lg);
+  box-shadow: var(--kit-shadow-lg);
+}
+
+.scrim {
+  background: var(--kit-scrim);
+}
+
+/* ── Background colors ───────────────────────────────────────────────────── */
+
+.bg-canvas {
+  background: var(--kit-bg);
+}
+.bg-elevated {
+  background: var(--kit-bg-elevated);
+}
+.bg-overlay {
+  background: var(--kit-bg-overlay);
+}
+.bg-sunken {
+  background: var(--kit-bg-sunken);
+}
+.bg-brand {
+  background: var(--kit-brand);
+  color: var(--kit-text-on-brand);
+}
+
+/* ── Text colors ─────────────────────────────────────────────────────────── */
+
+.text-primary {
+  color: var(--kit-text);
+}
+.text-muted {
+  color: var(--kit-text-muted);
+}
+.text-brand {
+  color: var(--kit-brand);
+}
+.text-on-brand {
+  color: var(--kit-text-on-brand);
+}
+
+/* ── Borders ─────────────────────────────────────────────────────────────── */
+
+.border-default {
+  border-color: var(--kit-border);
+}
+.border-strong {
+  border-color: var(--kit-border-strong);
+}
+
+/* ── Typography ──────────────────────────────────────────────────────────── */
+
+.font-kit {
+  font-family: var(--kit-font);
+}
+
+.text-xs {
+  font-size: var(--kit-text-xs);
+}
+.text-sm {
+  font-size: var(--kit-text-sm);
+}
+.text-base {
+  font-size: var(--kit-text-base);
+}
+.text-lg {
+  font-size: var(--kit-text-lg);
+}
+.text-xl {
+  font-size: var(--kit-text-xl);
+}
+.text-2xl {
+  font-size: var(--kit-text-2xl);
+}
+
+/* ── Radius ──────────────────────────────────────────────────────────────── */
+
+.rounded-sm {
+  border-radius: var(--kit-radius-sm);
+}
+.rounded-md {
+  border-radius: var(--kit-radius-md);
+}
+.rounded-lg {
+  border-radius: var(--kit-radius-lg);
+}
+.rounded-xl {
+  border-radius: var(--kit-radius-xl);
+}
+.rounded-full {
+  border-radius: var(--kit-radius-full);
+}
+
+/* ── Shadows ─────────────────────────────────────────────────────────────── */
+
+.shadow-sm {
+  box-shadow: var(--kit-shadow-sm);
+}
+.shadow-md {
+  box-shadow: var(--kit-shadow-md);
+}
+.shadow-lg {
+  box-shadow: var(--kit-shadow-lg);
+}
+
+/* ── Spacing — padding ───────────────────────────────────────────────────── */
+
+.p-1 {
+  padding: var(--kit-space-1);
+}
+.p-2 {
+  padding: var(--kit-space-2);
+}
+.p-3 {
+  padding: var(--kit-space-3);
+}
+.p-4 {
+  padding: var(--kit-space-4);
+}
+.p-5 {
+  padding: var(--kit-space-5);
+}
+.p-6 {
+  padding: var(--kit-space-6);
+}
+.p-8 {
+  padding: var(--kit-space-8);
+}
+
+.px-1 {
+  padding-inline: var(--kit-space-1);
+}
+.px-2 {
+  padding-inline: var(--kit-space-2);
+}
+.px-3 {
+  padding-inline: var(--kit-space-3);
+}
+.px-4 {
+  padding-inline: var(--kit-space-4);
+}
+.px-5 {
+  padding-inline: var(--kit-space-5);
+}
+.px-6 {
+  padding-inline: var(--kit-space-6);
+}
+.px-8 {
+  padding-inline: var(--kit-space-8);
+}
+
+.py-1 {
+  padding-block: var(--kit-space-1);
+}
+.py-2 {
+  padding-block: var(--kit-space-2);
+}
+.py-3 {
+  padding-block: var(--kit-space-3);
+}
+.py-4 {
+  padding-block: var(--kit-space-4);
+}
+.py-5 {
+  padding-block: var(--kit-space-5);
+}
+.py-6 {
+  padding-block: var(--kit-space-6);
+}
+.py-8 {
+  padding-block: var(--kit-space-8);
+}
+
+/* ── Spacing — gap ───────────────────────────────────────────────────────── */
+
+.gap-1 {
+  gap: var(--kit-space-1);
+}
+.gap-2 {
+  gap: var(--kit-space-2);
+}
+.gap-3 {
+  gap: var(--kit-space-3);
+}
+.gap-4 {
+  gap: var(--kit-space-4);
+}
+.gap-5 {
+  gap: var(--kit-space-5);
+}
+.gap-6 {
+  gap: var(--kit-space-6);
+}
+.gap-8 {
+  gap: var(--kit-space-8);
+}
+
+/* ── Semantic status colors ──────────────────────────────────────────────── */
+
+.text-critical {
+  color: var(--kit-color-critical);
+}
+.text-warning {
+  color: var(--kit-color-warning);
+}
+.text-success {
+  color: var(--kit-color-success);
+}
+.text-info {
+  color: var(--kit-color-info);
+}
+
+.bg-critical {
+  background: var(--kit-color-critical);
+  color: #fff;
+}
+.bg-warning {
+  background: var(--kit-color-warning);
+  color: #fff;
+}
+.bg-success {
+  background: var(--kit-color-success);
+  color: #fff;
+}
+.bg-info {
+  background: var(--kit-color-info);
+  color: #fff;
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Mobile Wireframe",
+  "description": "Low-fidelity grayscale wireframe style for early-stage mobile layouts",
+  "standalone": true,
+  "languages": ["ts", "js"]
+}

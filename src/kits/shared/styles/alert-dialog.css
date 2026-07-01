@@ -1,0 +1,61 @@
+/* ── Alert Dialog ─────────────────────────────────────────────────────────── */
+
+.kit-alert-dialog__backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--kit-scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 600;
+  padding: var(--kit-space-4);
+}
+
+.kit-alert-dialog {
+  background: var(--kit-bg-overlay);
+  border: 1px solid var(--kit-border);
+  border-radius: var(--kit-radius-lg);
+  box-shadow: var(--kit-shadow-lg);
+  width: 100%;
+  max-width: 360px;
+  padding: var(--kit-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--kit-space-4);
+}
+
+.kit-alert-dialog__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--kit-radius-full);
+  background: color-mix(in srgb, var(--kit-brand) 12%, transparent);
+  color: var(--kit-brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kit-alert-dialog__icon--destructive {
+  background: color-mix(in srgb, var(--kit-color-critical) 12%, transparent);
+  color: var(--kit-color-critical);
+}
+
+.kit-alert-dialog__title {
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-base);
+  font-weight: 600;
+  color: var(--kit-text);
+}
+
+.kit-alert-dialog__body {
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-sm);
+  color: var(--kit-text-muted);
+  line-height: 1.5;
+}
+
+.kit-alert-dialog__actions {
+  display: flex;
+  gap: var(--kit-space-2);
+  justify-content: flex-end;
+}

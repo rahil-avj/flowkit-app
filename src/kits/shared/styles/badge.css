@@ -1,0 +1,46 @@
+/* ── Badge ────────────────────────────────────────────────────────────────── */
+
+.kit-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--kit-space-1);
+  font-family: var(--kit-font);
+  font-size: var(--kit-text-xs);
+  font-weight: 500;
+  border-radius: var(--kit-radius-full);
+  padding: 2px var(--kit-space-2);
+  background: var(--kit-bg-sunken);
+  color: var(--kit-text-muted);
+  border: 1px solid var(--kit-border);
+  white-space: nowrap;
+}
+
+.kit-badge--brand {
+  background: color-mix(in srgb, var(--kit-brand) 15%, transparent);
+  color: var(--kit-brand);
+  border-color: color-mix(in srgb, var(--kit-brand) 30%, transparent);
+}
+
+.kit-badge--success {
+  background: color-mix(in srgb, var(--kit-color-success) 15%, transparent);
+  color: var(--kit-color-success);
+  border-color: color-mix(in srgb, var(--kit-color-success) 30%, transparent);
+}
+
+.kit-badge--critical {
+  background: color-mix(in srgb, var(--kit-color-critical) 15%, transparent);
+  color: var(--kit-color-critical);
+  border-color: color-mix(in srgb, var(--kit-color-critical) 30%, transparent);
+}
+
+.kit-badge--warning {
+  background: color-mix(in srgb, var(--kit-color-warning) 15%, transparent);
+  color: var(--kit-color-warning);
+  border-color: color-mix(in srgb, var(--kit-color-warning) 30%, transparent);
+}
+
+.kit-badge--solid {
+  background: var(--kit-brand);
+  color: var(--kit-text-on-brand);
+  border-color: transparent;
+}

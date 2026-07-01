@@ -1,0 +1,31 @@
+import path from 'path'
+import { defineConfig } from 'vitest/config'
+
+// Unit-test config for pure logic (applyDotPathPatch, compileFlowplan, …).
+// Mirrors the path aliases from vite.config.ts so test files can import via
+// @platform/* etc. Node environment — no DOM needed for the pure-logic suites.
+export default defineConfig({
+  resolve: {
+    alias: {
+      '@platform': path.resolve(__dirname, './src'),
+      '@kit': path.resolve(__dirname, './src/kits/shared'),
+      '@core': path.resolve(__dirname, './src/core'),
+      '@features': path.resolve(__dirname, './src/features'),
+      '@shared': path.resolve(__dirname, './src/shared'),
+      '@flowlens': path.resolve(__dirname, './src/modes/flowlens'),
+    },
+  },
+  test: {
+    environment: 'node',
+    include: ['scripts/tests/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      thresholds: {
+        statements: 91,
+        branches: 86,
+        functions: 95,
+        lines: 93,
+      },
+    },
+  },
+})

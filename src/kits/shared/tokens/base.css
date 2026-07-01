@@ -1,0 +1,69 @@
+/* ── Kit Base Tokens ─────────────────────────────────────────────────────────
+   Theme-agnostic scales. These are fallback values — every theme overrides
+   them under [data-kit="..."], but they ensure components render even if no
+   data-kit attribute is set.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* Spacing scale */
+  --kit-space-1: 4px;
+  --kit-space-2: 8px;
+  --kit-space-3: 12px;
+  --kit-space-4: 16px;
+  --kit-space-5: 20px;
+  --kit-space-6: 24px;
+  --kit-space-8: 32px;
+  --kit-space-10: 40px;
+  --kit-space-12: 48px;
+
+  /* Typography — font sizes */
+  --kit-text-xs: 11px;
+  --kit-text-sm: 13px;
+  --kit-text-base: 15px;
+  --kit-text-lg: 17px;
+  --kit-text-xl: 20px;
+  --kit-text-2xl: 24px;
+
+  /* Typography — font stacks (overridden by themes) */
+  --kit-font: system-ui, -apple-system, sans-serif;
+  --kit-font-mono: ui-monospace, 'SF Mono', monospace;
+
+  /* Radius (overridden by themes) */
+  --kit-radius-sm: 6px;
+  --kit-radius-md: 10px;
+  --kit-radius-lg: 14px;
+  --kit-radius-xl: 20px;
+  --kit-radius-full: 9999px;
+
+  /* Shadows (overridden by themes) */
+  --kit-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --kit-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --kit-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.14);
+
+  /* Surfaces (overridden by themes) */
+  --kit-bg: #ffffff;
+  --kit-bg-elevated: #f5f5f5;
+  --kit-bg-overlay: #ffffff;
+  --kit-bg-sunken: #eeeeee;
+  --kit-scrim: rgba(0, 0, 0, 0.4);
+
+  /* Text (overridden by themes) */
+  --kit-text: #000000;
+  --kit-text-muted: #666666;
+  --kit-text-on-brand: #ffffff;
+
+  /* Brand (overridden by themes) */
+  --kit-brand: #000000;
+  --kit-brand-hover: #222222;
+  --kit-brand-active: #444444;
+
+  /* Borders (overridden by themes) */
+  --kit-border: rgba(0, 0, 0, 0.12);
+  --kit-border-strong: rgba(0, 0, 0, 0.3);
+
+  /* Semantic */
+  --kit-color-critical: #e53e3e;
+  --kit-color-warning: #dd6b20;
+  --kit-color-success: #38a169;
+  --kit-color-info: #3182ce;
+}

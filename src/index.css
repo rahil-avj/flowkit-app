@@ -1,0 +1,280 @@
+/* Animation duration tiers:
+   fast  = 120ms — micro interactions (hover, focus ring)
+   base  = 150ms — component transitions (toggle, expand, chip)
+   slow  = 200ms — panel / modal entrance / exit           */
+@import 'tailwindcss';
+@source "../src/kits/**/*.{tsx,css}";
+@source "../src/kits/standalone/**/*.css";
+
+@theme {
+  /* Neutral scale */
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f4f4f5;
+  --color-neutral-200: #e4e4e7;
+  --color-neutral-300: #d4d4d8;
+  --color-neutral-400: #a1a1aa;
+  --color-neutral-500: #71717a;
+  --color-neutral-600: #52525b;
+  --color-neutral-700: #3f3f46;
+  --color-neutral-800: #27272a;
+  --color-neutral-850: #1e1e21;
+  --color-neutral-900: #18181b;
+  --color-neutral-950: #09090b;
+
+  /* Primary brand scale */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+
+  /* Warning scale */
+  --color-warning-400: #fb923c;
+  --color-warning-500: #f97316;
+  --color-warning-600: #ea580c;
+
+  /* Success scale */
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+
+  /* Typography — platform UI scale (used via uiScale in theme.ts) */
+  --text-ui-2xs: 11px; /* timestamps, metadata, badges */
+  --text-ui-xs: 12px; /* secondary labels, captions */
+  --text-ui-sm: 13px; /* primary body, buttons, inputs */
+  --text-ui-md: 14px; /* section headers, tab labels */
+  --text-ui-lg: 15px; /* panel titles, card headings */
+  --text-ui-xl: 17px; /* modal titles, page headings */
+
+  /* Document typography */
+  --text-display: 2.25rem;
+  --text-h1: 1.875rem;
+  --text-h2: 1.5rem;
+  --text-h3: 1.25rem;
+  --text-h4: 1.125rem;
+  --leading-body: 1.625;
+  --leading-relaxed: 1.75;
+
+  /* Backward compatibility aliases for inline JS styles */
+  --font-size-ui-2xs: var(--text-ui-2xs);
+  --font-size-ui-xs: var(--text-ui-xs);
+  --font-size-ui-sm: var(--text-ui-sm);
+  --font-size-ui-md: var(--text-ui-md);
+  --font-size-ui-lg: var(--text-ui-lg);
+  --font-size-ui-xl: var(--text-ui-xl);
+  --font-size-display: var(--text-display);
+  --font-size-h1: var(--text-h1);
+  --font-size-h2: var(--text-h2);
+  --font-size-h3: var(--text-h3);
+  --font-size-h4: var(--text-h4);
+  --line-height-body: var(--leading-body);
+  --line-height-relaxed: var(--leading-relaxed);
+
+  /* Platform neutral tokens — g/4 through g/8 */
+  --color-g4: #6d758f; /* body text / muted */
+  --color-g5: #b4b9c9; /* icon placeholder fill */
+  --color-g6: #e1e4ed; /* borders / dividers */
+  --color-g7: #f1f3f7; /* surface / card bg */
+  --color-g8: #f8faff; /* page background */
+
+  /* Custom shadows */
+  --shadow-card: 0 2px 8px 0 rgba(0, 0, 0, 0.18), 0 1px 2px 0 rgba(0, 0, 0, 0.12);
+  --shadow-device:
+    0 24px 64px 0 rgba(0, 0, 0, 0.55), 0 4px 16px 0 rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --shadow-float: 0 8px 32px 0 rgba(0, 0, 0, 0.28), 0 2px 8px 0 rgba(0, 0, 0, 0.18);
+
+  /* Dynamic Theme Variables */
+  --color-theme-base: var(--theme-bg-base);
+  --color-theme-surface: var(--theme-bg-surface);
+  --color-theme-elevated: var(--theme-bg-elevated);
+  --color-theme-hover: var(--theme-bg-hover);
+  --color-theme-border: var(--theme-bg-border);
+  --color-theme-border-subtle: var(--theme-bg-border-subtle);
+
+  --color-theme-text-primary: var(--theme-text-primary);
+  --color-theme-text-secondary: var(--theme-text-secondary);
+  --color-theme-text-muted: var(--theme-text-muted);
+  --color-theme-text-disabled: var(--theme-text-disabled);
+
+  --color-theme-blue: var(--theme-accent-blue);
+  --color-theme-blue-dim: var(--theme-accent-blue-dim);
+  --color-theme-green: var(--theme-accent-green);
+  --color-theme-green-dim: var(--theme-accent-green-dim);
+  --color-theme-red: var(--theme-accent-red);
+  --color-theme-red-dim: var(--theme-accent-red-dim);
+  --color-theme-amber: var(--theme-accent-amber);
+  --color-theme-amber-dim: var(--theme-accent-amber-dim);
+  --color-theme-purple: var(--theme-accent-purple);
+  --color-theme-purple-dim: var(--theme-accent-purple-dim);
+
+  --shadow-theme-card: var(--theme-shadow-card);
+  --shadow-theme-float: var(--theme-shadow-float);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  user-select: none;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #09090b;
+  color: #f4f4f5;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+/* Global scrollbar styling - 4px wide */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(109, 117, 143, 0.3) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(109, 117, 143, 0.3);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(109, 117, 143, 0.5);
+}
+
+/* Canvas scrollbars — always visible by default */
+.canvas-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(109, 117, 143, 0.35) transparent;
+}
+.canvas-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.canvas-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.canvas-scroll::-webkit-scrollbar-thumb {
+  background: rgba(109, 117, 143, 0.35);
+  border-radius: 9999px;
+}
+.canvas-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(109, 117, 143, 0.55);
+}
+.canvas-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Auto-hide mode — fades in on scroll, hidden at rest */
+.canvas-scroll:not(.scrollbars-always) {
+  scrollbar-color: transparent transparent;
+}
+.canvas-scroll:not(.scrollbars-always)::-webkit-scrollbar-thumb {
+  background: transparent;
+  transition: background 0.3s;
+}
+.canvas-scroll:not(.scrollbars-always).is-scrolling {
+  scrollbar-color: rgba(109, 117, 143, 0.35) transparent;
+}
+.canvas-scroll:not(.scrollbars-always).is-scrolling::-webkit-scrollbar-thumb {
+  background: rgba(109, 117, 143, 0.35);
+}
+
+/* Keep-fit mode — scrollbars fully hidden since the canvas always fits */
+.canvas-scroll.keep-fit {
+  scrollbar-width: none;
+}
+.canvas-scroll.keep-fit::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom simulated touch cursors for mobile/wearable viewports */
+.touchscreen-device,
+.touchscreen-device * {
+  cursor:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='rgba(128,128,128,0.18)' stroke='rgba(128,128,128,0.38)' stroke-width='1.5'/><circle cx='16' cy='16' r='3' fill='rgba(128,128,128,0.5)'/></svg>")
+      16 16,
+    auto !important;
+}
+
+/* Clickable elements highlight the touch cursor green */
+.touchscreen-device button,
+.touchscreen-device a,
+.touchscreen-device select,
+.touchscreen-device input[type='button'],
+.touchscreen-device input[type='submit'],
+.touchscreen-device [role='button'],
+.touchscreen-device .cursor-pointer,
+.touchscreen-device [onclick] {
+  cursor:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='rgba(34,197,94,0.12)' stroke='rgba(34,197,94,0.55)' stroke-width='1.5'/><circle cx='16' cy='16' r='3' fill='rgba(34,197,94,0.7)'/></svg>")
+      16 16,
+    pointer !important;
+}
+
+@keyframes fab-item-in {
+  from {
+    opacity: 0;
+    transform: scale(0.7) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Pulsing recording dot (migrated from the deleted standalone flowlens/index.css —
+   referenced by the live recording toolbar in PreviewCanvas). */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* FlowLens full-screen analytics overlay entrance. */
+@keyframes flowlens-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@utility left-middle-canvas {
+  left: calc(var(--left-panel-w) + (100vw - var(--left-panel-w) - var(--right-panel-w)) / 2);
+}
+
+#mockup-container {
+  transition: transform 0.28s ease;
+}
+
+/* Kill transition during panel drag so scale tracks the handle pixel-perfectly. */
+[data-panel-drag] #mockup-container {
+  transition: none;
+}

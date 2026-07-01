@@ -1,0 +1,175 @@
+import type { CursorSample, SessionExport } from '@platform/features/flowTracer/types'
+
+import { computeSessionMetrics } from '../../analyticsEngine'
+
+// ── Combined funnel across N sessions ───────────────────────────────────────────
+
+export interface CombinedFunnelStep {
+  screenId: string
+  /** Sessions that reached this step. */
+  reached: number
+  /** Sessions lost vs the previous step. */
+  dropOff: number
+  dropOffRate: number // 0–1
+}
+
+/**
+ * Derive a canonical screen order from the sessions (each screen ranked by the
+ * average position at which it first appears), then count how many sessions
+ * reached each step — a true multi-session funnel.
+ */
+export function combinedFunnel(sessions: SessionExport[]): CombinedFunnelStep[] {
+  if (sessions.length === 0) return []
+
+  // First-visit index per screen, averaged across sessions that visited it.
+  const firstIdxSum: Record<string, number> = {}
+  const firstIdxCount: Record<string, number> = {}
+  const reachedCount: Record<string, number> = {}
+
+  for (const s of sessions) {
+    const order: string[] = []
+    const seen = new Set<string>()
+    for (const e of s.events) {
+      if (e.type !== 'screen.visited') continue
+      const sid = e.payload.screenId as string
+      if (!sid || seen.has(sid)) continue
+      seen.add(sid)
+      order.push(sid)
+    }
+    order.forEach((sid, i) => {
+      firstIdxSum[sid] = (firstIdxSum[sid] ?? 0) + i
+      firstIdxCount[sid] = (firstIdxCount[sid] ?? 0) + 1
+    })
+    seen.forEach(sid => {
+      reachedCount[sid] = (reachedCount[sid] ?? 0) + 1
+    })
+  }
+
+  const screenOrder = Object.keys(firstIdxCount).sort((a, b) => {
+    const avgA = firstIdxSum[a] / firstIdxCount[a]
+    const avgB = firstIdxSum[b] / firstIdxCount[b]
+    return avgA - avgB
+  })
+
+  const steps: CombinedFunnelStep[] = []
+  let prev = sessions.length
+  for (const sid of screenOrder) {
+    const reached = reachedCount[sid] ?? 0
+    const dropOff = Math.max(0, prev - reached)
+    steps.push({ screenId: sid, reached, dropOff, dropOffRate: prev > 0 ? dropOff / prev : 0 })
+    prev = reached
+  }
+  return steps
+}
+
+// ── Merged per-screen cursor samples ────────────────────────────────────────────
+
+export interface MergedHeatmap {
+  screenId: string
+  samples: CursorSample[]
+  sessionCount: number
+}
+
+/** Pool all cursor samples by screen across sessions, for a combined heatmap. */
+export function mergedHeatmaps(sessions: SessionExport[]): MergedHeatmap[] {
+  const byScreen: Record<string, CursorSample[]> = {}
+  const sessionsByScreen: Record<string, Set<string>> = {}
+
+  for (const s of sessions) {
+    for (const sample of s.cursorSamples ?? []) {
+      ;(byScreen[sample.screenId] ??= []).push(sample)
+      ;(sessionsByScreen[sample.screenId] ??= new Set()).add(s.meta.id)
+    }
+  }
+
+  return Object.entries(byScreen)
+    .map(([screenId, samples]) => ({
+      screenId,
+      samples,
+      sessionCount: sessionsByScreen[screenId].size,
+    }))
+    .sort((a, b) => b.samples.length - a.samples.length)
+}
+
+// ── Roll-up metrics ─────────────────────────────────────────────────────────────
+
+export interface RollupMetrics {
+  sessionCount: number
+  totalEvents: number
+  avgDurationMs: number
+  avgQuality: number
+  completionRate: number // sessions with a flow.completed / total
+  frustrationRate: number // frustrated clicks per session
+  avgScreensPerSession: number
+  topFrustratedScreens: Array<{ screenId: string; count: number }>
+  screenPopularity: Array<{ screenId: string; visits: number; avgDwellMs: number }>
+}
+
+export function rollup(sessions: SessionExport[]): RollupMetrics {
+  const n = sessions.length
+  if (n === 0) {
+    return {
+      sessionCount: 0,
+      totalEvents: 0,
+      avgDurationMs: 0,
+      avgQuality: 0,
+      completionRate: 0,
+      frustrationRate: 0,
+      avgScreensPerSession: 0,
+      topFrustratedScreens: [],
+      screenPopularity: [],
+    }
+  }
+
+  let totalEvents = 0,
+    totalDuration = 0,
+    totalQuality = 0,
+    completed = 0
+  let totalFrustrated = 0,
+    totalScreens = 0
+  const frustratedByScreen: Record<string, number> = {}
+  const visitsByScreen: Record<string, number> = {}
+  const dwellByScreen: Record<string, number[]> = {}
+
+  for (const s of sessions) {
+    const m = computeSessionMetrics(s)
+    totalEvents += m.eventCount
+    totalDuration += m.totalDuration
+    totalQuality += m.qualityScore
+    totalScreens += m.uniqueScreensVisited
+    if (m.flowsCompleted.length > 0) completed += 1
+    for (const sm of m.screenMetrics) {
+      totalFrustrated += sm.frustratedClickCount
+      if (sm.frustratedClickCount > 0)
+        frustratedByScreen[sm.screenId] =
+          (frustratedByScreen[sm.screenId] ?? 0) + sm.frustratedClickCount
+      visitsByScreen[sm.screenId] = (visitsByScreen[sm.screenId] ?? 0) + sm.visitCount
+      if (sm.avgDwellMs > 0) (dwellByScreen[sm.screenId] ??= []).push(sm.avgDwellMs)
+    }
+  }
+
+  return {
+    sessionCount: n,
+    totalEvents,
+    avgDurationMs: Math.round(totalDuration / n),
+    avgQuality: Math.round(totalQuality / n),
+    completionRate: completed / n,
+    frustrationRate: totalFrustrated / n,
+    avgScreensPerSession: Math.round((totalScreens / n) * 10) / 10,
+    topFrustratedScreens: Object.entries(frustratedByScreen)
+      .map(([screenId, count]) => ({ screenId, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10),
+    screenPopularity: Object.entries(visitsByScreen)
+      .map(([screenId, visits]) => ({
+        screenId,
+        visits,
+        avgDwellMs: dwellByScreen[screenId]?.length
+          ? Math.round(
+              dwellByScreen[screenId].reduce((a, b) => a + b, 0) / dwellByScreen[screenId].length
+            )
+          : 0,
+      }))
+      .sort((a, b) => b.visits - a.visits),
+  }
+}
