@@ -14,7 +14,6 @@ ${b('Syntax:')} short alias or long-form, both always work
 
 ${b('Workspaces:')}
   ${c('nw')} / ${c('new-workspace')}           Create workspace (guided or express)
-  ${c('sw')} / ${c('switch')}                  ${d('[deprecated — workspace switching moved to the browser UI]')}
   ${c('rw')} / ${c('remove-workspace')}        Remove workspace (requires confirmation)
   ${c('watch:flows')}                      Watch for file changes
   ${c('status')}                           Health snapshot: flows, router, sessions, feedback, agent

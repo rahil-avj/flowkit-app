@@ -359,13 +359,6 @@ export async function cmdRemoveWorkspace(val) {
   console.log(g('✓') + ' Platform registry updated: src/workspaces.ts')
 }
 
-export async function cmdSwitchWorkspace(_val) {
-  console.log(b('flowkit sw') + d(' is no longer needed.'))
-  console.log(d('  Workspace selection now happens in the browser.'))
-  console.log(d('  Open ' + b('http://localhost:5173') + ' and select a workspace from the UI.'))
-  console.log(d('  Your selection is saved automatically in localStorage.'))
-}
-
 export async function cmdWatch(val) {
   requireRepoMode(
     'flowkit watch',

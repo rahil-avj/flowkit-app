@@ -128,26 +128,6 @@ describe('Suite B — Workspace CLI lifecycle', () => {
     assert.equal(count, 1, 'duplicate entry found in registry')
   })
 
-  it('B11 — Switch workspace (`sw`) → prints deprecation message, exits 0', async () => {
-    const result = await spawnCLI([`-sw:${WS_TWO}`])
-    assert.equal(result.code, 0, `sw should exit 0, stderr: ${result.stderr}`)
-    assert.ok(
-      result.stdout.includes('no longer needed') || result.stdout.includes('browser'),
-      'sw should print deprecation message'
-    )
-  })
-
-  it('B12 — Switch workspace (`sw`) → registry active is unchanged (browser owns selection)', () => {
-    // sw no longer mutates workspaces.json active — workspace selection is in the browser
-    const reg = parseRegistry()
-    assert.ok(typeof reg.active === 'string' || reg.active === null, 'active field exists')
-  })
-
-  it('B13 — Switch to non-existent workspace → exits 0 with deprecation message', async () => {
-    const result = await spawnCLI(['-sw:doesnotexist'])
-    assert.equal(result.code, 0, 'sw always exits 0 now (deprecated)')
-  })
-
   it('B14 — Delete workspace folder directly → syncWorkspaceRegistry removes entry', async () => {
     const dir = path.join(WORKSPACES_DIR, WS_ONE)
     if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true })

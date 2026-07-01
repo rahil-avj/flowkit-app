@@ -95,7 +95,7 @@ Path aliases keep workspace code isolated from platform code and enforce the lay
 | `@platform`  | `src/`                 | Prefer scoped aliases above                       |
 | `@workspace` | `workspaces/<active>/` | Active workspace screens and config               |
 
-`<active>` is the workspace name stored in `localStorage` (key `flowkit:active_workspace`). It is set via the browser UI workspace switcher, or by the URL param `?workspace=<name>` on load. The CLI `flowkit sw` command is deprecated — it prints a notice and exits without making changes.
+`<active>` is the workspace name stored in `localStorage` (key `flowkit:active_workspace`). It is set via the browser UI workspace switcher, or by the URL param `?workspace=<name>` on load.
 
 **Always use the most specific alias:** `@shared/contexts/ThemeContext` beats `@platform/shared/contexts/ThemeContext`.
 
@@ -580,6 +580,6 @@ flowkit export                       # Export as standalone HTML viewer
 flowkit handoff                      # Build developer handoff zip
 ```
 
-Workspace switching is done via the browser UI (or `?workspace=<name>` URL param). `flowkit sw` is deprecated.
+Workspace switching is done via the browser UI (or `?workspace=<name>` URL param).
 
 Full command reference: [CLI.md](CLI.md)

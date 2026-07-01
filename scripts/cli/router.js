@@ -1,5 +1,5 @@
 import { r, d } from '../lib/config.js'
-import { cmdNewWorkspace, cmdSwitchWorkspace, cmdRemoveWorkspace, cmdWatch } from './workspace.js'
+import { cmdNewWorkspace, cmdRemoveWorkspace, cmdWatch } from './workspace.js'
 import { cmdExport, cmdExportFull } from './export.js'
 import { cmdHandoff } from './handoff.js'
 import {
@@ -80,8 +80,6 @@ export async function route(argv) {
     await cmdNewWorkspace(p.val)
   } else if (p.cmd === 'rw' || p.cmd === 'remove-workspace') {
     await cmdRemoveWorkspace(p.val)
-  } else if (p.cmd === 'sw' || p.cmd === 'switch' || p.cmd === 'switch-workspace') {
-    await cmdSwitchWorkspace(p.val)
   } else if (p.cmd === 'watch') {
     const wsVal = p.val.startsWith('flows:') ? p.val.slice(6) : p.val === 'flows' ? '' : p.val
     await cmdWatch(wsVal)

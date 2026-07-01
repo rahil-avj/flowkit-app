@@ -40,7 +40,7 @@ A workspace is a folder under `workspaces/`. It contains your flows, components,
 flowkit nw:my-app    # create workspace
 ```
 
-Switch active workspace from the browser UI — select a workspace in the canvas shell and your choice is saved automatically. `flowkit sw` is deprecated and does nothing.
+Switch active workspace from the browser UI — select a workspace in the canvas shell and your choice is saved automatically.
 
 Flowplans live at `workspaces/<name>/flowplans/`. Add a new `.ts` file there and it is picked up automatically on next dev server hot reload.
 
