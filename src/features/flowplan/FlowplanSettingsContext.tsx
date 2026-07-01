@@ -53,8 +53,8 @@ if (import.meta.hot && !import.meta.hot.data.FlowplanSettingsContext) {
 }
 const FlowplanSettingsContext =
   (import.meta.hot?.data.FlowplanSettingsContext as
-    | ReturnType<typeof createContext<FlowplanSettingsValue | null>>
-    | undefined) ?? createContext<FlowplanSettingsValue | null>(null)
+    ReturnType<typeof createContext<FlowplanSettingsValue | null>> | undefined) ??
+  createContext<FlowplanSettingsValue | null>(null)
 
 export function FlowplanSettingsProvider({ children }: { children: React.ReactNode }) {
   const [strictMode, setStrictModeState] = useState(() => readBool(LS_FLOWPLAN_STRICT_MODE, false))

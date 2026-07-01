@@ -87,7 +87,6 @@ export async function route(argv) {
   } else if (p.cmd === 'status') {
     cmdStatus(p.val)
 
-    // ── Dump ──
     // ── Export / Handoff ──
   } else if (p.cmd === 'export' && (p.val === 'full' || p.val?.startsWith('full:'))) {
     const wsVal = p.val === 'full' ? '' : p.val.slice('full:'.length)
