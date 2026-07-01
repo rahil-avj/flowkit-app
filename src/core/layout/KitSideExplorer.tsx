@@ -350,7 +350,7 @@ export default function KitSideExplorer({
             key={t}
             label={LEFT_TAB_META[t].label}
             icon={LEFT_TAB_META[t].icon}
-            isActive={t === tab && isOpen}
+            isActive={t === tab}
             onClick={() => activateTab(t)}
             activeColor="var(--theme-accent-blue)"
           />

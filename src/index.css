@@ -139,6 +139,20 @@ body,
     sans-serif;
 }
 
+/* Mobile browser chrome (address bar) resizes the viewport as it shows/hides.
+   `height: 100%` on html/body resolves against the large viewport, which can
+   exceed the visible area while the address bar is shown, turning the page
+   itself into an unwanted scroll container. Pin to the small viewport and
+   disable page-level scroll/bounce; app content manages its own scroll regions. */
+html,
+body {
+  height: 100svh;
+  overflow: hidden;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+}
+
 /* Global scrollbar styling - 4px wide */
 * {
   scrollbar-width: thin;

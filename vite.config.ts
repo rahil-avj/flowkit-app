@@ -121,6 +121,11 @@ export default defineConfig({
     flowLensSaveSessionPlugin(),
     ...(activeWsDir ? [flowkit({ workspaceRoot: activeWsDir })] : []),
   ],
+  server: {
+    // Allows tunneling localhost to a phone (localtunnel / cloudflared quick tunnels)
+    // without sharing a network. Scoped to these two tunnel domains, not a wildcard host bypass.
+    allowedHosts: ['.loca.lt', '.trycloudflare.com'],
+  },
   resolve: {
     alias: {
       '@platform': path.resolve(__dirname, './src'),

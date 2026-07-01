@@ -189,8 +189,7 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
   const screenLabel = activeView?.label ?? activeViewId
   const kitTheme = workspaceConfig.kit ?? 'apple'
 
-  const colorFilter =
-    colorBlindMode !== 'none' ? `url(#${COLOR_BLIND_FILTERS[colorBlindMode]})` : undefined
+  const colorFilter = colorBlindMode !== 'none' ? COLOR_BLIND_FILTERS[colorBlindMode] : undefined
   const blurFilter = blurryVision > 0 ? `blur(${blurryVision * 2}px)` : undefined
   const combinedFilter = [colorFilter, blurFilter].filter(Boolean).join(' ') || undefined
 
@@ -342,8 +341,8 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
             activeId={rightSub}
             onSelect={id => setRightSub(id as RightSubTab)}
           >
-            {rightSub === 'info' && <ScreenInfoContent views={views} />}
-            {rightSub === 'simulator' && <SimulatorContent hideDevice />}
+            {rightSub === 'info' && <ScreenInfoContent views={views} touch />}
+            {rightSub === 'simulator' && <SimulatorContent />}
             {rightSub === 'flow' && <FlowDebuggerContent />}
             {rightSub === 'db' && <DbContent />}
             {rightSub === 'sessions' && showSessionsFeature && <SessionsContent />}

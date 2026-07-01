@@ -260,9 +260,9 @@ export function indexRows(_ctx) {
 export function platformSurfaces(ctx) {
   const flowsSurface = {
     area: 'Flows (Flowplan hierarchy)',
-    api: '`defineFlow({ id, name, steps[] })` — authored in `flowplans/<flow>.ts`',
+    api: '`defineFlow({ id, name, steps[], homeScreen? })` — authored in `flowplans/<flow>.ts`',
     from: '`@platform/core/config` → `defineFlow`',
-    note: 'Screen folders: `flows/<flow>/<screen>/`. Ordering declared in `flowkit.config.ts` → `projects.<proj>.flows[]`',
+    note: 'Screen folders: `flows/<flow>/<screen>/`. Ordering declared in `flowkit.config.ts` → `projects.<proj>.flows[]`. `homeScreen` overrides the device home button while that plan is playing; workspace-level default is `flowkit.config.ts` → `startScreen`.',
     doc: 'FLOWMASTER.md',
   }
 
@@ -304,6 +304,13 @@ export function platformSurfaces(ctx) {
       from: '`@platform/core/layout`',
       note: '`bind="db.auth.isLoggedIn"` path; default-export a JSX component from `data/simulator.tsx`',
       doc: 'FLOWKIT.md',
+    },
+    {
+      area: 'Device & orientation defaults',
+      api: '`flowkit.config.ts` → `defaultDevice` (a `DevicePreset.label`), `defaultOrientation` ("portrait" | "landscape")',
+      from: '`@platform/core/config` → `defineConfig`',
+      note: 'Both optional. `defaultDevice` must match a label in `src/shared/components/devices`; falls back to the platform default when unset/unrecognized. `defaultOrientation` is ignored if the resolved device lacks `supportsLandscape`.',
+      doc: 'CLI.md',
     },
     {
       area: 'Theme',

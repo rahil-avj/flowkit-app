@@ -73,6 +73,8 @@ export interface CompiledFlowplan extends FlowConfig {
     steps: CompiledStep[]
     /** Flow-level simulator controls shown during playback (F4.4). */
     simulatorControls: SimulatorControl[]
+    /** Screen id the home button should target while this flowplan plays. */
+    homeScreen?: string
   }
 }
 
@@ -329,6 +331,7 @@ export function compileFlowplan(
       flowplanId: plan.id,
       steps,
       simulatorControls: plan.simulator?.controls ?? [],
+      homeScreen: plan.homeScreen,
     },
   }
 }

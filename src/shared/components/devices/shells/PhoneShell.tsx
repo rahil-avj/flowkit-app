@@ -114,9 +114,9 @@ export default function PhoneShell({ preset, filter, children }: ShellProps) {
           style={{
             height: preset.safeTop || 44,
             display: 'flex',
-            alignItems: 'flex-end',
+            alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '0 24px 6px',
+            padding: preset.hasNotch ? '0 24px 6px' : '0 16px',
             color: theme.text.primary,
             fontSize: 12,
             fontWeight: 600,
@@ -188,7 +188,7 @@ export default function PhoneShell({ preset, filter, children }: ShellProps) {
             {connectionMode !== 'airplane' && (
               <CellularBars strength={cellularStrength} size="sm" />
             )}
-            <BatteryIcon size="md" percent={88} showLabel={isIPhone} />
+            <BatteryIcon size={preset.hasNotch ? 'md' : 'sm'} percent={88} showLabel={isIPhone} />
           </div>
         </div>
       )}

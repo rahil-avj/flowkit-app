@@ -98,13 +98,57 @@ workspaces/<name>/lib/flowLens/       ← committed session library + studies.js
 
 Kits are applied via the `@kit` CSS alias — no files are copied into the workspace. The selected kit is stored in `src/workspaces.ts` and applied as a `data-kit` attribute on the preview canvas at runtime.
 
-### `sw` / `switch` — Switch workspace _(deprecated)_
+### `flowkit.config.ts` anatomy
 
-```bash
-flowkit sw
+The workspace manifest is authored with `defineConfig()` from `@platform/core/config`:
+
+```typescript
+import { defineConfig } from '@platform/core/config'
+
+export default defineConfig({
+  workspace: { name: 'MyApp', description: 'What this prototype is.' }, // optional
+
+  // Screen loaded by default — cold load, device home button, reset-to-first —
+  // when no flowplan is active. Optional; falls back to the first declared screen when unset.
+  startScreen: 'welcome-screen',
+
+  // Default device shell/mockup shown on load. Must match a DevicePreset.label
+  // from src/shared/components/devices (e.g. "iPhone 16 Pro", "iPad Mini", "Compact").
+  // Optional; falls back to the platform default (DEVICE_PRESETS[0]) when unset or unrecognized.
+  defaultDevice: 'iPhone 16 Pro',
+
+  // Default orientation on load. Optional; falls back to "portrait". Ignored if the
+  // resolved device preset doesn't support landscape (DevicePreset.supportsLandscape).
+  defaultOrientation: 'portrait',
+
+  // Explicit flow ordering for the Screens tab and Flow Library.
+  // Unlisted flows are appended after declared ones in discovery order.
+  flows: ['onboarding-flow', 'home-flow'],
+
+  // Explicit screen ordering within each flow for the Screens tab sidebar.
+  // Unlisted screens are appended after declared ones, alphabetically.
+  screenOrder: {
+    'onboarding-flow': ['welcome-screen', 'setup-screen', 'ready-screen'],
+    'home-flow': ['home-screen', 'detail-screen'],
+  },
+})
 ```
 
-**Deprecated.** Workspace switching now happens in the browser UI — open `http://localhost:5173` and select a workspace. Your selection is saved automatically in `localStorage`. This command prints a deprecation notice and exits without making any changes.
+**Field summary:**
+
+| Field                | Purpose                                                                           |
+| -------------------- | --------------------------------------------------------------------------------- |
+| `workspace`          | Display `name` / `description` shown in the workspace picker                      |
+| `startScreen`        | Default screen id — cold load, device home button, reset-to-first (optional)      |
+| `defaultDevice`      | Default device shell/mockup label, must match a `DevicePreset.label` (optional)   |
+| `defaultOrientation` | Default orientation, `"portrait"` or `"landscape"` (optional)                     |
+| `flows`              | Explicit flow ordering (flat-layout workspaces)                                   |
+| `screenOrder`        | Explicit per-flow screen ordering, keyed by flow id                               |
+| `projects`           | Nested-layout only — per-project `flows`/`screenOrder` (skip for flat workspaces) |
+
+Per-flowplan playback can override the home-button target for the duration of that flow via `homeScreen` — see [FlowPlan anatomy](#flowplan-anatomy) below.
+
+Workspace switching happens in the browser UI — open `http://localhost:5173` and select a workspace. Your selection is saved automatically in `localStorage`.
 
 ### `rw` / `remove-workspace` — Remove workspace
 
@@ -163,6 +207,10 @@ export default defineFlow({
   name: 'Checkout', // required — display name
   description: 'Happy path.', // optional
   tags: ['buyer', 'status:approved'], // optional — prefixes: role: type: state: status:
+
+  // Screen the device home button targets while this plan is playing.
+  // Optional — falls back to the workspace's `startScreen` (see flowkit.config.ts) when unset.
+  homeScreen: 'product-detail',
 
   // Flow-level db baseline — deep-copied on play, restored on exit.
   // Keys are dot-paths; objects deep-merge, arrays replace entirely.
@@ -653,7 +701,6 @@ Commands grouped by item type. Click the heading to jump to the full section.
 | Command                     | Alias | Description                     |
 | --------------------------- | ----- | ------------------------------- |
 | `new-workspace[:<name>]`    | `nw`  | Create workspace                |
-| `switch`                    | `sw`  | _(deprecated)_ — use browser UI |
 | `remove-workspace[:<name>]` | `rw`  | Remove workspace                |
 | `watch[:<name>]`            | —     | Watch for file changes          |
 | `status[:<name>]`           | —     | Workspace health snapshot       |

@@ -612,6 +612,12 @@ export interface FlowplanDef {
   db?: Record<string, unknown> | string
   /** Flow-level simulator controls shown during playback. */
   simulator?: { controls: SimulatorControl[] }
+  /**
+   * Screen id the device's home button/reset-to-first should target while this
+   * flowplan is playing. Falls back to the workspace's `startScreen` (or the
+   * first declared screen) when unset.
+   */
+  homeScreen?: string
   /** Ordered steps (or refs to other Flowplans). */
   steps: FlowplanStepEntry[]
 }
@@ -656,6 +662,23 @@ export interface FlowkitConfig {
   screenOrder?: Record<string, string[]>
   /** Nested-layout: per-project config (use when the workspace has a projects/ folder). */
   projects?: Record<string, FlowkitProjectConfig>
+  /**
+   * Screen id to load by default (cold load, canvas "home" button, reset-to-first)
+   * when no flowplan is active. Falls back to the first declared screen when unset.
+   */
+  startScreen?: string
+  /**
+   * Default device shell/mockup shown on load. Must match a `DevicePreset.label`
+   * from `src/shared/components/devices` (e.g. "iPhone 16 Pro"). Falls back to the
+   * platform default (first entry in `DEVICE_PRESETS`) when unset or unrecognized.
+   */
+  defaultDevice?: string
+  /**
+   * Default orientation on load. Ignored if the resolved device preset does not
+   * support landscape (`DevicePreset.supportsLandscape`). Falls back to "portrait"
+   * when unset.
+   */
+  defaultOrientation?: 'portrait' | 'landscape'
 }
 
 /**
