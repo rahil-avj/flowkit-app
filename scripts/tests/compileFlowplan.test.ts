@@ -1,5 +1,5 @@
-import type { ScreenResolver } from '@features/flow-library/compileFlowplan'
-import { compileFlowplan, FlowplanCompileError } from '@features/flow-library/compileFlowplan'
+import type { ScreenResolver } from '@features/flowplan/compileFlowplan'
+import { compileFlowplan, FlowplanCompileError } from '@features/flowplan/compileFlowplan'
 import type { FlowplanDef, InteractionRule } from '@platform/types/index'
 import { describe, expect, it } from 'vitest'
 // (InteractionRule used in the `on`-wiring test below)

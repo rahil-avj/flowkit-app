@@ -1,13 +1,9 @@
-import type {
-  CompiledFlowplan,
-  CompiledStep,
-} from '@platform/features/flow-library/compileFlowplan'
+import type { CompiledFlowplan, CompiledStep } from '@features/flowplan/compileFlowplan'
+import { useDashboard } from '@platform/shared/contexts/DashboardContext'
+import { useFlowLensModeOptional } from '@platform/shared/contexts/FlowLensModeContext'
+import { useSessionRecorderShared } from '@platform/shared/contexts/SessionRecorderContext'
 import { applyDotPathPatch } from '@platform/shared/utils/applyDotPathPatch'
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
-
-import { useDashboard } from './DashboardContext'
-import { useFlowLensModeOptional } from './FlowLensModeContext'
-import { useSessionRecorderShared } from './SessionRecorderContext'
 
 // ── FlowPlaybackContext ─────────────────────────────────────────────────────────
 //

@@ -1,3 +1,4 @@
+import { useFlowPlaybackOptional } from '@features/flowplan/FlowPlaybackContext'
 import { useFeedback } from '@platform/features/feedback/context/FeedbackContext'
 import { useSessionSettings } from '@platform/features/flowTracer/components/useSessionSettings'
 import { useSessionRecorderOptional } from '@platform/features/flowTracer/context'
@@ -18,7 +19,6 @@ import { useActiveWorkspace } from '@platform/shared/contexts/ActiveWorkspaceCon
 import { useDashboard } from '@platform/shared/contexts/DashboardContext'
 import { useDevMode } from '@platform/shared/contexts/DevModeContext'
 import { useFlowLensModeOptional } from '@platform/shared/contexts/FlowLensModeContext'
-import { useFlowPlaybackOptional } from '@platform/shared/contexts/FlowPlaybackContext'
 import { useTheme } from '@platform/shared/contexts/ThemeContext'
 import { useIsMobile } from '@platform/shared/utils/useIsMobile'
 import type { FlowNode, WireframeView } from '@platform/types/index'

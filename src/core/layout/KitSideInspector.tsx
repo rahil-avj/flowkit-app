@@ -1,3 +1,4 @@
+import { useFlowPlaybackOptional } from '@features/flowplan/FlowPlaybackContext'
 import {
   FeedbackPanel,
   FeedbackTabProvider,
@@ -35,7 +36,6 @@ import { LS_SESSIONS_ENABLED } from '@platform/shared/constants/storageKeys'
 import { useActiveWorkspace } from '@platform/shared/contexts/ActiveWorkspaceContext'
 import { useDashboard } from '@platform/shared/contexts/DashboardContext'
 import { useDevMode } from '@platform/shared/contexts/DevModeContext'
-import { useFlowPlaybackOptional } from '@platform/shared/contexts/FlowPlaybackContext'
 import { useTheme } from '@platform/shared/contexts/ThemeContext'
 import type { WireframeView } from '@platform/types/index'
 import { getWorkspaceSimulator } from '@shared/utils/workspaceModules'

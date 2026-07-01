@@ -4,6 +4,7 @@
 export * from './command-palette/index'
 export * from './feedback/index'
 export * from './flow-debugger/index'
+export * from './flowplan/index'
 export * from './flowTracer/index'
 export * from './go-to-overlay/index'
 export * from './simulator/index'

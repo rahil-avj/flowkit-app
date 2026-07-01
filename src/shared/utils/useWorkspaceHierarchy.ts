@@ -20,9 +20,9 @@ import {
   compileFlowplan,
   type ResolvedScreen,
   type ScreenResolver,
-} from '@platform/features/flow-library/compileFlowplan'
+} from '@features/flowplan/compileFlowplan'
+import { useFlowPlaybackOptional } from '@features/flowplan/FlowPlaybackContext'
 import { DEVICE_PRESETS } from '@platform/shared/components/devices'
-import { useFlowPlaybackOptional } from '@platform/shared/contexts/FlowPlaybackContext'
 import { getWorkspaceConfig } from '@platform/shared/utils/workspaceModules'
 import type {
   AnnotationTag,
