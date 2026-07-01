@@ -4,6 +4,7 @@ import PreviewCanvas from './core/canvas/PreviewCanvas'
 import { useAppShortcuts } from './core/shortcuts/useKeyboardShortcuts'
 import { FeedbackProvider } from './features/feedback/context/FeedbackContext'
 import { FigmaExportView } from './features/figma-export'
+import { FlowplanSettingsProvider } from './features/flowplan/FlowplanSettingsContext'
 import { FlowPlaybackProvider } from './features/flowplan/FlowPlaybackContext'
 import { SessionRecorderProvider } from './features/flowTracer/context'
 import Forbidden from './shared/components/errors/Forbidden'
@@ -99,11 +100,13 @@ function WorkspaceRunner({ name, onSwitch }: WorkspaceRunnerProps) {
                       workspaceConfig={workspaceConfig}
                       onSwitchWorkspace={onSwitch}
                     >
-                      <FlowPlaybackProvider>
-                        <FeedbackProvider>
-                          <PreviewCanvas flows={FLOWS} views={ALL_VIEWS} />
-                        </FeedbackProvider>
-                      </FlowPlaybackProvider>
+                      <FlowplanSettingsProvider>
+                        <FlowPlaybackProvider>
+                          <FeedbackProvider>
+                            <PreviewCanvas flows={FLOWS} views={ALL_VIEWS} />
+                          </FeedbackProvider>
+                        </FlowPlaybackProvider>
+                      </FlowplanSettingsProvider>
                     </DashboardProvider>
                   )}
                 </WorkspaceErrorBoundary>
