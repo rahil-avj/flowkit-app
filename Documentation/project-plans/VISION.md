@@ -45,6 +45,19 @@ Guard rails — these are explicitly out of scope:
 
 ---
 
+## Distribution model
+
+FlowKit ships two ways from one repo:
+
+- **Repo mode** — this checkout, for platform development. `workspaces/<name>/` holds author content, platform code lives in `src/`, multiple workspaces coexist and switch via the browser UI.
+- **Flat / author mode** — an npm consumer runs `npm create flowkit-app@latest my-project` and gets a project with just `flows/`, `flowplans/`, `lib/`, `flowkit.config.ts`, plus `flowkit` installed in `node_modules/`. No `workspaces/` directory; exactly one implicit workspace.
+
+**Why:** AI coding agents read `src/core/`, `src/features/`, `src/shared/` unprompted and waste context on platform internals an author should never touch. `node_modules` gives universal agent/editor blindness by convention — the author's project root is just their own work.
+
+See `Documentation/PACKAGE-ARCHITECTURE.md` for the technical mechanism (`isRepoMode()` detection, the `flowkit/vite` plugin, virtual modules) and `FEATURES.md`'s Package-Publish rows for what's shipped versus still open.
+
+---
+
 ## The five values that guide every decision
 
 From `Documentation/DevelopmentValues.md` — the five highest-leverage:

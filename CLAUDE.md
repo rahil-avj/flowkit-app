@@ -361,18 +361,18 @@ Set in `.env.local` (not committed).
 
 ## Package / Publish Mode
 
-> The dual-mode support described below (`isRepoMode()`, `assertScopedWorkspaceDir()`, lib build `exports`/`files`) is present on `main`. `Documentation/deployment-plans/PACKAGE-ARCHITECTURE.md` refers to this work as living on a `flowkit/Package` branch, but no such branch currently exists locally or on `origin` — it likely merged already; treat that doc's branch references as historical.
+> The dual-mode **source code** (`isRepoMode()`, `assertScopedWorkspaceDir()`, lib build `exports`/`files`, `packages/create-flowkit-app/`) is present on `main`. **No consumer-facing install path is live as of 2026-07-01**: `create-flowkit-app` has never been published to npm (`npm create flowkit-app@latest` 404s), and `origin` (`rahil-avj/flowkit-app`) has no `deployment` branch — only `main` exists remotely, so a git dependency has nothing valid to point at either. Don't tell a user to run `npm create flowkit-app@latest` or add a `github:...#deployment` git dependency until one of these is actually published/pushed.
 
 FlowKit ships two ways from one repo — every path in `scripts/lib/` and `scripts/cli/` must work under both:
 
 - **Repo mode** (this checkout) — `workspaces/<name>/` holds author content; multiple workspaces coexist, switched via browser UI.
-- **Flat/author mode** — `npm create flowkit-app@latest` installs `flowkit` into `node_modules/`; there is no `workspaces/` dir, just one implicit workspace at the project root.
+- **Flat/author mode** — `npm create flowkit-app@latest` installs `flowkit` into `node_modules/`; there is no `workspaces/` dir, just one implicit workspace at the project root. (Not yet live — see note above.)
 
-- **Mode detection**: `scripts/lib/paths.js` → `isRepoMode()` checks whether `ROOT` (computed from `paths.js`'s own file location, not `cwd()`) contains `node_modules` in its path — never check `workspaces/` for contents/existence, that gate misdetects when this repo has zero workspaces and previously caused `flowkit rw` to treat the whole repo root as a workspace and delete it. `assertScopedWorkspaceDir()` is the defense-in-depth backstop before any recursive workspace delete — call it in any new code path that deletes a workspace-scoped directory.
+- **Mode detection**: `scripts/lib/paths.js` → `isRepoMode()` checks for a `.flowkit-repo-root` marker file at `ROOT` (computed from `paths.js`'s own file location, not `cwd()`) — deliberately excluded from `package.json`'s `files[]` allowlist so it never ships to any real install. Earlier detection heuristics (workspace-dir contents, then `node_modules`-in-path) both caused real incidents — see `Documentation/PACKAGE-ARCHITECTURE.md` section 2 for the history. `assertScopedWorkspaceDir()` is the defense-in-depth backstop before any recursive workspace delete — call it in any new code path that deletes a workspace-scoped directory.
 - **`package.json` `"files"` is an allowlist**: only listed paths ship via `npm pack`/`publish`/git-dep. Verify what actually ships with `npm pack --dry-run --json` — glob entries like `"scripts/"` pull in more than expected, hence the `!scripts/tests/` etc. negations.
 - **Public API surface** (`src/core/config/index.ts` and anything it re-exports) must use **relative imports only** for its own types — never `@platform/*`/`@shared/*`/etc. path aliases. TS declaration emit writes path-mapped specifiers as-is into `.d.ts`, which a consumer's TypeScript can't resolve. Check after any `build:lib` change: `grep -rn "from '@\(platform\|shared\|core\|features\|kit\|workspace\|flowlens\)" dist/types/` should return nothing.
 - **`scripts/vite-plugin.js`** (exported as `flowkit/vite`) is what makes flat mode work at dev-server time — it generates virtual modules (`virtual:flowkit/config|screens|flowplans|workspace`) that replace `import.meta.glob` patterns hardcoding `workspaces/<name>/...`, reconstructing the same data from `flowkit.config.ts` + filesystem globs from `cwd()` instead.
-- See [Documentation/deployment-plans/PACKAGE-ARCHITECTURE.md](Documentation/deployment-plans/PACKAGE-ARCHITECTURE.md) for full detail, incident history, and the gap-analysis/author-guide docs it links to.
+- See [Documentation/PACKAGE-ARCHITECTURE.md](Documentation/PACKAGE-ARCHITECTURE.md) for the full technical mechanism, [Documentation/PACKAGE-AUTHOR-GUIDE.md](Documentation/PACKAGE-AUTHOR-GUIDE.md) for the consumer-facing guide, and [Documentation/project-plans/VISION.md](Documentation/project-plans/VISION.md) / [FEATURES.md](Documentation/project-plans/FEATURES.md) for the distribution-model rationale and current status.
 
 ---
 
@@ -396,7 +396,7 @@ FlowKit ships two ways from one repo — every path in `scripts/lib/` and `scrip
 flowkit nw <name>   # scaffolds workspaces/<name>/ with flows/, flowplans/, lib/
 ```
 
-Switch active workspace from the browser UI — `flowkit sw` is deprecated and does nothing.
+Switch active workspace from the browser UI.
 
 **Add a screen to a flow**
 
