@@ -246,7 +246,7 @@ export default function FlowLensMode({
       {/* ── Playback bar (between the panels, only when replay drives the canvas) ── */}
       {replayEnabled && (
         <div
-          className="absolute bottom-[76px] z-25 pointer-events-auto"
+          className="absolute bottom-19 z-25 pointer-events-auto"
           style={{
             left: effectiveLeftW,
             right: effectiveRightW,

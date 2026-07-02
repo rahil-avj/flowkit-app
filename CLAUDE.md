@@ -264,7 +264,8 @@ npm run dev
 **Build**
 
 - `npm run build` — tsc + vite build (runs `plan:check` prebuild gate automatically)
-- `npm run build:standalone` — single-file HTML via `vite.config.standalone.ts` (requires `FLOWKIT_WORKSPACE` env var) + `inline.js` post-process
+- `npm run build:standalone` — plain `tsc -b && vite build` (default `vite.config.ts`) + `inline.js` post-process; NOT the real standalone export path
+- `flowkit export` / `flowkit export:full` — the actual standalone HTML export; runs `npx vite build --config vite.config.standalone.ts` (requires `FLOWKIT_WORKSPACE` env var, uses `vite-plugin-singlefile`, outputs to `dist-standalone/`) via `scripts/cli/export.js`
 - `npm run build:lib` — builds the publishable `flowkit` npm package (`tsc -p tsconfig.build.json && vite build --config vite.lib.config.ts`) — see Package/Publish Mode below
 - `VITE_ENABLE_FLOWLENS=true npm run build` — includes FlowLens analytics chunk
 

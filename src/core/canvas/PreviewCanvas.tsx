@@ -72,8 +72,8 @@ const DISABLED_LENS = {
   available: false,
   enabled: false,
   pendingSessionId: null,
-  enter: () => {},
-  exit: () => {},
+  enter: () => { },
+  exit: () => { },
   consumePendingSessionId: () => null,
 } as const
 
@@ -185,8 +185,8 @@ function DesktopCanvas({ flows, views }: Props) {
   const actionCtx = useMemo<ActionCtx>(
     () => ({
       navigateTo,
-      setActiveTab: () => {},
-      setIsOpen: () => {},
+      setActiveTab: () => { },
+      setIsOpen: () => { },
       toggleTheme,
       toggleOrientation,
       resetToFirst,
@@ -635,7 +635,7 @@ function DesktopCanvas({ flows, views }: Props) {
 
 function FlowLensPanelSkeleton() {
   return (
-    <div className="absolute left-0 w-[280px] bg-theme-surface border-r border-theme-border pointer-events-auto inset-y-0">
+    <div className="absolute left-0 w-70 bg-theme-surface border-r border-theme-border pointer-events-auto inset-y-0">
       <div className="p-4 text-theme-text-disabled text-ui-xs">Loading FlowLens…</div>
     </div>
   )
@@ -716,15 +716,6 @@ function CanvasContent({
     setFlowAutoPlayLoop,
   } = useDashboard()
 
-  // ── On-mount scroll center ───────────────────────────────────────────────────
-  useLayoutEffect(() => {
-    const el = canvasRef.current
-    if (!el || el.clientWidth === 0 || el.clientHeight === 0) return
-    el.scrollLeft = (CANVAS_W - el.clientWidth) / 2
-    el.scrollTop = (CANVAS_H - el.clientHeight) / 2
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // Once only — reducer's scrollIntent effect handles subsequent centers.
-
   // ── Scrollbar fade ────────────────────────────────────────────────────────────
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(
@@ -757,7 +748,7 @@ function CanvasContent({
     breakKeepFit
   )
   const canvasClass = `canvas-scroll${autoHideScrollbars ? '' : ' scrollbars-always'}${keepFit ? ' keep-fit' : ''}`
-  const deviderV = <div className="w-0.25 h-6 my-0.5 bg-theme-border" />
+  const deviderV = <div className="w-px h-6 my-0.5 bg-theme-border" />
 
   return (
     // Spans all 3 grid columns, z-index:0 — panels float above at z-index:2
@@ -891,15 +882,15 @@ function CanvasContent({
             tooltip={
               showHandTooltip
                 ? {
-                    label: 'Hand tool active',
-                    shortcut: 'H',
-                    hint: 'Click again to exit · interact mode on',
-                  }
+                  label: 'Hand tool active',
+                  shortcut: 'H',
+                  hint: 'Click again to exit · interact mode on',
+                }
                 : {
-                    label: 'Hand tool',
-                    shortcut: 'H',
-                    hint: 'Drag to pan · hold Space for quick access',
-                  }
+                  label: 'Hand tool',
+                  shortcut: 'H',
+                  hint: 'Drag to pan · hold Space for quick access',
+                }
             }
             active={handMode}
             tint={showHandTooltip ? 'warning' : 'default'}
@@ -1235,7 +1226,7 @@ function WorkspaceBar({ panelOpen }: { panelOpen: boolean }) {
                   {activeWorkspace}
                 </span>
               </div>
-              <span className="px-1.5 py-0.5 rounded-[4px] text-ui-2xs font-bold bg-theme-blue-dim text-theme-blue shrink-0">
+              <span className="px-1.5 py-0.5 rounded-sm text-ui-2xs font-bold bg-theme-blue-dim text-theme-blue shrink-0">
                 active
               </span>
             </div>
