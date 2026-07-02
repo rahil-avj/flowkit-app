@@ -1,23 +1,33 @@
-import { AuthorAvatar, TEAM_MEMBERS } from '@platform/features/feedback'
+import Button from '@platform/shared/components/ui/Button'
+import Checkbox from '@platform/shared/components/ui/Checkbox'
+import Modal from '@platform/shared/components/ui/Modal'
+import { useTheme } from '@platform/shared/contexts/ThemeContext'
 import {
   AlertCircle,
   Check,
   CheckCircle2,
-  Cloud,
   Copy,
   Database,
-  Eye,
-  EyeOff,
   FileText,
-  KeyRound,
-  Loader2,
 } from 'lucide-react'
 import { useRef, useState } from 'react'
 
-import { useTheme } from '../../contexts/ThemeContext'
-import Button from './Button'
-import Checkbox from './Checkbox'
-import Modal from './Modal'
+import { CloudExportControls, CloudExportStatusHint, CloudKeyStepModal } from '../cloud-sync'
+import AuthorAvatar from './AuthorAvatar'
+import { TEAM_MEMBERS } from './teamMembers'
+
+// Optional cloud-push affordance. Only present when the cloud-sync feature is
+// enabled — see FeedbackContext.tsx/context/index.tsx for how this is populated.
+// If absent, this modal is a pure local-export tool with no cloud UI at all.
+export interface ExportModalCloudSlot {
+  cloudKey: string
+  setCloudKey: (key: string) => void
+  providedKey?: string
+  exportStatus: 'idle' | 'uploading' | 'success' | 'error'
+  exportError: string
+  exportShareUrl: string
+  onPushToCloud: () => void
+}
 
 export interface ExportModalProps {
   isOpen: boolean
@@ -26,15 +36,8 @@ export interface ExportModalProps {
   setReviewerName: (name: string) => void
   includeScreenshots: boolean
   setIncludeScreenshots: (include: boolean) => void
-  onExport: () => void
   onDownload: (format: 'md' | 'json') => void
-  cloudKey: string
-  setCloudKey: (key: string) => void
-  providedKey?: string
-  exportStatus: 'idle' | 'uploading' | 'success' | 'error'
-  exportError: string
-  exportShareUrl: string
-  cloudExportEnabled: boolean
+  cloudSlot?: ExportModalCloudSlot
   title?: string
 }
 
@@ -45,25 +48,15 @@ export default function ExportModal({
   setReviewerName,
   includeScreenshots,
   setIncludeScreenshots,
-  onExport,
   onDownload,
-  cloudKey,
-  setCloudKey,
-  providedKey = '',
-  exportStatus,
-  exportError,
-  exportShareUrl,
-  cloudExportEnabled,
+  cloudSlot,
   title = 'Export Feedback',
 }: ExportModalProps) {
   const { theme } = useTheme()
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [showKeyStep, setShowKeyStep] = useState(false)
-  const [draftKey, setDraftKey] = useState('')
-  const [showKey, setShowKey] = useState(false)
   const [copied, setCopied] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const keyInputRef = useRef<HTMLInputElement>(null)
 
   const suggestions = TEAM_MEMBERS.filter(
     m => m.name.toLowerCase().includes(reviewerName.toLowerCase()) && reviewerName.length > 0
@@ -73,41 +66,19 @@ export default function ExportModal({
 
   const handleClose = () => {
     setShowKeyStep(false)
-    setDraftKey('')
-    setShowKey(false)
     setCopied(false)
     onClose()
   }
 
-  const openKeyStep = () => {
-    setDraftKey(cloudKey)
-    setShowKeyStep(true)
-    setTimeout(() => keyInputRef.current?.focus(), 50)
-  }
-
-  const handleSaveKey = () => {
-    setCloudKey(draftKey.trim())
-    setShowKeyStep(false)
-  }
-
-  const handleRemoveKey = () => {
-    setCloudKey('')
-    setDraftKey('')
-    setShowKeyStep(false)
-  }
-
-  const handleRestoreDefault = () => {
-    setDraftKey(providedKey)
-  }
-
   const handleCopyUrl = async () => {
-    await navigator.clipboard.writeText(exportShareUrl).catch(() => {})
+    if (!cloudSlot) return
+    await navigator.clipboard.writeText(cloudSlot.exportShareUrl).catch(() => {})
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
-  // ── Success ────────────────────────────────────────────────────────────────
-  if (exportStatus === 'success') {
+  // ── Success (cloud push only — local downloads just trigger a browser download) ──
+  if (cloudSlot?.exportStatus === 'success') {
     return (
       <Modal isOpen={isOpen} onClose={handleClose} title={title} size="sm">
         <div className="flex flex-col items-center text-center gap-4 py-2">
@@ -126,9 +97,9 @@ export default function ExportModal({
           <div className="flex items-center gap-2 w-full rounded-lg px-3 py-2.5 border border-theme-border bg-theme-base">
             <span
               className="flex-1 truncate font-mono select-all text-ui-2xs text-theme-text-secondary"
-              title={exportShareUrl}
+              title={cloudSlot.exportShareUrl}
             >
-              {exportShareUrl}
+              {cloudSlot.exportShareUrl}
             </span>
             <button
               onClick={handleCopyUrl}
@@ -157,132 +128,32 @@ export default function ExportModal({
   }
 
   // ── Key step (cloud mode) ──────────────────────────────────────────────────
-  if (showKeyStep) {
+  if (showKeyStep && cloudSlot) {
     return (
-      <Modal
+      <CloudKeyStepModal
         isOpen={isOpen}
-        onClose={handleClose}
+        onClose={() => setShowKeyStep(false)}
         title={title}
-        size="sm"
-        footerSlot={
-          <>
-            <Button size="sm" onClick={() => setShowKeyStep(false)}>
-              Back
-            </Button>
-            {cloudKey && (
-              <Button
-                size="sm"
-                onClick={handleRemoveKey}
-                style={{ color: theme.accent.red, borderColor: theme.accent.red + '55' }}
-              >
-                Remove Key
-              </Button>
-            )}
-            {providedKey && draftKey.trim() !== providedKey && (
-              <Button size="sm" onClick={handleRestoreDefault}>
-                Restore default
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant="primary"
-              onClick={handleSaveKey}
-              disabled={!draftKey.trim()}
-              style={{ backgroundColor: theme.accent.green, borderColor: theme.accent.green }}
-            >
-              Save Key
-            </Button>
-          </>
-        }
-      >
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-theme-surface border border-theme-border">
-            <div
-              className="flex items-center justify-center rounded-lg shrink-0 size-9"
-              style={{ background: theme.accent.green + '18' }}
-            >
-              <KeyRound size={18} style={{ color: theme.accent.green }} />
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="font-bold text-xs text-theme-text-primary">JSONBin Access Key</span>
-              <span className="text-ui-2xs text-theme-text-muted">
-                Requires <strong>Create Bin</strong> permission. Stored on your device only.
-              </span>
-            </div>
-          </div>
-          <div className="flex flex-col gap-1">
-            <div
-              className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-theme-surface"
-              style={{
-                border: `1px solid ${draftKey.trim() ? theme.accent.green + '55' : theme.bg.border}`,
-              }}
-            >
-              <input
-                ref={keyInputRef}
-                type={showKey ? 'text' : 'password'}
-                value={draftKey}
-                onChange={e => setDraftKey(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSaveKey()}
-                placeholder="Paste access key…"
-                className="flex-1 bg-transparent outline-none font-mono text-ui-xs text-theme-text-primary"
-                style={{ letterSpacing: showKey ? undefined : '0.08em' }}
-                autoComplete="off"
-                spellCheck={false}
-              />
-              <button
-                onClick={() => setShowKey(v => !v)}
-                className="shrink-0 p-0.5 rounded text-theme-text-muted cursor-pointer"
-                style={{ background: 'transparent', border: 'none' }}
-                tabIndex={-1}
-              >
-                {showKey ? <EyeOff size={13} /> : <Eye size={13} />}
-              </button>
-            </div>
-            <span className="text-ui-2xs text-theme-text-muted">
-              Stored locally. Won't be asked again.
-            </span>
-            {draftKey.trim().startsWith('$2a$') && (
-              <span className="text-ui-2xs" style={{ color: theme.accent.amber }}>
-                This is a master key — it grants full account access. Consider using a
-                collection-scoped access key instead.
-              </span>
-            )}
-          </div>
-        </div>
-      </Modal>
+        cloudKey={cloudSlot.cloudKey}
+        setCloudKey={cloudSlot.setCloudKey}
+        providedKey={cloudSlot.providedKey}
+      />
     )
   }
 
   // ── Main form ──────────────────────────────────────────────────────────────
-  const footerCloud = cloudExportEnabled ? (
+  const footerCloud = cloudSlot ? (
     <>
-      <Button size="sm" onClick={handleClose} disabled={exportStatus === 'uploading'}>
+      <Button size="sm" onClick={handleClose} disabled={cloudSlot.exportStatus === 'uploading'}>
         Cancel
       </Button>
-      <Button
-        size="sm"
-        onClick={openKeyStep}
-        disabled={exportStatus === 'uploading'}
-        icon={<KeyRound size={13} />}
-      >
-        {cloudKey ? 'Manage Key' : 'Add Key'}
-      </Button>
-      <Button
-        size="sm"
-        variant="primary"
-        onClick={onExport}
-        disabled={!reviewerName.trim() || !cloudKey || exportStatus === 'uploading'}
-        icon={
-          exportStatus === 'uploading' ? (
-            <Loader2 size={13} className="animate-spin" />
-          ) : (
-            <Cloud size={13} />
-          )
-        }
-        style={{ backgroundColor: theme.accent.green, borderColor: theme.accent.green }}
-      >
-        {exportStatus === 'uploading' ? 'Uploading…' : 'Push to Cloud'}
-      </Button>
+      <CloudExportControls
+        cloudKey={cloudSlot.cloudKey}
+        onManageKey={() => setShowKeyStep(true)}
+        onPushToCloud={cloudSlot.onPushToCloud}
+        exportStatus={cloudSlot.exportStatus}
+        disabled={!reviewerName.trim()}
+      />
     </>
   ) : null
 
@@ -296,7 +167,7 @@ export default function ExportModal({
     >
       <div className="flex flex-col gap-4">
         {/* Error banner */}
-        {exportStatus === 'error' && (
+        {cloudSlot?.exportStatus === 'error' && (
           <div
             className="flex items-start gap-2 p-2.5 rounded-lg"
             style={{
@@ -306,7 +177,7 @@ export default function ExportModal({
           >
             <AlertCircle size={14} className="shrink-0 mt-px" style={{ color: theme.accent.red }} />
             <span className="text-ui-2xs" style={{ color: theme.accent.red }}>
-              {exportError}
+              {cloudSlot.exportError}
             </span>
           </div>
         )}
@@ -429,23 +300,7 @@ export default function ExportModal({
         </div>
 
         {/* Cloud key status hint */}
-        {cloudExportEnabled && (
-          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-theme-surface border border-theme-border">
-            <Cloud
-              size={14}
-              className="shrink-0"
-              style={{ color: cloudKey ? theme.accent.green : theme.text.muted }}
-            />
-            <span
-              className="text-ui-2xs"
-              style={{ color: cloudKey ? theme.accent.green : theme.text.muted }}
-            >
-              {cloudKey
-                ? 'Cloud key saved — ready to push.'
-                : 'No key set. Use "Manage Key" to configure.'}
-            </span>
-          </div>
-        )}
+        {cloudSlot && <CloudExportStatusHint cloudKey={cloudSlot.cloudKey} />}
 
         {/* Screenshots toggle */}
         <div className="flex items-center justify-between p-2 rounded-lg border border-theme-border">

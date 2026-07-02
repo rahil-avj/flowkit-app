@@ -359,14 +359,17 @@ function FeedbackSection({ ctx }: { ctx: ActionCtx }) {
         </SettingRow>
       </SettingGroup>
 
-      <SettingGroup title="Cloud sync">
-        <SettingRow
-          label="Cloud push"
-          hint="Automatically syncs new comments to the configured cloud endpoint."
-        >
-          <Toggle size="sm" checked={ctx.cloudExportEnabled} onChange={ctx.toggleCloudExport} />
-        </SettingRow>
-      </SettingGroup>
+      {ctx.cloudSyncSlot && (
+        <SettingGroup title="Cloud sync">
+          <SettingRow label={ctx.cloudSyncSlot.label} hint={ctx.cloudSyncSlot.hint}>
+            <Toggle
+              size="sm"
+              checked={ctx.cloudSyncSlot.enabled}
+              onChange={ctx.cloudSyncSlot.toggle}
+            />
+          </SettingRow>
+        </SettingGroup>
+      )}
     </div>
   )
 }

@@ -135,8 +135,7 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
     firstViewId,
   } = useDashboard()
   const playback = useFlowPlaybackOptional()
-  const { totalCommentCount, setOpenFeedbackTab, cloudExportEnabled, toggleCloudExport } =
-    useFeedback()
+  const { totalCommentCount, setOpenFeedbackTab, cloudSyncSlot } = useFeedback()
 
   const [autoHideScrollbars, setAutoHideScrollbars] = useState(
     () => localStorage.getItem(LS_AUTO_HIDE_SCROLLBARS) === 'true'
@@ -216,8 +215,7 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
         setActiveTab('settings')
       },
       toggleDevMode,
-      toggleCloudExport,
-      cloudExportEnabled,
+      cloudSyncSlot,
       openFeedbackTab: () => {
         setActiveTab('feedback')
       },
@@ -241,8 +239,7 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       resetToFirst,
       resetDb,
       toggleDevMode,
-      toggleCloudExport,
-      cloudExportEnabled,
+      cloudSyncSlot,
       toggleAutoHideScrollbars,
       autoHideScrollbars,
       showSessionsFeature,

@@ -1,19 +1,19 @@
-import {
-  AlertCircle,
-  CheckCircle2,
-  Clipboard,
-  Cloud,
-  Eye,
-  EyeOff,
-  FileJson,
-  Link,
-  Upload,
-} from 'lucide-react'
+import Button from '@platform/shared/components/ui/Button'
+import Modal from '@platform/shared/components/ui/Modal'
+import { useTheme } from '@platform/shared/contexts/ThemeContext'
+import { AlertCircle, CheckCircle2, Clipboard, Cloud, FileJson, Upload } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 
-import { useTheme } from '../../contexts/ThemeContext'
-import Button from './Button'
-import Modal from './Modal'
+import { CloudImportTab } from '../cloud-sync'
+
+// Optional cloud-pull affordance. Only present when the cloud-sync feature is
+// enabled. If absent, this modal is a pure local file/paste import tool with no
+// cloud tab at all.
+export interface ImportModalCloudSlot {
+  importReadKey: string
+  setImportReadKey: (key: string) => void
+  onImportFromCloud: (binUrl: string) => Promise<void>
+}
 
 export interface ImportModalProps {
   isOpen: boolean
@@ -27,10 +27,7 @@ export interface ImportModalProps {
   importedTotalAfter: number
   onImportFile: (file: File) => void
   onImportText: (text: string) => Promise<void>
-  importReadKey: string
-  setImportReadKey: (key: string) => void
-  onImportFromCloud: (binUrl: string) => Promise<void>
-  cloudExportEnabled: boolean
+  cloudSlot?: ImportModalCloudSlot
   title?: string
   sourceNameLabel?: string
 }
@@ -47,10 +44,7 @@ export default function ImportModal({
   importedTotalAfter,
   onImportFile,
   onImportText,
-  importReadKey,
-  setImportReadKey,
-  onImportFromCloud,
-  cloudExportEnabled,
+  cloudSlot,
   title = 'Import Feedback',
   sourceNameLabel = 'reviewer',
 }: ImportModalProps) {
@@ -58,33 +52,13 @@ export default function ImportModal({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [tab, setTab] = useState<'file' | 'cloud'>('file')
-  const [binUrl, setBinUrl] = useState('')
-  const [showKey, setShowKey] = useState(false)
-  const [fetching, setFetching] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [pasting, setPasting] = useState(false)
   const [dropError, setDropError] = useState('')
 
-  const isValidUrl = binUrl.trim().includes('/b/')
-  const canFetch = isValidUrl && importReadKey.trim().length > 0 && !fetching
-
   const handleClose = () => {
-    setBinUrl('')
-    setFetching(false)
     setIsDragging(false)
     onClose()
-  }
-
-  const handleFetch = async () => {
-    setFetching(true)
-    try {
-      await onImportFromCloud(binUrl.trim())
-    } catch (err: unknown) {
-      setImportStatus('error')
-      console.error(err)
-    } finally {
-      setFetching(false)
-    }
   }
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -212,8 +186,8 @@ export default function ImportModal({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={title} size="sm">
       <div className="flex flex-col gap-4">
-        {/* Tab switcher — only shown when cloud export is enabled */}
-        {cloudExportEnabled && (
+        {/* Tab switcher — only shown when the cloud slot is present */}
+        {cloudSlot && (
           <div className="flex rounded-lg p-0.5 gap-0.5 bg-theme-elevated border border-theme-border">
             {(['file', 'cloud'] as const).map(t => (
               <button
@@ -305,115 +279,13 @@ export default function ImportModal({
         )}
 
         {/* From Cloud */}
-        {tab === 'cloud' && (
-          <div className="flex flex-col gap-3">
-            {/* Bin URL */}
-            <div className="flex flex-col gap-1">
-              <span
-                className="font-bold uppercase tracking-widest text-theme-text-muted"
-                style={{ fontSize: scale.text.xxs }}
-              >
-                Bin URL
-              </span>
-              <div
-                className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-theme-surface"
-                style={{
-                  border: `1px solid ${binUrl.length > 0 ? (isValidUrl ? 'var(--color-theme-green)' + '55' : 'var(--color-theme-red)' + '55') : 'var(--color-theme-border)'}`,
-                }}
-              >
-                <Link size={13} className="text-theme-text-muted shrink-0" />
-                <input
-                  type="url"
-                  value={binUrl}
-                  onChange={e => setBinUrl(e.target.value)}
-                  placeholder="https://api.jsonbin.io/v3/b/…"
-                  className="flex-1 bg-transparent outline-none font-mono text-theme-text-primary"
-                  style={{ fontSize: scale.text.xs }}
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-              </div>
-              {binUrl.length > 0 && !isValidUrl && (
-                <span className="text-theme-red" style={{ fontSize: scale.text.xxs }}>
-                  Paste the full JSONBin link shared by the reviewer.
-                </span>
-              )}
-            </div>
-
-            {/* Access Key */}
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center justify-between">
-                <span
-                  className="font-bold uppercase tracking-widest text-theme-text-muted"
-                  style={{ fontSize: scale.text.xxs }}
-                >
-                  Access Key
-                </span>
-                {importReadKey.trim().length > 0 && (
-                  <span
-                    className="flex items-center gap-1 font-bold text-theme-green"
-                    style={{ fontSize: scale.text.xxs }}
-                  >
-                    <span className="rounded-full bg-theme-green inline-block size-1.5" />
-                    Saved
-                  </span>
-                )}
-              </div>
-              <div
-                className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-theme-surface"
-                style={{
-                  border: `1px solid ${importReadKey.trim().length > 0 ? 'var(--color-theme-green)' + '55' : 'var(--color-theme-border)'}`,
-                }}
-              >
-                <Cloud
-                  size={13}
-                  className={`shrink-0 ${importReadKey.trim().length > 0 ? 'text-theme-green' : 'text-theme-text-muted'}`}
-                />
-                <input
-                  type={showKey ? 'text' : 'password'}
-                  value={importReadKey}
-                  onChange={e => setImportReadKey(e.target.value)}
-                  placeholder="Paste access key or master key…"
-                  className="flex-1 bg-transparent outline-none font-mono text-theme-text-primary"
-                  style={{ fontSize: scale.text.xs, letterSpacing: showKey ? undefined : '0.08em' }}
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-                <button
-                  onClick={() => setShowKey(v => !v)}
-                  className="shrink-0 p-0.5 rounded text-theme-text-muted bg-transparent border-none cursor-pointer"
-                  tabIndex={-1}
-                >
-                  {showKey ? <EyeOff size={13} /> : <Eye size={13} />}
-                </button>
-              </div>
-              <span className="text-theme-text-muted" style={{ fontSize: scale.text.xxs }}>
-                Access key or master key. Stored locally on your device.
-              </span>
-            </div>
-
-            <Button
-              variant="primary"
-              onClick={handleFetch}
-              disabled={!canFetch}
-              icon={
-                fetching ? (
-                  <span
-                    className="rounded-full border-2 border-t-transparent animate-spin size-3"
-                    style={{ borderColor: 'white', borderTopColor: 'transparent' }}
-                  />
-                ) : (
-                  <Cloud size={13} />
-                )
-              }
-              style={{
-                backgroundColor: 'var(--color-theme-green)',
-                borderColor: 'var(--color-theme-green)',
-              }}
-            >
-              {fetching ? 'Fetching…' : 'Fetch & Import'}
-            </Button>
-          </div>
+        {tab === 'cloud' && cloudSlot && (
+          <CloudImportTab
+            importReadKey={cloudSlot.importReadKey}
+            setImportReadKey={cloudSlot.setImportReadKey}
+            onImportFromCloud={cloudSlot.onImportFromCloud}
+            onError={() => setImportStatus('error')}
+          />
         )}
       </div>
     </Modal>

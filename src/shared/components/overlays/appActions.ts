@@ -5,6 +5,22 @@ function afterTabMount(fn: () => void) {
   setTimeout(fn, 50)
 }
 
+// Generic descriptor a feature can populate to register one toggle into both
+// Settings and Action Center, without shared/ needing to import that feature's
+// code. See src/features/feedback/cloud-sync/registerCloudSync.ts for the one
+// current producer of this shape — kept in sync with that file manually since
+// shared/ must not import from features/.
+export interface CloudSyncSlot {
+  actionId: string
+  group: string
+  label: string
+  hint?: string
+  beta?: boolean
+  enabled: boolean
+  toggle: () => void
+  stayOpen?: boolean
+}
+
 export interface ActionCtx {
   navigateTo: (id: string) => void
   setActiveTab: (tab: InspectorTab) => void
@@ -17,8 +33,7 @@ export interface ActionCtx {
   openHelp: () => void
   openSettings: () => void
   toggleDevMode: () => void
-  toggleCloudExport: () => void
-  cloudExportEnabled: boolean
+  cloudSyncSlot?: CloudSyncSlot
   openFeedbackTab: () => void
   openExportModal: () => void
   openImportModal: () => void
@@ -288,12 +303,18 @@ export const APP_ACTIONS: AppAction[] = [
       afterTabMount(() => c.openImportModal())
     },
   },
-  {
-    id: 'toggle-cloud-export',
-    modes: ['default'],
-    group: 'Feedback',
-    label: 'Toggle cloud push for feedback',
-    beta: true,
-    run: c => c.toggleCloudExport(),
-  },
 ]
+
+// Turns a CloudSyncSlot (or any future slot with this shape) into an AppAction
+// so it appears in Action Center alongside the static list — the item's very
+// existence in the palette depends on ctx, so it can't be a static entry.
+export function slotToAction(slot: CloudSyncSlot): AppAction {
+  return {
+    id: slot.actionId,
+    modes: ['default'],
+    group: slot.group,
+    label: slot.label,
+    beta: slot.beta,
+    run: c => c.cloudSyncSlot?.toggle(),
+  }
+}

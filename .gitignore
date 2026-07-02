@@ -24,3 +24,6 @@ flowlens-report-*.json
 sessions-brief-*.md
 test
 testspace
+
+# TrackerTim is its own nested git repo, not part of flowkit-app's history
+trackerTim

@@ -1,5 +1,4 @@
-import { JSONBIN_CONFIG, useFeedback } from '@platform/features/feedback/context/FeedbackContext'
-import { LS_JSONBIN_KEY, LS_JSONBIN_READ_KEY } from '@platform/shared/constants/storageKeys'
+import { useFeedback } from '@platform/features/feedback/context/FeedbackContext'
 import { useNavigation } from '@platform/shared/contexts/DashboardContext'
 import { FeedbackComment, FeedbackTag, WireframeView } from '@platform/types/index'
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
@@ -168,6 +167,13 @@ export function FeedbackTabProvider({
     setLastReviewerName,
     importCommentsFromText,
     cloudExportEnabled,
+    cloudKey,
+    setCloudKey,
+    providedKey,
+    importReadKey,
+    setImportReadKey,
+    pushJson,
+    pullFromBin,
   } = useFeedback()
   const { activeViewId } = useNavigation()
 
@@ -210,44 +216,12 @@ export function FeedbackTabProvider({
   const [includeScreenshot, setIncludeScreenshot] = useState(true)
   const [isCapturing, setIsCapturing] = useState(false)
 
-  const [cloudKey, setCloudKeyState] = useState(() => {
-    const stored = localStorage.getItem(LS_JSONBIN_KEY)
-    // Seed from provided key if nothing has been stored yet
-    if (!stored && JSONBIN_CONFIG.providedKey) {
-      try {
-        localStorage.setItem(LS_JSONBIN_KEY, JSONBIN_CONFIG.providedKey)
-      } catch {
-        /* quota */
-      }
-      return JSONBIN_CONFIG.providedKey
-    }
-    return stored || ''
-  })
-  const [importReadKey, setImportReadKeyState] = useState(
-    () => localStorage.getItem(LS_JSONBIN_READ_KEY) || ''
-  )
-  const setImportReadKey = (key: string) => {
-    setImportReadKeyState(key)
-    try {
-      localStorage.setItem(LS_JSONBIN_READ_KEY, key)
-    } catch {
-      /* quota */
-    }
-  }
   const [exportStatus, setExportStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>(
     'idle'
   )
   const [exportError, setExportError] = useState('')
   const [exportShareUrl, setExportShareUrl] = useState('')
 
-  const setCloudKey = (key: string) => {
-    setCloudKeyState(key)
-    try {
-      localStorage.setItem(LS_JSONBIN_KEY, key)
-    } catch {
-      /* quota */
-    }
-  }
   const [exportIncludeScreenshots, setExportIncludeScreenshots] = useState(true)
 
   const handleAddComment = async () => {
@@ -293,21 +267,18 @@ export function FeedbackTabProvider({
     setExportError('')
     setExportShareUrl('')
     try {
-      const result = await exportAndDownload(
+      const { json } = await exportAndDownload(
         exportReviewerName.trim(),
         'json',
         exportIncludeScreenshots,
-        cloudKey.trim() || undefined
+        { download: false }
       )
       setLastReviewerName(exportReviewerName.trim())
-      if (result.shareUrl) {
-        setExportShareUrl(result.shareUrl)
-        await navigator.clipboard.writeText(result.shareUrl).catch(() => {})
-        setExportStatus('success')
-      } else {
-        setExportStatus('idle')
-        setShowExportModal(false)
-      }
+      const dateStr = new Date().toISOString().split('T')[0]
+      const { shareUrl } = await pushJson(`wireframe-feedback-${dateStr}`, json!)
+      setExportShareUrl(shareUrl)
+      await navigator.clipboard.writeText(shareUrl).catch(() => {})
+      setExportStatus('success')
     } catch (err: unknown) {
       setExportError((err as Error).message || 'Upload failed. Please try again.')
       setExportStatus('error')
@@ -322,31 +293,13 @@ export function FeedbackTabProvider({
 
   const handleLocalExport = async (format: 'md' | 'json') => {
     if (!exportReviewerName.trim()) return
-    await exportAndDownload(
-      exportReviewerName.trim(),
-      format,
-      exportIncludeScreenshots,
-      undefined,
-      true
-    )
+    await exportAndDownload(exportReviewerName.trim(), format, exportIncludeScreenshots)
     setLastReviewerName(exportReviewerName.trim())
     setShowExportModal(false)
   }
 
   const handleImportFromCloud = async (binUrl: string) => {
-    const match = binUrl.match(/\/b\/([a-f0-9]+)/i)
-    if (!match) throw new Error('Invalid bin URL. Paste the full JSONBin link.')
-    const binId = match[1]
-    const authHeader = importReadKey.startsWith('$2a$') ? 'X-Master-Key' : 'X-Access-Key'
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-      headers: { [authHeader]: importReadKey },
-    })
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.message || `JSONBin error ${res.status}`)
-    }
-    const wrapper = await res.json()
-    const json = JSON.stringify(wrapper.record ?? wrapper)
+    const json = await pullFromBin(binUrl)
     const file = new File([json], 'cloud-import.json', { type: 'application/json' })
     await handleImportFile(file)
   }
@@ -440,7 +393,7 @@ export function FeedbackTabProvider({
         setExportIncludeScreenshots,
         cloudKey,
         setCloudKey,
-        providedKey: JSONBIN_CONFIG.providedKey,
+        providedKey,
         exportStatus,
         exportError,
         exportShareUrl,
