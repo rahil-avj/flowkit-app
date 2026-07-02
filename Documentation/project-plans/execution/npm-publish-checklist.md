@@ -2,6 +2,8 @@
 
 First-time publish, two packages: `flowkit` (library) and `create-flowkit-app` (scaffolder).
 
+> This checklist covers registry/packaging mechanics only. Code-level security, performance, and test fixes to complete beforehand live in [`pre-launch-remediation-runbook.md`](./pre-launch-remediation-runbook.md) — its Task 1 (block JSONBin master keys) is the same issue as Phase 6 below and should be done first.
+
 ---
 
 ## Phase 0 — Account & Tooling (one-time)

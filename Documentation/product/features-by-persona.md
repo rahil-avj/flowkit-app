@@ -1,7 +1,7 @@
-# FlowKit Features List
+# FlowKit Features by Persona
 
-> **Baseline snapshot** — current built features as of June 2026.
-> This document is a historical record. New features are tracked separately.
+> **Baseline snapshot** — current built features as of June 2026, organized by who each feature is for (U1–U5).
+> This is a product/UX-facing view. The engineering-facing feature registry (status, subsystem, phase) lives at `Documentation/project-plans/vision/FEATURES.md` — that one is actively maintained; this one is a point-in-time snapshot and won't be kept in sync automatically.
 
 ---
 

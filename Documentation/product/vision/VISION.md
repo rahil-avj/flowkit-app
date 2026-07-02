@@ -28,7 +28,7 @@ Seven core features, fully working, correctly gated:
 | **Flow Library**  | Browse and run flowplans; workspace hierarchy tree                                |
 | **Simulator**     | Device presets, connection mode, accessibility filters, custom workspace controls |
 
-A feature management system (registry → entitlement resolver → feature gate) gates these at build and runtime. See `Documentation/project-plans/Feature_Management_System.md`.
+A feature management system (registry → entitlement resolver → feature gate) gates these at build and runtime — planned, not yet implemented. See `Documentation/project-plans/trackers/flowkit-tracker.md` § Feature management system.
 
 ---
 

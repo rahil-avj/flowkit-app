@@ -90,6 +90,42 @@ monorepo's shared `render.js`/`spec.js`.
   duplicated content) but flag with a one-line comment in each stub.
 - If profile fields ever expand to include anything sensitive, revisit git-tracked status.
 
+## Appendix — exact stub file contents
+
+`.flowaid/profile.md` (`writeFlowaidProfileStub`) — header/comment only, no interview content:
+
+```
+# Author Profile
+
+<!-- Written and maintained by Flowaid across sessions. One "## Author Profile" section
+     with no name until one is given; upgrade that section in place once a name arrives.
+     Only add a second, separately-named section if a genuinely different person's answers
+     show up. Don't hand-edit unless correcting a mistake — let Flowaid keep this current. -->
+```
+
+`AGENTS.md` (`writeAgentsStub`):
+
+```
+# AGENTS.md
+
+This project's agent instructions live in CLAUDE.md — read that file first and follow it,
+including its "First session — onboarding" section and its `.flowaid/profile.md` handling.
+This file exists so cross-tool agents that look for AGENTS.md by convention find their way
+there; it is intentionally not duplicated here to avoid drift.
+```
+
+`.cursor/rules/flowkit.mdc` (`writeCursorRules`):
+
+```
+---
+description: FlowKit project agent instructions
+alwaysApply: true
+---
+
+This project's agent instructions live in CLAUDE.md — read that file first and follow it,
+including its "First session — onboarding" section and its `.flowaid/profile.md` handling.
+```
+
 ## Verification
 
 1. Scaffold locally via `--local-dev` into a scratch dir.

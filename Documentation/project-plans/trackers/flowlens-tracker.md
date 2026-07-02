@@ -95,7 +95,7 @@ Append-only. Most recent at top.
 
 **Decision:** The revamp changes only `src/modes/flowlens/components/reports/ReportsOverlay.tsx`. No changes to `AnalyticsOverlay.tsx`, `analyticsPrimitives.tsx`, `aggregate.ts`, `sessionFilters.ts`, or `HeatmapView.tsx`.
 **Reason:** Containment. The layout problem (flat filter bar, no tabs, no sessions list) is a UI-only issue. The aggregation and filter logic in `aggregate.ts` and `sessionFilters.ts` is correct — the data model already supports date ranges and quality range filters that the old UI just didn't expose.
-**Source:** `Documentation/project-plans/FlowLens_ReportsOverlay.md`
+**Source:** `Documentation/project-plans/specs/flowlens-reports-overlay.md`
 
 ---
 

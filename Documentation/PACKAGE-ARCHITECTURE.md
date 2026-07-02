@@ -1,6 +1,6 @@
 # FlowKit as a Package — Developer Architecture Reference
 
-> Audience: whoever picks up development on the git-dep/npm-package effort next. This is a technical reference for _how the system works and why_, not a plan or a status report. The original implementation plan and its gap-analysis audit have been compressed into `Documentation/project-plans/VISION.md` (Distribution model) and `FEATURES.md` (Package-Publish rows) — see those for status and open items. For the consumer-facing guide, see [PACKAGE-AUTHOR-GUIDE.md](./PACKAGE-AUTHOR-GUIDE.md).
+> Audience: whoever picks up development on the git-dep/npm-package effort next. This is a technical reference for _how the system works and why_, not a plan or a status report. The original implementation plan and its gap-analysis audit have been compressed into `Documentation/project-plans/vision/VISION.md` (Distribution model) and `Documentation/project-plans/vision/FEATURES.md` (Package-Publish rows) — see those for status and open items. For the consumer-facing guide, see [PACKAGE-AUTHOR-GUIDE.md](./PACKAGE-AUTHOR-GUIDE.md).
 >
 > Dual-mode source code (`isRepoMode()`, `assertScopedWorkspaceDir()`, lib build `exports`/`files`, `packages/create-flowkit-app/`) is present on `main`. No consumer-facing install path is live yet — `create-flowkit-app` has not been published to npm, and no `deployment` branch exists on `origin` for a git dependency to target.
 

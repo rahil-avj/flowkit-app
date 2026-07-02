@@ -1,6 +1,6 @@
 # Working with FlowKit as a Package (Author Guide)
 
-> Describes the end state of the FlowKit package/flat-mode distribution work (see `Documentation/project-plans/VISION.md`'s Distribution model section and `FEATURES.md`'s Package-Publish rows for status) — what it's like to use FlowKit once the packaging phases ship. Written ahead of the implementation so the target experience is unambiguous while building toward it. Update this file if a locked decision changes.
+> Describes the end state of the FlowKit package/flat-mode distribution work (see `Documentation/project-plans/vision/VISION.md`'s Distribution model section and `Documentation/project-plans/vision/FEATURES.md`'s Package-Publish rows for status) — what it's like to use FlowKit once the packaging phases ship. Written ahead of the implementation so the target experience is unambiguous while building toward it. Update this file if a locked decision changes.
 
 ## Quick start
 

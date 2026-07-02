@@ -85,7 +85,7 @@ Append-only. Most recent at top.
 
 **Decision:** Three-layer architecture planned (Registry → Entitlement Resolver → Feature Gate) with 7 features to register at v1: `flowlens`, `flowplans`, `feedback`, `flowTracer`, `flowDebugger`, `flowLibrary`, `simulator`.
 **Reason:** Approaching v1 — need kill switches, beta labels, and plan gating before ship. Current flags (`FLOWLENS_AVAILABLE`, `LS_SESSIONS_ENABLED`) are ad-hoc and inconsistent.
-**Source:** `Documentation/project-plans/Feature_Management_System.md`
+**Source:** This tracker's own In-scope section above (no separate spec file exists)
 
 ---
 

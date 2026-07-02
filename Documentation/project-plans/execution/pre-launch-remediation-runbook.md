@@ -12,6 +12,8 @@
 > [!IMPORTANT]
 > **Before you touch anything.** FlowKit is a browser-only prototyping tool — there is no server, database, or deployed production. "Shipping" means publishing a new build / standalone HTML export. So none of these fixes require migrations, downtime, or coordination.
 >
+> This runbook covers code-level fixes only. If "shipping" means an actual npm publish of the `flowkit`/`create-flowkit-app` packages, see [`npm-publish-checklist.md`](./npm-publish-checklist.md) for the registry/packaging steps — its Phase 6 security sweep overlaps with Task 1 below (same JSONBin master-key issue).
+>
 > Make a branch first: `git checkout -b fix/pre-launch-audit`. Commit after **each** task with the message shown in that task. If `npm run build` or `npm test` fails after a change, stop and re-read the step — do not push.
 >
 > If a step's "before" code doesn't match what you see in the file, the line numbers have drifted. Search for the surrounding code shown here rather than trusting the line number, and flag it in the PR.
@@ -28,6 +30,12 @@
 | 4   | [Add a Playwright smoke suite (or drop the dep)](#task-4--add-a-playwright-smoke-suite-or-drop-the-dep)                   | 🟡 High  | B — fast-follow  |
 | 5   | [Guard the dot-path writers against prototype pollution](#task-5--guard-the-dot-path-writers-against-prototype-pollution) | 🔵 Low   | C — hardening    |
 | 6   | [Validate imported screenshot URIs](#task-6--validate-imported-screenshot-uris)                                           | 🔵 Low   | C — hardening    |
+| 7   | [Fix stale `recState` closure in `logEvent`](#task-7--fix-stale-recstate-closure-in-logevent)                             | 🟡 High  | D — flowTracer   |
+| 8   | [Cancel pending `recentFlushRef` in `resetLiveState`](#task-8--cancel-pending-recentflushref-in-resetlivestate)           | 🟡 High  | D — flowTracer   |
+| 9   | [Pass tags/testMode through `startRecording`](#task-9--pass-tagstestmode-through-startrecording)                         | 🟡 High  | D — flowTracer   |
+| 10  | [De-duplicate remarks rendering in `SessionInspect`](#task-10--de-duplicate-remarks-rendering-in-sessioninspect)          | 🟡 High  | D — flowTracer   |
+
+> Task 2 (above, Phase A) already covers the `getSnapshots`/`deleteSession` full-scan bug — it was also flagged independently in the flowTracer review folded in here. Not duplicated as a separate task.
 
 ---
 
@@ -492,20 +500,123 @@ for (const c of newComments) {
 
 ---
 
+# Phase D — flowTracer bug backlog (folded in from a subsystem code review, 2026-06-25)
+
+Tasks 7–10. Scope: `src/features/flowTracer/` — the session recorder. None of these are exploitable/user-visible today; all are real logic bugs.
+
+---
+
+## Task 7 — Fix stale `recState` closure in `logEvent`
+
+|              |                                        |
+| ------------ | -------------------------------------- |
+| **Severity** | 🟡 High · Logic bug                    |
+| **File**     | `src/features/flowTracer/context/index.tsx` |
+| **Lines**    | 219–223                                |
+
+### Why
+
+`logEvent` is a `useCallback` that closes over React state `recState`. Between a `stopRecording()` call and the next render, `sessionIdRef.current` is `null` but `recState` still reads as `'recording'` (or vice versa). The guard on line 219 (`if (!sessionIdRef.current) return`) is correct; the guard on line 222 (`if (recState === 'paused' …`) reads stale state.
+
+### Fix
+
+Track pause/recording state via a ref kept in sync with a `useEffect`, and read the ref (not the closed-over state) inside `logEvent`.
+
+### ✓ Verify
+
+- [ ] Manual: start recording, pause immediately, fire an interaction — confirm it's not logged.
+- [ ] `npm run lint` + `npm run build` pass.
+- [ ] Commit: `git commit -am "fix(flowTracer): read recState via ref to avoid stale-closure logging bug"`
+
+---
+
+## Task 8 — Cancel pending `recentFlushRef` in `resetLiveState`
+
+|              |                                        |
+| ------------ | -------------------------------------- |
+| **Severity** | 🟡 High · Logic bug                    |
+| **File**     | `src/features/flowTracer/context/index.tsx` |
+| **Lines**    | 301–307                                |
+
+### Why
+
+`resetLiveState` (called by both `stopRecording` and the inactivity timeout) clears `recentEventsRef.current` and calls `setRecentEvents([])`. If a `recentFlushRef` timeout is already pending, it fires ~150ms later and calls `setRecentEvents([...recentEventsRef.current])` — the last snapshot before the clear — briefly un-clearing the live feed.
+
+### Fix
+
+`resetLiveState` must also `clearTimeout(recentFlushRef.current)` before clearing state.
+
+### ✓ Verify
+
+- [ ] Manual: stop recording right after a burst of interactions — live feed stays empty, doesn't flicker back.
+- [ ] `npm run lint` + `npm run build` pass.
+- [ ] Commit: `git commit -am "fix(flowTracer): cancel pending flush timer in resetLiveState"`
+
+---
+
+## Task 9 — Pass tags/testMode through `startRecording`
+
+|              |                       |
+| ------------ | --------------------- |
+| **Severity** | 🟡 High · Logic bug    |
+| **File**     | `src/features/flowTracer/components/panel.tsx` |
+| **Lines**    | 231                    |
+
+### Why
+
+`recorder.startRecording(resolvedName(s))` is called with 1 argument, but the recorder's `startRecording(name, tags, testMode)` signature takes 3. Tags and test mode from the settings panel are silently dropped — test sessions can't be initiated from the UI.
+
+### Fix
+
+Thread the settings-panel `tags` and `testMode` values through to the `startRecording` call at `panel.tsx:231`.
+
+### ✓ Verify
+
+- [ ] Manual: set tags + enable test mode in Session Settings, start a recording, stop it — exported session has the tags and `testMode: true`.
+- [ ] `npm run lint` + `npm run build` pass.
+- [ ] Commit: `git commit -am "fix(flowTracer): pass tags/testMode from panel into startRecording"`
+
+---
+
+## Task 10 — De-duplicate remarks rendering in `SessionInspect`
+
+|              |                                  |
+| ------------ | -------------------------------- |
+| **Severity** | 🟡 High · Logic bug               |
+| **File**     | `src/features/flowTracer/components/SessionInspect.tsx` |
+| **Lines**    | 265–289                          |
+
+### Why
+
+Remarks render from both `events.filter(e => e.type === 'session.remark')` (has timestamps) and `meta.remarks` (plain strings), de-duplicated by exact string equality. Any whitespace difference between the two produces a visible duplicate remark.
+
+### Fix
+
+Pick one source of truth — prefer the timestamped `events` list — and stop rendering from `meta.remarks` directly.
+
+### ✓ Verify
+
+- [ ] Manual: record a session, add 2–3 remarks, stop, open in Session Inspect — each remark appears exactly once.
+- [ ] `npm run lint` + `npm run build` pass.
+- [ ] Commit: `git commit -am "fix(flowTracer): render remarks from a single source, drop fragile dedup"`
+
+---
+
 # Sequencing & sign-off
 
 ### Suggested schedule
 
-| When         | Tasks | Gate before moving on                                                                         |
-| ------------ | ----- | --------------------------------------------------------------------------------------------- |
-| Day 1 AM     | 1 · 2 | Both committed; `npm run build` + `build:standalone` green; manual record/replay/delete works |
-| Day 1 PM     | 5 · 6 | New pollution + screenshot tests pass; lint clean                                             |
-| → **Launch** | —     | Tasks 1, 2, 5, 6 merged to main. **This clears the ship-blockers.**                           |
-| Week 1       | 3 · 4 | Coverage gate honest; first Playwright smoke test green in CI                                 |
+| When         | Tasks    | Gate before moving on                                                                         |
+| ------------ | -------- | --------------------------------------------------------------------------------------------- |
+| Day 1 AM     | 1 · 2    | Both committed; `npm run build` + `build:standalone` green; manual record/replay/delete works |
+| Day 1 PM     | 5 · 6    | New pollution + screenshot tests pass; lint clean                                             |
+| → **Launch** | —        | Tasks 1, 2, 5, 6 merged to main. **This clears the ship-blockers.**                           |
+| Week 1       | 3 · 4    | Coverage gate honest; first Playwright smoke test green in CI                                 |
+| Week 1–2     | 7 · 8 · 9 · 10 | flowTracer logic bugs closed — not ship-blocking, but real correctness bugs in the recorder |
 
 ### Definition of done for the whole runbook
 
-- All six tasks committed on `fix/pre-launch-audit`.
+- All ten tasks committed on `fix/pre-launch-audit` (or a follow-up branch for Phase D).
 - `npm run lint && npm test && npm run build` all pass from a clean checkout.
 - The negative tests in Tasks 1 and 6 were actually run once and observed to fail-safe.
 - PR opened against `main` with this runbook linked.
@@ -514,10 +625,10 @@ for (const c of newComments) {
 
 ## Appendix — Audit provenance & caveats
 
-This runbook is derived from the pre-launch codebase audit (2026-06-27). Every fix site was verified against live source before writing.
+This runbook is derived from the pre-launch codebase audit (2026-06-27) plus a `flowTracer`-scoped code review (2026-06-25, folded in as Phase D). Every Phase A–C fix site was verified against live source before writing; Phase D sites were verified during the original flowTracer review.
 
-**The audit was cut short** — the org hit its monthly spend limit partway through verification, so the `reliability-bugs`, `architecture`, and `deps-ops` reviewers did not complete. This runbook covers only what was **confirmed**.
+**The audit was cut short** — the org hit its monthly spend limit partway through verification, so the `reliability-bugs`, `architecture`, and `deps-ops` reviewers did not complete Phase A–C. This runbook covers only what was **confirmed**.
 
-**Not included here (separate known backlog):** the 5 logic bugs documented in [`flowTracer-review.md`](./flowTracer-review.md) — stale `recState` closure in `logEvent`, `recentFlushRef` not cancelled in `resetLiveState`, `startRecording` dropping tags/testMode, and remarks double-rendering. These were **not** independently re-verified in this audit pass; treat them as a parallel backlog or re-run the audit to fold them in.
+**Not folded in from the flowTracer review** (quality/consistency cleanup, not bugs — lower priority, no task numbers assigned): duplicated `CATEGORY_COLORS` across `panel.tsx`/`SessionInspect.tsx`; mixed Tailwind/inline-style approach in `panel.tsx`; `SessionSettingsOverlay`/`SessionExportOverlay`/`SessionInspect` still using raw HTML elements instead of shared UI components; a handful of dead exports (`context/useSessionRecorder.ts` re-export shim, redundant `activeSessionId` alias, `isTestModeRef` on the public context value, unpopulated `SessionExport.filters`, unnecessarily-public `sessionWriteBatcher` and `buildSessionExport`). Revisit as a separate cleanup pass if/when touching those files.
 
 **Re-framing note:** FlowKit's own `VISION.md` states it is not a production host, has no backend, persistence, auth, or API. Classic "production outage / load testing / DB migration / incident runbook" concerns do not apply. Severity throughout is calibrated to real client-side risks: app crashes, IndexedDB data loss, broken builds, secrets in the shared HTML export, and injection via untrusted import.

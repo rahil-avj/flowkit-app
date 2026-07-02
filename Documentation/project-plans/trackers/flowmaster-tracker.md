@@ -133,4 +133,4 @@ Append-only. Most recent at top.
 
 **Decision:** `src/modes/flowlens/components/FlowLensAnalyticsOverlays.tsx` contains the comment: "Multi-session Reports land in Phase 3." The revamp of `ReportsOverlay.tsx` is active work within Phase 3.
 **Reason:** Phase 1 shipped single-session replay and analytics. Multi-session aggregation requires additional data infrastructure (cohort filtering, date ranges, aggregate heatmaps) that was scoped separately.
-**Source:** Comment in `FlowLensAnalyticsOverlays.tsx`; `Documentation/project-plans/FlowLens_ReportsOverlay.md`
+**Source:** Comment in `FlowLensAnalyticsOverlays.tsx`; `Documentation/project-plans/specs/flowlens-reports-overlay.md`

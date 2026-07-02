@@ -37,7 +37,7 @@ All under `flowkit arch <cmd>`:
 
 #### CLI — planned additions
 
-- `plan:ls`, `plan:check` — Flowplan discovery and validation (spec in `Feature_Management_System.md` § H)
+- `plan:ls`, `plan:check` — Flowplan discovery and validation (no separate spec doc exists; see `trackers/flowkit-tracker.md` § Feature management system for the closest related design)
 - Long-form aliases for all commands (`new-workspace`, `remove-flow`, etc.) — spec § A
 - `isTTY` guard in `selectFromList` for VS Code / non-TTY terminals — spec § D
 - Array-literal syntax for `order flows [auth, onboarding, home]` — spec § E
@@ -86,7 +86,7 @@ Append-only. Most recent at top.
 
 **Decision:** All platform facts that reach agents (hooks, types, CLI commands, directives) are authored once in `scripts/lib/agentSpec.js`. `agent.js` formats them into whichever target agent's files. Hand-editing `.agent/INDEX.md`, `rules.md`, or `platform.md` is forbidden.
 **Reason:** Three workspaces with hand-maintained agent docs drifted within one refactor cycle. Single-source + regeneration is the only sustainable model. Matches `DevelopmentValues.md` Principle 12 (Minimize Surface Area).
-**Source:** `Documentation/project-plans/Agent_Onboarding.md`; `scripts/lib/agentSpec.js`
+**Source:** `Documentation/project-plans/audits/agent-onboarding-audit.md`; `scripts/lib/agentSpec.js`
 
 ---
 
@@ -132,11 +132,6 @@ Append-only. Most recent at top.
 
 ## 2026-06-26 — Three known gaps in agent readiness (not yet fixed)
 
-**Decision:** Three gaps are documented but not yet resolved:
-
-1. `project.md` is unfilled in all workspaces — agents have zero product context on cold-start
-2. `platform.md` CLI table broken by `|` separators in the `sessions:*` row — fix is one line in `agentSpec.js` `cliRows()`
-3. Import paths inconsistency — `platform.md` uses `@platform/contexts/DashboardContext` but `@shared/` is the preferred alias
-
-**Reason:** All three are low-effort, high-impact fixes but require `agent:sync` to propagate. Tracked here to ensure they don't get lost.
-**Source:** `Documentation/project-plans/Agent_Onboarding.md` Gaps 1–3
+**Decision:** Tracked in full in `Documentation/project-plans/audits/agent-onboarding-audit.md` Gaps 1–3 (unfilled `project.md`, malformed `platform.md` CLI table, `@platform/` vs `@shared/` import inconsistency) — see that doc for details, don't duplicate here.
+**Reason:** All three are low-effort, high-impact fixes but require `agent:sync` to propagate.
+**Source:** `Documentation/project-plans/audits/agent-onboarding-audit.md` Gaps 1–3
