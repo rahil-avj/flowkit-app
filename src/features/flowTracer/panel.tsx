@@ -350,7 +350,7 @@ export default function SessionsPanel({
     return (
       <div className="flex flex-col h-full overflow-hidden">
         {/* Live header */}
-        <div className="px-3 py-[10px] border-b border-theme-border shrink-0">
+        <div className="px-3 py-2.5 border-b border-theme-border shrink-0">
           <div className="flex items-center gap-2 mb-2">
             <div
               className="size-2 rounded-full shrink-0"
@@ -397,7 +397,7 @@ export default function SessionsPanel({
               Remarks
             </span>
             {remarks.map((ev, i) => (
-              <div key={i} className="text-ui-xs text-theme-text-secondary mt-[3px]">
+              <div key={i} className="text-ui-xs text-theme-text-secondary mt-0.75">
                 — {ev.payload.text as string}
               </div>
             ))}
@@ -495,14 +495,14 @@ export default function SessionsPanel({
             <span className="text-ui-xs text-theme-text-muted">Waiting for events…</span>
           ) : (
             collapseEvents(recorder.recentEvents).map((row, i) => (
-              <div key={i} className="flex items-center gap-[7px] py-[2px]">
+              <div key={i} className="flex items-center gap-1.75 py-0.5">
                 <div
-                  className="size-[5px] rounded-full shrink-0"
+                  className="size-1.25 rounded-full shrink-0"
                   style={{ background: eventColor(row.type) }}
                 />
                 <span className="text-ui-xs text-theme-text-secondary flex-1">{row.type}</span>
                 {row.count > 1 && (
-                  <span className="text-ui-2xs text-theme-text-muted bg-theme-elevated rounded px-[5px] py-px font-semibold">
+                  <span className="text-ui-2xs text-theme-text-muted bg-theme-elevated rounded px-1.25 py-px font-semibold">
                     ×{row.count}
                   </span>
                 )}
@@ -560,7 +560,7 @@ export default function SessionsPanel({
       )}
 
       {/* CTA row */}
-      <div className="px-3 py-[10px] border-b border-theme-border shrink-0 flex gap-2">
+      <div className="px-3 py-2.5 border-b border-theme-border shrink-0 flex gap-2">
         <Button
           variant="primary"
           size="sm"
@@ -596,7 +596,7 @@ export default function SessionsPanel({
       </div>
 
       {deleteError && (
-        <div className="mx-3 mb-1.5 px-2.5 py-1.5 rounded-[6px] flex items-center gap-1.5 bg-[color-mix(in_srgb,var(--color-theme-red)_12%,transparent)] border border-[color-mix(in_srgb,var(--color-theme-red)_30%,transparent)]">
+        <div className="mx-3 mb-1.5 px-2.5 py-1.5 rounded-md flex items-center gap-1.5 bg-[color-mix(in_srgb,var(--color-theme-red)_12%,transparent)] border border-[color-mix(in_srgb,var(--color-theme-red)_30%,transparent)]">
           <span className="flex-1 text-ui-xs text-theme-red">{deleteError}</span>
           <IconButton
             variant="danger"

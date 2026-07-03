@@ -366,7 +366,7 @@ function OverviewTab({
             <span>Database state</span>
             <span className="text-theme-text-disabled font-normal">@ {replayScreen || '—'}</span>
           </div>
-          <div className="bg-theme-elevated border border-theme-border rounded-md py-1.5 px-2 max-h-[140px] overflow-y-auto font-mono text-[10px] leading-relaxed">
+          <div className="bg-theme-elevated border border-theme-border rounded-md py-1.5 px-2 max-h-35 overflow-y-auto font-mono text-[10px] leading-relaxed">
             {dbKeys.map(k => (
               <div key={k} className="flex gap-1.5 whitespace-nowrap">
                 <span className="shrink-0" style={{ color: FLOWLENS_ACCENT }}>
@@ -400,7 +400,7 @@ function OverviewTab({
           <div className="text-ui-2xs font-semibold text-theme-text-secondary mb-1.5">Remarks</div>
           {session.meta.remarks.map((r, i) => (
             <div key={i} className="text-ui-2xs text-theme-text-muted py-0.5">
-              • {r}
+              • {r.text}
             </div>
           ))}
         </div>
@@ -558,7 +558,7 @@ function TagEditor({
           }}
           onBlur={addTag}
           placeholder="tag…"
-          className="w-[70px] text-[10px] py-0.5 px-1 rounded border border-theme-border bg-theme-elevated text-theme-text-primary outline-none"
+          className="w-17.5 text-[10px] py-0.5 px-1 rounded border border-theme-border bg-theme-elevated text-theme-text-primary outline-none"
         />
       ) : (
         <button

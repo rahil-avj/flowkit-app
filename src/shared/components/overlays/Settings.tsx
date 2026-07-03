@@ -43,11 +43,11 @@ interface RowProps {
 
 function SettingRow({ label, hint, children }: RowProps) {
   return (
-    <div className="flex items-center justify-between gap-6 py-[10px] border-b border-theme-border">
+    <div className="flex items-center justify-between gap-6 py-2.5 border-b border-theme-border">
       <div className="flex-1 min-w-0">
         <div className="text-ui-sm text-theme-text-primary font-medium">{label}</div>
         {hint && (
-          <div className="text-ui-xs text-theme-text-muted mt-[2px] leading-normal">{hint}</div>
+          <div className="text-ui-xs text-theme-text-muted mt-0.5 leading-normal">{hint}</div>
         )}
       </div>
       <div className="shrink-0">{children}</div>
@@ -63,7 +63,7 @@ interface GroupProps {
 function SettingGroup({ title, children }: GroupProps) {
   return (
     <div className="mb-7">
-      <div className="text-ui-2xs font-extrabold tracking-[0.09em] uppercase text-theme-text-disabled mb-1 pb-[6px]">
+      <div className="text-ui-2xs font-extrabold tracking-[0.09em] uppercase text-theme-text-disabled mb-1 pb-1.5">
         {title}
       </div>
       <div>{children}</div>
@@ -85,7 +85,7 @@ function SectionHeader({ icon, title, description }: SectionHeaderProps) {
       </div>
       <div>
         <div className="text-ui-base font-bold text-theme-text-primary">{title}</div>
-        <div className="text-ui-xs text-theme-text-muted mt-[2px] leading-normal">
+        <div className="text-ui-xs text-theme-text-muted mt-0.5 leading-normal">
           {description}
         </div>
       </div>
@@ -211,7 +211,7 @@ function PanelSection() {
               localStorage.removeItem(LS_LEFT_PANEL_W)
               localStorage.removeItem(LS_RIGHT_PANEL_W)
             }}
-            className="text-ui-xs font-semibold py-1 px-[10px] rounded-[6px] border border-theme-border bg-theme-elevated text-theme-text-secondary cursor-pointer"
+            className="text-ui-xs font-semibold py-1 px-2.5 rounded-md border border-theme-border bg-theme-elevated text-theme-text-secondary cursor-pointer"
           >
             Reset
           </button>
@@ -301,7 +301,7 @@ function FlowPlansSection() {
                 onClick={() => setWrongClickColor(s.value)}
                 title={s.value}
                 aria-label={s.value}
-                className="rounded-full cursor-pointer size-[18px]"
+                className="rounded-full cursor-pointer size-4.5"
                 style={{
                   background: s.hex,
                   border:
@@ -528,7 +528,7 @@ function SidebarNav({
   onSelect: (id: SectionId) => void
 }) {
   return (
-    <nav className="w-[168px] shrink-0 flex flex-col border-r border-theme-border p-[8px_6px] bg-theme-elevated">
+    <nav className="w-42 shrink-0 flex flex-col border-r border-theme-border p-[8px_6px] bg-theme-elevated">
       <div className="p-[8px_6px_12px] mb-1">
         <span className="text-ui-2xs font-extrabold tracking-[0.09em] uppercase text-theme-text-disabled">
           Settings
@@ -540,7 +540,7 @@ function SidebarNav({
           <button
             key={s.id}
             onClick={() => onSelect(s.id)}
-            className={`flex items-center gap-[9px] py-[7px] px-[10px] rounded-[7px] border-none cursor-pointer text-ui-sm text-left w-full transition-[background,color] duration-[0.12s] outline-none ${isActive ? 'bg-theme-hover text-theme-text-primary font-semibold' : 'bg-transparent text-theme-text-secondary font-normal'}`}
+            className={`flex items-center gap-2.25 py-1.75 px-2.5 rounded-[7px] border-none cursor-pointer text-ui-sm text-left w-full transition-[background,color] duration-[0.12s] outline-none ${isActive ? 'bg-theme-hover text-theme-text-primary font-semibold' : 'bg-transparent text-theme-text-secondary font-normal'}`}
           >
             <span
               className="flex shrink-0"
@@ -584,7 +584,7 @@ export default function Settings({ onClose, ctx, initialSection = 'interface' }:
         <span className="text-ui-sm font-bold text-theme-text-primary">Settings</span>
         <button
           onClick={onClose}
-          className="flex items-center justify-center rounded-[6px] border-none bg-transparent cursor-pointer text-theme-text-muted size-[26px]"
+          className="flex items-center justify-center rounded-md border-none bg-transparent cursor-pointer text-theme-text-muted size-6.5"
         >
           <X size={14} />
         </button>

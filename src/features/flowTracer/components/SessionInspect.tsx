@@ -1,5 +1,5 @@
 import { SessionDb } from '@platform/features/flowTracer/sessionDb'
-import type { SessionEvent, SessionMeta } from '@platform/features/flowTracer/types'
+import type { SessionEvent, SessionMeta, SessionRemark } from '@platform/features/flowTracer/types'
 import { ArrowLeft, Check, Pencil, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
@@ -80,7 +80,8 @@ export default function SessionInspect({ sessionId, onBack }: Props) {
 
   const addRemark = async () => {
     if (!meta || !remarkInput.trim()) return
-    const updated = { ...meta, remarks: [...meta.remarks, remarkInput.trim()] }
+    const remark: SessionRemark = { text: remarkInput.trim(), timestamp: Date.now() }
+    const updated = { ...meta, remarks: [...meta.remarks, remark] }
     await SessionDb.saveMeta(updated)
     setMeta(updated)
     setRemarkInput('')
@@ -97,7 +98,6 @@ export default function SessionInspect({ sessionId, onBack }: Props) {
   const duration = meta.endTime ? meta.endTime - meta.startTime : null
   const screenVisits = events.filter(e => e.type === 'screen.visited')
   const flowEntries = events.filter(e => e.type === 'flow.entered')
-  const remarks = events.filter(e => e.type === 'session.remark')
   const firstTs = events[0]?.timestamp ?? 0
 
   const screenPath: { id: string; dwell: number | null }[] = []
@@ -207,7 +207,7 @@ export default function SessionInspect({ sessionId, onBack }: Props) {
                   key={i}
                   className="flex items-center gap-2 px-2 py-1 bg-theme-elevated rounded"
                 >
-                  <span className="text-ui-xs text-theme-text-muted min-w-[18px]">{i + 1}</span>
+                  <span className="text-ui-xs text-theme-text-muted min-w-4.5">{i + 1}</span>
                   <span className="text-ui-xs text-theme-text-secondary flex-1 truncate">{id}</span>
                   {dwell !== null && (
                     <span className="text-ui-xs text-theme-text-muted">{formatMs(dwell)}</span>
@@ -236,7 +236,7 @@ export default function SessionInspect({ sessionId, onBack }: Props) {
               </button>
             ))}
           </div>
-          <div className="flex flex-col gap-px max-h-[280px] overflow-y-auto">
+          <div className="flex flex-col gap-px max-h-70 overflow-y-auto">
             {filteredEvents.map(ev => (
               <div key={ev.id} className="flex items-center gap-2 px-1.5 py-0.5 rounded">
                 <div
@@ -259,30 +259,18 @@ export default function SessionInspect({ sessionId, onBack }: Props) {
 
         {/* Remarks */}
         <Section title="Remarks">
-          {remarks.length === 0 && meta.remarks.length === 0 ? (
+          {meta.remarks.length === 0 ? (
             <span className="text-ui-xs text-theme-text-muted">No remarks recorded</span>
           ) : (
             <div className="flex flex-col gap-1 mb-2">
-              {remarks.map((ev, i) => (
-                <div key={`ev-${i}`} className="flex gap-2 px-2 py-1.5 bg-theme-elevated rounded">
-                  <span className="text-ui-xs text-theme-text-secondary flex-1">
-                    {(ev.payload.text as string) ?? ''}
-                  </span>
+              {meta.remarks.map((r, i) => (
+                <div key={i} className="flex gap-2 px-2 py-1.5 bg-theme-elevated rounded">
+                  <span className="text-ui-xs text-theme-text-secondary flex-1">{r.text}</span>
                   <span className="text-ui-2xs text-theme-text-muted shrink-0">
-                    {formatMs(ev.timestamp - firstTs)}
+                    {formatMs(Math.max(0, r.timestamp - meta.startTime))}
                   </span>
                 </div>
               ))}
-              {meta.remarks
-                .filter(r => !remarks.some(ev => (ev.payload.text as string) === r))
-                .map((r, i) => (
-                  <div
-                    key={`meta-${i}`}
-                    className="flex gap-2 px-2 py-1.5 bg-theme-elevated rounded"
-                  >
-                    <span className="text-ui-xs text-theme-text-secondary flex-1">{r}</span>
-                  </div>
-                ))}
             </div>
           )}
           <div className="flex gap-1.5">

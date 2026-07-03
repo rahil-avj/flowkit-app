@@ -82,7 +82,7 @@ function RailShell({ tabs, activeId, onSelect, children, badgeMap = {} }: RailSh
   return (
     <div className="flex flex-1 min-h-0 overflow-hidden">
       {/* Icon rail — desktop SidebarButton style */}
-      <div className="w-[44px] shrink-0 flex flex-col border-r border-theme-border bg-theme-elevated">
+      <div className="w-11 shrink-0 flex flex-col border-r border-theme-border bg-theme-elevated">
         {tabs.map(t => {
           const active = t.id === activeId
           const badge = badgeMap[t.id] ?? 0
@@ -98,7 +98,7 @@ function RailShell({ tabs, activeId, onSelect, children, badgeMap = {} }: RailSh
                 <span className="absolute right-0 w-0.5 rounded-l bg-theme-blue inset-y-2" />
               )}
               {badge > 0 && (
-                <span className="absolute top-1.5 right-1.5 bg-theme-red text-white text-[8px] font-extrabold min-w-[13px] h-[13px] rounded-full flex items-center justify-center px-0.5">
+                <span className="absolute top-1.5 right-1.5 bg-theme-red text-white text-[8px] font-extrabold min-w-3.25 h-3.25 rounded-full flex items-center justify-center px-0.5">
                   {badge > 9 ? '9+' : badge}
                 </span>
               )}
@@ -201,7 +201,7 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
   const actionCtx = useMemo<ActionCtx>(
     () => ({
       navigateTo,
-      setActiveTab: () => {},
+      setActiveTab: () => { },
       setIsOpen: open => {
         if (!open) closeSheet()
       },
@@ -209,8 +209,8 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       toggleOrientation,
       resetToFirst,
       resetDb,
-      openGoTo: () => {},
-      openHelp: () => {},
+      openGoTo: () => { },
+      openHelp: () => { },
       openSettings: () => {
         setActiveTab('settings')
       },
@@ -219,8 +219,8 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       openFeedbackTab: () => {
         setActiveTab('feedback')
       },
-      openExportModal: () => {},
-      openImportModal: () => {},
+      openExportModal: () => { },
+      openImportModal: () => { },
       toggleAutoHideScrollbars,
       autoHideScrollbars,
       showSessionsFeature,
@@ -228,7 +228,7 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       autoRecordOnPlay,
       toggleAutoRecordOnPlay,
       flowLensAvailable: false,
-      enterFlowLens: () => {},
+      enterFlowLens: () => { },
     }),
     [
       navigateTo,
@@ -411,7 +411,7 @@ function SettingRow({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 px-4 py-[10px] border-b border-theme-border">
+    <div className="flex items-center justify-between gap-4 px-4 py-2.5 border-b border-theme-border">
       <div className="flex-1 min-w-0">
         <div className="text-ui-sm font-medium text-theme-text-primary">{label}</div>
         {hint && (
@@ -507,7 +507,7 @@ function MobileSettingsContent({ section, ctx }: MobileSettingsContentProps) {
               localStorage.removeItem(LS_LEFT_PANEL_W)
               localStorage.removeItem(LS_RIGHT_PANEL_W)
             }}
-            className="text-ui-xs font-semibold py-1 px-[10px] rounded-md border border-theme-border bg-theme-elevated text-theme-text-secondary cursor-pointer"
+            className="text-ui-xs font-semibold py-1 px-2.5 rounded-md border border-theme-border bg-theme-elevated text-theme-text-secondary cursor-pointer"
           >
             Reset
           </button>

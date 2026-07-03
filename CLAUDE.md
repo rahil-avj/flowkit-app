@@ -50,12 +50,12 @@ Browser-based UI prototyping platform (React 19 + Vite 8 + Tailwind v4) for mult
 │   ├── types/index.ts        All domain interfaces (WireframeView, FlowNode, FlowplanDef, etc.)
 │   ├── core/
 │   │   ├── canvas/
-│   │   │   ├── PreviewCanvas.tsx   ⚠️ 1158 LOC — main interactive canvas; pan/zoom/mode switch
+│   │   │   ├── PreviewCanvas.tsx   ⚠️ ~1280 LOC — main interactive canvas; pan/zoom/mode switch
 │   │   │   ├── CanvasView.tsx      Multi-screen grid (Figma export mode)
 │   │   │   ├── canvasConfig.ts     CANVAS_W/H, ZOOM_MIN/MAX, panel width defaults
 │   │   │   └── canvasReducer.ts    Canvas pan/zoom/mode state reducer; unit-tested
 │   │   ├── layout/
-│   │   │   ├── FlowEngine.ts       ⚠️ 716 LOC — useFlowEngine() interaction state machine
+│   │   │   ├── FlowEngine.ts       ⚠️ ~820 LOC — useFlowEngine() interaction state machine
 │   │   │   ├── FlowMaster.tsx      Single-flow renderer; swipe + hotspot + off-script toasts
 │   │   │   ├── KitSideExplorer.tsx Left sidebar — screen/flow tree
 │   │   │   ├── KitSideInspector.tsx Right sidebar — Simulator/Debug/Sessions/Feedback tabs
@@ -69,12 +69,16 @@ Browser-based UI prototyping platform (React 19 + Vite 8 + Tailwind v4) for mult
 │   ├── features/
 │   │   ├── command-palette/        Global quick-action overlay (PaletteItem, PaletteGroup)
 │   │   ├── feedback/
-│   │   │   └── context/FeedbackContext.tsx  🔴 JSONBIN_CONFIG master key bundled client-side
+│   │   │   ├── context/FeedbackContext.tsx  Comment wall state, IndexedDB image store
+│   │   │   └── cloud-sync/          Export/import to JSONBin; jsonbin.ts enforces scoped Access Keys only (rejects master keys)
 │   │   ├── figma-export/           Figma handoff sidebar
 │   │   ├── flow-debugger/
 │   │   │   └── DbInspector.tsx     Live DB view/edit
 │   │   ├── flow-library/
 │   │   │   └── compileFlowplan.ts  Pure compiler: FlowplanDef → FlowConfig + CompiledStep[]
+│   │   ├── flowplan/
+│   │   │   ├── FlowPlaybackContext.tsx      Flowplan playback state (see Context Provider Table)
+│   │   │   └── FlowplanSettingsContext.tsx  Flowplan authoring/settings state
 │   │   ├── flowTracer/
 │   │   │   ├── sessionDb.ts        ⚠️ IndexedDB schema; getSnapshots() does full-store scan
 │   │   │   └── context/index.tsx   SessionRecorderProvider; writes must go via WriteBatcher
@@ -95,7 +99,7 @@ Browser-based UI prototyping platform (React 19 + Vite 8 + Tailwind v4) for mult
 │   │   │   ├── devices/            Device mockup shells (phone/tablet/desktop/wearable)
 │   │   │   └── overlays/           ActionCenter, HelpModal, Settings
 │   │   └── utils/
-│   │       ├── applyDotPathPatch.ts  ⚠️ Prototype pollution footgun — no __proto__ guard
+│   │       ├── applyDotPathPatch.ts  ⚠️ Prototype pollution footgun — `setAtPath()` has no `__proto__`/`constructor` guard
 │   │       └── useWorkspaceHierarchy.ts  Loads projects/**/flowplans/ hierarchy tree
 │   ├── modes/flowlens/             Optional analytics/replay mode (lazy chunk)
 │   └── kits/shared/               Radix UI primitives (shadcn-style); barrel: shared/index.ts
@@ -144,7 +148,7 @@ Barrel at `src/features/simulator/controls/index.ts`. Use these inside the Simul
 | `FlowLensModeContext`    | `useFlowLensMode()` / `useFlowLensModeOptional()`   | FlowLens toggle, FLOWLENS_AVAILABLE flag, accent constants                                                                                                                            |
 | `DevModeContext`         | `useDevMode()`                                      | devMode, toggleDevMode, pendingEdits, setEdit, clearEdits                                                                                                                             |
 | `ActiveWorkspaceContext` | `useActiveWorkspace()`                              | active workspace name (string)                                                                                                                                                        |
-| `FeedbackContext`        | `useFeedback()`                                     | comment wall state, cloud sync, IndexedDB image store                                                                                                                                 |
+| `FeedbackContext`        | `useFeedback()`                                     | comment wall state, cloud sync, IndexedDB image store (context lives in `@features/feedback`, cloud sync logic in `@features/feedback/cloud-sync`)                                   |
 
 > Optional hooks return `null` outside provider. Non-optional hooks throw.
 
@@ -387,7 +391,6 @@ FlowKit ships two ways from one repo — every path in `scripts/lib/` and `scrip
 - No `.github/workflows/` — zero CI, zero automated publish.
 - `npm run build` (full app `tsc -b` step) currently fails — missing declarations for `scripts/vite-plugin.js` / `scripts/lib/flowlens-session.js`. Doesn't block `build:lib` (the real publish build) but is an open bug.
 - `flowkit export`'s ESLint check hardcodes `workspaces/${wsName}` — breaks under flat mode.
-- 🔴 **Highest-risk item**: `FeedbackContext.tsx`'s `JSONBIN_CONFIG` client-bundled master key. Publishing it in a public tarball is irreversible even within npm's 72h unpublish window (anyone who installed it keeps a copy). Must be resolved before Phase 7.
 - Local consumer smoke tests (checklist Phase 5) haven't been run yet: no `file:` install test, no scaffold-then-`npm run dev`-in-flat-mode test performed.
 
 See [Documentation/PACKAGE-ARCHITECTURE.md](Documentation/PACKAGE-ARCHITECTURE.md) for the full technical mechanism, [Documentation/PACKAGE-AUTHOR-GUIDE.md](Documentation/PACKAGE-AUTHOR-GUIDE.md) for the consumer-facing guide (written ahead of implementation — describes target end-state, not current reality), [Documentation/product/vision/VISION.md](Documentation/product/vision/VISION.md) / [FEATURES.md](Documentation/product/vision/FEATURES.md) for the distribution-model rationale, and [Documentation/project-plans/execution/npm-publish-checklist.md](Documentation/project-plans/execution/npm-publish-checklist.md) for the exact remaining steps in order.
@@ -397,8 +400,7 @@ See [Documentation/PACKAGE-ARCHITECTURE.md](Documentation/PACKAGE-ARCHITECTURE.m
 ## Known Gotchas
 
 - **`sessionDb.ts` `getSnapshots()`** — full IndexedDB store scan; degrades with large session counts ⚠️
-- **`FeedbackContext.tsx`** — `JSONBIN_CONFIG` master key is bundled into the client build 🔴
-- **`applyDotPathPatch.ts`** — dot-path setter has no `__proto__` guard; prototype pollution possible on untrusted input ⚠️
+- **`applyDotPathPatch.ts`** — dot-path setter has no `__proto__`/`constructor` guard; prototype pollution possible on untrusted input ⚠️
 - **vitest scope** — `vitest.config.ts` only includes `scripts/tests/**/*.test.ts` (4 files as of this writing: `applyDotPathPatch`, `canvasReducer`, `compileFlowplan`, `useKeyboardShortcuts`), but those files import and test `src/` modules directly — despite the directory name, this is where `src/` unit coverage lives. Coverage thresholds (91/86/95/93 stmts/branches/funcs/lines) apply only to what those 4 files exercise; most `src/` logic (UI components, contexts, most of `core/`) has no coverage ⚠️
 - **playwright** — installed as devDependency, no tests exist; ignore 🔴
 - **`prebuild` gate** — `npm run build` always runs `flowkit plan:check`; exits non-zero on blocking plan issues

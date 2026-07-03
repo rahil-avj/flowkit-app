@@ -56,7 +56,7 @@ function getAll<T>(
   db: IDBDatabase,
   storeName: string,
   indexName: string,
-  key: IDBValidKey
+  key: IDBValidKey | IDBKeyRange
 ): Promise<T[]> {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, 'readonly')
@@ -82,13 +82,13 @@ function deleteByIndex(
   db: IDBDatabase,
   storeName: string,
   indexName: string,
-  key: IDBValidKey
+  key: IDBValidKey | IDBKeyRange
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, 'readwrite')
     const store = tx.objectStore(storeName)
     const index = store.index(indexName)
-    const req = index.openCursor(IDBKeyRange.only(key))
+    const req = index.openCursor(key instanceof IDBKeyRange ? key : IDBKeyRange.only(key))
     req.onsuccess = () => {
       const cursor = req.result
       if (cursor) {
@@ -100,6 +100,12 @@ function deleteByIndex(
     }
     req.onerror = () => reject(req.error)
   })
+}
+
+// `sessionId_sequenceId` is a compound index; bounding it to [sessionId, -Infinity]..
+// [sessionId, +Infinity] restricts the scan to one session's rows without a schema change.
+function sessionIdPrefixRange(sessionId: string): IDBKeyRange {
+  return IDBKeyRange.bound([sessionId, -Infinity], [sessionId, Infinity])
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -143,8 +149,13 @@ export const SessionDb = {
 
   async getSnapshots(sessionId: string): Promise<SessionSnapshot[]> {
     const db = await openDb()
-    const all = await getAllFromStore<SessionSnapshot>(db, 'snapshots')
-    return all.filter(s => s.sessionId === sessionId).sort((a, b) => a.sequenceId - b.sequenceId)
+    const snapshots = await getAll<SessionSnapshot>(
+      db,
+      'snapshots',
+      'sessionId_sequenceId',
+      sessionIdPrefixRange(sessionId)
+    )
+    return snapshots.sort((a, b) => a.sequenceId - b.sequenceId)
   },
 
   async saveCursorSample(sample: CursorSample): Promise<void> {
@@ -217,25 +228,7 @@ export const SessionDb = {
         req.onerror = () => reject(req.error)
       }),
       deleteByIndex(db, 'events', 'sessionId', sessionId),
-      // snapshots use autoIncrement keys — cursor by sessionId
-      (async () => {
-        const tx = db.transaction('snapshots', 'readwrite')
-        const store = tx.objectStore('snapshots')
-        const req = store.openCursor()
-        await new Promise<void>((resolve, reject) => {
-          req.onsuccess = () => {
-            const cursor = req.result
-            if (!cursor) {
-              resolve()
-              return
-            }
-            const snap = cursor.value as SessionSnapshot
-            if (snap.sessionId === sessionId) cursor.delete()
-            cursor.continue()
-          }
-          req.onerror = () => reject(req.error)
-        })
-      })(),
+      deleteByIndex(db, 'snapshots', 'sessionId_sequenceId', sessionIdPrefixRange(sessionId)),
       deleteByIndex(db, 'cursor_samples', 'sessionId', sessionId),
     ])
   },

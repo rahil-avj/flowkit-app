@@ -78,6 +78,11 @@ export interface CursorSample {
 
 // ─── Session metadata ─────────────────────────────────────────────────────────
 
+export interface SessionRemark {
+  text: string
+  timestamp: number
+}
+
 export interface SessionMeta {
   id: string
   name: string
@@ -87,7 +92,7 @@ export interface SessionMeta {
   tags: string[]
   eventCount: number
   cursorSampleCount: number
-  remarks: string[]
+  remarks: SessionRemark[]
   qualityScore: number
   isTestMode: boolean
   capturedScreenW: number
