@@ -47,3 +47,30 @@ required (a full containment restructure, not a one-line guard).
 - **T-9 → done.** Update status from `broken` to `done`, verified 2026-07-03.
 - **T-1 → remove or reclassify.** Not a real bug; recommend deleting the row rather than leaving it as `broken` or `planned`.
 - **T-2, T-3, T-4, T-5 → remain `broken`, confirmed real**, with corrected detail text per above (T-2's impact is narrower than stated, T-3's fix needs an index migration not just a query change, T-5's fix should target the root cause — divergent write paths — not just the dedup check).
+
+---
+
+## Verification pass — 2026-07-03 (post-fix code review, T-2/T-3/T-4/T-5)
+
+After T-2, T-3, T-4, T-5 were fixed, a high-effort recall-biased code review (8 parallel finder
+angles: line-by-line, removed-behavior audit, cross-file trace, reuse, simplification, efficiency,
+altitude, CLAUDE.md conventions) ran against the actual diff (`git diff HEAD`, not the full branch
+history) before those fixes were considered final. 3 of the findings that survived 1-vote
+verification were then fixed; details below.
+
+| # | Finding | Verdict | Detail |
+|---|---|---|---|
+| R-1 | `SessionInspect.tsx`'s remarks-rendering fix (T-5) dropped per-remark timestamps, since `meta.remarks` was a plain `string[]` with no timing field | **CONFIRMED, fixed** | Real information loss for every session with remarks, not an edge case. Fixed by widening `SessionMeta.remarks` to `SessionRemark[]` (`{text, timestamp}`) — see `features.md` T-30 for the full migration. |
+| R-2 | `resetLiveState`'s `recentFlushRef` fix (T-2) was narrower than the underlying mechanism — `inactivityTimerRef` has the identical "pending timer outlives reset" hazard (rearmed on every `logEvent`, not cleared by `resetLiveState`) and was left uncovered | **PLAUSIBLE, fixed** | `resetLiveState` now clears and nulls both `recentFlushRef` and `inactivityTimerRef`, closing the bug class rather than just the one reported instance. |
+| R-3 | `getAllByCompoundPrefix`/`deleteByCompoundPrefix` (added for T-3) duplicated the pre-existing `getAll`/`deleteByIndex` helpers almost verbatim, differing only in accepting an `IDBKeyRange` instead of an `IDBValidKey` | **PLAUSIBLE, fixed** | `index.getAll()`/`index.openCursor()` both natively accept either type. Widened `getAll`/`deleteByIndex`'s `key` parameter to `IDBValidKey \| IDBKeyRange`, deleted the two duplicate functions, call sites now pass `sessionIdPrefixRange(sessionId)` directly into the original helpers. |
+
+Two other candidates were traced to real call sites and refuted: a claimed live-recording
+visibility gap in `SessionInspect.tsx` didn't hold up because that component is only reachable in
+the idle/post-hoc state (`panel.tsx:338` renders the separate live-monitor UI while
+`recorder.state !== 'idle'`); and `recoverCrash`'s pre-existing (not diff-introduced) practice of
+overwriting `meta.remarks` wholesale from `events` on crash recovery was noted as an existing
+divergence but not a regression from this diff, since it predates T-5's fix. `recoverCrash` was
+still updated as part of the T-30 migration (converts intra-session `performance.now()` deltas to
+wall-clock via `crashSession.startTime`) so it stays compatible with the new `SessionRemark` shape.
+
+All fixes verified: `npx tsc --noEmit` clean, `eslint` clean, full `vitest run` (134 tests) passes.

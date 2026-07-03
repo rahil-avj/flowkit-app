@@ -80,6 +80,23 @@ replay off — sessions accumulate for later analysis without shipping the full 
 cursor tracking, individual writes would be ~60 IndexedDB transactions/sec; batching reduces to
 ~2/sec with no data loss (`stopRecording` awaits a final flush).
 
+**`snapshots` per-session queries reuse the existing compound `sessionId_sequenceId` index via an
+open-ended `IDBKeyRange.bound` prefix, instead of adding a plain `sessionId` index.** (2026-07-03,
+fixing T-3.) `events`/`cursor_samples` both have a plain `sessionId` index; `snapshots` only has the
+compound one. Reason: `IDBKeyRange.bound([sessionId, -Infinity], [sessionId, Infinity])` scopes the
+existing index to one session with no `DB_VERSION` bump/migration — the more conservative choice
+for a client-side store with potentially open connections in other tabs. The `snapshots`/`events`
+schema asymmetry this preserves is cosmetic, not a correctness issue.
+
+**`SessionMeta.remarks` is `SessionRemark[]` (`{text, timestamp}`), not `string[]`.** (2026-07-03,
+fixing a regression introduced while fixing T-5.) `timestamp` is wall-clock (`Date.now()`),
+deliberately a different epoch from `SessionEvent.timestamp` (`performance.now()`, page-load-relative
+— see the `recoverCrash` comment in `context/index.tsx`). Reason: `meta.remarks` is the single
+source of truth for remarks (per the T-5 fix, replacing a dual-read from `events` + `meta.remarks`),
+so it needs to carry its own timing data rather than relying on the `events` store, which uses an
+incompatible clock. `recoverCrash` converts recovered events' `performance.now()` deltas to
+wall-clock via `crashSession.startTime` when reconstructing remarks after a crash.
+
 ---
 
 ## FlowMaster
