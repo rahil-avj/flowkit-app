@@ -14,11 +14,18 @@ ${b('Syntax:')} short alias or long-form, both always work
   ${c('flowkit new-workspace:<name>')}        same, long form
   ${c('flowkit nw:<name> --kit:apple --lang:ts --agent:claude')}   with flags
 
-${b('Workspaces:')}
+${b('Workspaces (repo mode):')}
   ${c('nw')} / ${c('new-workspace')}           Create workspace (guided or express)
   ${c('rw')} / ${c('remove-workspace')}        Remove workspace (requires confirmation)
   ${c('watch:flows')}                      Watch for file changes
   ${c('status')}                           Health snapshot: flows, router, sessions, feedback, agent
+
+${b('Workspaces (flat/multi-workspace author projects):')}
+  ${c('convert:multi')} ${d('[--name:<id>]')}       Convert a flat project to multi-workspace mode
+  ${c('convert:flat')} ${d('[--from:<id>] [--all]')}  Collapse multi-workspace mode back to flat
+  ${c('create:workspace')} ${d('[--name:<id>] [--lang:ts|js]')}   Add a workspace (multi mode only)
+  ${c('remove:workspace')} ${d('[--name:<id>]')}     Remove a workspace (requires confirmation)
+  ${c('rename:workspace')} ${d('<old> <new>')}       Rename a workspace
 
 ${b('Scaffold (authoring):')}
   ${c('create:flow')} ${d('--name:<id>')}            Add a flow + register in config

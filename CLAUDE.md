@@ -61,6 +61,7 @@ Browser-based UI prototyping platform (React 19 + Vite 8 + Tailwind v4) for mult
 │   ├── index.css             Tailwind v4 @theme tokens + global styles
 │   ├── theme.ts              UIScale constants (space, radius, minTap) injected by ThemeContext
 │   ├── types/index.ts        All domain interfaces (WireframeView, FlowNode, FlowplanDef, etc.)
+│   ├── workspace-stub/       Fallback module for `@workspace` alias when no workspace is active
 │   ├── core/
 │   │   ├── canvas/
 │   │   │   ├── PreviewCanvas.tsx   ⚠️ ~1280 LOC — main interactive canvas; pan/zoom/mode switch
@@ -409,7 +410,7 @@ See [Documentation/PACKAGE-ARCHITECTURE.md](Documentation/PACKAGE-ARCHITECTURE.m
 ## Known Gotchas
 
 - **`applyDotPathPatch.ts`** — dot-path setter has no `__proto__`/`constructor` guard; prototype pollution possible on untrusted input ⚠️
-- **vitest scope** — `vitest.config.ts` only includes `scripts/tests/**/*.test.ts` (4 files as of this writing: `applyDotPathPatch`, `canvasReducer`, `compileFlowplan`, `useKeyboardShortcuts`), but those files import and test `src/` modules directly — despite the directory name, this is where `src/` unit coverage lives. Coverage thresholds (91/86/95/93 stmts/branches/funcs/lines) apply only to what those 4 files exercise; most `src/` logic (UI components, contexts, most of `core/`) has no coverage ⚠️
+- **vitest scope** — `vitest.config.ts` only includes `scripts/tests/**/*.test.ts` (4 files as of this writing: `applyDotPathPatch`, `canvasReducer`, `compileFlowplan`, `useKeyboardShortcuts`), but those files import and test `src/` modules directly — despite the directory name, this is where `src/` unit coverage lives. Coverage thresholds (91/86/95/93 stmts/branches/funcs/lines) apply only to what those 4 files exercise; most `src/` logic (UI components, contexts, most of `core/`) has no coverage ⚠️. Separately, `npm run test:workspace` runs 4 `.test.js` CLI integration files (`scaffold-consistency`, `stub-fallback`, `workspace-cli`, `workspace-registry`) — these are plain Node tests, not part of the vitest run above.
 - **playwright** — installed as devDependency, no tests exist; ignore 🔴
 - **`prebuild` gate** — `npm run build` always runs `flowkit plan:check`; exits non-zero on blocking plan issues
 - **`@workspace` alias** — resolves to the active workspace at build/dev start; switching workspace requires dev server restart
@@ -510,6 +511,7 @@ Two directories with different audiences — `docs/` ships to clients (included 
 - [docs/CLI.md](docs/CLI.md) — Full CLI command reference
 - [docs/FLOWKIT.md](docs/FLOWKIT.md) — Platform architecture
 - [docs/FLOWLENS.md](docs/FLOWLENS.md) — FlowLens analytics reference
+- [docs/FLOWLENS-GUIDE.md](docs/FLOWLENS-GUIDE.md) — FlowLens usage guide
 - [docs/FLOWMASTER.md](docs/FLOWMASTER.md) — Flow engine reference
 - [docs/AGENTS.md](docs/AGENTS.md) — AI agent spec; source of truth for `flowkit agent:sync` output
 

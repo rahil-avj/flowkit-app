@@ -1,0 +1,16 @@
+{
+  "name": "create-flowkit-workspace",
+  "version": "0.0.1-beta.0",
+  "description": "Scaffold a new FlowKit multi-workspace author project.",
+  "type": "module",
+  "bin": {
+    "create-flowkit-workspace": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "templates/"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

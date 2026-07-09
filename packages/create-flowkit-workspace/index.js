@@ -21,9 +21,13 @@ const d = s => DIM + s + RESET
 const r = s => RED + s + RESET
 
 // ── Minimal self-contained prompt helpers ───────────────────────────────────────
-// Deliberately not imported from the platform's scripts/lib/prompt.js — this
-// package is meant to be installable/publishable on its own, with no
-// dependency on the rest of the monorepo at runtime.
+// Same rationale as create-flowkit-app: this package must stay independently
+// installable/publishable, so it doesn't reach into the monorepo's scripts/ tree
+// at build time. The one exception is writeWorkspaceContent() (imported
+// dynamically further down, after `npm install`), which lives in flowkit's own
+// scripts/helpers/workspace-template.js and is reached via this project's
+// `flowkit` devDependency — same as any consumer's project importing from
+// `flowkit` at runtime, not a monorepo-internal reach-through.
 
 function prompt(rl, question) {
   return new Promise(resolve => rl.question(question, resolve))
@@ -87,19 +91,22 @@ function parseStringFlag(argv, name) {
 
 function usage() {
   console.log(`
-  ${b('create-flowkit-app')} — scaffold a new FlowKit author project
+  ${b('create-flowkit-workspace')} — scaffold a new FlowKit multi-workspace author project
 
   ${b('Usage:')}
-    npm create flowkit-app@latest ${c('<project-name>')} ${d('[--lang:ts|js]')}
-    npx create-flowkit-app ${c('<project-name>')}
+    npm create flowkit-workspace@latest ${c('<project-name>')} ${d('[--lang:ts|js]')}
+    npx create-flowkit-workspace ${c('<project-name>')}
 
   ${b('Example:')}
-    npm create flowkit-app@latest my-prototype
-    npm create flowkit-app@latest my-prototype -- --lang:js
+    npm create flowkit-workspace@latest my-project
+    npm create flowkit-workspace@latest my-project -- --lang:js
+
+  ${d('The scaffolded project starts with one workspace folder ("workspace-1/").')}
+  ${d('Add more any time with `flowkit add:workspace <name>` inside the project.')}
 
   ${d('flowkit contributors: --local-dev points the generated project at your')}
   ${d('local flowkit checkout instead of the published package. Only works when')}
-  ${d('run from inside that checkout — see packages/create-flowkit-app/index.js.')}
+  ${d('run from inside that checkout — see packages/create-flowkit-workspace/index.js.')}
 `)
   process.exit(0)
 }
@@ -124,25 +131,19 @@ if (fs.existsSync(targetDir)) {
   process.exit(1)
 }
 
-// The published range for the `flowkit` dependency. Bump this alongside
-// flowkit's own package.json "version" when cutting a release — there's no
-// automatic way to read that from here once this package is actually
-// installed from the registry (it won't have flowkit's monorepo as a sibling
-// directory anymore).
+const DEFAULT_WORKSPACE_NAME = 'workspace-1'
+
+// The published range for the `flowkit` dependency (added to the SCAFFOLDED
+// project's package.json). Bump this alongside flowkit's own package.json
+// "version" when cutting a release — mirrors create-flowkit-app's identical
+// constant/comment. This scaffolded dependency is also how this tool itself
+// reaches writeWorkspaceContent() at scaffold time (imported dynamically from
+// node_modules/flowkit after `npm install`, further down in main()).
 const FLOWKIT_PUBLISHED_RANGE = '0.0.1-beta.0'
 
 // ── Local-testing escape hatch ───────────────────────────────────────────────
-// Pass --local-dev (or set FLOWKIT_LOCAL_DEV=1) to point the generated
-// project's flowkit dependency at a local monorepo checkout instead of the
-// published range above — for testing this scaffolder against unreleased
-// platform changes before a real publish.
-//
-// Guarded by checking for flowkit's repo-root marker file two directories up:
-// the flag/env var alone isn't enough, so a stray env var in someone's shell
-// can't accidentally point a real user's scaffold at an unrelated local path
-// — it only activates when this script is genuinely running from inside a
-// flowkit monorepo checkout (see scripts/lib/paths.js's isRepoMode(), which
-// uses the same marker file for the same reason).
+// Same mechanism as create-flowkit-app/index.js — see that file's comment for
+// the full rationale (symlink/node_modules-path pitfalls this guards against).
 const WANTS_LOCAL_DEV = args.includes('--local-dev') || process.env.FLOWKIT_LOCAL_DEV === '1'
 
 function resolveFlowkitDependency() {
@@ -163,7 +164,7 @@ function resolveFlowkitDependency() {
 
 const FLOWKIT_DEP = resolveFlowkitDependency()
 
-// ── Preferences — language, same flow as `flowkit nw` ──────────────────────────
+// ── Preferences — language, same flow as create-flowkit-app ────────────────────
 
 async function resolveLanguage() {
   const flag = parseStringFlag(args, 'lang')
@@ -182,21 +183,6 @@ async function resolveLanguage() {
   return selection.startsWith('JavaScript') ? 'js' : 'ts'
 }
 
-// ── Copy templates ─────────────────────────────────────────────────────────────
-
-function copyDir(src, dest) {
-  fs.mkdirSync(dest, { recursive: true })
-  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-    const srcPath = path.join(src, entry.name)
-    const destPath = path.join(dest, entry.name)
-    if (entry.isDirectory()) {
-      copyDir(srcPath, destPath)
-    } else {
-      fs.copyFileSync(srcPath, destPath)
-    }
-  }
-}
-
 // ── Write generated files ──────────────────────────────────────────────────────
 
 function writePackageJson(dir, name, language) {
@@ -210,6 +196,13 @@ function writePackageJson(dir, name, language) {
       dev: 'vite',
       build: 'vite build',
       preview: 'vite preview',
+    },
+    // Declared explicitly, never inferred from folder shape — see
+    // scripts/helpers/flowkit-manifest.js for the read/write helpers that
+    // consume this at runtime (flowkit convert:*/add:workspace/etc.).
+    flowkit: {
+      mode: 'multi',
+      workspaces: [DEFAULT_WORKSPACE_NAME],
     },
     devDependencies: {
       flowkit: FLOWKIT_DEP,
@@ -262,7 +255,9 @@ function writeTsConfig(dir) {
           noFallthroughCasesInSwitch: true,
           skipLibCheck: true,
         },
-        include: ['flows', 'flowplans', 'lib', 'flowkit.config.ts', 'vite.config.ts'],
+        // Multi-workspace mode: every workspace folder's flows/flowplans/lib
+        // need type coverage, not just one implicit root workspace's.
+        include: ['*/flows', '*/flowplans', '*/lib', '*/flowkit.config.ts', 'vite.config.ts'],
       },
       null,
       2
@@ -270,26 +265,27 @@ function writeTsConfig(dir) {
   )
 }
 
-// writeWorkspaceContent (config/flowplans/screens/db/tokens) lives in
-// ./lib/workspace-template.js, shared with create-flowkit-workspace. That
-// module in turn hand-ports scripts/helpers/scaffold.js's demo content — see
-// its top comment. Cannot import scaffold.js directly: both scaffolder
-// packages must stay standalone-publishable with zero runtime deps on the
-// monorepo (see the standalone-prompt-helpers comment above and this
-// package's package.json).
-
 function writeClaude(dir) {
   fs.writeFileSync(
     path.join(dir, 'CLAUDE.md'),
     `# ${projectName}
 
-A FlowKit author project. Your work lives in:
+A FlowKit multi-workspace author project. Each top-level folder (starting with
+\`${DEFAULT_WORKSPACE_NAME}/\`) is an independent workspace with its own:
 
 - \`flows/\` — Screen components, organized by flow then screen name
 - \`flowplans/\` — Playback scripts (sequences of screens with interaction definitions)
-- \`lib/\` — Shared data, components, and utilities for this project
+- \`lib/\` — Shared data, components, and utilities for that workspace
 
-No UI kit is pre-installed — \`lib/design-system/tokens.css\` starts empty. See "First session" below.
+No UI kit is pre-installed — each workspace's \`lib/design-system/tokens.css\` starts empty.
+See "First session" below.
+
+## Workspaces
+
+- \`flowkit add:workspace <name>\` — add another workspace
+- \`flowkit remove:workspace <name>\` — remove a workspace
+- \`flowkit rename:workspace <old> <new>\` — rename a workspace
+- \`flowkit convert:flat\` — collapse back down to a single implicit workspace at root
 
 ## CLI Commands
 
@@ -305,8 +301,8 @@ flowkit export          # build standalone HTML viewer
 ## Rules
 
 - Do **not** edit \`node_modules/flowkit/\` — that is the platform engine.
-- Add screens under \`flows/<flow-name>/<screen-id>/\`
-- Add flowplan steps in \`flowplans/<flow-name>.ts\`
+- Add screens under \`<workspace>/flows/<flow-name>/<screen-id>/\`
+- Add flowplan steps in \`<workspace>/flowplans/<flow-name>.ts\`
 - All CLI operations go through \`flowkit <command>\`
 
 ## First session — onboarding
@@ -323,9 +319,10 @@ Keep it conversational, one or two questions at a time, not a form dump.
    explain vs. just do. Don't ask it clinically — something like "so I pitch
    this right: are you more comfortable in the code, or would you rather I
    just handle that side?"
-3. **What they're building.** A quick prototype for a pitch/demo, a client
-   deliverable, a personal project, something else? Shapes how much you
-   optimize for speed vs. polish.
+3. **What they're building, and how many workspaces they expect to need.** A
+   quick prototype for a pitch/demo, a client deliverable with multiple
+   related apps, something else? This project starts with one workspace
+   (\`${DEFAULT_WORKSPACE_NAME}/\`) — find out if they already know they'll want more.
 4. **Working style.** Do they want you to check in before changes, or move
    fast and explain after the fact? Set your autonomy level for the rest of
    the session based on the answer — don't re-ask this every time.
@@ -338,9 +335,9 @@ Keep it conversational, one or two questions at a time, not a form dump.
    it up themselves.
 
 Once you have these answers, act on them immediately — set up
-\`lib/design-system/tokens.css\` and whatever component approach fits, then
-get to the actual flows/screens. Don't re-run this interview later in the
-project; refer back to what you learned instead.
+\`${DEFAULT_WORKSPACE_NAME}/lib/design-system/tokens.css\` and whatever component approach
+fits, then get to the actual flows/screens. Don't re-run this interview later
+in the project; refer back to what you learned instead.
 `
   )
 }
@@ -369,8 +366,20 @@ dist/
 
 // ── Copy docs from installed flowkit ──────────────────────────────────────────
 
+function copyDir(src, dest) {
+  fs.mkdirSync(dest, { recursive: true })
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    const srcPath = path.join(src, entry.name)
+    const destPath = path.join(dest, entry.name)
+    if (entry.isDirectory()) {
+      copyDir(srcPath, destPath)
+    } else {
+      fs.copyFileSync(srcPath, destPath)
+    }
+  }
+}
+
 function copyDocsFromFlowkit(targetDir) {
-  // After npm install, docs live in node_modules/flowkit/docs/
   const docsSource = path.join(targetDir, 'node_modules', 'flowkit', 'docs')
   const docsDest = path.join(targetDir, 'docs')
   if (fs.existsSync(docsSource)) {
@@ -384,7 +393,7 @@ function copyDocsFromFlowkit(targetDir) {
 
 async function main() {
   console.log('')
-  console.log(`  ${b('Creating FlowKit project:')} ${c(projectName)}`)
+  console.log(`  ${b('Creating FlowKit multi-workspace project:')} ${c(projectName)}`)
   console.log('')
 
   const language = await resolveLanguage()
@@ -392,13 +401,11 @@ async function main() {
   try {
     fs.mkdirSync(targetDir, { recursive: true })
 
-    // Static, language-agnostic files
     fs.copyFileSync(
       path.join(__dirname, 'templates', 'index.html'),
       path.join(targetDir, 'index.html')
     )
 
-    // Generated files that don't need flowkit installed yet.
     writePackageJson(targetDir, projectName, language)
     writeViteConfig(targetDir)
     if (language === 'ts') writeTsConfig(targetDir)
@@ -411,27 +418,13 @@ async function main() {
       `  ${g('✓')} Language: ` +
         b(language === 'js' ? 'JavaScript (.jsx / .js)' : 'TypeScript (.tsx / .ts)')
     )
-    // Install dependencies BEFORE writing workspace content: the demo
-    // screens/flowplans/config are generated by writeWorkspaceContent(),
-    // which lives in flowkit itself (scripts/helpers/workspace-template.js —
-    // the one shared source of truth also used by create-flowkit-workspace
-    // and this repo's own `flowkit add:workspace` command) and is only
-    // resolvable from node_modules/flowkit once installed. This package
-    // can't depend on the monorepo directly (see the standalone-prompt-
-    // helpers comment above) — it reaches the shared template through its
-    // own `flowkit` devDependency instead, same as any consumer's project
-    // importing from `flowkit` at runtime.
-    //
-    // --install-links only matters for --local-dev's file: dependency: npm's
-    // default for a `file:` spec pointing at a directory is to SYMLINK it into
-    // node_modules, not copy it. Node's ESM loader resolves import.meta.url
-    // through that symlink to its realpath, which erases the node_modules
-    // path segment isRepoMode() would otherwise rely on — so a symlinked
-    // install gets misdetected as repo mode, pointing every workspace-scoped
-    // path at the real monorepo instead of this scaffolded project. Forcing a
-    // real copy sidesteps the problem entirely for local testing; it's a
-    // no-op for the published range (registry/git installs are already real
-    // copies, never symlinks).
+
+    // Install BEFORE writing workspace content: writeWorkspaceContent() lives
+    // in flowkit itself (scripts/helpers/workspace-template.js — the one
+    // shared source of truth also used by create-flowkit-app and this repo's
+    // own `flowkit add:workspace` command) and is only resolvable from
+    // node_modules/flowkit once installed. See create-flowkit-app/index.js
+    // for the identical pattern and the --install-links symlink rationale.
     console.log(`  ${d('Installing dependencies (this may take a moment)...')}`)
     execSync(`npm install${WANTS_LOCAL_DEV ? ' --install-links' : ''}`, {
       cwd: targetDir,
@@ -443,10 +436,11 @@ async function main() {
       path.join(targetDir, 'node_modules', 'flowkit', 'scripts', 'helpers', 'workspace-template.js')
     ).href
     const { writeWorkspaceContent } = await import(templateUrl)
-    writeWorkspaceContent(targetDir, projectName, language)
-    console.log(`  ${g('✓')} Workspace content generated`)
+    const wsDir = path.join(targetDir, DEFAULT_WORKSPACE_NAME)
+    fs.mkdirSync(wsDir, { recursive: true })
+    writeWorkspaceContent(wsDir, DEFAULT_WORKSPACE_NAME, language)
+    console.log(`  ${g('✓')} Workspace: ` + b(`${DEFAULT_WORKSPACE_NAME}/`))
 
-    // Copy docs from installed flowkit
     const docsCopied = copyDocsFromFlowkit(targetDir)
     if (docsCopied) {
       console.log(`  ${g('✓')} Docs copied from flowkit`)
@@ -458,9 +452,10 @@ async function main() {
     console.log(`    ${c(`cd ${projectName}`)}`)
     console.log(`    ${c('npm run dev')}`)
     console.log('')
+    console.log(`  ${d(`Add another workspace any time: flowkit add:workspace <name>`)}`)
+    console.log('')
   } catch (err) {
     console.error(r(`\n  ✗ Failed: ${err.message}`))
-    // Clean up on failure
     if (fs.existsSync(targetDir)) {
       try {
         fs.rmSync(targetDir, { recursive: true, force: true })

@@ -52,6 +52,13 @@ import {
   cmdListExports,
 } from '../authoring/components.js'
 import { cmdPromoteFlow } from '../authoring/promote-flow.js'
+import {
+  cmdConvertMulti,
+  cmdConvertFlat,
+  cmdAddWorkspace,
+  cmdRemoveWorkspace as cmdRemoveWorkspaceFlat,
+  cmdRenameWorkspace,
+} from './workspace-flat.js'
 
 // Parse both bare ("nw:name") and dashed ("-nw:name") forms.
 function parseCmd(arg) {
@@ -231,6 +238,7 @@ export async function route(argv) {
     else if (sub === 'screen') await cmdCreateScreen('', rest)
     else if (sub === 'flowplan') await cmdCreateFlowplan('', rest)
     else if (sub === 'component') await cmdCreateComponent('', rest)
+    else if (sub === 'workspace') await cmdAddWorkspace('', rest)
     else {
       console.error(r(`✗ Unknown: create:${sub}`))
       process.exit(1)
@@ -242,8 +250,17 @@ export async function route(argv) {
     else if (sub === 'flowplan') await cmdRemoveFlowplan('', rest)
     else if (sub === 'component') await cmdRemoveComponent('', rest)
     else if (sub === 'step') await cmdRemoveStep('', rest)
+    else if (sub === 'workspace') await cmdRemoveWorkspaceFlat('', rest)
     else {
       console.error(r(`✗ Unknown: remove:${sub}`))
+      process.exit(1)
+    }
+  } else if (p.cmd === 'convert') {
+    if (p.val === 'multi') await cmdConvertMulti('', rest)
+    else if (p.val === 'flat') await cmdConvertFlat('', rest)
+    else {
+      console.error(r(`✗ Unknown: convert:${p.val}`))
+      console.log(d('  Try: convert:multi, convert:flat'))
       process.exit(1)
     }
   } else if (p.cmd === 'list') {
@@ -258,6 +275,7 @@ export async function route(argv) {
     }
   } else if (p.cmd === 'rename') {
     if (p.val === 'screen') await cmdRenameScreen('', rest)
+    else if (p.val === 'workspace') await cmdRenameWorkspace('', rest)
     else {
       console.error(r(`✗ Unknown: rename:${p.val}`))
       process.exit(1)
