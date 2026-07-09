@@ -7,11 +7,8 @@ import {
   isRepoMode,
   PLATFORM_WORKSPACES_FILE,
   getActiveWorkspaceName,
-  g,
-  r,
-  b,
-  d,
-} from '../helpers/config.js'
+} from '../helpers/paths.js'
+import { g, r, b, d } from '../helpers/colors.js'
 import { readJson, writeJson } from '../helpers/json.js'
 import {
   AGENT_SPEC_VERSION,

@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { describe, it } from 'node:test'
 
-import { ROOT } from '../helpers/config.js'
+import { ROOT } from '../helpers/paths.js'
 import { workspaceScaffold } from '../helpers/scaffold.js'
 
 // scripts/helpers/scaffold.js (repo mode) and packages/create-flowkit-app/index.js

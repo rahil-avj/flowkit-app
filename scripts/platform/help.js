@@ -1,5 +1,6 @@
 // Platform command: prints CLI usage help.
-import { b, c, d, getActiveWorkspaceName } from '../helpers/config.js'
+import { getActiveWorkspaceName } from '../helpers/paths.js'
+import { b, c, d } from '../helpers/colors.js'
 
 export function cmdHelp() {
   const ws = getActiveWorkspaceName()

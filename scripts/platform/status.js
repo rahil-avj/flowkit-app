@@ -1,17 +1,8 @@
 // Platform command: read-only health snapshot of a workspace (flows, sessions, feedback, agent).
 import fs from 'fs'
 import path from 'path'
-import {
-  workspacePath,
-  isRepoMode,
-  ROOT,
-  b,
-  c,
-  d,
-  g,
-  r,
-  getActiveWorkspaceName,
-} from '../helpers/config.js'
+import { workspacePath, isRepoMode, ROOT, getActiveWorkspaceName } from '../helpers/paths.js'
+import { b, c, d, g, r } from '../helpers/colors.js'
 import { flowLensModuleExists } from './sessions/index.js'
 
 export function cmdStatus(wsArg) {

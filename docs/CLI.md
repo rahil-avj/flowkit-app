@@ -301,6 +301,196 @@ Static lint — validates that each flowplan file exports a valid object with `i
 
 ---
 
+## Authoring
+
+CRUD commands for editing the content inside a workspace — flows, screens, flowplan steps, and shared components. Every command accepts `--workspace:<name>` (optional; defaults to the active workspace) and exits 1 with a red `✗` message on any validation failure. IDs must be kebab-case (`^[a-z][a-z0-9-]*$`) unless noted otherwise.
+
+### Flows
+
+#### `create:flow` — Add a flow
+
+```bash
+flowkit create:flow --name:<flow-id>
+```
+
+Creates `flows/<flow-id>/` and registers it in `flowkit.config.ts` (`flows[]` + an empty `screenOrder[flow-id]`). If `--name` is omitted, prompts interactively. Rolls back the created directory if registration fails.
+
+Prints `Next: flowkit create:screen --flow:<flow-id> --name:<first-screen> --label:"Screen Name"` on success.
+
+#### `remove:flow` — Remove a flow
+
+```bash
+flowkit remove:flow --name:<flow-id> [--force]
+```
+
+Unregisters the flow from `flowkit.config.ts` and deletes `flows/<flow-id>/`. Refuses if the flow directory contains any screens unless `--force` is passed.
+
+#### `list:flows` — List flows
+
+```bash
+flowkit list:flows
+```
+
+Read-only. Lists every flow with its screen count and a total.
+
+### Screens
+
+Screen ids are **unique across the whole workspace**, not just within their flow — `create:screen`/`rename:screen` both check this.
+
+#### `create:screen` — Add a screen to a flow
+
+```bash
+flowkit create:screen --flow:<flow-id> --name:<screen-id> [--label:"Display Label"]
+```
+
+Creates `flows/<flow-id>/<screen-id>/<PascalName>Screen.tsx` from a template and registers it in `flowkit.config.ts` (`screenOrder.<flow-id>[]`). The flow must already exist. `--label` defaults to a Title Case version of the screen id if omitted.
+
+Prints `Next: flowkit add:step --flowplan:<flow-id> --screen:<screen-id> --action:"..."` on success.
+
+#### `remove:screen` — Remove a screen
+
+```bash
+flowkit remove:screen --flow:<flow-id> --name:<screen-id>
+```
+
+Unregisters the screen and deletes its directory. If any flowplan still references the screen id, prints a warning listing the affected flowplans but does not block the removal or edit them for you.
+
+#### `rename:screen` — Rename a screen
+
+```bash
+flowkit rename:screen --flow:<flow-id> --name:<old-id> --to:<new-id>
+```
+
+Renames the directory and the `.tsx` file (including the exported component function name), and updates `screenOrder`. The new id must not already exist anywhere in the workspace. Like `remove:screen`, warns about but does not update flowplan references to the old id.
+
+#### `move:screen` — Move a screen to a different flow
+
+```bash
+flowkit move:screen --name:<screen-id> --from-flow:<flow-id> --to-flow:<flow-id>
+```
+
+Moves the screen's directory and updates `screenOrder` on both flows. The destination flow must already exist.
+
+#### `list:screens` — List screens
+
+```bash
+flowkit list:screens [--flow:<flow-id>]
+```
+
+Read-only. Lists screens grouped by flow, or just the one flow if `--flow` is given.
+
+#### `screen:info` — Show screen metadata
+
+```bash
+flowkit screen:info --flow:<flow-id> --name:<screen-id>
+```
+
+Read-only. Prints the screen's `label`/`desc` (from `screenMeta`) and its import list, read directly from the `.tsx` file.
+
+### FlowPlan steps
+
+#### `add:step` — Append a step to a flowplan
+
+```bash
+flowkit add:step --flowplan:<flowplan-id> --screen:<screen-id> [--on:<element-id>] [--action:"..."] [--position:<n>]
+```
+
+Appends `{ screenId, on?, actionNote? }` to the flowplan's `steps[]`. `screen-id` must already be registered somewhere in the workspace (across any flow) — on failure, prints a "did you mean" suggestion plus the full list of known screens. `--position` inserts at that 0-based index instead of the end; an unparseable or omitted `--position` appends to the end.
+
+⚠️ Rewrites the `steps: [...]` block with a non-greedy regex — on a flowplan whose first step array contains a nested `forks[].steps[...]`, this can match the wrong closing bracket. Review the file after running this on a flowplan with forks.
+
+#### `remove:step` — Remove a step by index
+
+```bash
+flowkit remove:step --flowplan:<flowplan-id> --index:<n>
+```
+
+Removes the step at the given 0-based index. ⚠️ **`--index` is required in practice but not enforced** — if omitted, the command does not error; it silently removes step **0** instead (via `steps.splice(NaN, 1)`, and `NaN` coerces to `0`) and still prints a "✓ Removed" confirmation naming whatever step actually sat at index 0. Always pass `--index` explicitly and double check with `list:steps` afterward.
+
+#### `list:steps` — List a flowplan's steps
+
+```bash
+flowkit list:steps --flowplan:<flowplan-id>
+```
+
+Read-only. Prints each step's index, screen id, `on`, and `actionNote`.
+
+#### `flowplan:info` — Show flowplan summary
+
+```bash
+flowkit flowplan:info --name:<flowplan-id>
+```
+
+Read-only. Prints id, name, description, step count, and the first 5 steps.
+
+### Components
+
+#### `create:component` — Add a shared component
+
+```bash
+flowkit create:component --name:<PascalName> --path:<lib/components/...> [--desc:"..."]
+```
+
+`--name` must be PascalCase (`^[A-Z][A-Za-z0-9]+$`, 2+ characters), e.g. `StatusBadge`. Writes `<path>/<Name>.tsx` from a template, registers it in `.flowkit/components.json`, and — if a barrel `index.ts` exists at or above `--path` — appends `export { default as <Name> } from './...'` to it (skipped if already exported). If no barrel is found, prints a reminder to add the export manually or run `add:export`.
+
+#### `remove:component` — Remove a shared component
+
+```bash
+flowkit remove:component --name:<ComponentName> [--path:<lib/components/...>]
+```
+
+Deletes the `.tsx` file (if present — does not error if it's already gone) and removes both the barrel export and the `.flowkit/components.json` entry. Looks up the path from the registry unless `--path` is given explicitly.
+
+#### `components:find` — Look up a component
+
+```bash
+flowkit components:find --name:<ComponentName>
+```
+
+Read-only. Checks the registry first, then falls back to scanning `lib/components/` on disk if not registered. Suggests `create:component` if found nowhere, or `components:scan` if found on disk but unregistered.
+
+#### `components:ls` — List registered components
+
+```bash
+flowkit components:ls [--path:<prefix>]
+```
+
+Read-only. Lists every registered component, marking whether its file actually exists on disk, optionally filtered to a path prefix.
+
+#### `components:scan` — Sync the registry from disk
+
+```bash
+flowkit components:scan
+```
+
+Walks `lib/components/` for any `.tsx` file starting with an uppercase letter (excluding `index.*`) and registers any not already known. Use after manually adding component files outside `create:component`.
+
+#### `add:export` — Add a barrel export
+
+```bash
+flowkit add:export --barrel:<path/to/index.ts> --name:<ExportName>
+```
+
+Appends `export { default as <Name> } from './<Name>'` to the given barrel file. The source file (`<Name>.tsx` or `.ts`) must already exist next to the barrel. No-ops (not an error) if the export already exists.
+
+#### `list:exports` — List a barrel's exports
+
+```bash
+flowkit list:exports --barrel:<path/to/index.ts>
+```
+
+Read-only. Lists every `export { ... } from '...'` line in the barrel file.
+
+### `promote:flow` — Extract a fork into its own flowplan
+
+```bash
+flowkit promote:flow --flowplan:<path> --fork:"Fork label" [--as:<new-id>]
+```
+
+Finds the fork by an exact match on `label: "Fork label"` **(double-quoted only** — a single-quoted label in the source, like the ones in this doc's own [FlowPlan anatomy](#flowplan-anatomy) example, will not match) and writes its `steps[]` into a brand-new flowplan file. Does **not** edit the source file — it prints the exact `{ ref: "<new-id>" }` snippet to paste in by hand, replacing the fork. `--as` sets the new flowplan's id explicitly; otherwise it's derived by slugifying the fork label.
+
+---
+
 ## Export
 
 ### `export` — Export workspace as standalone HTML viewer
@@ -619,6 +809,32 @@ Commands grouped by item type. Click the heading to jump to the full section.
 | ------------ | ---------- | -------------------------------- |
 | `plan:ls`    | `fp:ls`    | List flowplans                   |
 | `plan:check` | `fp:check` | Validate flowplans (static lint) |
+
+### [Authoring](#authoring)
+
+| Command             | Alias | Description                            |
+| -------------------- | ----- | --------------------------------------- |
+| `create:flow`        | —     | Add a flow                              |
+| `remove:flow`        | —     | Remove a flow (`--force` if non-empty)  |
+| `list:flows`         | —     | List flows                              |
+| `create:screen`      | —     | Add a screen to a flow                  |
+| `remove:screen`      | —     | Remove a screen                         |
+| `rename:screen`      | —     | Rename a screen                         |
+| `move:screen`        | —     | Move a screen to a different flow       |
+| `list:screens`       | —     | List screens                            |
+| `screen:info`        | —     | Show screen metadata                    |
+| `add:step`           | —     | Append a step to a flowplan             |
+| `remove:step`        | —     | Remove a step by index                  |
+| `list:steps`         | —     | List a flowplan's steps                 |
+| `flowplan:info`      | —     | Show flowplan summary                   |
+| `create:component`   | —     | Add a shared component                  |
+| `remove:component`   | —     | Remove a shared component               |
+| `components:find`    | —     | Look up a component                     |
+| `components:ls`      | —     | List registered components              |
+| `components:scan`    | —     | Sync the registry from disk             |
+| `add:export`         | —     | Add a barrel export                     |
+| `list:exports`       | —     | List a barrel's exports                 |
+| `promote:flow`       | —     | Extract a fork into its own flowplan    |
 
 ### [Sessions](#sessions-flowtracer--flowlens)
 

@@ -1,7 +1,8 @@
 // Platform command: feedback management (import/dump/list).
 import fs from 'fs'
 import path from 'path'
-import { workspacePath, g, r, b, d, c } from '../helpers/config.js'
+import { workspacePath } from '../helpers/paths.js'
+import { g, r, b, d, c } from '../helpers/colors.js'
 import { toSlug } from '../helpers/registry.js'
 import { localDatePart, fmtDate } from '../helpers/dates.js'
 import { resolveWorkspaceLoose } from '../helpers/workspace-resolve.js'

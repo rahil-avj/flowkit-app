@@ -8,7 +8,7 @@ import {
   readWorkspacesJson,
   writeWorkspacesJson,
   getActiveWorkspaceName,
-} from './config.js'
+} from './paths.js'
 
 function readConfigDescription(name) {
   try {

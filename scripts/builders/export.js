@@ -2,17 +2,8 @@
 import fs from 'fs'
 import path from 'path'
 import { execSync } from 'child_process'
-import {
-  ROOT,
-  workspacePath,
-  requireRepoMode,
-  listWorkspaceDirs,
-  g,
-  r,
-  b,
-  d,
-  c,
-} from '../helpers/config.js'
+import { ROOT, workspacePath, requireRepoMode, listWorkspaceDirs } from '../helpers/paths.js'
+import { g, r, b, d, c } from '../helpers/colors.js'
 import { selectFromList } from '../helpers/prompt.js'
 import { cmdSessionsCheck } from '../platform/sessions/index.js'
 

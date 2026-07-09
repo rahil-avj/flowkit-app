@@ -42,7 +42,7 @@ describe('Suite A — Registry pure logic', () => {
   })
 
   it('A4 — readWorkspaceRegistry() with missing file → returns []', async () => {
-    const { WORKSPACES_JSON } = await import(path.join(ROOT, 'scripts/helpers/config.js'))
+    const { WORKSPACES_JSON } = await import(path.join(ROOT, 'scripts/helpers/paths.js'))
     const tmpPath = WORKSPACES_JSON + '.bak'
     fs.renameSync(WORKSPACES_JSON, tmpPath)
     try {
@@ -55,7 +55,7 @@ describe('Suite A — Registry pure logic', () => {
 
   it('A5 — writeWorkspaceRegistry() output is valid JSON with required fields', async () => {
     writeWorkspaceRegistry(['ws-one', 'ws-two'], 'ws-one')
-    const { WORKSPACES_JSON } = await import(path.join(ROOT, 'scripts/helpers/config.js'))
+    const { WORKSPACES_JSON } = await import(path.join(ROOT, 'scripts/helpers/paths.js'))
     const data = JSON.parse(fs.readFileSync(WORKSPACES_JSON, 'utf8'))
     assert.ok(Array.isArray(data.workspaces), 'workspaces must be an array')
     assert.ok(

@@ -9,12 +9,8 @@ import {
   requireRepoMode,
   assertScopedWorkspaceDir,
   listWorkspaceDirs,
-  g,
-  r,
-  b,
-  d,
-  c,
-} from '../helpers/config.js'
+} from '../helpers/paths.js'
+import { g, r, b, d, c } from '../helpers/colors.js'
 import { copyDirRecursive } from '../helpers/fs-copy.js'
 import {
   writeWorkspaceRegistry,

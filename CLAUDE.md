@@ -35,7 +35,6 @@ Browser-based UI prototyping platform (React 19 + Vite 8 + Tailwind v4) for mult
 │   │   ├── help.js           help command
 │   │   └── install.js        one-time setup — registers the flowkit shell alias (manual/agent-invoked)
 │   ├── helpers/               domain-agnostic support machinery, never a direct CLI command
-│   │   ├── config.js         backward-compat re-export shim → paths.js + colors.js (not authoritative)
 │   │   ├── paths.js          root/mode resolution, workspace path safety, repo/flat-mode detection
 │   │   ├── registry.js       workspace registry read/write/sync
 │   │   ├── args.js           CLI flag parsing
@@ -94,7 +93,7 @@ Browser-based UI prototyping platform (React 19 + Vite 8 + Tailwind v4) for mult
 │   │   │   ├── FlowPlaybackContext.tsx      Flowplan playback state (see Context Provider Table)
 │   │   │   └── FlowplanSettingsContext.tsx  Flowplan authoring/settings state
 │   │   ├── flowTracer/
-│   │   │   ├── sessionDb.ts        ⚠️ IndexedDB schema; getSnapshots() does full-store scan
+│   │   │   ├── sessionDb.ts        IndexedDB schema; snapshot/cursor queries use indexed ranges
 │   │   │   └── context/index.tsx   SessionRecorderProvider; writes must go via WriteBatcher
 │   │   ├── go-to-overlay/          Quick-jump dialog (flows/screens/flowplans)
 │   │   ├── manage/                 Workspace management UI
@@ -389,7 +388,7 @@ FlowKit ships two ways from one repo — every path in `scripts/helpers/` and `s
 - **Mode detection**: `scripts/helpers/paths.js` → `isRepoMode()` checks for a `.flowkit-repo-root` marker file at `ROOT` (computed from `paths.js`'s own file location, not `cwd()`) — deliberately excluded from `package.json`'s `files[]` allowlist so it never ships to any real install. Earlier detection heuristics (workspace-dir contents, then `node_modules`-in-path) both caused real incidents, including a full repo-delete bug — see `Documentation/PACKAGE-ARCHITECTURE.md` section 2 for the history. `assertScopedWorkspaceDir()` is the defense-in-depth backstop before any recursive workspace delete — call it in any new code path that deletes a workspace-scoped directory.
 - **`package.json` `"files"` is an allowlist**: currently `scripts/`, `src/`, `dist/`, `docs/`, `index.html` (minus `!scripts/tests/`, `!scripts/builders/format.mjs`). Only listed paths ship via `npm pack`/`publish`/git-dep. Verify what actually ships with `npm pack --dry-run --json` — glob entries like `"scripts/"` pull in more than expected, hence the negations. Note: `PACKAGE-ARCHITECTURE.md`'s example `files[]` includes `"packages/"` — the real `package.json` does not; `packages/create-flowkit-app/` publishes as its own separate package, not bundled into `flowkit`'s tarball.
 - **Public API surface** (`src/core/config/index.ts` and anything it re-exports) must use **relative imports only** for its own types — never `@platform/*`/`@shared/*`/etc. path aliases. TS declaration emit writes path-mapped specifiers as-is into `.d.ts`, which a consumer's TypeScript can't resolve. Check after any `build:lib` change: `grep -rn "from '@\(platform\|shared\|core\|features\|kit\|workspace\|flowlens\)" dist/types/` should return nothing.
-- **`scripts/vite-plugin.js`** (exported as `flowkit/vite`) is what makes flat mode work at dev-server time — it generates virtual modules (`virtual:flowkit/config|screens|flowplans|workspace`) that replace `import.meta.glob` patterns hardcoding `workspaces/<name>/...`, reconstructing the same data from `flowkit.config.ts` (bundled via esbuild) + filesystem globs from `cwd()` instead. Handles HMR via full-reload. This is already exercised by this repo's own `vite.config.ts`, but the flat-mode consumer path through it (Phase 5 of the checklist) is still untested end-to-end.
+- **`scripts/helpers/vite-plugin.js`** (exported as `flowkit/vite`) is what makes flat mode work at dev-server time — it generates virtual modules (`virtual:flowkit/config|screens|flowplans|workspace`) that replace `import.meta.glob` patterns hardcoding `workspaces/<name>/...`, reconstructing the same data from `flowkit.config.ts` (bundled via esbuild) + filesystem globs from `cwd()` instead. Handles HMR via full-reload. This is already exercised by this repo's own `vite.config.ts`, but the flat-mode consumer path through it (Phase 5 of the checklist) is still untested end-to-end.
 - **`packages/create-flowkit-app/`** is a real, working scaffolder (not a stub) — `index.js` generates a full project (2-flow/5-screen starter) as template literals, plus a `--local-dev` / `FLOWKIT_LOCAL_DEV=1` opt-in gated on the repo marker for testing against this checkout instead of a published version.
 
 ### What's actually done vs. not, toward publish
@@ -409,7 +408,6 @@ See [Documentation/PACKAGE-ARCHITECTURE.md](Documentation/PACKAGE-ARCHITECTURE.m
 
 ## Known Gotchas
 
-- **`sessionDb.ts` `getSnapshots()`** — full IndexedDB store scan; degrades with large session counts ⚠️
 - **`applyDotPathPatch.ts`** — dot-path setter has no `__proto__`/`constructor` guard; prototype pollution possible on untrusted input ⚠️
 - **vitest scope** — `vitest.config.ts` only includes `scripts/tests/**/*.test.ts` (4 files as of this writing: `applyDotPathPatch`, `canvasReducer`, `compileFlowplan`, `useKeyboardShortcuts`), but those files import and test `src/` modules directly — despite the directory name, this is where `src/` unit coverage lives. Coverage thresholds (91/86/95/93 stmts/branches/funcs/lines) apply only to what those 4 files exercise; most `src/` logic (UI components, contexts, most of `core/`) has no coverage ⚠️
 - **playwright** — installed as devDependency, no tests exist; ignore 🔴

@@ -13,11 +13,11 @@ FlowKit ships two ways from one repo:
 - **Repo mode** — this repo, checked out normally. `workspaces/<name>/` holds author content, platform code lives in `src/`, multiple workspaces can coexist, switched via a browser UI.
 - **Flat / author mode** — someone runs `npm create flowkit-app@latest my-project`, gets a project with just `flows/`, `flowplans/`, `lib/`, `flowkit.config.ts`, plus `flowkit` installed in `node_modules/`. There is no `workspaces/` directory. There is exactly one implicit workspace: the whole project.
 
-The two modes share **all** the same platform source (`src/`) and CLI code (`scripts/cli/`, `scripts/lib/`). The only difference is _where things resolve from_ — a workspace-shaped subdirectory of this repo, vs. the author's own project root. Almost every bug found this session was a place where that distinction leaked: code written assuming repo-mode's directory shape broke silently (or destructively) when run in flat mode.
+The two modes share **all** the same platform source (`src/`) and CLI code (`scripts/platform/`, `scripts/helpers/`). The only difference is _where things resolve from_ — a workspace-shaped subdirectory of this repo, vs. the author's own project root. Almost every bug found this session was a place where that distinction leaked: code written assuming repo-mode's directory shape broke silently (or destructively) when run in flat mode.
 
 ---
 
-## 2. Mode detection — `scripts/lib/paths.js`
+## 2. Mode detection — `scripts/helpers/paths.js`
 
 ```js
 export const ROOT = path.resolve(__dirname, '../..') // wherever paths.js physically lives
@@ -33,7 +33,7 @@ export function workspacePath(name) {
 }
 ```
 
-`ROOT` is computed from `paths.js`'s own file location, not `process.cwd()`. That's the load-bearing fact: in repo mode, `paths.js` lives in _this_ repo's `scripts/lib/`, so `ROOT` is this repo's root regardless of what directory you ran a command from. In flat mode, `flowkit` is installed at `<project>/node_modules/flowkit/`, so `paths.js` lives at `.../node_modules/flowkit/scripts/lib/paths.js`.
+`ROOT` is computed from `paths.js`'s own file location, not `process.cwd()`. That's the load-bearing fact: in repo mode, `paths.js` lives in _this_ repo's `scripts/helpers/`, so `ROOT` is this repo's root regardless of what directory you ran a command from. In flat mode, `flowkit` is installed at `<project>/node_modules/flowkit/`, so `paths.js` lives at `.../node_modules/flowkit/scripts/helpers/paths.js`.
 
 **This check has broken twice, for two different reasons — third time's the marker file:**
 
@@ -53,7 +53,7 @@ export function assertScopedWorkspaceDir(wsDir, name) {
 }
 ```
 
-Call sites: `scripts/cli/workspace.js` (`cmdNewWorkspace`'s rollback-on-failure, `cmdRemoveWorkspace`), `scripts/cli/agent/screens.js`, `scripts/cli/agent/flows.js`. If you add a new place that deletes a workspace-scoped directory, call this first — it's cheap and it's the only thing standing between a bug like the one above and another repo wipe.
+Call sites: `scripts/platform/workspace.js` (`cmdNewWorkspace`'s rollback-on-failure, `cmdRemoveWorkspace`), `scripts/authoring/screens.js`, `scripts/authoring/flows.js`. If you add a new place that deletes a workspace-scoped directory, call this first — it's cheap and it's the only thing standing between a bug like the one above and another repo wipe.
 
 **Commands that only make sense in repo mode** (`flowkit nw`, `flowkit rw`, `flowkit watch`, `flowkit export`, `flowkit handoff`) call a shared guard at the top instead of hand-copying the message each time:
 
@@ -63,7 +63,7 @@ export async function cmdRemoveWorkspace(val) {
   ...
 ```
 
-If you add a new CLI command that assumes `workspaces/<name>/` exists, add this guard. If a command _should_ work in both modes, thread everything through `workspacePath()`/`isRepoMode()` rather than constructing `workspaces/...` paths by hand — see `scripts/cli/status.js` for the reference-correct pattern (uses `getActiveWorkspaceName()` + `workspacePath()`, never checks `listWorkspaceDirs().length` as a gate, so it degrades gracefully to "the one implicit flat-mode workspace" instead of hard-failing).
+If you add a new CLI command that assumes `workspaces/<name>/` exists, add this guard. If a command _should_ work in both modes, thread everything through `workspacePath()`/`isRepoMode()` rather than constructing `workspaces/...` paths by hand — see `scripts/platform/status.js` for the reference-correct pattern (uses `getActiveWorkspaceName()` + `workspacePath()`, never checks `listWorkspaceDirs().length` as a gate, so it degrades gracefully to "the one implicit flat-mode workspace" instead of hard-failing).
 
 ---
 
@@ -80,21 +80,21 @@ If you add a new CLI command that assumes `workspaces/<name>/` exists, add this 
     "docs/",
     "index.html",
     "!scripts/tests/",
-    "!scripts/build/format.mjs"
+    "!scripts/builders/format.mjs"
   ],
   "exports": {
     ".": {
       "types": "./dist/types/core/config/index.d.ts",
       "import": "./dist/lib/index.js"
     },
-    "./vite": "./scripts/vite-plugin.js"
+    "./vite": "./scripts/helpers/vite-plugin.js"
   }
 }
 ```
 
 - **`"files"` is an allowlist**, not a denylist — only these paths (and their contents) end up in what npm packs, whether via `npm publish`, a `file:` dependency, or a git dependency. Anything not listed (`.husky/`, `eslint.config.js`, `.prettierrc`, `vitest.config.ts`, etc.) is excluded _by omission_ — no negation needed.
-- The two `!`-negations exist because `"scripts/"` is broad and swept in real dev-only files: `scripts/tests/**` (vitest specs), `scripts/build/format.mjs` (the Prettier wrapper script). Verify with `npm pack --dry-run --json` — that's the only way to know for sure what actually ships; reading the "files" field alone doesn't tell you what glob patterns like `"scripts/"` pull in. (`scripts/deploy/` — this repo's former release-tagging/deployment-branch tooling — was removed entirely once the repo committed to npm publish as the distribution path; there's no longer a `deployment` git branch mechanism to maintain.)
-- **`"exports"` has two separate entries** because Node (running the CLI) and Vite (running in a browser/dev-server context) resolve differently. `"."` is the Node-facing, pre-built JS entry (`defineConfig`, `defineFlow`, `tag`, types) — it must be built output, not raw TypeScript, because Node can't strip types itself. `"./vite"` points straight at `scripts/vite-plugin.js`, which is already plain JS and needs no build step.
+- The two `!`-negations exist because `"scripts/"` is broad and swept in real dev-only files: `scripts/tests/**` (vitest specs), `scripts/builders/format.mjs` (the Prettier wrapper script). Verify with `npm pack --dry-run --json` — that's the only way to know for sure what actually ships; reading the "files" field alone doesn't tell you what glob patterns like `"scripts/"` pull in. (`scripts/deploy/` — this repo's former release-tagging/deployment-branch tooling — was removed entirely once the repo committed to npm publish as the distribution path; there's no longer a `deployment` git branch mechanism to maintain.)
+- **`"exports"` has two separate entries** because Node (running the CLI) and Vite (running in a browser/dev-server context) resolve differently. `"."` is the Node-facing, pre-built JS entry (`defineConfig`, `defineFlow`, `tag`, types) — it must be built output, not raw TypeScript, because Node can't strip types itself. `"./vite"` points straight at `scripts/helpers/vite-plugin.js`, which is already plain JS and needs no build step.
 - **The `dist/lib` build**: `npm run build:lib` runs `tsc -p tsconfig.build.json && vite build --config vite.lib.config.ts`. `tsconfig.build.json` is deliberately scoped to only 4 files (`src/core/config/{index,defineConfig}.ts`, `src/types/index.ts`, `src/shared/contexts/FlowNavContext.tsx`) — not all of `src/` — so internal implementation types don't leak into the public `.d.ts` output.
 
 ### The alias-leak gotcha (already fixed, but the pattern will recur)
@@ -105,7 +105,7 @@ The fix, everywhere it recurs: **any file reachable from the public entry point 
 
 ---
 
-## 4. The Vite plugin — `scripts/vite-plugin.js` (exported as `flowkit/vite`)
+## 4. The Vite plugin — `scripts/helpers/vite-plugin.js` (exported as `flowkit/vite`)
 
 This is the part that makes flat mode actually work at dev-server time. Header comment says it best:
 
@@ -174,7 +174,7 @@ if (dbFile) {
 }
 ```
 
-Author `db.ts` files are expected to use **named exports** (`export const user = {...}`, `export const items = [...]`) — matching repo-mode's own convention exactly. A single `export default {...}` is supported as a fallback, but named exports is the documented, primary path (both `create-flowkit-app`'s scaffold and `scripts/lib/scaffold.js`'s repo-mode scaffold use named exports).
+Author `db.ts` files are expected to use **named exports** (`export const user = {...}`, `export const items = [...]`) — matching repo-mode's own convention exactly. A single `export default {...}` is supported as a fallback, but named exports is the documented, primary path (both `create-flowkit-app`'s scaffold and `scripts/helpers/scaffold.js`'s repo-mode scaffold use named exports).
 
 **`loadTokens` — the `?inline` gotcha:**
 
@@ -247,7 +247,7 @@ Virtual modules are cached in a `Map` (`cache`) keyed by module ID, cleared on a
 There is **no shared code** between repo-mode and flat-mode session saving — they're two independent implementations of the same `POST /__flowlens/save-session` endpoint, because they live in two different files that are never loaded together:
 
 - **Repo mode**: `flowLensSaveSessionPlugin()` in this repo's own `vite.config.ts` — looks up the active workspace from `src/workspaces.json`, saves to `workspaces/<ws>/lib/flowLens/`.
-- **Flat mode**: the same middleware, ported into `scripts/vite-plugin.js`'s `configureServer`, saving to `<cwd>/lib/flowLens/` instead — added this session, because it didn't exist at all before (an author project only ever loads `flowkit/vite`'s plugin, never this repo's `vite.config.ts`, so there was no way to save a session in flat mode whatsoever).
+- **Flat mode**: the same middleware, ported into `scripts/helpers/vite-plugin.js`'s `configureServer`, saving to `<cwd>/lib/flowLens/` instead — added this session, because it didn't exist at all before (an author project only ever loads `flowkit/vite`'s plugin, never this repo's `vite.config.ts`, so there was no way to save a session in flat mode whatsoever).
 
 Both write the same shape: `studies.json` (auto-created with an `initial-study` if missing) + `sessions/<studyId>/<slug>-<id8>.json`. The flat-mode read side (`genWorkspace`'s `sessionFiles = await globFiles('lib/flowLens/sessions/**/*.json', cwd)`) expects exactly this layout — if you change one side's path convention, change the other, or sessions saved via one path silently stop being readable.
 
@@ -259,7 +259,7 @@ If you ever unify these two plugins into one shared function, the parameter to a
 
 Lives at `packages/create-flowkit-app/`, published (once you run `npm publish` there — not done yet) as its own separate npm package, invoked via `npm create flowkit-app@latest <name>`.
 
-**Why not `npm create flowkit@latest`, matching the original plan?** `npm create <x>` is shorthand for `npx create-<x>@latest` — it always resolves against the public npm registry for a package named exactly `create-<x>`. `create-flowkit` is already registered to an unrelated, abandoned package (confirmed: `npm view create-flowkit` returns a real, unrelated package whose entire source is `console.log("Yo")`). There is no way to make `npm create flowkit@latest` resolve to our code without owning that exact registry name, which we don't and can't dispute our way into short-term. Renamed to `create-flowkit-app` — an unclaimed name — everywhere: the package's own `name`/`bin` fields, its usage text, and `scripts/cli/workspace.js`'s flat-mode redirect message.
+**Why not `npm create flowkit@latest`, matching the original plan?** `npm create <x>` is shorthand for `npx create-<x>@latest` — it always resolves against the public npm registry for a package named exactly `create-<x>`. `create-flowkit` is already registered to an unrelated, abandoned package (confirmed: `npm view create-flowkit` returns a real, unrelated package whose entire source is `console.log("Yo")`). There is no way to make `npm create flowkit@latest` resolve to our code without owning that exact registry name, which we don't and can't dispute our way into short-term. Renamed to `create-flowkit-app` — an unclaimed name — everywhere: the package's own `name`/`bin` fields, its usage text, and `scripts/platform/workspace.js`'s flat-mode redirect message.
 
 ### 6.1 How it finds `flowkit`
 
@@ -298,7 +298,7 @@ Everything else (screens, flowplans, `db.ts`, `flowkit.config.ts`, `vite.config.
 
 ### 6.3 Prompts — matching `flowkit nw`'s UX
 
-`index.js` implements its own **self-contained** `selectFromList`/`prompt` (arrow-key terminal UI, non-TTY numbered fallback) — a near-duplicate of `scripts/lib/prompt.js`, deliberately not imported from there, because this package is meant to be independently installable/publishable and shouldn't depend on the rest of the monorepo at runtime.
+`index.js` implements its own **self-contained** `selectFromList`/`prompt` (arrow-key terminal UI, non-TTY numbered fallback) — a near-duplicate of `scripts/helpers/prompt.js`, deliberately not imported from there, because this package is meant to be independently installable/publishable and shouldn't depend on the rest of the monorepo at runtime.
 
 Two prompts, both skippable via flags for non-interactive use:
 
@@ -307,7 +307,7 @@ npm create flowkit-app@latest my-app                       # interactive
 npm create flowkit-app@latest my-app -- --lang:js --kit:none  # flags
 ```
 
-- **Language** (`ts`/`js`) — affects file extensions (`.tsx`/`.jsx`) and `package.json` devDependencies (drops `typescript`/`@types/*` for JS, skips writing `tsconfig.json` entirely). Config/flowplan files stay `.ts` regardless of choice — Vite strips TS syntax from any `.ts`/`.tsx` file whether or not the project declares itself as JS, and this matches repo-mode's own scaffold convention (`scripts/lib/scaffold.js` never varies `flowkit.config.ts`/flowplan extensions by language either).
+- **Language** (`ts`/`js`) — affects file extensions (`.tsx`/`.jsx`) and `package.json` devDependencies (drops `typescript`/`@types/*` for JS, skips writing `tsconfig.json` entirely). Config/flowplan files stay `.ts` regardless of choice — Vite strips TS syntax from any `.ts`/`.tsx` file whether or not the project declares itself as JS, and this matches repo-mode's own scaffold convention (`scripts/helpers/scaffold.js` never varies `flowkit.config.ts`/flowplan extensions by language either).
 - **Kit** (`apple`/`material`/`neo-brutalism`/`mobile-wireframe`/`none`) — a small **hardcoded** list, not read from this repo's `src/kits/` at scaffold time. Once `create-flowkit-app` is published standalone it won't have a sibling `src/` tree to read from at all, so this has to be static. If kits are added/removed from `src/kits/{shared,standalone}/`, update `SHARED_KITS`/`STANDALONE_KITS` in `index.js` by hand.
 
 If `kit !== 'none'`, the generated `lib/design-system/tokens.css` contains a direct-path `@import`:
@@ -320,10 +320,10 @@ Same precedent as `index.html`'s `<script src="/node_modules/flowkit/src/main.ts
 
 ### 6.4 The 2-flow/5-screen starter
 
-Ported from `scripts/lib/scaffold.js`'s repo-mode `workspaceScaffold()` — same content (onboarding: welcome → setup → ready; home: home → detail), adapted from repo mode's `useDashboard()` hook to flat mode's documented `FlowScreenProps` convention:
+Ported from `scripts/helpers/scaffold.js`'s repo-mode `workspaceScaffold()` — same content (onboarding: welcome → setup → ready; home: home → detail), adapted from repo mode's `useDashboard()` hook to flat mode's documented `FlowScreenProps` convention:
 
 ```tsx
-// repo mode (scripts/lib/scaffold.js)
+// repo mode (scripts/helpers/scaffold.js)
 export default function WelcomeScreen() {
   const { db } = useDashboard()
   return <button id="get-started">Get Started</button> // DOM id matched against flowplan step's `on` field
@@ -402,8 +402,8 @@ This repo used to maintain **two** independent lists controlling "what doesn't s
 
 Everything described above is committed on `flowkit/Package` (not merged into `r/deployBuild` — holding until full testing per explicit instruction). Remaining, in the order they'll probably matter:
 
-1. `npm run build` (the main platform/app build, not `build:lib`) currently fails at the `tsc -b` step — `Could not find a declaration file for module './scripts/vite-plugin.js'` (and now also `./scripts/lib/flowlens-session.js`). Confirmed pre-existing via `git stash` — not caused by any of the fixes below, but still unresolved. `build:lib` (the actual publishable package build) works and was verified.
+1. `npm run build` (the main platform/app build, not `build:lib`) currently fails at the `tsc -b` step — `Could not find a declaration file for module './scripts/helpers/vite-plugin.js'` (and now also `./scripts/helpers/flowlens-session.js`; paths updated after the `scripts/` restructure moved both files under `scripts/helpers/`). Confirmed pre-existing via `git stash` — not caused by any of the fixes below, but still unresolved. `build:lib` (the actual publishable package build) works and was verified.
 2. Move Radix UI packages to `peerDependencies` + `devDependencies` (React already is; Radix still isn't) — see section 3's `"exports"`/`"files"` discussion for why this matters for a real consumer install.
 3. ~~Change `FLOWKIT_GIT_DEP`...~~ **Done this session** — see section 6.1. Default is now the real `FLOWKIT_PUBLISHED_RANGE` semver spec; local testing against an unpublished checkout is the explicit, guarded `--local-dev` opt-in. This also fixed a second bug it surfaced: `isRepoMode()` misdetected flat mode as repo mode under a symlinked `file:` dependency (see section 2) — fixed via the `.flowkit-repo-root` marker file.
 4. Decide `npm publish` timing for `flowkit` and `create-flowkit-app` — both names are confirmed unclaimed on the registry as of this session (`npm view flowkit` / `npm view create-flowkit-app` both 404, re-confirmed in the follow-up session that fixed item 3).
-5. ~~`esbuild` runtime dependency missing~~ **Found and fixed this session, only by running the full flow end-to-end** — not visible from reading code alone. `scripts/vite-plugin.js` does `import esbuild from 'esbuild'` at module load, but `esbuild` was in `devDependencies`, which npm does not install for consumers of a package. Every flat-mode `npm run dev` failed with `ERR_MODULE_NOT_FOUND: Cannot find package 'esbuild'` until this was moved to `dependencies`. Caught while verifying the item-3 fix: the scaffold, the dependency resolution, and `isRepoMode()` all passed their own checks, then the actual `vite` dev server still wouldn't boot — a reminder that "the pieces I can unit-test are correct" isn't the same bar as "the thing actually runs."
+5. ~~`esbuild` runtime dependency missing~~ **Found and fixed this session, only by running the full flow end-to-end** — not visible from reading code alone. `scripts/helpers/vite-plugin.js` does `import esbuild from 'esbuild'` at module load, but `esbuild` was in `devDependencies`, which npm does not install for consumers of a package. Every flat-mode `npm run dev` failed with `ERR_MODULE_NOT_FOUND: Cannot find package 'esbuild'` until this was moved to `dependencies`. Caught while verifying the item-3 fix: the scaffold, the dependency resolution, and `isRepoMode()` all passed their own checks, then the actual `vite` dev server still wouldn't boot — a reminder that "the pieces I can unit-test are correct" isn't the same bar as "the thing actually runs."

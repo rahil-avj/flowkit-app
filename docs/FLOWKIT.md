@@ -223,7 +223,6 @@ The canvas reads `config.kit` and sets `data-kit="material"` on the preview wrap
 
 1. Create `src/kits/shared/tokens/themes/my-theme.css` — define all `--kit-*` vars under `[data-kit="my-theme"]`
 2. Add `"my-theme"` to `KIT_MANIFEST.themes` in `src/kits/shared/index.ts`
-3. Run `flowkit kit:check` to see coverage gaps
 
 > `WorkspaceConfig.kit` is a plain `string` — no type union to update. Any string value is accepted; the canvas sets `data-kit="<value>"` on the preview wrapper.
 

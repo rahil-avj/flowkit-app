@@ -1,5 +1,5 @@
 // Platform: the CLI's central command dispatcher — parses argv and routes to every subcommand.
-import { r, d } from '../helpers/config.js'
+import { r, d } from '../helpers/colors.js'
 import { cmdNewWorkspace, cmdRemoveWorkspace, cmdWatch } from './workspace.js'
 import { cmdExport, cmdExportFull } from '../builders/export.js'
 import { cmdHandoff } from '../builders/handoff.js'
