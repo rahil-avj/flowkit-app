@@ -1,16 +1,17 @@
+// Authoring command: CRUD for shared components (create/remove/find/list/scan/export).
 import fs from 'fs'
 import path from 'path'
-import { parseStringFlag } from '../../lib/args.js'
-import { resolveWorkspace } from '../../lib/workspace-resolve.js'
-import { workspacePath } from '../../lib/paths.js'
-import { g, r, b, d, c } from '../../lib/colors.js'
+import { parseStringFlag } from '../helpers/args.js'
+import { resolveWorkspace } from '../helpers/workspace-resolve.js'
+import { workspacePath } from '../helpers/paths.js'
+import { g, r, b, d, c } from '../helpers/colors.js'
 import {
   readComponents,
   registerComponent,
   unregisterComponent,
   findComponent,
   writeComponents,
-} from '../../lib/agent-state.js'
+} from '../authoring-support/agent-state.js'
 
 const PASCAL_RE = /^[A-Z][A-Za-z0-9]+$/
 

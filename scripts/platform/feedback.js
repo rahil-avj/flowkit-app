@@ -1,10 +1,11 @@
+// Platform command: feedback management (import/dump/list).
 import fs from 'fs'
 import path from 'path'
-import { workspacePath, g, r, b, d, c } from '../lib/config.js'
-import { toSlug } from '../lib/registry.js'
-import { localDatePart, fmtDate } from '../lib/dates.js'
-import { resolveWorkspaceLoose } from '../lib/workspace-resolve.js'
-import { readJson } from '../lib/json.js'
+import { workspacePath, g, r, b, d, c } from '../helpers/config.js'
+import { toSlug } from '../helpers/registry.js'
+import { localDatePart, fmtDate } from '../helpers/dates.js'
+import { resolveWorkspaceLoose } from '../helpers/workspace-resolve.js'
+import { readJson } from '../helpers/json.js'
 
 const FEEDBACK_FILE = '.flowkit-feedback.json'
 

@@ -55,7 +55,7 @@ export default tseslint.config(
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
       'tailwindcss/no-unnecessary-arbitrary-value': 'warn',
-      'tailwindcss/enforces-shorthand': 'warn',
+      'tailwindcss/enforces-shorthand': 'off',
       'boundaries/dependencies': [
         'error',
         {

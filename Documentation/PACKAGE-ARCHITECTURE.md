@@ -39,7 +39,7 @@ export function workspacePath(name) {
 
 1. **Originally** checked `fs.existsSync(path.join(process.cwd(), 'workspaces'))`. Wrong — this repo can legitimately have zero workspaces (the last one, `nClarity`, was intentionally decommissioned) while still being repo mode. With that check, running any `flowkit` command from this repo's root misdetected as flat mode, and `workspacePath(name)` fell through to `return process.cwd()` — the entire repo root. `flowkit rw` then deleted the whole repository.
 2. **Fixed** by checking whether `ROOT` contains a `node_modules` path segment (`.../node_modules/flowkit` in flat mode always does; this repo's own root never does) — a structural fact of _how flowkit was installed_, not a snapshot of directory contents. This held until a `file:` dependency entered the picture: `npm install` on a `file:` spec creates a **symlink**, not a copy, under `node_modules`. `import.meta.url` resolves through that symlink to `ROOT`'s realpath, which has no `node_modules` segment at all — so a flat-mode project depending on flowkit via `file:` (or `npm link`) was misdetected as repo mode, pointing every workspace-scoped path at the real monorepo on the developer's machine instead of the flat project. Confirmed live by scaffolding via `create-flowkit-app --local-dev` and running `flowkit status` from inside the result — it printed a path into the real monorepo, not the scaffolded project.
-3. **Current fix:** a marker file, `.flowkit-repo-root`, tracked in git at this repo's actual root and deliberately excluded from `package.json`'s `"files"` allowlist (see `scripts/tests/manifest-consistency.test.js`'s `M4`, which fails loudly if a future `files[]` change ever widens to catch it). Its presence is the one signal immune to both directory-contents drift and symlink-realpath resolution, since it's a deliberate marker rather than something inferred from install mechanics — and its absence fails toward the safe direction (repo-only commands wrongly blocked, never wrongly allowed against the wrong `ROOT`).
+3. **Current fix:** a marker file, `.flowkit-repo-root`, tracked in git at this repo's actual root and deliberately excluded from `package.json`'s `"files"` allowlist. Its presence is the one signal immune to both directory-contents drift and symlink-realpath resolution, since it's a deliberate marker rather than something inferred from install mechanics — and its absence fails toward the safe direction (repo-only commands wrongly blocked, never wrongly allowed against the wrong `ROOT`). ⚠️ **Regression risk, currently unguarded:** the automated check that used to fail loudly if a future `files[]` change ever widened to catch this marker (`scripts/tests/manifest-consistency.test.js`'s `M4`) was deleted along with the rest of `scripts/deploy/` when the repo moved off the deployment-branch mechanism — there is no test today that would catch `.flowkit-repo-root` accidentally shipping in a real `npm pack`. Worth a standalone replacement test before publish.
 
 **Defense in depth**, added after that incident — every code path that recursively deletes a named workspace directory calls this first:
 
@@ -80,7 +80,6 @@ If you add a new CLI command that assumes `workspaces/<name>/` exists, add this 
     "docs/",
     "index.html",
     "!scripts/tests/",
-    "!scripts/deploy/",
     "!scripts/build/format.mjs"
   ],
   "exports": {
@@ -94,7 +93,7 @@ If you add a new CLI command that assumes `workspaces/<name>/` exists, add this 
 ```
 
 - **`"files"` is an allowlist**, not a denylist — only these paths (and their contents) end up in what npm packs, whether via `npm publish`, a `file:` dependency, or a git dependency. Anything not listed (`.husky/`, `eslint.config.js`, `.prettierrc`, `vitest.config.ts`, etc.) is excluded _by omission_ — no negation needed.
-- The three `!`-negations exist because `"scripts/"` is broad and swept in real dev-only files: `scripts/tests/**` (vitest specs), `scripts/deploy/**` (this repo's own release tooling), `scripts/build/format.mjs` (the Prettier wrapper script). Verify with `npm pack --dry-run --json` — that's the only way to know for sure what actually ships; reading the "files" field alone doesn't tell you what glob patterns like `"scripts/"` pull in.
+- The two `!`-negations exist because `"scripts/"` is broad and swept in real dev-only files: `scripts/tests/**` (vitest specs), `scripts/build/format.mjs` (the Prettier wrapper script). Verify with `npm pack --dry-run --json` — that's the only way to know for sure what actually ships; reading the "files" field alone doesn't tell you what glob patterns like `"scripts/"` pull in. (`scripts/deploy/` — this repo's former release-tagging/deployment-branch tooling — was removed entirely once the repo committed to npm publish as the distribution path; there's no longer a `deployment` git branch mechanism to maintain.)
 - **`"exports"` has two separate entries** because Node (running the CLI) and Vite (running in a browser/dev-server context) resolve differently. `"."` is the Node-facing, pre-built JS entry (`defineConfig`, `defineFlow`, `tag`, types) — it must be built output, not raw TypeScript, because Node can't strip types itself. `"./vite"` points straight at `scripts/vite-plugin.js`, which is already plain JS and needs no build step.
 - **The `dist/lib` build**: `npm run build:lib` runs `tsc -p tsconfig.build.json && vite build --config vite.lib.config.ts`. `tsconfig.build.json` is deliberately scoped to only 4 files (`src/core/config/{index,defineConfig}.ts`, `src/types/index.ts`, `src/shared/contexts/FlowNavContext.tsx`) — not all of `src/` — so internal implementation types don't leak into the public `.d.ts` output.
 
@@ -391,16 +390,11 @@ Always clean up afterward: `rm -rf test/demo`, kill the background vite process,
 
 ---
 
-## 9. Reconciling `manifest.js` and `package.json`'s `files[]`
+## 9. `package.json`'s `files[]` — now the only "what ships" mechanism
 
-Two independent lists control "what doesn't ship," for two different distribution paths:
+This repo used to maintain **two** independent lists controlling "what doesn't ship": `package.json`'s `files[]` (filtering what npm itself packs) and `scripts/deploy/manifest.js`'s `STRIP_DIRS`/`STRIP_FILES` (stripped from a separate `deployment` git branch via `sync:deployment`, for git-dependency installs). `scripts/deploy/` — and the whole deployment-branch mechanism, including `manifest-consistency.test.js`, the test that kept the two lists in sync — was removed once the repo committed to npm publish as the sole distribution path. There is no `deployment` branch to maintain and no second list to reconcile.
 
-- `scripts/deploy/manifest.js`'s `STRIP_DIRS`/`STRIP_FILES` — removed from the **`deployment` git branch's working tree** by `sync:deployment`. This is what a git-dependency install actually sees.
-- `package.json`'s `files[]` — filters what **npm itself** packs, for `npm publish` or any `file:`/git-dep install, regardless of which branch/checkout it runs from. This is what a local `file:` dev-testing install actually sees (exactly the workflow in section 8).
-
-They overlap for `scripts/tests`, `scripts/deploy`, `scripts/build/format.mjs`. Two entries are **intentional exceptions** — `scripts/flows` (flowplan-fork promotion, a repo-mode-only concept) and `scripts/build/kit-check.js` (validates `src/kits/*`, also repo-mode-oriented) — stripped from the deployment branch but still fine to ship in the npm package since they're harmless if present in flat mode.
-
-`scripts/tests/manifest-consistency.test.js` (wired into `npm run test:workspace`) checks this automatically: every `STRIP_DIRS`/`STRIP_FILES` entry actually exists on disk (catches stale entries — one was found and removed this session: `scripts/agent/check.js`, referenced but long deleted), and every entry that would actually be shipped by a `files[]` positive pattern has either a matching `!`-negation or a documented exception in `NPM_PACKAGE_EXCEPTIONS`. If you add a new dev-only script anywhere under `scripts/`, `src/`, `packages/`, or `docs/` (the positive `files[]` patterns), this test will fail loudly if you forget to exclude it one way or the other — that's the point.
+`package.json`'s `files[]` is now the single source of truth for what ships, for every install path (`npm publish`, `file:`, or git dep). Verify what actually ships with `npm pack --dry-run --json` — reading the `files[]` field alone doesn't tell you what a broad positive pattern like `"scripts/"` actually pulls in; that's still true today, it just isn't cross-checked by an automated test anymore. If a new dev-only script is added anywhere under `scripts/`, `src/`, `packages/`, or `docs/`, nothing will fail loudly if you forget to add a `!`-negation for it — that's a manual discipline now, not an enforced one.
 
 ---
 

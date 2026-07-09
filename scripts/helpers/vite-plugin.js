@@ -20,11 +20,11 @@ import os from 'os'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-import { handleSaveSession } from './lib/flowlens-session.js'
+import { handleSaveSession } from './flowlens-session.js'
 
 // src/ directory of the flowkit package — resolved relative to this plugin file.
 // In flat mode (author project) all @platform/* aliases point here.
-const ENGINE_SRC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src')
+const ENGINE_SRC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../src')
 
 // ── Config reader ──────────────────────────────────────────────────────────────
 

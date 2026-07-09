@@ -1,3 +1,4 @@
+// Platform command: regenerates .agent/* docs and the chosen agent's memory file (agent:sync).
 import fs from 'fs'
 import path from 'path'
 import {
@@ -10,8 +11,8 @@ import {
   r,
   b,
   d,
-} from '../lib/config.js'
-import { readJson, writeJson } from '../lib/json.js'
+} from '../helpers/config.js'
+import { readJson, writeJson } from '../helpers/json.js'
 import {
   AGENT_SPEC_VERSION,
   specContext,
@@ -19,7 +20,7 @@ import {
   indexRows,
   platformSurfaces,
   cliRows,
-} from './spec.js'
+} from './agent-spec.js'
 
 // ─── Supported agent targets: single source → each tool's native memory file ─────
 

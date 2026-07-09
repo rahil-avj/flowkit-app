@@ -1,8 +1,9 @@
+// Platform command: study cohort management (sessions:study:new/ls/archive/active).
 import fs from 'fs'
 import path from 'path'
 import readline from 'readline'
-import { g, r, b, d, c } from '../../lib/colors.js'
-import { resolveWorkspace } from '../../lib/workspace-resolve.js'
+import { g, r, b, d, c } from '../../helpers/colors.js'
+import { resolveWorkspace } from '../../helpers/workspace-resolve.js'
 import {
   readStudies,
   writeStudies,

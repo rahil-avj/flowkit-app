@@ -1,10 +1,11 @@
+// Authoring command: CRUD for flowplans and their steps (create/remove/add/list/info).
 import fs from 'fs'
 import path from 'path'
-import { parseStringFlag } from '../../lib/args.js'
-import { resolveWorkspace } from '../../lib/workspace-resolve.js'
-import { workspacePath } from '../../lib/paths.js'
-import { g, r, b, d, c } from '../../lib/colors.js'
-import { readWorkspaceConfig } from '../../lib/config-patch.js'
+import { parseStringFlag } from '../helpers/args.js'
+import { resolveWorkspace } from '../helpers/workspace-resolve.js'
+import { workspacePath } from '../helpers/paths.js'
+import { g, r, b, d, c } from '../helpers/colors.js'
+import { readWorkspaceConfig } from '../authoring-support/config-patch.js'
 
 const KEBAB_RE = /^[a-z][a-z0-9-]*$/
 

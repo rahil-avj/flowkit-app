@@ -546,21 +546,9 @@ Lists comments from the committed snapshot: reviewer, screen, status, short text
 
 ---
 
-## Kit
-
-### `kit:check` — Verify theme coverage
-
-```bash
-flowkit kit:check
-```
-
-Reads `KIT_MANIFEST` from `src/kits/shared/index.ts` and checks that every theme CSS file covers every component. A `·` (dot) means the component uses base structural styles with no theme-specific override. A `✗` means a theme file is missing entirely. Run this after adding a new theme or component.
-
----
-
 ## Agent onboarding
 
-Every workspace ships an **agent-ready** file set so a coding agent can start building immediately without reading the whole codebase. All files are generated from a single platform spec (`scripts/lib/agentSpec.js`).
+Every workspace ships an **agent-ready** file set so a coding agent can start building immediately without reading the whole codebase. All files are generated from a single platform spec (`scripts/platform/agent-spec.js`).
 
 **Read order for a cold agent:**
 
@@ -579,62 +567,6 @@ flowkit agent:sync --agent:cursor        # switch agent (removes old memory file
 ```
 
 Re-emits `.agent/INDEX.md`, `rules.md`, `platform.md`, and the memory file. Never touches `project.md`. Run after platform changes.
-
----
-
-## Deploy
-
-The deploy system produces a stripped, locked `deployment` branch for client/production delivery. **Never commit directly to `deployment`** — always regenerate it via `sync:deployment`.
-
-### `checkpoint` — Tag HEAD before a risky change
-
-```bash
-flowkit checkpoint
-flowkit checkpoint:<label>
-```
-
-Creates a lightweight git tag `checkpoint/<label>-<date>` on the current HEAD and pushes it to origin. No build, no branch switch — pure escape hatch.
-
-```
-✓ Checkpoint created
-  Tag:     checkpoint/before-canvas-refactor-2025-06-29
-  Branch:  main @ a1b2c3d
-  Recover: git checkout checkpoint/before-canvas-refactor-2025-06-29
-```
-
-### `release` — Tag a milestone version
-
-```bash
-flowkit release
-flowkit release:<version>
-```
-
-Prompts for a version number and one-line release note, creates an annotated git tag `v<version>`, and pushes it to origin. No npm publish, no build step — git tagging only.
-
-### `sync:deployment` — Generate clean deployment branch
-
-```bash
-flowkit sync:deployment
-```
-
-Creates or resets the `deployment` branch from the current branch, strips all dev-only content, and optionally pushes to origin. Always shows a dry-run summary and requires `y` confirmation before making any changes.
-
-**What gets stripped:**
-
-| Category        | Removed                                                                             |
-| --------------- | ----------------------------------------------------------------------------------- |
-| Directories     | `scripts/tests`, `scripts/deploy`, `scripts/flows`, `.husky`, `Documentation`       |
-| Files           | `eslint.config.js`, `vitest.config.ts`, `.prettierrc`, `format.mjs`, `kit-check.js` |
-| devDependencies | vitest, eslint, playwright, prettier, husky, lint-staged, and all their plugins     |
-| npm scripts     | `lint`, `test`, `test:*`, `format`, `format:check`, `prebuild`                      |
-
-**What gets locked (read-only via `chmod a-w`):**
-
-`src/`, `scripts/lib/`, `scripts/cli/`, `scripts/agent/`, `scripts/flowkit.js`, `scripts/install.js`, `scripts/build/inline.js`
-
-A `post-checkout` git hook is installed so the lock re-applies automatically whenever you switch to the `deployment` branch and releases when you switch away.
-
-> Source-of-truth for what is stripped/locked: `scripts/deploy/manifest.js`
 
 ---
 
@@ -730,16 +662,3 @@ Commands grouped by item type. Click the heading to jump to the full section.
 | --------------------- | ----- | -------------------------------- |
 | `agent:sync[:<name>]` | —     | Regenerate agent files from spec |
 
-### [Kit (dev)](#kit)
-
-| Command     | Alias | Description                      |
-| ----------- | ----- | -------------------------------- |
-| `kit:check` | —     | Check theme × component coverage |
-
-### [Deploy](#deploy)
-
-| Command                | Alias | Description                                 |
-| ---------------------- | ----- | ------------------------------------------- |
-| `checkpoint[:<label>]` | —     | Tag HEAD before a risky change              |
-| `release[:<version>]`  | —     | Tag a milestone version with release note   |
-| `sync:deployment`      | —     | Generate stripped, locked deployment branch |

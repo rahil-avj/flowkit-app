@@ -1,3 +1,4 @@
+// Builder: packages a workspace into a developer handoff zip.
 import fs from 'fs'
 import path from 'path'
 import { execSync } from 'child_process'
@@ -11,9 +12,9 @@ import {
   b,
   d,
   c,
-} from '../lib/config.js'
-import { selectFromList } from '../lib/prompt.js'
-import { copyDirRecursive } from '../lib/fs-copy.js'
+} from '../helpers/config.js'
+import { selectFromList } from '../helpers/prompt.js'
+import { copyDirRecursive } from '../helpers/fs-copy.js'
 
 // Folders and files to exclude from the handoff zip.
 // These are Flowkit tooling — the developer only needs src/, workspaces/, and config files.

@@ -4,8 +4,8 @@ import fs from 'fs'
 import path from 'path'
 import { defineConfig, Plugin } from 'vite'
 
-import { handleSaveSession } from './scripts/lib/flowlens-session.js'
-import { flowkit } from './scripts/vite-plugin.js'
+import { handleSaveSession } from './scripts/helpers/flowlens-session.js'
+import { flowkit } from './scripts/helpers/vite-plugin.js'
 
 // Read active workspace from src/workspaces.json so -sw changes take effect on next dev restart.
 // Returns null when no workspaces exist on disk (all were deleted).
@@ -43,7 +43,7 @@ function reconcileWorkspacesPlugin(): Plugin {
         // Delegate write-back to the registry module — it owns the template and tsconfig patch.
         // Spawned as a child process to cross the ESM boundary cleanly.
         execSync(
-          `node --input-type=module --eval "import { syncWorkspaceRegistry } from './scripts/lib/registry.js'; syncWorkspaceRegistry();"`,
+          `node --input-type=module --eval "import { syncWorkspaceRegistry } from './scripts/helpers/registry.js'; syncWorkspaceRegistry();"`,
           { cwd: __dirname, stdio: 'pipe' }
         )
 

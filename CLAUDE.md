@@ -12,34 +12,48 @@ Browser-based UI prototyping platform (React 19 + Vite 8 + Tailwind v4) for mult
 
 ```
 .
-├── scripts/                  CLI entry point + domain modules (Node ESM)
-│   ├── flowkit.js            bin entry — dispatches all CLI subcommands
-│   ├── install.js            post-install setup (shell env, global config)
-│   ├── lib/                  shared utilities (config, registry, sessions, args, colors, dates, fs-copy, json, paths, prompt, scaffold, strings, workspace-resolve)
-│   ├── cli/
+├── scripts/                  CLI entry point + domain modules (Node ESM), organized by nature not domain
+│   ├── flowkit.js            npm bin entry — bootstraps platform/router.js
+│   ├── authoring/            CRUD commands on workspace CONTENT (flows/screens/flowplans/components)
+│   │   ├── flows.js          create:flow / remove:flow / list:flows
+│   │   ├── screens.js        create:screen / remove:screen / rename:screen / move:screen / list:screens / screen:info
+│   │   ├── flowplans.js      create:flowplan / remove:flowplan / add:step / remove:step / list:steps / flowplan:info
+│   │   ├── components.js     create:component / remove:component / components:find/ls/scan / add:export / list:exports
+│   │   └── promote-flow.js   promote:flow — extracts a flowplan fork into its own standalone flowplan
+│   ├── authoring-support/    domain-specific mutation logic used only by authoring/ commands (never dispatched itself)
+│   │   ├── config-patch.js   surgical read/modify/write helpers for flowkit.config.ts (flowExists, screenExists, listScreens, addFlow, etc.)
+│   │   └── agent-state.js    .flowkit/ per-workspace state files (component registry)
+│   ├── platform/             commands about the CLI/tool's own lifecycle and built-in subsystems
 │   │   ├── router.js         CLI dispatcher — single dispatch table for all subcommands
-│   │   ├── workspace.js      nw/rw commands; scaffold rollback on failure
-│   │   ├── plans.js          plan:check prebuild gate + plan CRUD
-│   │   ├── sessions/         session subcommands split across crud/analytics/validate/sample
-│   │   ├── export.js         export / export:full commands
-│   │   ├── feedback.js       feedback commands
-│   │   ├── handoff.js        handoff command
+│   │   ├── workspace.js      nw/rw/watch commands; scaffold rollback on failure
+│   │   ├── plans.js          plan:ls / plan:check (read-only validation) / project:ls
+│   │   ├── feedback.js       feedback:import/dump/ls
+│   │   ├── sessions/         sessions:* + lens:report + sessions:study:* — split across crud/analytics/validate/sample/study
+│   │   ├── agent-sync.js     agent:sync — generates CLAUDE.md / AGENTS.md / .cursor rules
+│   │   ├── agent-spec.js     single-source-of-truth spec data rendered by agent-sync.js
 │   │   ├── status.js         status command
-│   │   └── help.js           help command
-│   ├── build/
-│   │   ├── inline.js         standalone HTML post-processor (used by build:standalone)
-│   │   ├── format.mjs        output formatter
-│   │   └── kit-check.js      pre-build kit validation
-│   ├── deploy/
-│   │   ├── release.js        checkpoint + release commands
-│   │   ├── sync.js           sync:deployment — strips dev files, pushes deployment branch
-│   │   ├── manifest.js       STRIP_DIRS/LOCK_DIRS — single source of truth for what gets removed
-│   │   └── lock.js           filesystem locking for deployment branch switches
-│   ├── flows/
-│   │   └── promote.mjs       extract a flowplan fork into its own standalone flowplan
-│   └── agent/
-│       ├── render.js         agent:sync; generates CLAUDE.md / AGENTS.md / .cursor rules
-│       └── spec.js           agent spec context definitions
+│   │   ├── help.js           help command
+│   │   └── install.js        one-time setup — registers the flowkit shell alias (manual/agent-invoked)
+│   ├── helpers/               domain-agnostic support machinery, never a direct CLI command
+│   │   ├── config.js         backward-compat re-export shim → paths.js + colors.js (not authoritative)
+│   │   ├── paths.js          root/mode resolution, workspace path safety, repo/flat-mode detection
+│   │   ├── registry.js       workspace registry read/write/sync
+│   │   ├── args.js           CLI flag parsing
+│   │   ├── colors.js         terminal ANSI formatting
+│   │   ├── dates.js          date formatting
+│   │   ├── fs-copy.js        recursive directory copy
+│   │   ├── json.js           safe JSON file read/write
+│   │   ├── prompt.js         interactive CLI prompts
+│   │   ├── scaffold.js       new-workspace scaffold content generator
+│   │   ├── strings.js        casing/slug utilities
+│   │   ├── workspace-resolve.js  resolves a workspace name from a CLI value or the active one
+│   │   ├── flowlens-session.js  shared /__flowlens/save-session dev-server middleware
+│   │   └── vite-plugin.js    flowkit/vite — flat-mode virtual modules (config/screens/flowplans/workspace)
+│   └── builders/             export/build/run pipelines
+│       ├── export.js         export / export:full commands
+│       ├── handoff.js        handoff command
+│       ├── format.mjs        output formatter (npm run format)
+│       └── inline.js         standalone HTML post-processor (used by build:standalone)
 ├── src/
 │   ├── App.tsx               Provider hierarchy + mode switch (interactive ↔ FlowLens)
 │   ├── main.tsx              Vite entry
@@ -269,7 +283,7 @@ npm run dev
 
 - `npm run build` — tsc + vite build (runs `plan:check` prebuild gate automatically)
 - `npm run build:standalone` — plain `tsc -b && vite build` (default `vite.config.ts`) + `inline.js` post-process; NOT the real standalone export path
-- `flowkit export` / `flowkit export:full` — the actual standalone HTML export; runs `npx vite build --config vite.config.standalone.ts` (requires `FLOWKIT_WORKSPACE` env var, uses `vite-plugin-singlefile`, outputs to `dist-standalone/`) via `scripts/cli/export.js`
+- `flowkit export` / `flowkit export:full` — the actual standalone HTML export; runs `npx vite build --config vite.config.standalone.ts` (requires `FLOWKIT_WORKSPACE` env var, uses `vite-plugin-singlefile`, outputs to `dist-standalone/`) via `scripts/builders/export.js`
 - `npm run build:lib` — builds the publishable `flowkit` npm package (`tsc -p tsconfig.build.json && vite build --config vite.lib.config.ts`) — see Package/Publish Mode below
 - `VITE_ENABLE_FLOWLENS=true npm run build` — includes FlowLens analytics chunk
 
@@ -303,11 +317,7 @@ npm run dev
 - `flowkit project:ls` — list projects (short alias `pj:ls`)
 - `flowkit feedback:ls/import/dump` — feedback management
 - `flowkit agent:sync/check` — agent spec sync
-- `flowkit checkpoint` — tag a pre-release checkpoint
-- `flowkit release` — cut a release (wraps checkpoint + git tagging)
-- `flowkit sync:deployment` — strip dev files and sync to the deployment branch
-- `flowkit kit:check` — pre-build kit validation (`scripts/build/kit-check.js`)
-- `flowkit create/remove/list/rename/move/add/screen/flowplan/components` — lower-level scaffolding sub-verbs used internally by `nw`/other commands (router.js) — prefer the higher-level commands above unless you need fine-grained control
+- `flowkit create/remove/list/rename/move/add/screen/flowplan/components/promote:flow` — lower-level scaffolding sub-verbs used internally by `nw`/other commands (router.js) — prefer the higher-level commands above unless you need fine-grained control
 
 ---
 
@@ -363,7 +373,7 @@ Set in `.env.local` (not committed).
 - **New feature structure**: every feature needs an `index.ts` barrel (public API) and a `panel.tsx` root component. Add `export * from './<name>/index'` to `src/features/index.ts`. Shared state between features belongs in `@shared/contexts`.
 - **New mode structure**: export a single default component from `src/modes/<name>/index.ts`, lazy-import from `PreviewCanvas` behind a `VITE_ENABLE_*` env flag.
 - **Workspace reconciliation**: `reconcileWorkspacesPlugin()` in `vite.config.ts` auto-syncs `src/workspaces.json` with disk on every dev start — removes stale entries and orphaned FlowLens folders. Manual edits to `src/workspaces.json` will be overwritten; use the CLI or browser UI.
-- **Agent spec system**: `scripts/agent/spec.js` + `render.js` generate `CLAUDE.md`, `Documentation/AGENTS.md`, and `.cursor/rules/flowkit.mdc` from a single spec. Run `flowkit agent:sync` to regenerate all three. See [Documentation/AGENTS.md](Documentation/AGENTS.md).
+- **Agent spec system**: `scripts/platform/agent-spec.js` + `agent-sync.js` generate `CLAUDE.md`, `Documentation/AGENTS.md`, and `.cursor/rules/flowkit.mdc` from a single spec. Run `flowkit agent:sync` to regenerate all three. See [Documentation/AGENTS.md](Documentation/AGENTS.md).
 
 ---
 
@@ -371,25 +381,25 @@ Set in `.env.local` (not committed).
 
 > **This repo's end goal is to ship as two published npm packages** (`flowkit` the library, `create-flowkit-app` the scaffolder). The dual-mode source (`isRepoMode()`, `assertScopedWorkspaceDir()`, lib build `exports`/`files`, `packages/create-flowkit-app/`) is built and present on `main`. **Neither package has been published as of 2026-07-02**: `npm view flowkit` / `npm view create-flowkit-app` are still unclaimed, `npm create flowkit-app@latest` 404s, and `origin` (`rahil-avj/flowkit-app`) has no `deployment` branch — only `main` exists remotely, so a `github:...#deployment` git dependency has nothing to point at either. Don't tell a user to run `npm create flowkit-app@latest` or add a git dependency until one of these is actually published/pushed. Full step-by-step publish plan: [Documentation/project-plans/execution/npm-publish-checklist.md](Documentation/project-plans/execution/npm-publish-checklist.md).
 
-FlowKit ships two ways from one repo — every path in `scripts/lib/` and `scripts/cli/` must work under both:
+FlowKit ships two ways from one repo — every path in `scripts/helpers/` and `scripts/platform/` must work under both:
 
 - **Repo mode** (this checkout) — `workspaces/<name>/` holds author content; multiple workspaces coexist, switched via browser UI.
 - **Flat/author mode** — consumer runs `npm create flowkit-app@latest`, gets `flowkit` installed into `node_modules/`; there is no `workspaces/` dir, just one implicit workspace at the project root. Rationale (per `PACKAGE-ARCHITECTURE.md`): `node_modules/` gives universal, convention-based blindness so AI coding agents/editors don't wander into platform internals (`src/core`, `src/features`, `src/shared`) unprompted. Not yet live — see note above.
 
-- **Mode detection**: `scripts/lib/paths.js` → `isRepoMode()` checks for a `.flowkit-repo-root` marker file at `ROOT` (computed from `paths.js`'s own file location, not `cwd()`) — deliberately excluded from `package.json`'s `files[]` allowlist so it never ships to any real install. Earlier detection heuristics (workspace-dir contents, then `node_modules`-in-path) both caused real incidents, including a full repo-delete bug — see `Documentation/PACKAGE-ARCHITECTURE.md` section 2 for the history. `assertScopedWorkspaceDir()` is the defense-in-depth backstop before any recursive workspace delete — call it in any new code path that deletes a workspace-scoped directory.
-- **`package.json` `"files"` is an allowlist**: currently `scripts/`, `src/`, `dist/`, `docs/`, `index.html` (minus `!scripts/tests/`, `!scripts/deploy/`, `!scripts/build/format.mjs`). Only listed paths ship via `npm pack`/`publish`/git-dep. Verify what actually ships with `npm pack --dry-run --json` — glob entries like `"scripts/"` pull in more than expected, hence the negations. Note: `PACKAGE-ARCHITECTURE.md`'s example `files[]` includes `"packages/"` — the real `package.json` does not; `packages/create-flowkit-app/` publishes as its own separate package, not bundled into `flowkit`'s tarball.
+- **Mode detection**: `scripts/helpers/paths.js` → `isRepoMode()` checks for a `.flowkit-repo-root` marker file at `ROOT` (computed from `paths.js`'s own file location, not `cwd()`) — deliberately excluded from `package.json`'s `files[]` allowlist so it never ships to any real install. Earlier detection heuristics (workspace-dir contents, then `node_modules`-in-path) both caused real incidents, including a full repo-delete bug — see `Documentation/PACKAGE-ARCHITECTURE.md` section 2 for the history. `assertScopedWorkspaceDir()` is the defense-in-depth backstop before any recursive workspace delete — call it in any new code path that deletes a workspace-scoped directory.
+- **`package.json` `"files"` is an allowlist**: currently `scripts/`, `src/`, `dist/`, `docs/`, `index.html` (minus `!scripts/tests/`, `!scripts/builders/format.mjs`). Only listed paths ship via `npm pack`/`publish`/git-dep. Verify what actually ships with `npm pack --dry-run --json` — glob entries like `"scripts/"` pull in more than expected, hence the negations. Note: `PACKAGE-ARCHITECTURE.md`'s example `files[]` includes `"packages/"` — the real `package.json` does not; `packages/create-flowkit-app/` publishes as its own separate package, not bundled into `flowkit`'s tarball.
 - **Public API surface** (`src/core/config/index.ts` and anything it re-exports) must use **relative imports only** for its own types — never `@platform/*`/`@shared/*`/etc. path aliases. TS declaration emit writes path-mapped specifiers as-is into `.d.ts`, which a consumer's TypeScript can't resolve. Check after any `build:lib` change: `grep -rn "from '@\(platform\|shared\|core\|features\|kit\|workspace\|flowlens\)" dist/types/` should return nothing.
 - **`scripts/vite-plugin.js`** (exported as `flowkit/vite`) is what makes flat mode work at dev-server time — it generates virtual modules (`virtual:flowkit/config|screens|flowplans|workspace`) that replace `import.meta.glob` patterns hardcoding `workspaces/<name>/...`, reconstructing the same data from `flowkit.config.ts` (bundled via esbuild) + filesystem globs from `cwd()` instead. Handles HMR via full-reload. This is already exercised by this repo's own `vite.config.ts`, but the flat-mode consumer path through it (Phase 5 of the checklist) is still untested end-to-end.
 - **`packages/create-flowkit-app/`** is a real, working scaffolder (not a stub) — `index.js` generates a full project (2-flow/5-screen starter) as template literals, plus a `--local-dev` / `FLOWKIT_LOCAL_DEV=1` opt-in gated on the repo marker for testing against this checkout instead of a published version.
 
 ### What's actually done vs. not, toward publish
 
-**Done**: `build:lib` produces working `dist/lib/` + `dist/types/`; peer-dep split (React/Radix); mode detection + safety guard; flat-mode vite plugin incl. FlowLens session middleware; `create-flowkit-app` scaffolder; `manifest-consistency.test.js` keeps `files[]` and the deploy strip-list in sync; path-alias leak fix in public `.d.ts`.
+**Done**: `build:lib` produces working `dist/lib/` + `dist/types/`; peer-dep split (React/Radix); mode detection + safety guard; flat-mode vite plugin incl. FlowLens session middleware; `create-flowkit-app` scaffolder; path-alias leak fix in public `.d.ts`; `scripts/deploy/` (the `checkpoint`/`release`/`sync:deployment` commands and their strip-list mechanism) removed entirely — the repo has committed to the npm-publish distribution path instead of maintaining a stripped `deployment` git branch.
 
 **Not done** — concrete blockers before Phase 7 (publish) of the checklist:
 - No `LICENSE` file in repo root (checklist Phase 2 & 6).
 - No `.github/workflows/` — zero CI, zero automated publish.
-- `npm run build` (full app `tsc -b` step) currently fails — missing declarations for `scripts/vite-plugin.js` / `scripts/lib/flowlens-session.js`. Doesn't block `build:lib` (the real publish build) but is an open bug.
+- `npm run build` (full app `tsc -b` step) currently fails — missing declarations for `scripts/helpers/vite-plugin.js` / `scripts/helpers/flowlens-session.js`. Doesn't block `build:lib` (the real publish build) but is an open bug.
 - `flowkit export`'s ESLint check hardcodes `workspaces/${wsName}` — breaks under flat mode.
 - Local consumer smoke tests (checklist Phase 5) haven't been run yet: no `file:` install test, no scaffold-then-`npm run dev`-in-flat-mode test performed.
 
@@ -495,7 +505,7 @@ All 7 aliases are declared in `vite.config.ts` and mirrored in `tsconfig.app.jso
 
 ## Documentation
 
-Two directories with different audiences — `docs/` ships to clients (survives `sync:deployment`); `Documentation/` is dev-only (stripped on deployment sync).
+Two directories with different audiences — `docs/` ships to clients (included in `package.json`'s `files[]` allowlist); `Documentation/` is dev-only (not in `files[]`, never ships in the npm tarball).
 
 **`docs/`** — client-deliverable:
 

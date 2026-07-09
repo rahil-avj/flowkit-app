@@ -1,8 +1,9 @@
+// Platform command: validates session data integrity (sessions:check).
 import fs from 'fs'
 import path from 'path'
-import { ROOT } from '../../lib/paths.js'
-import { g, r, b, d, c } from '../../lib/colors.js'
-import { resolveWorkspace } from '../../lib/workspace-resolve.js'
+import { ROOT } from '../../helpers/paths.js'
+import { g, r, b, d, c } from '../../helpers/colors.js'
+import { resolveWorkspace } from '../../helpers/workspace-resolve.js'
 import { listLibraryFiles, readSession, workspaceScreenIds, sessionScreenIds } from './_shared.js'
 
 export function cmdSessionsCheck(val, { warnOnly = false } = {}) {

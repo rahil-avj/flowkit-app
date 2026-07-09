@@ -1,3 +1,4 @@
+// Builder: post-build step inlining CSS/JS into a single standalone HTML file.
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'

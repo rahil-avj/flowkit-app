@@ -131,7 +131,7 @@ describe('Suite B — Workspace CLI lifecycle', () => {
   it('B14 — Delete workspace folder directly → syncWorkspaceRegistry removes entry', async () => {
     const dir = path.join(WORKSPACES_DIR, WS_ONE)
     if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true })
-    const { syncWorkspaceRegistry } = await import(path.join(ROOT, 'scripts/lib/registry.js'))
+    const { syncWorkspaceRegistry } = await import(path.join(ROOT, 'scripts/helpers/registry.js'))
     syncWorkspaceRegistry()
     const reg = parseRegistry()
     assert.ok(!reg.names.includes(WS_ONE), `${WS_ONE} should be removed after folder deleted`)
@@ -166,7 +166,7 @@ describe('Suite B — Workspace CLI lifecycle', () => {
         await spawnCLI([`-rw:${name}`], name)
       }
     }
-    const { syncWorkspaceRegistry } = await import(path.join(ROOT, 'scripts/lib/registry.js'))
+    const { syncWorkspaceRegistry } = await import(path.join(ROOT, 'scripts/helpers/registry.js'))
     syncWorkspaceRegistry()
     const final = parseRegistry()
     assert.ok(!final.names.includes(WS_ONE), `${WS_ONE} should be removed`)

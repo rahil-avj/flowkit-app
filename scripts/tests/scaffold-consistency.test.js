@@ -3,10 +3,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { describe, it } from 'node:test'
 
-import { ROOT } from '../lib/config.js'
-import { workspaceScaffold } from '../lib/scaffold.js'
+import { ROOT } from '../helpers/config.js'
+import { workspaceScaffold } from '../helpers/scaffold.js'
 
-// scripts/lib/scaffold.js (repo mode) and packages/create-flowkit-app/index.js
+// scripts/helpers/scaffold.js (repo mode) and packages/create-flowkit-app/index.js
 // (flat-mode scaffolder, deliberately standalone — can't import scaffold.js at
 // runtime) hand-port the same demo content in two places. See the comments
 // above workspaceScaffold() and above writeFlowkitConfig() in create-flowkit-app

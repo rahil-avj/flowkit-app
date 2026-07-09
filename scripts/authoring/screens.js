@@ -1,16 +1,19 @@
+// Authoring command: CRUD for screens within a flow (create/remove/rename/move/list/info).
 import fs from 'fs'
 import path from 'path'
-import { parseStringFlag } from '../../lib/args.js'
-import { resolveWorkspace } from '../../lib/workspace-resolve.js'
-import { workspacePath, assertScopedWorkspaceDir } from '../../lib/paths.js'
-import { g, r, b, d, c } from '../../lib/colors.js'
+import { parseStringFlag } from '../helpers/args.js'
+import { resolveWorkspace } from '../helpers/workspace-resolve.js'
+import { workspacePath, assertScopedWorkspaceDir } from '../helpers/paths.js'
+import { g, r, b, d, c } from '../helpers/colors.js'
 import {
   readWorkspaceConfig,
   addScreen,
   removeScreen,
   renameScreen,
   moveScreen,
-} from '../../lib/config-patch.js'
+  screenExists,
+  listScreens,
+} from '../authoring-support/config-patch.js'
 
 const KEBAB_RE = /^[a-z][a-z0-9-]*$/
 
@@ -103,8 +106,8 @@ export async function cmdCreateScreen(_val, args = []) {
     process.exit(1)
   }
 
-  if ((config.screenOrder[flowId] || []).includes(screenId)) {
-    console.error(r(`✗ Screen '${screenId}' already exists in flow '${flowId}'`))
+  if (screenExists(wsDir, screenId)) {
+    console.error(r(`✗ Screen '${screenId}' already exists in workspace '${wsName}'`))
     process.exit(1)
   }
 
@@ -197,8 +200,8 @@ export async function cmdRenameScreen(_val, args = []) {
     console.error(r(`✗ Screen directory not found: flows/${flowId}/${oldId}/`))
     process.exit(1)
   }
-  if (fs.existsSync(newDir)) {
-    console.error(r(`✗ Directory already exists: flows/${flowId}/${newId}/`))
+  if (newId !== oldId && screenExists(wsDir, newId)) {
+    console.error(r(`✗ Screen '${newId}' already exists in workspace '${wsName}'`))
     process.exit(1)
   }
 
@@ -285,6 +288,7 @@ export async function cmdListScreens(_val, args = []) {
   assertScopedWorkspaceDir(wsDir, wsName)
   const filterFlow = parseStringFlag(args, 'flow')
   const config = readWorkspaceConfig(wsDir)
+  const screenOrder = listScreens(wsDir, filterFlow || undefined)
 
   const flows = filterFlow ? [filterFlow] : config.flows
 
@@ -296,7 +300,7 @@ export async function cmdListScreens(_val, args = []) {
   console.log(b(`Screens  [${wsName}]${filterFlow ? ` — flow: ${filterFlow}` : ''}\n`))
   let total = 0
   for (const flowId of flows) {
-    const screens = config.screenOrder[flowId] || []
+    const screens = screenOrder[flowId] || []
     console.log(`  ${c(flowId)}  ${d(`(${screens.length})`)}`)
     screens.forEach((s, i) => console.log(`    ${d(`${i + 1}.`)} ${s}`))
     if (screens.length === 0) console.log(d('    (no screens)'))

@@ -1,3 +1,4 @@
+// Platform command: workspace lifecycle (new/remove/watch).
 import fs from 'fs'
 import path from 'path'
 import readline from 'readline'
@@ -13,22 +14,22 @@ import {
   b,
   d,
   c,
-} from '../lib/config.js'
-import { copyDirRecursive } from '../lib/fs-copy.js'
+} from '../helpers/config.js'
+import { copyDirRecursive } from '../helpers/fs-copy.js'
 import {
   writeWorkspaceRegistry,
   syncWorkspaceRegistry,
   workspaceScaffold,
   parseStringFlag,
-} from '../lib/registry.js'
-import { prompt, selectFromList } from '../lib/prompt.js'
-import { specContext } from '../agent/spec.js'
+} from '../helpers/registry.js'
+import { prompt, selectFromList } from '../helpers/prompt.js'
+import { specContext } from './agent-spec.js'
 import {
   renderAgentFiles,
   renderProjectStub,
   writeAgentMeta,
   AGENT_TARGETS,
-} from '../agent/render.js'
+} from './agent-sync.js'
 
 export function restartVite() {
   try {

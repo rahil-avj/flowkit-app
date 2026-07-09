@@ -1,7 +1,8 @@
+// Platform command: generates synthetic sample sessions for testing (sessions:sample).
 import fs from 'fs'
 import path from 'path'
-import { g, r, d, c } from '../../lib/colors.js'
-import { resolveWorkspace } from '../../lib/workspace-resolve.js'
+import { g, r, d, c } from '../../helpers/colors.js'
+import { resolveWorkspace } from '../../helpers/workspace-resolve.js'
 import { libraryDir, workspaceScreenIds } from './_shared.js'
 
 export function cmdSessionsSample(val) {

@@ -1,3 +1,4 @@
+// Helper: resolves a workspace name from a CLI value or falls back to the active one.
 import fs from 'fs'
 import path from 'path'
 import { workspacePath, getActiveWorkspaceName } from './paths.js'

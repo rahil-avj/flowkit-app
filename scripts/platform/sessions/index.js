@@ -1,3 +1,4 @@
+// Platform: barrel re-exporting every sessions:* command from its implementation file.
 export {
   cmdSessionsLs,
   cmdSessionsImport,

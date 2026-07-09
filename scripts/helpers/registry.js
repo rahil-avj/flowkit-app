@@ -1,3 +1,4 @@
+// Helper: workspace registry read/write/sync, plus backward-compat re-exports.
 import fs from 'fs'
 import path from 'path'
 import {
@@ -21,8 +22,8 @@ function readConfigDescription(name) {
 }
 
 // Re-export for backward compat — callers that import these from registry.js keep working.
-export { toSlug, toTitle, toId } from './strings.js'
-export { parseArg, parseStringFlag } from './args.js'
+export { toSlug, toId } from './strings.js'
+export { parseStringFlag } from './args.js'
 export { workspaceScaffold } from './scaffold.js'
 
 export function readWorkspaceRegistry() {

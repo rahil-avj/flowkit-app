@@ -71,7 +71,7 @@ For **both** `flowkit/package.json` and `packages/create-flowkit-app/package.jso
 **For `flowkit`:**
 
 - [ ] `npm pack --dry-run --json > /tmp/flowkit-pack.json`
-- [ ] Review file list — confirm present: `dist/`, `scripts/` (minus `scripts/tests/`, `scripts/deploy/`, `scripts/build/format.mjs` per the `!` negations), `src/`, `docs/`, `index.html`
+- [ ] Review file list — confirm present: `dist/`, `scripts/` (minus `scripts/tests/`, `scripts/build/format.mjs` per the `!` negations), `src/`, `docs/`, `index.html`
 - [ ] Confirm ABSENT: `.env*`, `Documentation/`, `workspaces/`, `.git/`, `node_modules/`, any test fixtures with fake secrets/tokens, `.husky/`, `eslint.config.js`, `.prettierrc`, `vitest.config.ts`
 - [ ] Check tarball size — sanity check nothing huge got swept in (e.g. an accidentally-committed node_modules or build cache)
 - [ ] `npm publish --dry-run` (flowkit) — confirms registry-side view matches pack output, no auth/permission surprises

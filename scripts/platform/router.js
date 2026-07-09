@@ -1,7 +1,8 @@
-import { r, d } from '../lib/config.js'
+// Platform: the CLI's central command dispatcher — parses argv and routes to every subcommand.
+import { r, d } from '../helpers/config.js'
 import { cmdNewWorkspace, cmdRemoveWorkspace, cmdWatch } from './workspace.js'
-import { cmdExport, cmdExportFull } from './export.js'
-import { cmdHandoff } from './handoff.js'
+import { cmdExport, cmdExportFull } from '../builders/export.js'
+import { cmdHandoff } from '../builders/handoff.js'
 import {
   cmdSessionsLs,
   cmdSessionsImport,
@@ -19,12 +20,12 @@ import {
   cmdStudyArchive,
   cmdStudyActive,
 } from './sessions/index.js'
-import { cmdAgentSync } from '../agent/render.js'
+import { cmdAgentSync } from './agent-sync.js'
 import { cmdPlanLs, cmdPlanCheck, cmdProjectLs } from './plans.js'
 import { cmdFeedbackImport, cmdFeedbackDump, cmdFeedbackLs } from './feedback.js'
 import { cmdHelp } from './help.js'
 import { cmdStatus } from './status.js'
-import { cmdCreateFlow, cmdRemoveFlow, cmdListFlows } from './agent/flows.js'
+import { cmdCreateFlow, cmdRemoveFlow, cmdListFlows } from '../authoring/flows.js'
 import {
   cmdCreateScreen,
   cmdRemoveScreen,
@@ -32,7 +33,7 @@ import {
   cmdMoveScreen,
   cmdListScreens,
   cmdScreenInfo,
-} from './agent/screens.js'
+} from '../authoring/screens.js'
 import {
   cmdCreateFlowplan,
   cmdRemoveFlowplan,
@@ -40,7 +41,7 @@ import {
   cmdRemoveStep,
   cmdListSteps,
   cmdFlowplanInfo,
-} from './agent/flowplans.js'
+} from '../authoring/flowplans.js'
 import {
   cmdCreateComponent,
   cmdRemoveComponent,
@@ -49,7 +50,8 @@ import {
   cmdComponentsScan,
   cmdAddExport,
   cmdListExports,
-} from './agent/components.js'
+} from '../authoring/components.js'
+import { cmdPromoteFlow } from '../authoring/promote-flow.js'
 
 // Parse both bare ("nw:name") and dashed ("-nw:name") forms.
 function parseCmd(arg) {
@@ -95,15 +97,6 @@ export async function route(argv) {
     await cmdExport(p.val, rest)
   } else if (p.cmd === 'handoff') {
     await cmdHandoff(p.val)
-
-    // ── Kit ──
-  } else if ((p.cmd === 'kit' && p.val === 'check') || firstArg === 'kit:check') {
-    const mod = await import('../build/kit-check.js').catch(() => null)
-    if (!mod) {
-      console.error(r('✗ kit:check is not available in this environment'))
-      process.exit(1)
-    }
-    await mod.cmdKitCheck()
 
     // ── Sessions ──
   } else if (p.cmd === 'sessions' || p.cmd === 'se' || p.cmd === 'sp') {
@@ -221,29 +214,6 @@ export async function route(argv) {
       process.exit(1)
     }
 
-    // ── Version & Deployment ──
-  } else if (p.cmd === 'checkpoint') {
-    const mod = await import('../deploy/release.js').catch(() => null)
-    if (!mod) {
-      console.error(r('✗ checkpoint is not available in this environment'))
-      process.exit(1)
-    }
-    await mod.cmdCheckpoint(p.val, rest)
-  } else if (p.cmd === 'release') {
-    const mod = await import('../deploy/release.js').catch(() => null)
-    if (!mod) {
-      console.error(r('✗ release is not available in this environment'))
-      process.exit(1)
-    }
-    await mod.cmdRelease(p.val, rest)
-  } else if (p.cmd === 'sync' && p.val === 'deployment') {
-    const mod = await import('../deploy/sync.js').catch(() => null)
-    if (!mod) {
-      console.error(r('✗ sync:deployment is not available in this environment'))
-      process.exit(1)
-    }
-    await mod.cmdSyncDeployment(p.val, rest)
-
     // ── Agent ──
   } else if (p.cmd === 'agent') {
     const subColon = p.val.indexOf(':')
@@ -290,6 +260,12 @@ export async function route(argv) {
     if (p.val === 'screen') await cmdRenameScreen('', rest)
     else {
       console.error(r(`✗ Unknown: rename:${p.val}`))
+      process.exit(1)
+    }
+  } else if (p.cmd === 'promote') {
+    if (p.val === 'flow') await cmdPromoteFlow('', rest)
+    else {
+      console.error(r(`✗ Unknown: promote:${p.val}`))
       process.exit(1)
     }
   } else if (p.cmd === 'move') {

@@ -1,4 +1,5 @@
-import { b, c, d, getActiveWorkspaceName } from '../lib/config.js'
+// Platform command: prints CLI usage help.
+import { b, c, d, getActiveWorkspaceName } from '../helpers/config.js'
 
 export function cmdHelp() {
   const ws = getActiveWorkspaceName()
@@ -71,14 +72,6 @@ ${b('Export & handoff:')}
 
 ${b('Agent onboarding:')}
   ${c('agent:sync')} ${d('[--agent:claude|agents|cursor|none]')}   Regenerate .agent/* from spec
-
-${b('Kit (dev/internal):')}
-  ${c('kit:check')}                        Check all themes cover all kit components
-
-${b('Version & deployment:')}
-  ${c('checkpoint')} ${d('[:<label>]')}          Tag HEAD before a risky change
-  ${c('release')}                          Tag a milestone version with notes
-  ${c('sync:deployment')}                  Generate clean deployment branch from current branch
 
   ${c('flowkit -h')} / ${c('flowkit help')}  — show this help
 `)

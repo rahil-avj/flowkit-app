@@ -1,7 +1,8 @@
+// Platform command: read-only flowplan/project discovery and validation (plan:ls, plan:check, project:ls).
 import fs from 'fs'
 import path from 'path'
-import { workspacePath, g, r, b, d } from '../lib/config.js'
-import { resolveWorkspaceLoose as resolveWorkspace } from '../lib/workspace-resolve.js'
+import { workspacePath, g, r, b, d } from '../helpers/config.js'
+import { resolveWorkspaceLoose as resolveWorkspace } from '../helpers/workspace-resolve.js'
 
 function findProjectsDir(ws) {
   return path.join(workspacePath(ws), 'projects')

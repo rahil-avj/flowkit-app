@@ -1,11 +1,12 @@
+// Authoring command: CRUD for flows (create/remove/list).
 import fs from 'fs'
 import path from 'path'
-import { parseStringFlag } from '../../lib/args.js'
-import { resolveWorkspace } from '../../lib/workspace-resolve.js'
-import { workspacePath, assertScopedWorkspaceDir } from '../../lib/paths.js'
-import { g, r, b, d } from '../../lib/colors.js'
-import { addFlow, removeFlow, readWorkspaceConfig } from '../../lib/config-patch.js'
-import { prompt, selectFromList } from '../../lib/prompt.js'
+import { parseStringFlag } from '../helpers/args.js'
+import { resolveWorkspace } from '../helpers/workspace-resolve.js'
+import { workspacePath, assertScopedWorkspaceDir } from '../helpers/paths.js'
+import { g, r, b, d } from '../helpers/colors.js'
+import { addFlow, removeFlow, readWorkspaceConfig, flowExists } from '../authoring-support/config-patch.js'
+import { prompt, selectFromList } from '../helpers/prompt.js'
 
 const KEBAB_RE = /^[a-z][a-z0-9-]*$/
 
@@ -40,8 +41,7 @@ export async function cmdCreateFlow(_val, args = []) {
     process.exit(1)
   }
 
-  const config = readWorkspaceConfig(wsDir)
-  if (config.flows.includes(flowId)) {
+  if (flowExists(wsDir, flowId)) {
     console.error(r(`✗ Flow '${flowId}' already exists`))
     process.exit(1)
   }
@@ -83,8 +83,7 @@ export async function cmdRemoveFlow(_val, args = []) {
     process.exit(1)
   }
 
-  const config = readWorkspaceConfig(wsDir)
-  if (!config.flows.includes(flowId)) {
+  if (!flowExists(wsDir, flowId)) {
     console.error(r(`✗ Flow '${flowId}' not found in workspace '${wsName}'`))
     process.exit(1)
   }

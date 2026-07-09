@@ -320,7 +320,7 @@ workspaces/<ws>/lib/flowLens/
   sessions/<study-id>/*.json                       ← committed session library (glob-loaded by Vite)
   reports/                                         ← generated report files (gitignored)
 
-scripts/cli/sessions/
+scripts/platform/sessions/
   _shared.js                                       ← path helpers (flowLensRoot, sessionsRoot, reportsDir) + study helpers
   study.js                                         ← study:new / study:ls / study:archive / study:active
   analytics.js                                     ← cmdSessionsReport (unified); cmdLensReport + cmdSessionsBrief as aliases

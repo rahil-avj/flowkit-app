@@ -1,3 +1,4 @@
+// Helper: root/mode resolution, workspace path safety, and repo/flat-mode detection.
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'

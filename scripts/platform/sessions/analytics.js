@@ -1,8 +1,9 @@
+// Platform command: session analytics/reporting (sessions:stats, sessions:brief, lens:report, sessions:report).
 import fs from 'fs'
 import path from 'path'
-import { g, r, b, d, c } from '../../lib/colors.js'
-import { localDatePart, fmtDate } from '../../lib/dates.js'
-import { resolveWorkspace } from '../../lib/workspace-resolve.js'
+import { g, r, b, d, c } from '../../helpers/colors.js'
+import { localDatePart, fmtDate } from '../../helpers/dates.js'
+import { resolveWorkspace } from '../../helpers/workspace-resolve.js'
 import {
   listLibraryFiles,
   readSession,

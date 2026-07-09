@@ -1,3 +1,4 @@
+// Helper: interactive CLI prompt/select-list utilities.
 import readline from 'readline'
 import { bold as _b, dim as _d, cyan as _c } from './colors.js'
 

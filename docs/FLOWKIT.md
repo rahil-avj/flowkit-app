@@ -544,13 +544,13 @@ Guards control whether the sidebar shows the screen as locked. Both `canEnter` a
 | `flowkit export`  | `dist-standalone/<outDir>/<name>-<date>-<HH-MM>.html` | Full Flowkit viewer, single self-contained HTML — share with designers / PMs, no install required |
 | `flowkit handoff` | `handoff/<name>-handoff-<date>.zip`                   | Pure React app — no Flowkit shell, recipient runs `npm install && npm run dev`                    |
 
-Output directory and naming are configured in `vite.config.standalone.ts` (`outDir`) and `scripts/lib/export.js` (`USE_GENERIC_NAME`). Old exports accumulate — never auto-deleted.
+Output directory and naming are configured in `vite.config.standalone.ts` (`outDir`) and `scripts/builders/export.js` (`USE_GENERIC_NAME`). Old exports accumulate — never auto-deleted.
 
 ---
 
 ## Agent bootstrap system
 
-Agent-ready workspaces are a core value prop: drop a coding agent in and it builds correctly and fast, without reading the whole codebase. Every workspace ships a **layered, lookup-first** file set, all generated from one platform spec (`scripts/lib/agentSpec.js`) so it never drifts.
+Agent-ready workspaces are a core value prop: drop a coding agent in and it builds correctly and fast, without reading the whole codebase. Every workspace ships a **layered, lookup-first** file set, all generated from one platform spec (`scripts/platform/agent-spec.js`) so it never drifts.
 
 | File                                                                  | Purpose                                                                                                                       |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |

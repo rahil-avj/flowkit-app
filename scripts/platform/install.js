@@ -1,3 +1,4 @@
+// Platform: one-time setup — registers the `flowkit` shell alias. Manual/agent-invoked, not wired to any npm lifecycle hook.
 import fs from 'fs'
 import path from 'path'
 import os from 'os'

@@ -1,3 +1,4 @@
+// Builder: standalone HTML export pipeline (export / export:full).
 import fs from 'fs'
 import path from 'path'
 import { execSync } from 'child_process'
@@ -11,9 +12,9 @@ import {
   b,
   d,
   c,
-} from '../lib/config.js'
-import { selectFromList } from '../lib/prompt.js'
-import { cmdSessionsCheck } from './sessions/index.js'
+} from '../helpers/config.js'
+import { selectFromList } from '../helpers/prompt.js'
+import { cmdSessionsCheck } from '../platform/sessions/index.js'
 
 function runCheck(label, cmd, env) {
   process.stdout.write(`  ${d('checking')} ${label}… `)

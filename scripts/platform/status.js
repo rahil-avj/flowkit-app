@@ -1,3 +1,4 @@
+// Platform command: read-only health snapshot of a workspace (flows, sessions, feedback, agent).
 import fs from 'fs'
 import path from 'path'
 import {
@@ -10,7 +11,7 @@ import {
   g,
   r,
   getActiveWorkspaceName,
-} from '../lib/config.js'
+} from '../helpers/config.js'
 import { flowLensModuleExists } from './sessions/index.js'
 
 export function cmdStatus(wsArg) {

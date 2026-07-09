@@ -1,10 +1,11 @@
+// Platform command: session CRUD (sessions:ls/import/rm/export/purge).
 import fs from 'fs'
 import path from 'path'
 import readline from 'readline'
-import { g, r, b, d, c } from '../../lib/colors.js'
-import { fmtDate } from '../../lib/dates.js'
-import { resolveWorkspace } from '../../lib/workspace-resolve.js'
-import { toSlug } from '../../lib/strings.js'
+import { g, r, b, d, c } from '../../helpers/colors.js'
+import { fmtDate } from '../../helpers/dates.js'
+import { resolveWorkspace } from '../../helpers/workspace-resolve.js'
+import { toSlug } from '../../helpers/strings.js'
 import {
   libraryDir,
   listLibraryFiles,

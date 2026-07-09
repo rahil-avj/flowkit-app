@@ -129,7 +129,7 @@ if (fs.existsSync(targetDir)) {
 // automatic way to read that from here once this package is actually
 // installed from the registry (it won't have flowkit's monorepo as a sibling
 // directory anymore).
-const FLOWKIT_PUBLISHED_RANGE = '^1.0.0'
+const FLOWKIT_PUBLISHED_RANGE = '0.0.1-beta.0'
 
 // ── Local-testing escape hatch ───────────────────────────────────────────────
 // Pass --local-dev (or set FLOWKIT_LOCAL_DEV=1) to point the generated
@@ -370,7 +370,7 @@ function writeWelcomeScreen(dir, language) {
       <div className="p-4 pb-8">
         <button
           onClick={() => onAction?.('get-started')}
-          className="w-full px-3 py-[10px] rounded-[6px] bg-theme-blue-dim text-theme-blue text-ui-sm font-medium"
+          className="w-full px-3 py-2.5 rounded-md bg-theme-blue-dim text-theme-blue text-ui-sm font-medium"
         >
           Get Started
         </button>
@@ -420,7 +420,7 @@ function writeSetupScreen(dir, language) {
       <div className="mt-auto p-4 pb-8">
         <button
           onClick={() => onAction?.('continue')}
-          className="w-full px-3 py-[10px] rounded-[6px] bg-theme-blue-dim text-theme-blue text-ui-sm font-medium"
+          className="w-full px-3 py-2.5 rounded-md bg-theme-blue-dim text-theme-blue text-ui-sm font-medium"
         >
           Continue
         </button>
@@ -456,7 +456,7 @@ function writeReadyScreen(dir, language) {
       </div>
       <button
         onClick={() => onAction?.('go-to-home')}
-        className="px-4 py-[10px] rounded-[6px] bg-theme-blue-dim text-theme-blue text-ui-sm font-medium"
+        className="px-4 py-2.5 rounded-md bg-theme-blue-dim text-theme-blue text-ui-sm font-medium"
       >
         Go to Home
       </button>
@@ -546,7 +546,7 @@ function writeDetailScreen(dir, language) {
         <div className="w-12" />
       </div>
       <div className="flex flex-col gap-4 p-4">
-        <div className="rounded-[12px] bg-theme-surface shadow-theme-card p-4 flex flex-col gap-3">
+        <div className="rounded-xl bg-theme-surface shadow-theme-card p-4 flex flex-col gap-3">
           <div className="flex items-start justify-between gap-2">
             <h2 className="text-ui-lg font-bold text-theme-text-primary">{item?.title ?? 'Item'}</h2>
             <span className={'text-ui-2xs font-bold uppercase tracking-[0.04em] px-1.5 py-0.5 rounded-full shrink-0 ' + badgeClass}>

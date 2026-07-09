@@ -1,7 +1,8 @@
+// Platform/sessions: path helpers and shared read/write utilities for the sessions subsystem.
 import fs from 'fs'
 import path from 'path'
-import { workspacePath } from '../../lib/paths.js'
-import { toId, toSlug } from '../../lib/strings.js'
+import { workspacePath } from '../../helpers/paths.js'
+import { toId } from '../../helpers/strings.js'
 
 // ── Path helpers ─────────────────────────────────────────────────────────────
 
@@ -50,13 +51,6 @@ export function ensureStudies(ws) {
   fs.writeFileSync(path.join(studyDir(ws, 'initial-study'), '.gitkeep'), '')
   writeStudies(ws, data)
   return data
-}
-
-/** Returns the study object matching activeStudyId, or null. */
-export function activeStudy(ws) {
-  const data = readStudies(ws)
-  if (!data?.activeStudyId) return null
-  return data.studies.find(s => s.id === data.activeStudyId) ?? null
 }
 
 /** Slugify a human study name to an id. */
@@ -160,5 +154,3 @@ export function sessionScreenIds(session) {
   }
   return ids
 }
-
-export { toSlug }

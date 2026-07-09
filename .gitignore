@@ -13,6 +13,7 @@ dist-standalone/
 *.zip
 *-handoff-*/
 scripts/.flowkit-state.json
+.vscode
 
 # FlowLens generated reports (per-workspace, gitignored)
 workspaces/*/lib/flowLens/reports/
