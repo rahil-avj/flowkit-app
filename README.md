@@ -32,7 +32,7 @@ Flowkit gives you a live canvas with:
 
 ---
 
-## Workspace setup
+## Workspace setup (this repo)
 
 A workspace is a folder under `workspaces/`. It contains your flows, components, mock database, and design tokens — isolated from the platform and from other workspaces.
 
@@ -46,12 +46,50 @@ Flowplans live at `workspaces/<name>/flowplans/`. Add a new `.ts` file there and
 
 ---
 
+## Using FlowKit in your own project
+
+> Not yet published to npm as of 2026-07-10. The commands below describe the intended flow once published.
+
+Outside this repo, FlowKit ships as installable packages rather than a checkout:
+
+**Single-workspace project** — scaffold via `create-flowkit-app`. Your project root *is* the one workspace: `flowkit.config.ts`, `flows/`, `flowplans/`, `lib/` sit directly at root, and `flowkit` is a `devDependency` in `node_modules/`.
+
+```bash
+npm create flowkit-app@latest my-app
+cd my-app && npm run dev
+```
+
+**Multi-workspace project** — scaffold via `create-flowkit-workspace` instead. Each workspace is its own sibling folder at project root (`workspace-1/`, `app-b/`, …), declared explicitly in `package.json`'s `flowkit.workspaces` array.
+
+```bash
+npm create flowkit-workspace@latest my-project
+cd my-project && npm run dev   # serves flowkit.workspaces[0] by default
+```
+
+Convert between the two shapes any time, and manage workspaces in a multi-workspace project:
+
+```bash
+flowkit convert:multi              # flat → multi (wraps root into workspace-1/)
+flowkit convert:flat               # multi → flat (collapses back to root)
+flowkit create:workspace --name:app-b --lang:ts
+flowkit remove:workspace --name:app-b
+flowkit rename:workspace app-b app-c
+```
+
+The rest of the CLI reference below (authoring commands, sessions, export/handoff) works the same in a scaffolded project as it does in this repo, minus the repo-mode-only commands noted in the table.
+
+---
+
 ## Writing a screen
 
-Screens are plain React components. Props are injected automatically — no context imports needed.
+Screens are plain React components. Props are injected automatically — no context imports needed. Import path differs by mode: `@platform/types` inside this repo's own `workspaces/<name>/`, `'flowkit'` in a project scaffolded by `create-flowkit-app`/`create-flowkit-workspace`.
 
 ```tsx
+// this repo (repo mode)
 import type { FlowScreenProps } from '@platform/types'
+
+// scaffolded consumer project (flat/multi-workspace mode)
+import type { FlowScreenProps } from 'flowkit'
 
 export default function WelcomeScreen({ onNext, onBack, db }: FlowScreenProps) {
   return (
@@ -70,10 +108,14 @@ export const screenMeta = { id: 'welcome', label: 'Welcome' }
 
 ## Flow config
 
-Flows are defined as **flowplans** under `workspaces/<name>/flowplans/`. Each flowplan is a `FlowplanDef` — a typed, ordered sequence of steps with optional db patches, forks, and entry guards:
+Flows are defined as **flowplans** under `workspaces/<name>/flowplans/` (repo mode) or `flowplans/` at the workspace root (consumer mode). Each flowplan is a `FlowplanDef` — a typed, ordered sequence of steps with optional db patches, forks, and entry guards:
 
 ```ts
+// this repo (repo mode)
 import { defineFlow } from '@platform/core/config'
+
+// scaffolded consumer project (flat/multi-workspace mode)
+import { defineFlow } from 'flowkit'
 
 export default defineFlow({
   id: 'onboarding',
@@ -93,21 +135,21 @@ The flowplan compiler (`compileFlowplan.ts`) converts this at runtime into a `Fl
 
 ## CLI reference
 
-| Command                   | Description                                          |
-| ------------------------- | ---------------------------------------------------- |
-| `flowkit nw:<name>`       | Create workspace                                     |
-| `flowkit rw:<name>`       | Remove workspace                                     |
-| `flowkit watch:<name>`    | Watch workspace for file changes                     |
-| `flowkit status`          | Workspace health snapshot                            |
-| `flowkit export`          | Export as standalone HTML viewer (no FlowLens)       |
-| `flowkit export:full`     | Export as standalone HTML viewer (FlowLens included) |
-| `flowkit handoff`         | Build developer handoff zip                          |
-| `flowkit plan:check`      | Validate all flowplans (runs automatically on build) |
-| `flowkit sessions:brief`  | Agent analytics brief from committed sessions        |
-| `flowkit checkpoint`      | Tag HEAD before a risky change                       |
-| `flowkit release`         | Tag a milestone version                              |
-| `flowkit sync:deployment` | Generate stripped, locked deployment branch          |
-| `flowkit help`            | Full help                                            |
+| Command                                  | Description                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------- |
+| `flowkit nw:<name>`                      | Create workspace (repo mode only)                                  |
+| `flowkit rw:<name>`                      | Remove workspace (repo mode only)                                  |
+| `flowkit watch:<name>`                   | Watch workspace for file changes (repo mode only)                  |
+| `flowkit status`                         | Workspace health snapshot                                          |
+| `flowkit export`                         | Export as standalone HTML viewer (no FlowLens)                     |
+| `flowkit export:full`                    | Export as standalone HTML viewer (FlowLens included)                |
+| `flowkit handoff`                        | Build developer handoff zip                                        |
+| `flowkit plan:check`                     | Validate all flowplans (runs automatically on build)                |
+| `flowkit sessions:brief`                 | Agent analytics brief from committed sessions                      |
+| `flowkit convert:multi`                  | Convert a flat consumer project to multi-workspace mode            |
+| `flowkit convert:flat`                   | Collapse a multi-workspace consumer project back to flat           |
+| `flowkit create/remove/rename:workspace` | Add/remove/rename a workspace (multi-workspace consumer mode only) |
+| `flowkit help`                           | Full help                                                           |
 
 Full reference: [docs/CLI.md](docs/CLI.md)
 

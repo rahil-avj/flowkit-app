@@ -25,7 +25,8 @@ Browser-based UI prototyping platform (React 19 + Vite 8 + Tailwind v4) for mult
 │   │   └── agent-state.js    .flowkit/ per-workspace state files (component registry)
 │   ├── platform/             commands about the CLI/tool's own lifecycle and built-in subsystems
 │   │   ├── router.js         CLI dispatcher — single dispatch table for all subcommands
-│   │   ├── workspace.js      nw/rw/watch commands; scaffold rollback on failure
+│   │   ├── workspace.js      nw/rw/watch commands; scaffold rollback on failure — repo mode only
+│   │   ├── workspace-flat.js convert:multi/convert:flat + create/remove/rename:workspace — flat/multi consumer mode only
 │   │   ├── plans.js          plan:ls / plan:check (read-only validation) / project:ls
 │   │   ├── feedback.js       feedback:import/dump/ls
 │   │   ├── sessions/         sessions:* + lens:report + sessions:study:* — split across crud/analytics/validate/sample/study
@@ -35,19 +36,21 @@ Browser-based UI prototyping platform (React 19 + Vite 8 + Tailwind v4) for mult
 │   │   ├── help.js           help command
 │   │   └── install.js        one-time setup — registers the flowkit shell alias (manual/agent-invoked)
 │   ├── helpers/               domain-agnostic support machinery, never a direct CLI command
-│   │   ├── paths.js          root/mode resolution, workspace path safety, repo/flat-mode detection
-│   │   ├── registry.js       workspace registry read/write/sync
+│   │   ├── paths.js          root/mode resolution, workspace path safety, repo/flat/multi-workspace-mode-aware resolution
+│   │   ├── flowkit-manifest.js  reads/writes consumer package.json's flowkit.mode/flowkit.workspaces
+│   │   ├── registry.js       workspace registry read/write/sync — repo mode only
 │   │   ├── args.js           CLI flag parsing
 │   │   ├── colors.js         terminal ANSI formatting
 │   │   ├── dates.js          date formatting
 │   │   ├── fs-copy.js        recursive directory copy
 │   │   ├── json.js           safe JSON file read/write
 │   │   ├── prompt.js         interactive CLI prompts
-│   │   ├── scaffold.js       new-workspace scaffold content generator
+│   │   ├── scaffold.js       new-workspace scaffold content generator — repo mode only
+│   │   ├── workspace-template.js  shared per-workspace content generator — flat/multi consumer mode + create-flowkit-app/create-flowkit-workspace scaffolders
 │   │   ├── strings.js        casing/slug utilities
 │   │   ├── workspace-resolve.js  resolves a workspace name from a CLI value or the active one
 │   │   ├── flowlens-session.js  shared /__flowlens/save-session dev-server middleware
-│   │   └── vite-plugin.js    flowkit/vite — flat-mode virtual modules (config/screens/flowplans/workspace)
+│   │   └── vite-plugin.js    flowkit/vite — virtual modules (config/screens/flowplans/workspace); workspaceRoot + standalone options
 │   └── builders/             export/build/run pipelines
 │       ├── export.js         export / export:full commands
 │       ├── handoff.js        handoff command
@@ -304,10 +307,10 @@ npm run dev
 
 **CLI (flowkit)**
 
-- `flowkit nw <name>` — scaffold new workspace ✅ (rollback on failure)
-- `flowkit rw <name>` — remove workspace
+- `flowkit nw <name>` — scaffold new workspace ✅ (rollback on failure) — **repo mode only**
+- `flowkit rw <name>` — remove workspace — **repo mode only**
 - `flowkit status` — health snapshot: flows, sessions, feedback, agent
-- `flowkit watch` — watch workspace for file changes (help shows `watch:flows`; dispatcher matches `watch`)
+- `flowkit watch` — watch workspace for file changes (help shows `watch:flows`; dispatcher matches `watch`) — **repo mode only**
 - `flowkit export` — standalone HTML viewer (no FlowLens)
 - `flowkit export:full` — standalone HTML viewer + FlowLens included
 - `flowkit handoff` — developer handoff zip
@@ -317,7 +320,10 @@ npm run dev
 - `flowkit project:ls` — list projects (short alias `pj:ls`)
 - `flowkit feedback:ls/import/dump` — feedback management
 - `flowkit agent:sync/check` — agent spec sync
-- `flowkit create/remove/list/rename/move/add/screen/flowplan/components/promote:flow` — lower-level scaffolding sub-verbs used internally by `nw`/other commands (router.js) — prefer the higher-level commands above unless you need fine-grained control
+- `flowkit create/remove/list/rename/move/add/screen/flowplan/components/promote:flow` — lower-level scaffolding sub-verbs used internally by `nw`/other commands (router.js) — prefer the higher-level commands above unless you need fine-grained control. Work correctly in repo, flat, and multi-workspace consumer mode; accept `--workspace:<name>` to target a non-default workspace in multi-workspace mode (default: `flowkit.workspaces[0]`)
+- `flowkit convert:multi [--name:<id>]` — convert a flat-mode consumer project to multi-workspace mode — **flat/multi consumer mode only**
+- `flowkit convert:flat [--from:<id>] [--all]` — collapse a multi-workspace consumer project back to flat mode — **flat/multi consumer mode only**
+- `flowkit create:workspace [--name:<id>] [--lang:ts|js]` / `remove:workspace [--name:<id>]` / `rename:workspace <old> <new>` — add/remove/rename a workspace in a multi-workspace consumer project (`scripts/platform/workspace-flat.js`) — **flat/multi consumer mode only**, distinct from repo-mode's `nw`/`rw`
 
 ---
 
@@ -379,31 +385,36 @@ Set in `.env.local` (not committed).
 
 ## Package / Publish Mode
 
-> **This repo's end goal is to ship as two published npm packages** (`flowkit` the library, `create-flowkit-app` the scaffolder). The dual-mode source (`isRepoMode()`, `assertScopedWorkspaceDir()`, lib build `exports`/`files`, `packages/create-flowkit-app/`) is built and present on `main`. **Neither package has been published as of 2026-07-02**: `npm view flowkit` / `npm view create-flowkit-app` are still unclaimed, `npm create flowkit-app@latest` 404s, and `origin` (`rahil-avj/flowkit-app`) has no `deployment` branch — only `main` exists remotely, so a `github:...#deployment` git dependency has nothing to point at either. Don't tell a user to run `npm create flowkit-app@latest` or add a git dependency until one of these is actually published/pushed. Full step-by-step publish plan: [Documentation/project-plans/execution/npm-publish-checklist.md](Documentation/project-plans/execution/npm-publish-checklist.md).
+> **This repo's end goal is to ship as three published npm packages**: `flowkit` (the library), `create-flowkit-app` (flat-mode scaffolder), `create-flowkit-workspace` (multi-workspace scaffolder). The dual-mode source (`isRepoMode()`, `assertScopedWorkspaceDir()`, lib build `exports`/`files`, `packages/create-flowkit-app/`, `packages/create-flowkit-workspace/`) is built and present on this branch. **As of 2026-07-10, npm login is confirmed (`rahil316`) and all three packages' names are still unclaimed, but nothing has been published yet** — `flowkit/package.json` still has `"private": true` as a deliberate failsafe, removed only as the last step before the actual `npm publish`. Don't tell a user to run `npm create flowkit-app@latest`/`npm create flowkit-workspace@latest` or add a git dependency until publish actually happens. Full step-by-step status: [temp-docs/npm-checklist.md](temp-docs/npm-checklist.md) — this is the live, dated tracking doc; the older [Documentation/project-plans/execution/npm-publish-checklist.md](Documentation/project-plans/execution/npm-publish-checklist.md) predates it and is stale (still describes only two packages).
 
-FlowKit ships two ways from one repo — every path in `scripts/helpers/` and `scripts/platform/` must work under both:
+FlowKit ships three ways from one repo — every path in `scripts/helpers/` and `scripts/platform/` must work under all three:
 
 - **Repo mode** (this checkout) — `workspaces/<name>/` holds author content; multiple workspaces coexist, switched via browser UI.
-- **Flat/author mode** — consumer runs `npm create flowkit-app@latest`, gets `flowkit` installed into `node_modules/`; there is no `workspaces/` dir, just one implicit workspace at the project root. Rationale (per `PACKAGE-ARCHITECTURE.md`): `node_modules/` gives universal, convention-based blindness so AI coding agents/editors don't wander into platform internals (`src/core`, `src/features`, `src/shared`) unprompted. Not yet live — see note above.
+- **Flat mode** — consumer scaffolds via `create-flowkit-app`, gets `flowkit` installed into `node_modules/`; no `workspaces/` dir, one implicit workspace at the project root.
+- **Multi-workspace (standalone) mode** — consumer scaffolds via `create-flowkit-workspace`, gets multiple sibling workspace folders at project root (not nested under `workspaces/`). Mode and workspace list are declared explicitly in the consumer's `package.json` under a `flowkit` key (`{ mode: "multi", workspaces: [...] }`) — see `scripts/helpers/flowkit-manifest.js`. Convert between flat and multi via `flowkit convert:multi` / `flowkit convert:flat`; add/remove/rename workspaces via `flowkit create:workspace` / `remove:workspace` / `rename:workspace` (all in `scripts/platform/workspace-flat.js`, distinct from the repo-mode-only `nw`/`rw`/`watch` in `scripts/platform/workspace.js`).
 
-- **Mode detection**: `scripts/helpers/paths.js` → `isRepoMode()` checks for a `.flowkit-repo-root` marker file at `ROOT` (computed from `paths.js`'s own file location, not `cwd()`) — deliberately excluded from `package.json`'s `files[]` allowlist so it never ships to any real install. Earlier detection heuristics (workspace-dir contents, then `node_modules`-in-path) both caused real incidents, including a full repo-delete bug — see `Documentation/PACKAGE-ARCHITECTURE.md` section 2 for the history. `assertScopedWorkspaceDir()` is the defense-in-depth backstop before any recursive workspace delete — call it in any new code path that deletes a workspace-scoped directory.
-- **`package.json` `"files"` is an allowlist**: currently `scripts/`, `src/`, `dist/`, `docs/`, `index.html` (minus `!scripts/tests/`, `!scripts/builders/format.mjs`). Only listed paths ship via `npm pack`/`publish`/git-dep. Verify what actually ships with `npm pack --dry-run --json` — glob entries like `"scripts/"` pull in more than expected, hence the negations. Note: `PACKAGE-ARCHITECTURE.md`'s example `files[]` includes `"packages/"` — the real `package.json` does not; `packages/create-flowkit-app/` publishes as its own separate package, not bundled into `flowkit`'s tarball.
+Rationale for flat/multi-workspace mode generally (per `PACKAGE-ARCHITECTURE.md`): `node_modules/` gives universal, convention-based blindness so AI coding agents/editors don't wander into platform internals (`src/core`, `src/features`, `src/shared`) unprompted.
+
+- **Mode detection**: `scripts/helpers/paths.js` → `isRepoMode()` checks for a `.flowkit-repo-root` marker file at `ROOT` (computed from `paths.js`'s own file location, not `cwd()`) — deliberately excluded from `package.json`'s `files[]` allowlist so it never ships to any real install. Earlier detection heuristics (workspace-dir contents, then `node_modules`-in-path) both caused real incidents, including a full repo-delete bug — see `Documentation/PACKAGE-ARCHITECTURE.md` section 2 for the history. `assertScopedWorkspaceDir()` is the defense-in-depth backstop before any recursive workspace delete in repo mode; `scripts/helpers/flowkit-manifest.js`'s `assertScopedConsumerWorkspaceDir()` is the equivalent for flat/multi-workspace mode. **Both guards must treat `process.cwd()` as unsafe only conditionally** — in repo mode a named workspace should never legitimately resolve to `cwd`, but in flat mode it always correctly does (the project root IS the one implicit workspace). Getting this backwards silently blocks every authoring command in flat mode — confirmed as a real regression, fixed 2026-07-10.
+- **`package.json` `"files"` is an allowlist**: currently `scripts/`, `src/`, `dist/`, `docs/`, `index.html` (minus `!scripts/tests/`, `!scripts/builders/format.mjs`). Only listed paths ship via `npm pack`/`publish`/git-dep. Verify what actually ships with `npm pack --dry-run --json` — glob entries like `"scripts/"` pull in more than expected, hence the negations. Note: `PACKAGE-ARCHITECTURE.md`'s example `files[]` includes `"packages/"` — the real `package.json` does not; `packages/create-flowkit-app/` and `packages/create-flowkit-workspace/` each publish as their own separate package, not bundled into `flowkit`'s tarball.
 - **Public API surface** (`src/core/config/index.ts` and anything it re-exports) must use **relative imports only** for its own types — never `@platform/*`/`@shared/*`/etc. path aliases. TS declaration emit writes path-mapped specifiers as-is into `.d.ts`, which a consumer's TypeScript can't resolve. Check after any `build:lib` change: `grep -rn "from '@\(platform\|shared\|core\|features\|kit\|workspace\|flowlens\)" dist/types/` should return nothing.
-- **`scripts/helpers/vite-plugin.js`** (exported as `flowkit/vite`) is what makes flat mode work at dev-server time — it generates virtual modules (`virtual:flowkit/config|screens|flowplans|workspace`) that replace `import.meta.glob` patterns hardcoding `workspaces/<name>/...`, reconstructing the same data from `flowkit.config.ts` (bundled via esbuild) + filesystem globs from `cwd()` instead. Handles HMR via full-reload. This is already exercised by this repo's own `vite.config.ts`, but the flat-mode consumer path through it (Phase 5 of the checklist) is still untested end-to-end.
-- **`packages/create-flowkit-app/`** is a real, working scaffolder (not a stub) — `index.js` generates a full project (2-flow/5-screen starter) as template literals, plus a `--local-dev` / `FLOWKIT_LOCAL_DEV=1` opt-in gated on the repo marker for testing against this checkout instead of a published version.
+- **`scripts/helpers/vite-plugin.js`** (exported as `flowkit/vite`) is what makes flat/multi-workspace mode work at dev-server time — it generates virtual modules (`virtual:flowkit/config|screens|flowplans|workspace`) that replace `import.meta.glob` patterns hardcoding `workspaces/<name>/...`, reconstructing the same data from `flowkit.config.ts` (bundled via esbuild) + filesystem globs from `cwd()` instead. Handles HMR via full-reload. The plugin takes two independent options: `workspaceRoot` (which folder to read `flowkit.config.ts`/`flows`/`flowplans`/`lib` from) and `standalone` (whether the plugin itself must supply `@platform`/`@core`/etc. aliases, vs. a host `vite.config.ts` already supplying them). Repo mode passes `workspaceRoot` only (its own `vite.config.ts` supplies aliases); multi-workspace standalone mode passes both `workspaceRoot` **and** `standalone: true` (no host config exists to supply aliases). Conflating these two options into one flag was a real bug — fixed 2026-07-10 — see `scripts/helpers/vite-plugin.js`'s `config()` for the current split.
+- **`scripts/authoring-support/config-patch.js`'s `writeConfig()` must preserve the existing `flowkit.config.ts` import line, not hardcode one.** Repo mode imports `defineConfig` from `@platform/core/config`; flat/standalone mode imports it from the published `flowkit` package. Hardcoding either breaks the other mode's build the next time any authoring command (`create:flow`, `create:screen`, etc.) mutates the file. Fixed 2026-07-10 by capturing the import line into `config._importLine` on read and reusing it on write.
+- **`scripts/helpers/paths.js`'s `workspacePath()`/`getActiveWorkspaceName()` must resolve against `flowkit.workspaces` in multi-workspace mode**, not just branch on repo-mode-vs-not. Without this, every authoring command run from a multi-workspace project's root silently resolved to root itself, never a named workspace subfolder. Fixed 2026-07-10 — both functions now consult `scripts/helpers/flowkit-manifest.js`'s `readFlowkitManifest()`/`isMultiMode()` and default to `flowkit.workspaces[0]` when no `--workspace:<name>` flag is given (matching the same "first entry" convention the generated `vite.config.ts` uses).
+- **`flowkit convert:multi`/`convert:flat` must rewrite `vite.config.ts`, not just move files.** The two templates (flat: bare `flowkit()`; multi: `flowkit({ workspaceRoot, standalone: true })` reading `package.json`'s `flowkit.workspaces[0]`) are written by `writeFlatViteConfig()`/`writeMultiViteConfig()` in `scripts/platform/workspace-flat.js` — keep in sync with the literal templates in `packages/create-flowkit-app/index.js` and `packages/create-flowkit-workspace/index.js` if either changes. Omitting this step was a real bug — the build succeeded but silently produced an empty bundle (no workspace content) — fixed 2026-07-10.
+- **`packages/create-flowkit-app/`** and **`packages/create-flowkit-workspace/`** are real, working scaffolders (not stubs). Both import their shared per-workspace content generator (`scripts/helpers/workspace-template.js` — the one shared source of truth also used by `flowkit create:workspace`) dynamically from their own `flowkit` devDependency, **after** `npm install` completes, not at their own top level — neither scaffolder package may depend on the monorepo directly (`scripts/` isn't part of either scaffolder's own tarball). Both also support `--local-dev` / `FLOWKIT_LOCAL_DEV=1`, gated on the repo marker, for testing against this checkout instead of a published version.
 
 ### What's actually done vs. not, toward publish
 
-**Done**: `build:lib` produces working `dist/lib/` + `dist/types/`; peer-dep split (React/Radix); mode detection + safety guard; flat-mode vite plugin incl. FlowLens session middleware; `create-flowkit-app` scaffolder; path-alias leak fix in public `.d.ts`; `scripts/deploy/` (the `checkpoint`/`release`/`sync:deployment` commands and their strip-list mechanism) removed entirely — the repo has committed to the npm-publish distribution path instead of maintaining a stripped `deployment` git branch.
+**Done**: `build:lib` produces working `dist/lib/` + `dist/types/`; peer-dep split (React/Radix); mode detection + safety guards (repo-mode and consumer-mode); flat/multi-workspace vite plugin incl. FlowLens session middleware; `create-flowkit-app` and `create-flowkit-workspace` scaffolders; path-alias leak fix in public `.d.ts`; `scripts/deploy/` removed entirely; `LICENSE` (MIT) added at repo root + both scaffolder packages, `license`/`author`/`repository`/`keywords`/`engines` added to all three `package.json`s; npm login confirmed (`rahil316`); full authoring CRUD family (create/remove/rename/move flow/screen/flowplan/component, list/info commands) verified working end-to-end in both flat and multi-workspace consumer mode, including workspace isolation.
 
-**Not done** — concrete blockers before Phase 7 (publish) of the checklist:
-- No `LICENSE` file in repo root (checklist Phase 2 & 6).
+**Not done** — concrete blockers before actual publish (see [temp-docs/npm-checklist.md](temp-docs/npm-checklist.md) for the live, itemized state):
+- `flowkit/package.json` still has `"private": true` — intentional failsafe, must be removed as the deliberate last step before `npm publish`.
 - No `.github/workflows/` — zero CI, zero automated publish.
 - `npm run build` (full app `tsc -b` step) currently fails — missing declarations for `scripts/helpers/vite-plugin.js` / `scripts/helpers/flowlens-session.js`. Doesn't block `build:lib` (the real publish build) but is an open bug.
-- `flowkit export`'s ESLint check hardcodes `workspaces/${wsName}` — breaks under flat mode.
-- Local consumer smoke tests (checklist Phase 5) haven't been run yet: no `file:` install test, no scaffold-then-`npm run dev`-in-flat-mode test performed.
+- `flowkit export`'s ESLint check hardcodes `workspaces/${wsName}` — breaks under flat/multi-workspace mode.
 
-See [Documentation/PACKAGE-ARCHITECTURE.md](Documentation/PACKAGE-ARCHITECTURE.md) for the full technical mechanism, [Documentation/PACKAGE-AUTHOR-GUIDE.md](Documentation/PACKAGE-AUTHOR-GUIDE.md) for the consumer-facing guide (written ahead of implementation — describes target end-state, not current reality), [Documentation/product/vision/VISION.md](Documentation/product/vision/VISION.md) / [FEATURES.md](Documentation/product/vision/FEATURES.md) for the distribution-model rationale, and [Documentation/project-plans/execution/npm-publish-checklist.md](Documentation/project-plans/execution/npm-publish-checklist.md) for the exact remaining steps in order.
+See [Documentation/PACKAGE-ARCHITECTURE.md](Documentation/PACKAGE-ARCHITECTURE.md) for the full technical mechanism, [Documentation/PACKAGE-AUTHOR-GUIDE.md](Documentation/PACKAGE-AUTHOR-GUIDE.md) for the consumer-facing guide (written ahead of implementation — describes target end-state, not current reality), [Documentation/product/vision/VISION.md](Documentation/product/vision/VISION.md) / [FEATURES.md](Documentation/product/vision/FEATURES.md) for the distribution-model rationale, and [temp-docs/npm-checklist.md](temp-docs/npm-checklist.md) for the exact remaining steps in order.
 
 ---
 
@@ -518,4 +529,4 @@ Two directories with different audiences — `docs/` ships to clients (included 
 **`Documentation/`** — dev-only:
 
 - [Documentation/DevelopmentValues.md](Documentation/DevelopmentValues.md) — Engineering philosophy
-- [Documentation/FlowKit-Features-List.md](Documentation/FlowKit-Features-List.md) — Feature inventory and status
+- [Documentation/product/vision/FEATURES.md](Documentation/product/vision/FEATURES.md) — Feature inventory and status (engineering-facing, actively maintained)

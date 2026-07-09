@@ -17,16 +17,20 @@ for it. Recording is **always on** regardless.
 
 ## Build gating
 
-FlowLens availability is **presence-based** in all environments — no env flag required. The gate is an `import.meta.glob` in `FlowLensModeContext.tsx`:
+FlowLens availability is **presence-based** — the gate is an `import.meta.glob` in `FlowLensModeContext.tsx`:
 
 ```ts
 const _flowlensGlob = import.meta.glob('../../modes/flowlens/index.ts')
 export const FLOWLENS_AVAILABLE = _flowlensLoader !== undefined
 ```
 
-If `src/modes/flowlens/index.ts` exists on disk, Vite resolves the glob → `FLOWLENS_AVAILABLE = true` → the lazy chunk is included. If the folder is absent, the glob is empty, `FLOWLENS_AVAILABLE = false`, and Rollup DCEs the entire FlowLens chunk — **no `flowlens-*.js` in the build**.
+If `src/modes/flowlens/index.ts` exists on disk, Vite resolves the glob at build time → `FLOWLENS_AVAILABLE = true` → the lazy chunk is included in the bundle. If the folder is absent, the glob is empty, `FLOWLENS_AVAILABLE = false`, and Rollup DCEs the entire FlowLens chunk — **no `flowlens-*.js` in the build**.
 
-Use `flowkit export:full` to include FlowLens in standalone exports; `flowkit export` excludes it by omitting the folder from the build.
+To exclude FlowLens from a build:
+- **Repo mode**: delete or rename `src/modes/flowlens/` before `npm run build`
+- **Consumer mode (packages)**: no `src/modes/flowlens/` folder exists by default — it ships without FlowLens and cannot be re-enabled at build time
+
+For standalone exports, `flowkit export` strips the folder from the build; `flowkit export:full` preserves it.
 
 **Recording (FlowTracer) is independent** — it is gated only by the `flowkit:sessions:enabled` localStorage toggle, not by FlowLens availability.
 
@@ -128,22 +132,38 @@ In the **Recorded** tab, hover a session row → click the Archive icon (📁). 
 **Import a session file into the committed library:**
 
 ```bash
+# Default to active workspace:
+flowkit sessions:import path/to/session.json
+
+# Target a specific workspace:
 flowkit sessions:import:<ws> path/to/session.json
+
 # Target a specific study:
-flowkit sessions:import:<ws> path/to/session.json --study "Round 2"
+flowkit sessions:import path/to/session.json --study "Round 2"
+
+# Override workspace mismatch in session metadata:
+flowkit sessions:import path/to/session.json --force
 ```
 
 **Export a committed session back to a file:**
 
 ```bash
-flowkit sessions:export:<ws> <id|name> [--dest <dir>]
+# Default to active workspace:
+flowkit sessions:export <id|name|file>
+
+# Target a specific workspace:
+flowkit sessions:export:<workspace> <id|name|file>
+
+# Specify output directory:
+flowkit sessions:export <id|name> --dest ./handoffs/
 ```
 
 **List committed sessions:**
 
 ```bash
-flowkit sessions:ls:<ws>
-flowkit sessions:ls:<ws> --study "initial-study"
+flowkit sessions:ls            # active workspace
+flowkit sessions:ls:<ws>       # specific workspace
+flowkit sessions:ls --study "Round 2"  # filter to one study
 ```
 
 ### Session merge
@@ -282,15 +302,17 @@ are opaque, `role="dialog"`, Escape-to-close. The playback scrubber is a
 src/features/flowTracer/
   context/
     index.tsx                  ← SessionRecorderProvider, state machine, logEvent, logCursorSample
-    useSessionRecorder.ts      ← re-export barrel
   components/
     SessionCard.tsx            ← single session list item (quality dot, actions)
     SessionInspect.tsx         ← detail/edit view for a completed session
     SessionSettingsOverlay.tsx ← start/configure recording modal (fps labels, channel toggles)
     SessionExportOverlay.tsx   ← download sessions (JSON / CSV / Markdown) with error surface
+    CountdownOverlay.tsx       ← pre-session countdown timer
     useSessionSettings.ts      ← localStorage persistence; _version schema field
   sessionDb.ts                 ← IndexedDB (4 stores) + WriteBatcher(300ms) + pruneOldSessions
   buildSessionExport.ts        ← IndexedDB → SessionExport
+  sessionMetrics.ts            ← session quality scoring + event stats
+  exportBlobs.ts               ← Blob/CSV/JSON file export
   types.ts                     ← EventType, SessionEvent, SessionMeta, ChannelConfig, …
   panel.tsx                    ← Sessions panel UI (list, merge, delete w/ error banner)
   index.ts                     ← public barrel export
@@ -300,20 +322,27 @@ src/modes/flowlens/
   index.ts                                         ← lazy default export barrel
   useSessionLibrary.ts                             ← merges committed JSON + IndexedDB; glob → workspaces/**/lib/flowLens/sessions/**/*.json
   exportUtils.ts                                   ← JSON/CSV/Markdown/SVG/PNG helpers; importSessionFromFile; saveToLibrary (dev)
+  flowLensTheme.ts                                 ← FlowLens theme colors + accent constants
   components/FlowLensMode.tsx                      ← the whole mode UI
   components/LensSideExplorer.tsx                  ← Library + Recorded tabs; Save to Library button (dev only)
   components/LensSideInspector.tsx                 ← tabbed session info / reports quick view (right panel)
   components/analyticsPrimitives.tsx               ← shared TabBody / QuickStat / ViewAll primitives
   components/ReplayController.tsx                  ← drives the shared DashboardContext
-  replayState.ts                                   ← fold-forward reconstruction
   components/CursorGhost.tsx                       ← replayed pointer ghost over the mockup
+  components/CursorHeatmap.tsx                     ← click density heatmap renderer
   components/PlaybackBar.tsx                       ← scrub + autoplay
   components/AnalyticsOverlay.tsx                  ← full-screen overlay shell
-  components/FlowLensAnalyticsOverlays.tsx         ← single-session Metrics/Paths/Funnel/Heatmap
+  components/FlowLensAnalyticsOverlays.tsx         ← single-session Metrics/Paths/Funnel/Heatmap tabs
+  components/MetricsView.tsx                       ← single-session metrics (completion, frustration, etc.)
+  components/PathsView.tsx                         ← navigation path sankey/tree
+  components/FunnelView.tsx                        ← flow funnel completion rates
   components/HeatmapView.tsx                       ← screen-behind heatmap + toggles + legend
   components/TimelineView.tsx                      ← event rail (colored by type)
-  analyticsEngine.ts                               ← per-session + aggregate metrics
-  reports/                                         ← ReportsOverlay (study filter), aggregate, sessionFilters
+  components/reports/ReportsOverlay.tsx            ← multi-session cohort reports + study filter
+  components/reports/aggregate.ts                  ← aggregate metrics across session cohorts
+  components/reports/sessionFilters.ts             ← filtering logic for cohort selection
+  replayState.ts                                   ← fold-forward event reconstruction
+  analyticsEngine.ts                               ← per-session + aggregate metrics computation
 
 workspaces/<ws>/lib/flowLens/
   studies.json                                     ← study registry; activeStudyId pointer

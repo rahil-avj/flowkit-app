@@ -3,9 +3,28 @@
   "private": true,
   "version": "0.0.1-beta.0",
   "description": "Browser-based UI prototyping platform for multi-screen, flow-based interactive previews.",
+  "license": "MIT",
+  "author": "Rahil Kothari <Rahilkothari5@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rahil-avj/flowkit-app.git"
+  },
+  "keywords": [
+    "flowkit",
+    "prototyping",
+    "ui-prototyping",
+    "flow",
+    "wireframe",
+    "react",
+    "vite",
+    "design-tool"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "type": "module",
   "bin": {
-    "flowkit": "./scripts/flowkit.js"
+    "flowkit": "scripts/flowkit.js"
   },
   "files": [
     "scripts/",

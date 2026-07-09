@@ -105,7 +105,7 @@ A **study** is a named folder that groups sessions from one testing round. Every
 
 Sessions are scoped to the active workspace automatically (`meta.workspaceId`).
 
-**Test mode** — enable the **Test mode** toggle before recording to mark the session as `isTestMode: true`. Test sessions are excluded from all analytics and reports by default.
+**Settings** — Click the **Settings** icon (⚙) before starting to configure recording options: session name template, cursor tracking sample rate, and which event channels to record (Interactions and Navigation are always on; you can toggle Effects, State changes, Simulator changes, Panel activity, etc.).
 
 ---
 
@@ -131,14 +131,15 @@ Click a row to select it for review. In dev mode, each row has a **save icon** (
 
 ### Right panel tabs
 
-| Tab      | What it shows                        |
-| -------- | ------------------------------------ |
-| Overview | Quality score breakdown, key metrics |
-| Timeline | Scrubba event timeline               |
-| Heatmap  | Cursor density per screen            |
-| Screens  | Per-screen dwell and frustration     |
+| Tab      | What it shows                                          |
+| -------- | ------------------------------------------------------ |
+| Overview | Quality breakdown, key metrics, most visited screens   |
+| Timeline | Event timeline scrubber                                |
+| Paths    | Navigation paths — top screens by visit count          |
+| Funnel   | Flow completion rates                                  |
+| Heatmap  | Cursor density on the current screen                   |
 
-Use the **playback bar** at the bottom to scrub or auto-play the session.
+Click **View all** in any tab to open a full-screen overlay with more detail. Use the **playback bar** at the bottom to scrub or auto-play the session.
 
 ---
 
@@ -147,7 +148,7 @@ Use the **playback bar** at the bottom to scrub or auto-play the session.
 ### Option A — Browser (dev only)
 
 1. Go to the **Recorded** tab.
-2. Hover a session row → click the **Archive icon** (📁).
+2. Hover a session row → click the **Archive icon** (from lucide).
 3. The session POSTs to `/__flowlens/save-session` (Vite dev middleware).
 4. File is written to `workspaces/<ws>/lib/flowLens/sessions/<active-study>/`.
 5. Vite HMR picks it up → the session appears in the **Library** tab within seconds.

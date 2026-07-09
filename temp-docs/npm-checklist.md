@@ -13,7 +13,7 @@ First-time publish, two packages: `flowkit` (library) and `create-flowkit-app` (
 
 - [x] npm account created at npmjs.com
 - [x] 2FA enabled on npm account (required to publish)
-- [ ] `npm login` → confirm with `npm whoami`
+- [x] `npm login` → confirm with `npm whoami` — **RESOLVED 2026-07-10.** Logged in as `rahil316`, confirmed via `npm whoami`.
 - [ ] Decide npm access level for scoped work (not needed — "flowkit" and "create-flowkit-app" are unscoped public names)
 - [x] `node --version` → confirm >=20 — **v24.13.1 installed, satisfies both the repo's own tooling and `packages/create-flowkit-app/package.json`'s `"engines": {"node": ">=20"}`**
 
@@ -37,12 +37,12 @@ For **both** `flowkit/package.json` and `packages/create-flowkit-app/package.jso
 
 - [x] `"name"` matches intended registry name exactly — `"flowkit"` and `"create-flowkit-app"` confirmed in both files
 - [x] `"version"` set correctly — **both now `"0.0.1-beta.0"`**, confirmed intentional (see Phase 1)
-- [x] `"description"` present and accurate — flowkit: "Browser-based UI prototyping platform for multi-screen, flow-based interactive previews."; create-flowkit-app: "Scaffold a new FlowKit author project."
-- [ ] `"license"` field present — **missing from both package.json files** (no `license` key at all; matches the repo-wide absence of a LICENSE file, see Phase 6)
-- [ ] `"repository"` field points to the real GitHub URL — **absent from both package.json files**
-- [ ] `"author"` field set (or intentionally omitted) — **absent from both**; needs an explicit decision either way
-- [ ] `"keywords"` added — **absent from both**
-- [x] `"engines"` field present if there's a real Node version floor — present on `create-flowkit-app` (`>=20`); **absent on `flowkit` itself** — worth adding if there's a real floor (the repo uses Node 24 features in tooling)
+- [x] `"description"` present and accurate — flowkit: "Browser-based UI prototyping platform for multi-screen, flow-based interactive previews."; create-flowkit-app: "Scaffold a new FlowKit author project."; create-flowkit-workspace: "Scaffold a new FlowKit multi-workspace author project."
+- [x] `"license"` field present — **`"license": "MIT"` added to all three package.json files (2026-07-10)**. `LICENSE` file (MIT, copyright Rahil Kothari) added at repo root and copied into both `packages/create-flowkit-app/` and `packages/create-flowkit-workspace/` so each ships its own copy. Confirmed via `npm pack --dry-run` that npm includes `LICENSE` in the tarball automatically (no `files[]` entry needed) for all three packages.
+- [x] `"repository"` field points to the real GitHub URL — **RESOLVED 2026-07-10.** Added to all three package.json files: `{ type: "git", url: "https://github.com/rahil-avj/flowkit-app.git" }`, with a `directory` sub-field on the two `packages/` scaffolders pointing at their own subpath (npm monorepo convention).
+- [x] `"author"` field set — **RESOLVED 2026-07-10.** `"Rahil Kothari <Rahilkothari5@gmail.com>"` on all three, matching the LICENSE copyright holder.
+- [x] `"keywords"` added — **RESOLVED 2026-07-10.** Added to all three (flowkit/prototyping/react/vite-flavored terms per package).
+- [x] `"engines"` field present if there's a real Node version floor — **RESOLVED 2026-07-10.** `>=20` added to `flowkit` itself too, now consistent across all three packages (matches `create-flowkit-app`/`create-flowkit-workspace`, which already had it).
 - [x] `"type": "module"` consistent with actual output format — both set to `"module"`, confirmed consistent with ESM build output
 - [x] For `flowkit`: `"exports"` map correct — verified both entries resolve and work at runtime:
   - `"."` → `dist/lib/index.js` (confirmed present, exports `defineConfig`/`defineFlow`/`tag`) + `dist/types/core/config/index.d.ts` (confirmed present, correct declarations)
@@ -96,16 +96,16 @@ For **both** `flowkit/package.json` and `packages/create-flowkit-app/package.jso
 
 ## Phase 6 — Security / Legal Sweep
 
-- [x] Grep the pack contents for hardcoded secrets/tokens/keys, especially `JSONBIN_CONFIG` — **confirmed resolved, no live secret in the pack.** Extracted the actual tarball (not just source) and grepped it directly: every `JSONBIN`/`MASTER_KEY` hit is either the config object's name, the guard code in `scripts/build/inline.js` that warns on a detected master-key pattern, or `packages/create-flowkit-app`'s handoff template's literal placeholder string `VITE_JSONBIN_MASTER_KEY=` (an empty env-var template). The actual `JSONBIN_CONFIG.providedKey` in `src/features/feedback/cloud-sync/constants.ts` is `''` (empty) by default. No `sk_live`/`sk_test`/`AKIA`/private-key patterns found anywhere in the pack. **This item is the checklist's own "Highest-Risk Item" (see bottom) and it's closed.**
+- [x] Grep the pack contents for hardcoded secrets/tokens/keys, especially `JSONBIN_CONFIG` — **confirmed resolved, no live secret in the pack.** Extracted the actual tarball (not just source) and grepped it directly: every `JSONBIN`/`MASTER_KEY` hit is either the config object's name, the guard code in `scripts/build/inline.js` that warns on a detected master-key pattern, or `packages/create-flowkit-app`'s handoff template's literal placeholder string `VITE_JSONBIN_MASTER_KEY=` (an empty env-var template). The actual `JSONBIN_CONFIG.providedKey` in `src/features/feedback/cloud-sync/constants.ts` is `''` (empty) by default. No `sk_live`/`sk_test`/`AKIA`/private-key patterns found anywhere in the pack. **This was previously the checklist's "Highest-Risk Item" — closed as of 2026-07-08.**
 - [x] `npm audit` on the package's own dependency tree — **confirmed: `npm audit --omit=dev` reports 0 vulnerabilities**
-- [ ] Confirm LICENSE file exists in repo root — **confirmed ABSENT.** `ls LICENSE*` finds nothing. This blocks Phase 2's license-field checklist item too. Real, unresolved blocker.
+- [x] Confirm LICENSE file exists in repo root — **RESOLVED 2026-07-10.** MIT LICENSE added at repo root, copied into both scaffolder packages, `license: "MIT"` field added to all three `package.json` files. Confirmed present in `npm pack --dry-run` output for all three packages.
 - [ ] Check for any workspace/customer-specific data accidentally committed under `src/` or `scripts/` — not exhaustively audited this session; the `nClarity` workspace-consolidation decision (per `decisions.md`) suggests this has had at least one prior cleanup pass, but no fresh audit was done here since `workspaces/` doesn't ship via `files[]` anyway (confirmed absent from the pack in Phase 4) — lower urgency than it first appears.
 
 ---
 
 ## Phase 7 — Publish (irreversible past this line)
 
-**Nothing in this phase was run or attempted — correctly gated behind Phase 0 (no npm login) and Phase 6 (no LICENSE). Versions/dist-tag ARE now decided (Phase 1) — commands below updated accordingly.**
+**Nothing in this phase was run or attempted.** Phase 0 (npm login) and Phase 6 (LICENSE) are now both resolved — the only remaining gate is `flowkit/package.json`'s `"private": true` failsafe, which must be removed as a deliberate step right before running the commands below. Versions/dist-tag are decided (Phase 1) — commands below reflect that.
 
 - [ ] Final `npm whoami` check
 - [ ] `cd` to `flowkit` package root, `npm publish --tag beta` (publishes `0.0.1-beta.0`)
@@ -130,9 +130,9 @@ For **both** `flowkit/package.json` and `packages/create-flowkit-app/package.jso
 
 ## Highest-Risk Item
 
-~~**Phase 6, `JSONBIN_CONFIG`.**~~ **RESOLVED.** Verified 2026-07-08 by extracting and grepping the actual pack tarball: no live master key ships. `JSONBIN_CONFIG.providedKey` defaults to `''`, and the only "master key"-shaped strings in the pack are guard/detection code and an empty placeholder template, not a real secret.
+The JSONBin master-key risk and the missing-LICENSE gap that were tracked here are both resolved (JSONBin: confirmed clean 2026-07-08, re-confirmed 2026-07-09; LICENSE: added 2026-07-10 — see Phase 6).
 
-**Current highest-risk / most concrete remaining blocker: no LICENSE file (Phase 6).** Everything else blocking Phase 7 is a decision (names/versions/dist-tag, Phase 0/1) or a one-time setup step (npm account/login, Phase 0) rather than a defect. The LICENSE gap is the one item that's both unresolved and needed before `npm publish` will look complete to consumers' legal/compliance tooling.
+**Current highest-risk / most concrete remaining blocker: none left except the deliberate `"private": true` failsafe on `flowkit/package.json`.** npm login (`rahil316`), LICENSE, and package.json hygiene (repository/author/keywords/engines) are all resolved as of 2026-07-10. The only thing standing between here and Phase 7 is flipping `private` off on `flowkit` — which is correct to leave on until the actual publish step, not a bug.
 
 ---
 

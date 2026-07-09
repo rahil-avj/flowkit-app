@@ -8,14 +8,14 @@ A browser-based UI prototyping platform for building multi-screen, flow-based in
 
 This folder is the platform knowledge base. Start with the one that fits your task:
 
-| Doc                        | Covers                                                                                                                                                     |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Doc                        | Covers                                                                                                                                                       |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **FLOWKIT.md** (this file) | Platform architecture: structure, aliases, kit system, canvas, db, theming, feedback, entry guards, export vs build.                                       |
 | **FLOWMASTER.md**          | The flow engine: flowplan config (`defineFlow`), steps, forks, guards, animations, screen components, the recorded event stream.                           |
 | **FLOWLENS.md**            | FlowTracer (session recorder) + FlowLens (replay mode & analytics): event types, build gating, the committed session library.                              |
+| **FLOWLENS-GUIDE.md**      | FlowLens usage guide.                                                                                                                                       |
 | **AGENTS.md**              | How a coding agent works inside a workspace: cold-start sequence, common task recipes, the directive grammar, and the `agent:sync` source-of-truth system. |
-| **CLI.md**                 | Full `flowkit` command reference with examples.                                                                                                            |
-| **AUDIT.md**               | Pre-release / onboarding checklist — every subsystem, file by file.                                                                                        |
+| **CLI.md**                 | Full `flowkit` command reference with examples, across repo, flat, and multi-workspace consumer mode.                                                       |
 
 ---
 
@@ -24,78 +24,82 @@ This folder is the platform knowledge base. Start with the one that fits your ta
 ```
 flowkit/
   src/                          ← Platform source
-    core/                       ← Canvas engine, layout panels, shortcuts
+    core/                       ← Canvas engine, layout panels, shortcuts, config helpers
       canvas/                   ← PreviewCanvas, CanvasView, canvasReducer, canvasConfig
       layout/                   ← FlowMaster, FlowEngine, KitSideExplorer, KitSideInspector
-        simulator-controls/     ← ControlAccordion, SimControl, SimToggle, SimSelect, …
+        hooks/                  ← usePanelLayout, usePanelDrag
       shortcuts/                ← useKeyboardShortcuts
+      config/                   ← defineConfig()/defineFlow() identity helpers
     features/                   ← Isolated product features
-      feedback/                 ← Comment wall, cloud push, export/import
+      feedback/                 ← Comment wall, cloud push (cloud-sync/), export/import
+      figma-export/             ← Figma handoff sidebar
       flow-debugger/            ← Runtime flow state, db inspector
       flow-library/             ← Flowplan browsing, hierarchy, compileFlowplan
       flowTracer/               ← Session recorder + IndexedDB (WriteBatcher 300ms)
-      simulator/                ← Accessibility settings, device settings
+      simulator/                ← Accessibility settings, device settings, controls/ primitives
     modes/
       flowlens/                 ← FlowLens replay mode + analytics (lazy, build-gated)
-        library/                ← Committed session JSON files per workspace
     shared/                     ← Foundation layer — contexts, utils, UI components
       contexts/                 ← DashboardContext, ThemeContext, FlowLensModeContext, …
       components/ui/            ← Button, Input, Modal, Tooltip, SegmentedControl, …
-      utils/                    ← dynamicRouter, useWorkspaceFlows, applyDotPathPatch, …
+      components/mobile/        ← MobileCanvas, BottomSheet
+      utils/                    ← useWorkspaceHierarchy, applyDotPathPatch, …
+    kits/
+      shared/                   ← Radix/shadcn kit — tokens, components, styles
+      standalone/                ← Standalone (non-shared) kit variants
     types/                      ← All shared TypeScript interfaces
+    workspace-stub/             ← Fallback module for @workspace alias when no workspace is active
     main.tsx / App.tsx          ← React entry
-  workspaces/                   ← One folder per workspace
+  workspaces/                   ← One folder per workspace (repo mode only)
     <name>/
-      flowplans/                ← Flowplan files (defineFlow) — flat format
+      flowplans/                ← Flowplan files (defineFlow)
         <flow>.ts
-      flows/                    ← Flow screen folders — flat format
+      flows/                    ← Flow screen folders
         <flow>/
           <screen>/
             <ScreenName>.tsx    ← Screen component
-      components/               ← Workspace-scoped shared components
-        ui/
-        layout/
-        navigation/
-        forms/
-        feedback/
-      lib/data/db.ts                ← Mock database (named exports)
-      lib/data/simulator.tsx        ← Custom simulator controls
-      design-system/tokens.css  ← CSS custom properties
-      lib/                      ← Workspace utility functions
-      hooks/                    ← Workspace custom hooks
-      assets/                   ← Images, icons, static files
-      .agent/                   ← Agent onboarding (generated from agentSpec.js — see below)
+      lib/
+        data/db.ts              ← Mock database (named exports)
+        data/simulator.tsx      ← Custom simulator controls
+        design-system/tokens.css ← CSS custom properties
+        components/             ← Workspace-scoped shared components
+        assets/                  ← Images, icons, static files
+        flowLens/                ← Committed session library + studies.json
+      .agent/                   ← Agent onboarding (generated by agent-sync.js — see below)
         INDEX.md                ← the map: task → action → detail
         rules.md                ← directive grammar: NEVER / ALWAYS / TO … → …
         platform.md             ← terse surface reference → Documentation/*
         project.md              ← living product brief (hand-owned, never regenerated)
         .agent-meta.json        ← formatter state for agent:sync
-      CLAUDE.md                 ← agent memory file (when --agent:claude; else AGENTS.md or .cursor/rules/flowkit.mdc)
-      flowkit.config.ts         ← workspace-level config overrides
-      index.ts                  ← Workspace entry
+      CLAUDE.md / AGENTS.md     ← agent memory file (chosen via --agent: flag)
+      flowkit.config.ts         ← workspace manifest (defineConfig)
+      index.ts                  ← Workspace entry (optional shared exports)
   scripts/                      ← Node.js CLI (never bundled by Vite)
-    flowkit.js                  ← CLI entry
-    lib/                        ← Command handlers: flows, workspace, export, build
-  Documentation/                ← This folder
+    flowkit.js                  ← CLI entry point
+    platform/, authoring/, helpers/, builders/  ← command handlers by nature, not domain
+  docs/                          ← This folder — client-deliverable docs
+  Documentation/                 ← Dev-only docs, never shipped in the npm package
 ```
+
+> **Consumer mode (flat / multi-workspace)** has a different layout — no `workspaces/` directory, `flowkit.config.ts`/`flows/`/`flowplans/`/`lib/` sit at the project root (flat) or at each sibling workspace folder's own root (multi-workspace). See [CLI.md](CLI.md) for the full breakdown.
 
 ---
 
 ## Alias system
 
-Path aliases keep workspace code isolated from platform code and enforce the layer hierarchy:
+Path aliases keep workspace code isolated from platform code and enforce the layer hierarchy. **Repo mode only** — consumer-mode (flat/multi-workspace) screens and config import from the published `'flowkit'` package instead; see [CLI.md](CLI.md#import-aliases).
 
 | Alias        | Resolves to            | Use for                                           |
-| ------------ | ---------------------- | ------------------------------------------------- |
+| ------------ | ---------------------- | -------------------------------------------------- |
 | `@shared`    | `src/shared/`          | Contexts, UI components, utils — foundation layer |
-| `@core`      | `src/core/`            | Canvas shell, layout panels, shortcuts            |
-| `@features`  | `src/features/`        | Isolated product features                         |
-| `@flowlens`  | `src/modes/flowlens/`  | FlowLens mode (lazy-loaded chunk)                 |
-| `@kit`       | `src/kits/shared/`     | Radix/shadcn kit utilities                        |
-| `@platform`  | `src/`                 | Prefer scoped aliases above                       |
-| `@workspace` | `workspaces/<active>/` | Active workspace screens and config               |
+| `@core`      | `src/core/`            | Canvas shell, layout panels, shortcuts             |
+| `@features`  | `src/features/`        | Isolated product features                          |
+| `@flowlens`  | `src/modes/flowlens/`  | FlowLens mode (lazy-loaded chunk)                  |
+| `@kit`       | `src/kits/shared/`     | Radix/shadcn kit utilities                         |
+| `@platform`  | `src/`                 | Prefer scoped aliases above                        |
+| `@workspace` | `workspaces/<active>/` | Active workspace screens and config; falls back to `src/workspace-stub/` when none is active |
 
-`<active>` is the workspace name stored in `localStorage` (key `flowkit:active_workspace`). It is set via the browser UI workspace switcher, or by the URL param `?workspace=<name>` on load.
+`<active>` is resolved by `getActiveWorkspace()` in `vite.config.ts` from `src/workspaces.json`'s `active` field (kept in sync by the browser UI or CLI) — not from a URL param or `localStorage` key at the Vite-alias level. (`localStorage` under `flowkit:active_workspace` is a separate, app-runtime concern — see `src/workspaces.ts`'s `getStoredWorkspace()`/`storeWorkspace()`.)
 
 **Always use the most specific alias:** `@shared/contexts/ThemeContext` beats `@platform/shared/contexts/ThemeContext`.
 
@@ -104,7 +108,7 @@ Path aliases keep workspace code isolated from platform code and enforce the lay
 ```ts
 import type { FlowScreenProps } from '@platform/types'
 import { useDashboard } from '@shared/contexts/DashboardContext'
-import '@workspace/design-system/tokens.css'
+import '@workspace/lib/design-system/tokens.css'
 ```
 
 Screens **do not need to import `db`** — it is injected as a prop by the canvas automatically.
@@ -113,7 +117,7 @@ Screens **do not need to import `db`** — it is injected as a prop by the canva
 
 ## Kit system
 
-The kit system provides a shared component library and CSS token architecture that workspaces consume via the `@kit` alias. All kits use the same Shadcn/Radix-backed components — what changes between themes is CSS variables, not JSX.
+The kit system provides a shared component library and CSS token architecture that workspaces consume via the `@kit` alias. All shared-kit themes use the same Shadcn/Radix-backed components — what changes between themes is CSS variables, not JSX. (`src/kits/standalone/` holds separate standalone kit variants, outside this shared-component architecture.)
 
 ### Architecture layers
 
@@ -121,19 +125,17 @@ The kit system provides a shared component library and CSS token architecture th
 src/kits/shared/
   tokens/
     base.css           ← theme-agnostic scales (spacing, font sizes, fallback vars)
+    dark.css           ← dark mode overrides
     themes/
-      apple.css        ← --kit-* vars under [data-kit="apple"]
-      material.css     ← --kit-* vars under [data-kit="material"]
+      apple.css        ← --kit-* vars for the apple theme
+      material.css     ← --kit-* vars for the material theme
       neo-brutalism.css
-    dark.css           ← dark mode overrides under [data-mode="dark"]
-  styles/
-    button.css         ← structural styles + kit-button escape hatch
-    card.css, input.css, ...  (one file per component)
-  components/          ← Shadcn/Radix components (source-copied)
-  lib/utils.ts         ← cn() helper (clsx + tailwind-merge)
-  utilities.css        ← semantic utility classes (.card, .surface, .bg-elevated, etc.)
-  index.css            ← imports all layers in order
-  index.ts             ← KIT_MANIFEST (components + themes list)
+  styles/                ← per-component structural styles
+  components/            ← Shadcn/Radix components (source-copied)
+  lib/                   ← cn() helper (clsx + tailwind-merge) and related utilities
+  utilities.css          ← semantic utility classes
+  index.css              ← imports all layers in order
+  index.ts               ← KIT_MANIFEST (components + themes list, used by drift checks)
 ```
 
 CSS cascade order: base → theme → dark mode → component styles → utilities → workspace overrides.
@@ -178,26 +180,11 @@ function StatCard({ label, value }) {
 
 ### Token naming convention
 
-All CSS vars use the `--kit-` prefix:
-
-| Var                                     | Meaning                  |
-| --------------------------------------- | ------------------------ |
-| `--kit-bg`                              | Page / screen background |
-| `--kit-bg-elevated`                     | Cards, panels            |
-| `--kit-bg-overlay`                      | Modals, popovers         |
-| `--kit-bg-sunken`                       | Input wells, inset areas |
-| `--kit-scrim`                           | Modal backdrop           |
-| `--kit-brand`                           | Primary action color     |
-| `--kit-text` / `--kit-text-muted`       | Text colors              |
-| `--kit-border` / `--kit-border-strong`  | Border colors            |
-| `--kit-radius-sm/md/lg/full`            | Border radii             |
-| `--kit-shadow-sm/md/lg`                 | Box shadows              |
-| `--kit-font`                            | Font stack               |
-| `--kit-space-1` through `--kit-space-8` | Spacing scale            |
+All CSS vars use the `--kit-` prefix. Exact var names are defined per theme in `src/kits/shared/tokens/themes/*.css` — check the theme file directly for the current set rather than relying on a hardcoded list here, since these evolve as themes are added/tuned.
 
 ### Workspace-level overrides
 
-In `design-system/tokens.css`, import the kit first, then override any vars:
+In `lib/design-system/tokens.css`, import the kit first, then override any vars:
 
 ```css
 @import '@kit/index.css';
@@ -209,29 +196,20 @@ In `design-system/tokens.css`, import the kit first, then override any vars:
 
 ### Setting a kit
 
-In `src/workspaces.ts`:
-
-```ts
-{ name: "my-app", label: "My App", path: "workspaces/my-app", config: { kit: "material" } }
-```
-
-Or via CLI: `flowkit nw:my-app --kit:material`
-
-The canvas reads `config.kit` and sets `data-kit="material"` on the preview wrapper — all components and utility classes respond automatically.
+Set via the CLI at workspace creation: `flowkit nw:my-app --kit:material` (repo mode). The chosen kit is stored in `src/workspaces.json`'s per-workspace entry and applied as a `data-kit="material"` attribute on the preview wrapper at runtime — all components and utility classes respond automatically.
 
 ### Adding a new theme
 
-1. Create `src/kits/shared/tokens/themes/my-theme.css` — define all `--kit-*` vars under `[data-kit="my-theme"]`
+1. Create `src/kits/shared/tokens/themes/my-theme.css` — define all `--kit-*` vars for the theme
 2. Add `"my-theme"` to `KIT_MANIFEST.themes` in `src/kits/shared/index.ts`
 
-> `WorkspaceConfig.kit` is a plain `string` — no type union to update. Any string value is accepted; the canvas sets `data-kit="<value>"` on the preview wrapper.
+> `WorkspaceConfig.kit` (in `src/workspaces.ts`) is a plain `string` — no type union to update. Any string value is accepted; the canvas sets `data-kit="<value>"` on the preview wrapper.
 
 ### Adding a new component
 
 1. `npx shadcn@latest add <component>` — outputs to `src/kits/shared/components/`
-2. Add `kit-{name}` class to the root element
-3. Add structural styles to `src/kits/shared/styles/{name}.css`
-4. Add component name to `KIT_MANIFEST.components` in `src/kits/shared/index.ts`
+2. Add structural styles to `src/kits/shared/styles/{name}.css`
+3. Add the component name to `KIT_MANIFEST.components` in `src/kits/shared/index.ts` (used by `flowkit`'s drift-check tooling to verify every theme covers every component)
 
 ---
 
@@ -241,13 +219,7 @@ Workspaces can be authored in plain JavaScript/JSX instead of TypeScript. The pl
 
 ### Setting a workspace to JS
 
-In `src/workspaces.ts`, set `config.language` to `"js"`:
-
-```ts
-{ name: "my-workspace", label: "My Workspace", path: "workspaces/my-workspace", config: { language: "js" } }
-```
-
-The platform will then pick up `.jsx` screen files and `.js` flowplan files.
+Set via the CLI: `flowkit nw:my-workspace --lang:js` (repo mode) — stores `language: "js"` on the workspace's entry in `src/workspaces.json`. The platform then picks up `.jsx` screen files and `.js` flowplan files.
 
 ### Writing screens in JSX
 
@@ -271,15 +243,14 @@ export default function HomeScreen({ db }) { ... }
 
 ### Isolation guarantee
 
-- `src/` is compiled by `tsconfig.app.json` (`strict: true`, `allowJs: false`) — untouched.
-- `workspaces/` is compiled by `tsconfig.workspace.json` (`allowJs: true`, `checkJs: false`, `strict: false`).
-- The two tsconfigs have non-overlapping `include` arrays — no leakage in either direction.
+- `src/` is compiled by `tsconfig.app.json` (`strict: true`, no `allowJs`).
+- `workspaces/` is compiled under **both** `tsconfig.app.json` (strict, as part of the main app build) and a separate composite project, `tsconfig.workspace.json` (`allowJs: true`, `checkJs: false`, `strict: false`, extends `tsconfig.app.json`). This isn't file-exclusive isolation — `workspaces` legitimately appears in both configs' `include` arrays — it's two different strictness passes over the same files, so JS/mixed-language workspace content doesn't fail the main app's strict build while still getting checked under looser rules via the second project.
 
 ---
 
 ## Router
 
-Workspaces have no `router.tsx`. Screens are discovered by `useWorkspaceHierarchy()` via Vite glob from `flows/**`. The flowplan files (`defineFlow`) in `flowplans/*.ts` declare step sequences; no router file is generated or needed.
+Workspaces have no `router.tsx`. Screens are discovered by `useWorkspaceHierarchy()` (`src/shared/utils/useWorkspaceHierarchy.ts`) via Vite glob from `flows/**`. The flowplan files (`defineFlow`) in `flowplans/*.ts` declare step sequences; no router file is generated or needed.
 
 ---
 
@@ -299,27 +270,9 @@ export const settings = { theme: 'dark', language: 'en' }
 
 ## Mobile canvas
 
-On narrow viewports (or touch devices) the platform switches to `MobileCanvas` — a `BottomSheet`-based layout with full feature parity to the desktop canvas.
+On narrow viewports (or touch devices) the platform switches to `MobileCanvas` (`src/shared/components/mobile/MobileCanvas.tsx`) — a `BottomSheet`-based layout (`src/shared/components/mobile/BottomSheet.tsx`) with feature parity to the desktop canvas. For the exact current tab/rail structure, read `MobileCanvas.tsx` directly — this is UI layout detail that shifts with design iteration more often than most of this doc, so treat any specific tab list here as a starting point, not a guarantee.
 
-### Layout
-
-- **Main area** — device mockup fills the screen; BottomSheet slides up from the bottom.
-- **Bottom sheet tabs** — Inspect / Feedback / Settings (three top-level tabs).
-- **Inspect rail** (sub-tabs): Info · Simulator · Flow · Database · Sessions. Sessions tab is gated by `showSessionsFeature`.
-- **Feedback** — full `FeedbackContent` panel, same as desktop.
-- **Settings rail** (sub-tabs): Interface · Panel · Sessions · **Workspace**.
-
-### Workspace sub-tab
-
-The Workspace sub-tab shows the active workspace name and lets you switch to any other registered workspace. `switchWorkspace()` from `@platform/workspaces` is called on tap. This is the mobile equivalent of the desktop workspace dropdown in `WorkspaceBar`.
-
-### Active tab indicator
-
-Rail buttons use an inset left-border accent: `boxShadow: "inset 2px 0 0 <blue>"` + a 10% blue tinted background. This avoids layout shift from a real `borderLeft`.
-
-### `BottomSheet` drag behavior
-
-`BottomSheet` resets `dragOffset` to 0 via `handleClose` (a `useCallback` wrapper around the parent's `onClose`) whenever the sheet closes — whether via backdrop tap or drag-to-dismiss. This keeps the sheet's initial position clean on re-open without calling `setState` inside an effect.
+The Workspace switcher is reachable from mobile the same way as desktop — via `switchWorkspace()` from `useDashboard()`.
 
 ---
 
@@ -329,7 +282,7 @@ Rail buttons use an inset left-border accent: `boxShadow: "inset 2px 0 0 <blue>"
 
 - **Device frame** — phone / tablet / desktop / wearable with correct safe areas
 - **Zoom + pan** — keyboard shortcuts (see table below); zoom is tracked per device type (`zoomByType`) so switching devices restores their last zoom level
-- **keepFit mode** — device fills 90% of visible width and 80% of visible height (whichever is the binding constraint); toggled with `Cmd Shift 0` or `0`
+- **keepFit mode** — device fills a target fraction of the visible viewport (see `FIT_TARGET_W`/`FIT_TARGET_H` below); toggled with `Cmd Shift 0` or `0`
 - **Simulator panel** — connection mode, network speed, color-blind filters, blur
 - **Feedback** — comment wall, tags, screenshot attachment, export/import, badge count
 - **FlowLens mode** — toggle into session replay + analytics over the same canvas (build-gated, lazy). See `FLOWLENS.md`.
@@ -337,50 +290,31 @@ Rail buttons use an inset left-border accent: `boxShadow: "inset 2px 0 0 <blue>"
 
 ### Canvas architecture
 
-All canvas state lives in a `useReducer` (`canvasReducer.ts`). Constants are defined once in `canvasConfig.ts`.
+All canvas pan/zoom/fit state lives in a `useReducer` (`canvasReducer.ts`). Constants are defined once in `canvasConfig.ts`. Panel resize state (`usePanelLayout.ts`) is a separate hook, not part of the canvas reducer.
 
-**`canvasConfig.ts`** — single source of truth:
+**`canvasConfig.ts`** — single source of truth for canvas sizing/zoom:
 
-| Constant                | Value            | Meaning                                                     |
-| ----------------------- | ---------------- | ----------------------------------------------------------- |
-| `CANVAS_SIZE`           | `4000`           | Fixed panning surface (px)                                  |
-| `CANVAS_DEVICE_MARGIN`  | `0.95`           | Device must fit within this fraction of canvas              |
-| `FIT_TARGET_W`          | `0.9`            | Fraction of visible width the device fills in keepFit mode  |
-| `FIT_TARGET_H`          | `0.8`            | Fraction of visible height the device fills in keepFit mode |
-| `ZOOM_MIN` / `ZOOM_MAX` | `0.25` / `5`     | Zoom bounds                                                 |
-| `ZOOM_STEP`             | `0.1`            | Zoom increment per step                                     |
-| `LEFT_PANEL_MIN/MAX`    | `200` / `480` px | Left panel drag limits                                      |
-| `RIGHT_PANEL_MIN/MAX`   | `280` / `560` px | Right panel drag limits                                     |
+| Constant                                     | Value      | Meaning                                                      |
+| --------------------------------------------- | ---------- | -------------------------------------------------------------- |
+| `CANVAS_W` / `CANVAS_H`                      | `2000`/`2000` | Fixed panning surface (px)                                   |
+| `CANVAS_DEVICE_MARGIN`                       | `0.95`     | Device must fit within this fraction of canvas                |
+| `FIT_TARGET_W` / `FIT_TARGET_H`               | `0.9`/`0.8` | Fraction of visible width/height the device fills in keepFit  |
+| `ZOOM_MIN` / `ZOOM_MAX`                       | `0.25` / `5` | Zoom bounds                                                   |
+| `ZOOM_STEP`                                   | `0.1`      | Zoom increment per step                                       |
 
-**`canvasReducer.ts`** — state shape:
+Left/right panel resize bounds live in `src/core/layout/sidebarConfig.ts` (re-exported by `canvasConfig.ts`), not defined locally — check that file directly for current values, since resize bounds get tuned independently of canvas sizing.
 
-- `viewportW/H` — measured canvas viewport dimensions
-- `leftPanelW`, `rightPanelW` — current panel widths
+**`canvasReducer.ts`** — state shape (`CanvasState`):
+
+- `visibleW`/`visibleH` — last-measured visible canvas dimensions (excludes panels), updated by a `ResizeObserver` on the canvas scroll element — the browser's own layout is the source of truth
 - `fitScale` — computed fit scale for the current device and viewport
 - `keepFit` — boolean; when true, `scale` tracks `fitScale` continuously
 - `zoomByType` — per-device-type zoom map; switching device types restores their last zoom
-- `scale` — derived each action via `derive()`; equals `fitScale` when `keepFit` is on, else the stored per-type zoom
-- `scrollIntent: "center"` — set by actions that need the device re-centered; consumed by a `useLayoutEffect` and cleared by `SCROLL_DONE`
+- `scale` — derived, recomputed atomically inside the reducer
+- `scrollCenterCount` — increments every time the canvas should re-center; a counter (not a boolean) so a center→center request is still a visible dependency change
 - `fullscreen` — boolean
 
-Actions: `MEASURED`, `TOGGLE_KEEP_FIT`, `BREAK_KEEP_FIT`, `TOGGLE_FULLSCREEN`, `ZOOM_IN`, `ZOOM_OUT`, `RESET_ZOOM`, `SET_ZOOM`, `SET_PANEL_WIDTH`, `SCROLL_DONE`.
-
-The `MEASURED` action receives `effectiveRightW` — `RAIL_W` (40 px) when the right panel is collapsed, full width when open — so `computeFitScale` always uses the actual visible width.
-
-### Canvas layout
-
-`PreviewCanvas` root is a CSS Grid: `gridTemplateColumns: leftPanelW 1fr rightPanelW`, `gridTemplateRows: minmax(0, 1fr)`.
-
-- Left panel (col 1) and right panel (col 3) sit at `z-index: 2` — they visually overlay the canvas.
-- `CanvasContent` (canvas + scrollbars + device) spans `grid-column: 1 / -1` at `z-index: 0` — it fills the full grid width underneath the panels.
-- The scroll container (`canvas-scroll`) uses `position: absolute; top: 0; bottom: 0; left: var(--left-panel-w); right: var(--right-panel-w)` — inset by the panel widths so scrollbar tracks render in the visible canvas gap between panels, not hidden behind them.
-- `--left-panel-w` and `--right-panel-w` are CSS custom properties on the root div, inherited by the scroll container. They update live on every drag pixel — no React re-render is needed for scroll position changes.
-- Both scrollbars (vertical and horizontal) are always visible within the canvas area regardless of panel state or resizing.
-
-### Panel resizing
-
-- `livePanelW` state drives the CSS column widths live on every drag pixel via the CSS custom properties above.
-- The reducer's `SET_PANEL_WIDTH` action is fired debounced (300 ms) so `fitScale` is only recomputed after the drag settles — not on every pixel.
+Read `canvasReducer.ts`'s `CanvasAction` union directly for the exact current action list — it's the single source of truth and changes independently of this doc.
 
 ### Canvas keyboard shortcuts
 
@@ -405,16 +339,18 @@ The `MEASURED` action receives `effectiveRightW` — `RAIL_W` (40 px) when the r
 | `Cmd /`               | Open Action Center (searchable command palette)                       |
 | `Cmd Shift ?`         | Open keyboard shortcuts reference                                     |
 
+> See [CLAUDE.md](../CLAUDE.md#canvas-keyboard-shortcuts) for the maintained shortcut table — this doc and CLAUDE.md's have drifted from each other before (e.g. `Cmd Alt Shift P` for canvas↔preview toggle appears there but not here); treat CLAUDE.md as the more actively maintained of the two if they disagree.
+
 ### Simulator settings (from `useDashboard()`)
 
 When **Ignore all Simulator Settings** is enabled, all controls below it are dimmed and non-interactive.
 
 | Setting          | Type             | Values                             |
-| ---------------- | ---------------- | ---------------------------------- |
+| ---------------- | ---------------- | ----------------------------------- |
 | `connectionMode` | `ConnectionMode` | `"wifi" \| "mobile" \| "airplane"` |
 | `networkSpeed`   | `NetworkSpeed`   | `"strong" \| "weak" \| "offline"`  |
-| `colorBlindMode` | `ColorBlindMode` | `"none"` + 7 vision modes          |
-| `blurryVision`   | `number`         | 0–8, blur amount in px             |
+| `colorBlindMode` | `ColorBlindMode` | `"none"` + several vision modes    |
+| `blurryVision`   | `number`         | blur amount in px                  |
 
 ---
 
@@ -424,17 +360,14 @@ The feedback tab lets reviewers leave per-screen comments without leaving the br
 
 - Comments are attributed to **"Me"** while reviewing — author is set at export time
 - Each author gets a unique avatar color derived deterministically from their name
-- Team members defined in `src/features/feedback/teamMembers.ts` get suggested in the export author picker
-- **Wall sort order**: groups sorted by screen label (A→Z); comments within each group sorted by timestamp (oldest first)
+- Team members defined in `src/features/feedback/components/teamMembers.ts` get suggested in the export author picker
 - Screens that have comments show a muted comment icon in the sidebar screen list
-- **Local export**: MD tile downloads a shareable Markdown report (includes a `Tags:` line per comment), JSON tile downloads a re-importable backup — tiles are direct download buttons, no selection step
-- **Cloud export**: toggle via Action Center (`Cmd /` → "Push Feedback to Cloud"). Requires a JSONBin access key or master key (stored locally, never bundled). Pushes JSON to JSONBin; share the returned bin URL for the recipient to import via the Import modal's "From Cloud" tab.
+- **Local export**: MD tile downloads a shareable Markdown report, JSON tile downloads a re-importable backup
+- **Cloud export**: toggle via Action Center (`Cmd /` → "Push Feedback to Cloud"). Requires a JSONBin **scoped Access Key** — `src/features/feedback/cloud-sync/jsonbin.ts` runs `assertNotMasterKey()` before every push/fetch and **throws, refusing the request**, if a master key is detected (checks for the `$2a$` bcrypt marker JSONBin master keys carry). This is an enforced rejection, not just a recommendation — a master key genuinely cannot be used here. Pushes JSON to JSONBin; share the returned bin URL for the recipient to import via the Import modal's "From Cloud" tab.
 
 ### Action Center (`Cmd /`)
 
-A searchable command palette. Opens as a floating overlay on desktop and as a full-width panel on mobile.
-
-**Scroll behaviour** — the search row is `flexShrink: 0` (always visible); the results list below it is `flex: 1, overflowY: auto`. The outer overlay wrapper has a `maxHeight: 70vh` cap but does **not** itself scroll — only the results div scrolls. This keeps the search input pinned regardless of result count.
+A searchable command palette. Opens as a floating overlay on desktop and as a full-width panel on mobile. The results list scrolls independently (`flex-1 overflow-y-auto`) while the search input above it stays pinned.
 
 ---
 
@@ -448,12 +381,12 @@ The import modal accepts JSON and Markdown feedback files. Three input methods:
 | **File picker**     | Click the drop zone to open a file chooser                                     |
 | **Clipboard paste** | Click "Paste from Clipboard" — reads `navigator.clipboard.readText()` directly |
 
-Both JSON and MD are auto-detected by content (first character). Imports are deduplicated by `id` and merged with `isImported: true`. The `importCommentsFromText(text)` method on `FeedbackContext` accepts raw string content and handles both formats.
+Both JSON and MD are auto-detected by content. Imports are deduplicated by `id` and merged with `isImported: true`.
 
 ### Feedback keyboard shortcuts (within the Feedback tab)
 
 | Shortcut      | Action                                |
-| ------------- | ------------------------------------- |
+| ------------- | -------------------------------------- |
 | `Cmd K`       | Add comment                           |
 | `Cmd I`       | Open import modal                     |
 | `Cmd Shift F` | Toggle auto-filter for current screen |
@@ -462,10 +395,10 @@ Both JSON and MD are auto-detected by content (first character). Imports are ded
 
 ## Simulator controls authoring
 
-Each workspace has `lib/data/simulator.tsx` — a default-exported React component rendered inside the Simulator panel's custom controls tab. Use the platform primitives from `@core/layout/simulator-controls`:
+Each workspace has `lib/data/simulator.tsx` — a default-exported React component rendered inside the Simulator panel's custom controls tab. Use the platform primitives from `@features/simulator/controls` (barrel at `src/features/simulator/controls/index.ts` — see [CLAUDE.md](../CLAUDE.md#simulatorcontrols-inventory) for the full inventory):
 
 ```tsx
-import { ControlAccordion, SimControl, SimAction } from '@core/layout/simulator-controls'
+import { ControlAccordion, SimControl, SimAction } from '@features/simulator/controls'
 
 export default function WorkspaceSimulatorControls() {
   return (
@@ -485,16 +418,16 @@ export default function WorkspaceSimulatorControls() {
 
 ### `SimControl` — smart binding
 
-`bind` accepts any `db.*` path or a `DashboardContext` key. The control type is inferred automatically:
+`bind` accepts any `db.*` path. The control type is inferred automatically:
 
 | Value type               | Rendered as               |
-| ------------------------ | ------------------------- |
+| ------------------------ | -------------------------- |
 | `boolean`                | Toggle                    |
-| `string` with `options`  | Segmented control         |
-| `string` without options | Text input                |
-| `number`                 | Number input              |
-| `array`                  | Editable array            |
-| `object`                 | Editable key-value object |
+| `string` with `options`  | Segmented control          |
+| `string` without options | Text input                 |
+| `number`                 | Number input               |
+
+> `SimArrayEditor`/`SimObjectEditor` exist as files but are not exported from the `controls` barrel as of this writing — check [CLAUDE.md](../CLAUDE.md#simulatorcontrols-inventory) before assuming array/object binding is available.
 
 ### `ControlAccordion` visibility props
 
@@ -530,26 +463,26 @@ export const screenMeta = {
 }
 ```
 
-`EntryGuard` type: `(context: { db: any }) => boolean`
+`EntryGuard` type (`src/types/index.ts`): `(context: { db }) => boolean` — use `canEnter` to allow access only when a condition is true, `canNotEnter` to block access when a condition is true. Both can coexist on the same screen or flow; if either blocks, the guard fails.
 
-Guards control whether the sidebar shows the screen as locked. Both `canEnter` and `canNotEnter` can coexist — if either blocks, the guard fails.
+Guards control whether the sidebar shows the screen as locked.
 
 ---
 
 ## Export vs Build
 
-| Command           | Output                                                | Purpose                                                                                           |
-| ----------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `flowkit export`  | `dist-standalone/<outDir>/<name>-<date>-<HH-MM>.html` | Full Flowkit viewer, single self-contained HTML — share with designers / PMs, no install required |
-| `flowkit handoff` | `handoff/<name>-handoff-<date>.zip`                   | Pure React app — no Flowkit shell, recipient runs `npm install && npm run dev`                    |
+| Command           | Output                                                     | Purpose                                                                                            |
+| ----------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `flowkit export`  | `dist-standalone/index.html` by default (configurable filename via `USE_GENERIC_NAME` in `scripts/builders/export.js`) | Full Flowkit viewer, single self-contained HTML — share with designers / PMs, no install required |
+| `flowkit handoff` | `handoff/<name>-handoff-<date>.zip`                          | Pure React app — no Flowkit shell, recipient runs `npm install && npm run dev`                       |
 
-Output directory and naming are configured in `vite.config.standalone.ts` (`outDir`) and `scripts/builders/export.js` (`USE_GENERIC_NAME`). Old exports accumulate — never auto-deleted.
+Both are **repo-mode only** — see [CLI.md](CLI.md#export). Output directory is configured in `vite.config.standalone.ts` (`outDir`). Old exports accumulate — never auto-deleted.
 
 ---
 
 ## Agent bootstrap system
 
-Agent-ready workspaces are a core value prop: drop a coding agent in and it builds correctly and fast, without reading the whole codebase. Every workspace ships a **layered, lookup-first** file set, all generated from one platform spec (`scripts/platform/agent-spec.js`) so it never drifts.
+Agent-ready workspaces are a core value prop: drop a coding agent in and it builds correctly and fast, without reading the whole codebase. Every workspace ships a **layered, lookup-first** file set, all generated from one platform spec (`scripts/platform/agent-spec.js`, formatted by `scripts/platform/agent-sync.js`) so it never drifts.
 
 | File                                                                  | Purpose                                                                                                                       |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
@@ -560,15 +493,19 @@ Agent-ready workspaces are a core value prop: drop a coding agent in and it buil
 | `.agent/project.md`                                                   | Hand-owned product brief — flows, data model, decisions. **Never regenerated.**                                               |
 | `.agent/.agent-meta.json`                                             | Formatter state (agent, kit, language, spec version) for `agent:sync`.                                                        |
 
+> ⚠️ **Known gap (consumer mode):** `agent:sync` generates `.agent/platform.md` with repo-mode-only content (pointers to `Documentation/*.md`, `@platform`/`@shared` aliases) even when run inside a flat/multi-workspace consumer project, where neither exists. Confirmed live 2026-07-10 — see [CLI.md](CLI.md#agent-onboarding) for the full note. Treat its pointers/import-path examples as reference-only in consumer mode until fixed.
+
 **Read order for a cold agent:** memory file → `rules.md` → `INDEX.md` → (depth only when a row points there) → `platform.md` / `Documentation/*`.
 
-**Single source → many agents.** `agentSpec.js` holds the facts once; `agent.js` formats them into whichever agent's native file. Regenerate with `flowkit agent:sync` (also switches agent via `--agent:`). `docs/overview.md` remains the human-facing project doc — `.agent/` is agent-only.
+**Single source → many agents.** `agent-spec.js` holds the facts once; `agent-sync.js` formats them into whichever agent's native file. Regenerate with `flowkit agent:sync` (also switches agent via `--agent:`).
 
-For how an agent actually _works_ a workspace — the cold-start sequence, task recipes, and the directive grammar — see **`Documentation/AGENTS.md`**.
+For how an agent actually _works_ a workspace — the cold-start sequence, task recipes, and the directive grammar — see **[AGENTS.md](AGENTS.md)**.
 
 ---
 
 ## Workspace workflow
+
+**Repo mode:**
 
 ```bash
 flowkit nw:<name>                    # Create workspace
@@ -579,6 +516,16 @@ flowkit export                       # Export as standalone HTML viewer
 flowkit handoff                      # Build developer handoff zip
 ```
 
-Workspace switching is done via the browser UI (or `?workspace=<name>` URL param).
+Workspace switching is done via the browser UI.
+
+**Consumer mode (flat/multi-workspace):**
+
+```bash
+npm create flowkit-app@latest my-app     # or: npm create flowkit-workspace@latest my-project
+cd my-app
+flowkit plan:check
+flowkit status
+npm run dev / npm run build               # export/handoff are repo-mode only
+```
 
 Full command reference: [CLI.md](CLI.md)

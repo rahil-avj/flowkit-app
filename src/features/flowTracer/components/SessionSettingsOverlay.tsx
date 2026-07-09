@@ -59,7 +59,7 @@ export default function SessionSettingsOverlay({
       </div>
 
       {/* Body */}
-      <div className="overflow-y-auto p-3.5 flex flex-col gap-[18px] flex-1">
+      <div className="overflow-y-auto p-3.5 flex flex-col gap-4.5 flex-1">
         {/* Name template */}
         <div className="flex flex-col gap-1.5">
           <span className="text-ui-xs text-theme-text-muted font-bold tracking-[0.06em] uppercase">

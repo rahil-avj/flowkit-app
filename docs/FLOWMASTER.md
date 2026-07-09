@@ -2,6 +2,8 @@
 
 FlowMaster is Flowkit's flow engine — a proper state machine giving you conditional branching, isolated per-flow state, global mock database access, and a live debugger panel, all driven by flowplan files.
 
+**This doc covers all three deployment modes** (repo, flat, and multi-workspace consumer). Examples use repo-mode imports (`@platform/core/config`). In consumer mode (flat/multi-workspace), import `defineFlow` from `'flowkit'` instead — the API is identical. See [CLI.md](CLI.md#import-aliases) for details.
+
 ---
 
 ## Mental model
@@ -108,6 +110,7 @@ export default defineFlow({
 | `decisionNote` | Narrative note shown in the step list                          |
 | `annotation`   | Free-text sticky note shown on canvas node and step list       |
 | `db`           | Dot-path patch applied to the flow db when this step activates |
+| `simulator`    | Per-step simulator control visibility (add/hide/exclusive)     |
 | `forks`        | Inline conditional branches (see below)                        |
 
 ### Fork fields
@@ -172,12 +175,17 @@ export const screenMeta = {
 
 | Field          | Type                  | Purpose                                                                         |
 | -------------- | --------------------- | ------------------------------------------------------------------------------- |
+| `id`           | `string`              | Screen identifier (optional; auto-derived from file name if omitted)           |
+| `label`        | `string`              | Display name (optional; defaults to derived from component name)               |
 | `desc`         | `string`              | Short description shown in the sidebar                                          |
+| `devNotes`     | `string`              | Developer notes (not shown in sidebar)                                          |
 | `tags`         | `string[]`            | Filtering tags. Conventions: `role:`, `type:`, `state:`, `platform:`, `status:` |
 | `hasTag`       | `string`              | Sidebar badge label                                                             |
 | `isStandalone` | `boolean`             | Entry-point screen — not reached via back-nav                                   |
 | `canEnter`     | `({ db }) => boolean` | Allow guard — sidebar shows lock icon when `false`                              |
 | `canNotEnter`  | `({ db }) => boolean` | Block guard — sidebar shows lock icon when `true`                               |
+| `variantLabel` | `string`              | Human-readable label for A/B variants (only for `.variant.<serial>.tsx` files) |
+| `variantOrder` | `number`              | Sort position for A/B variants (lower = earlier; default = Infinity)           |
 
 ---
 
@@ -235,11 +243,11 @@ FlowMaster emits an event stream to the session recorder (FlowTracer) as the use
 
 - `flow.entered` / `flow.completed` / `flow.exited-early` / `flow.blocked`
 - `screen.visited` / `screen.dwell-end` / `screen.blocked`
-- `interaction.tap` / `double-tap` / `hover` / `swipe` / `effect` / `frustrated-click`
+- `interaction.tap` / `interaction.double-tap` / `interaction.hover` / `interaction.swipe` / `interaction.effect` / `interaction.frustrated-click`
 - `navigation.auto-advance`
 - **`flow.transition`** — emitted when a navigation resolves with a problem: a screen guard **blocks** it, or a step resolver **throws**. Carries `{ action, from, to, blocked?/error?, warnings[] }` so FlowLens replay shows _why_ a tap misbehaved, not just that it happened.
 
-Cursor positions are sampled (rAF, throttled) when the `cursorTracking` channel is on. Recording is always available; replaying it is the **FlowLens** mode. See `Documentation/FLOWLENS.md`.
+Cursor positions are sampled (rAF, throttled) when the `cursorTracking` channel is on. Recording is always available; replaying it is the **FlowLens** mode. See [FLOWLENS.md](FLOWLENS.md).
 
 ---
 

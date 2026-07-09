@@ -11,12 +11,25 @@ function getConfigPath(wsDir) {
   return path.join(wsDir, 'flowkit.config.ts')
 }
 
+// Fallback import line if a config file somehow has none to preserve (should
+// not happen for any real scaffolded file, repo-mode or flat-mode/standalone).
+const DEFAULT_IMPORT_LINE = `import { defineConfig } from 'flowkit'`
+
 /** Parse flowkit.config.ts into a plain JS object without TypeScript compilation. */
 function readConfig(wsDir) {
   const configPath = getConfigPath(wsDir)
   if (!fs.existsSync(configPath)) throw new Error(`flowkit.config.ts not found at ${configPath}`)
 
   let src = fs.readFileSync(configPath, 'utf8')
+  // Capture the import line verbatim rather than discarding it — repo-mode
+  // configs import defineConfig from '@platform/core/config', flat/standalone
+  // configs import it from the published 'flowkit' package. Hardcoding either
+  // one in writeConfig() below would silently break the other mode's build
+  // the next time any authoring command mutates the file (confirmed live:
+  // create:flow rewrote a flat-mode project's working import into the
+  // repo-mode path, and nothing caught it until `npm run build` failed).
+  const importMatch = src.match(/^import\s+.*$/m)
+  const importLine = importMatch ? importMatch[0] : DEFAULT_IMPORT_LINE
   // Strip the import line (always the same single line)
   src = src.replace(/^import\s+.*\n/m, '')
   // Replace `export default defineConfig(` with a returnable expression
@@ -27,6 +40,7 @@ function readConfig(wsDir) {
     workspace: raw.workspace || { name: path.basename(wsDir) },
     flows: raw.flows || [],
     screenOrder: raw.screenOrder || {},
+    _importLine: importLine,
   }
 }
 
@@ -58,7 +72,7 @@ function writeConfig(wsDir, config) {
   }
 
   const lines = [
-    `import { defineConfig } from '@platform/core/config'`,
+    config._importLine || DEFAULT_IMPORT_LINE,
     ``,
     `export default defineConfig({`,
     `  workspace: { name: '${config.workspace.name}' },`,

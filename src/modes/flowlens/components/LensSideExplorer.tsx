@@ -180,7 +180,7 @@ export default function LensSideExplorer({
             <button
               onClick={() => fileInputRef.current?.click()}
               title="Import session JSON"
-              className="flex items-center gap-1 text-ui-2xs font-semibold text-theme-text-muted bg-transparent border border-theme-border rounded-[6px] py-[3px] px-2 cursor-pointer hover:text-theme-text-secondary transition-colors shrink-0"
+              className="flex items-center gap-1 text-ui-2xs font-semibold text-theme-text-muted bg-transparent border border-theme-border rounded-md py-0.75 px-2 cursor-pointer hover:text-theme-text-secondary transition-colors shrink-0"
             >
               <Upload size={11} />
             </button>
@@ -317,7 +317,7 @@ function SessionRow({
           {meta.name}
         </span>
         {entry.source === 'library' && entry.studyId && (
-          <span className="text-ui-2xs text-theme-text-disabled shrink-0 truncate max-w-[80px]">
+          <span className="text-ui-2xs text-theme-text-disabled shrink-0 truncate max-w-20">
             {entry.studyId}
           </span>
         )}
@@ -332,7 +332,7 @@ function SessionRow({
           </button>
         )}
       </div>
-      <div className="flex items-center gap-[10px] flex-wrap text-[10.5px] text-theme-text-muted">
+      <div className="flex items-center gap-2.5 flex-wrap text-[10.5px] text-theme-text-muted">
         <span className="flex items-center gap-0.5">
           <Clock size={10} /> {fmtDate(meta.startTime)}
         </span>

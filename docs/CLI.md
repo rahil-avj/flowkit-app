@@ -2,7 +2,19 @@
 
 Command-line interface for managing workspaces, flows, screens, FlowPlans, sessions, and workspace data.
 
+**This CLI runs in three modes**, and most of this doc's examples use repo-mode paths (`workspaces/<ws>/...`). Where a command behaves differently or isn't available in a mode, it's called out explicitly.
+
+| Mode | Where it applies | Layout |
+| --- | --- | --- |
+| **Repo mode** | This monorepo checkout | `workspaces/<name>/` — multiple workspaces, switched via browser UI |
+| **Flat mode** | A project scaffolded by `create-flowkit-app` | Project root IS the one workspace — no `workspaces/` dir |
+| **Multi-workspace mode** | A project scaffolded by `create-flowkit-workspace`, or a flat project after `flowkit convert:multi` | Sibling workspace folders at project root (`workspace-1/`, `app-b/`, …), declared in `package.json`'s `flowkit.workspaces` |
+
+Flat and multi-workspace mode are collectively "consumer mode" below. See [Workspaces (flat/multi-workspace consumer mode)](#workspaces-flatmulti-workspace-consumer-mode) for the commands specific to those two.
+
 ## Setup
+
+**Repo mode:**
 
 ```bash
 npm install
@@ -13,6 +25,15 @@ Or run without linking:
 
 ```bash
 node scripts/flowkit.js <command>
+```
+
+**Consumer mode** — `flowkit` is a `devDependency` installed by the scaffolder, already on your `PATH` via `node_modules/.bin`:
+
+```bash
+npx create-flowkit-app@latest my-app          # flat mode
+npx create-flowkit-workspace@latest my-project # multi-workspace mode
+cd my-app  # or my-project
+flowkit <command>
 ```
 
 ---
@@ -40,7 +61,9 @@ flowkit help
 
 ---
 
-## Workspaces
+## Workspaces (repo mode)
+
+> **`nw`/`rw`/`watch` are repo-mode only** — they manage `workspaces/<name>/` directories inside this monorepo checkout and exit with an error pointing at the consumer-mode equivalents if run elsewhere. `status` (bottom of this section) is the exception — confirmed working in all three modes, included here because it's a workspace-lifecycle command, not because it's repo-mode-specific. See [Workspaces (flat/multi-workspace consumer mode)](#workspaces-flatmulti-workspace-consumer-mode) for the consumer-mode equivalents of `nw`/`rw`.
 
 ### `nw` / `new-workspace` — Create workspace
 
@@ -100,10 +123,13 @@ Kits are applied via the `@kit` CSS alias — no files are copied into the works
 
 ### `flowkit.config.ts` anatomy
 
-The workspace manifest is authored with `defineConfig()` from `@platform/core/config`:
+The workspace manifest is authored with `defineConfig()` — imported from `@platform/core/config` in repo mode, or from `'flowkit'` in consumer mode (flat/multi-workspace):
 
 ```typescript
+// repo mode
 import { defineConfig } from '@platform/core/config'
+// consumer mode (flat/multi-workspace)
+import { defineConfig } from 'flowkit'
 
 export default defineConfig({
   workspace: { name: 'MyApp', description: 'What this prototype is.' }, // optional
@@ -142,9 +168,11 @@ export default defineConfig({
 | `startScreen`        | Default screen id — cold load, device home button, reset-to-first (optional)      |
 | `defaultDevice`      | Default device shell/mockup label, must match a `DevicePreset.label` (optional)   |
 | `defaultOrientation` | Default orientation, `"portrait"` or `"landscape"` (optional)                     |
-| `flows`              | Explicit flow ordering (flat-layout workspaces)                                   |
+| `flows`              | Explicit flow ordering (flat-layout workspaces — see note below)                  |
 | `screenOrder`        | Explicit per-flow screen ordering, keyed by flow id                               |
 | `projects`           | Nested-layout only — per-project `flows`/`screenOrder` (skip for flat workspaces) |
+
+> **"Flat-layout" here is unrelated to flat *mode*.** `flows`/`screenOrder` vs. `projects` describes whether a single workspace has a `projects/` subdivision layer inside it — a repo-mode-and-consumer-mode-agnostic authoring choice. It has nothing to do with flat mode (one implicit workspace, no `workspaces/` dir) vs. multi-workspace mode (sibling workspace folders) described elsewhere in this doc. Both `flat-layout` and `nested-layout` workspaces exist identically in repo mode, flat mode, and multi-workspace mode.
 
 Per-flowplan playback can override the home-button target for the duration of that flow via `homeScreen` — see [FlowPlan anatomy](#flowplan-anatomy) below.
 
@@ -174,6 +202,8 @@ Switches to the workspace, starts the dev server (`npm run dev`), then watches `
 
 ### `status` — Workspace health snapshot
 
+Works in all three modes — confirmed via live test in flat and multi-workspace mode. Takes the workspace name via colon-suffix only (`status:<name>`), not the `--workspace:<name>` flag the Authoring family uses.
+
 ```bash
 flowkit status
 flowkit status:<name>
@@ -189,18 +219,85 @@ Prints a compact health report for the active workspace:
 
 ---
 
+## Workspaces (flat/multi-workspace consumer mode)
+
+Consumer-mode equivalent of the repo-mode `nw`/`rw`/`watch` commands above. Mode and workspace list are declared explicitly in the consumer project's `package.json` under a `flowkit` key — never inferred from folder shape:
+
+```json
+{
+  "flowkit": {
+    "mode": "multi",
+    "workspaces": ["workspace-1", "app-b"]
+  }
+}
+```
+
+Absent `flowkit` key (or `mode` omitted) means flat mode — the project root itself is the one implicit workspace.
+
+### `convert:multi` — Convert flat mode to multi-workspace mode
+
+```bash
+flowkit convert:multi
+flowkit convert:multi --name:my-workspace
+```
+
+Wraps the project root's `flowkit.config.ts`/`index.ts`/`flows/`/`flowplans/`/`lib/` (plus `.flowkit/`, `.agent/`, `.flowkit-feedback.json` if present) into a new folder — `workspace-1/` by default, or `--name:<id>`. Rewrites `vite.config.ts` to the multi-workspace template and sets `package.json`'s `flowkit.mode`/`flowkit.workspaces` accordingly. Staged move with rollback — a failure partway through leaves the project exactly as it was before running the command, confirmed via induced-failure test.
+
+Prints a hint for adding another workspace afterward; does **not** scaffold a second workspace itself.
+
+### `convert:flat` — Collapse multi-workspace mode back to flat
+
+```bash
+flowkit convert:flat                    # only valid with exactly one workspace left
+flowkit convert:flat --from:app-b       # pick which workspace survives (others must not exist, or pass --all)
+flowkit convert:flat --from:app-b --all # delete every other workspace first, then collapse app-b to root
+```
+
+Moves the chosen workspace's content back up to project root, rewrites `vite.config.ts` to the flat template, and clears `package.json`'s `flowkit` key entirely. Refuses (rather than guessing) if multiple workspaces exist and neither `--from` nor `--all` disambiguates which one survives. `--all` requires typed confirmation before deleting the non-surviving workspaces.
+
+### `create:workspace` — Add a workspace
+
+```bash
+flowkit create:workspace --name:app-b --lang:ts
+flowkit create:workspace          # prompts for name and language interactively
+```
+
+Multi-workspace mode only. Scaffolds a new sibling folder with the same demo content as `create-flowkit-workspace`'s own initial workspace, and appends it to `package.json`'s `flowkit.workspaces`. This is the primary way to add a workspace — hand-creating a folder and manually editing `flowkit.workspaces` works too, but there's no discovery: an unlisted folder is not a workspace no matter what's inside it.
+
+### `remove:workspace` — Remove a workspace
+
+```bash
+flowkit remove:workspace --name:app-b
+flowkit remove:workspace          # prompts to select from the list
+```
+
+Multi-workspace mode only. Requires typed confirmation (the workspace name, not just `y`/`n`) before deleting — same pattern as repo-mode's `rw`. Removes the folder and its entry in `flowkit.workspaces`.
+
+### `rename:workspace` — Rename a workspace
+
+```bash
+flowkit rename:workspace app-b app-c
+```
+
+Multi-workspace mode only. Renames the folder and updates `flowkit.workspaces` in place; the workspace's own `flowkit.config.ts` `workspace.name` field is not required to match and isn't auto-updated.
+
+---
+
 ## FlowPlans
 
 FlowPlans are TypeScript files that define scripted journeys with conditional forks, db patches, and action notes. They are compiled at runtime by `compileFlowplan.ts`.
 
-**Storage location:** `workspaces/<ws>/flowplans/<Name>.ts`
+**Storage location:** `workspaces/<ws>/flowplans/<Name>.ts` (repo mode) or `flowplans/<Name>.ts` at the workspace root (consumer mode — flat: project root; multi-workspace: inside the workspace's own folder).
 
 ### FlowPlan anatomy
 
-A FlowPlan is authored with `defineFlow()` from `@platform/core/config`:
+A FlowPlan is authored with `defineFlow()` — imported from `@platform/core/config` in repo mode, or from `'flowkit'` in consumer mode:
 
 ```typescript
+// repo mode
 import { defineFlow } from '@platform/core/config'
+// consumer mode (flat/multi-workspace)
+import { defineFlow } from 'flowkit'
 
 export default defineFlow({
   id: 'checkout-flow', // required — unique plan id
@@ -304,6 +401,12 @@ Static lint — validates that each flowplan file exports a valid object with `i
 ## Authoring
 
 CRUD commands for editing the content inside a workspace — flows, screens, flowplan steps, and shared components. Every command accepts `--workspace:<name>` (optional; defaults to the active workspace) and exits 1 with a red `✗` message on any validation failure. IDs must be kebab-case (`^[a-z][a-z0-9-]*$`) unless noted otherwise.
+
+Work identically across all three modes. "Active workspace" (the default when `--workspace` is omitted) resolves differently per mode:
+
+- **Repo mode** — `src/workspaces.json`'s `active` field, set by the browser UI or CLI.
+- **Flat mode** — the one implicit workspace (project root); `--workspace` has nothing else to target.
+- **Multi-workspace mode** — the first entry in `package.json`'s `flowkit.workspaces` array. Pass `--workspace:<name>` to target a different one (e.g. `flowkit create:flow --name:checkout --workspace:app-b`).
 
 ### Flows
 
@@ -493,6 +596,8 @@ Finds the fork by an exact match on `label: "Fork label"` **(double-quoted only*
 
 ## Export
 
+> **Repo mode only.** `export`/`export:full`/`handoff` all reject with an error in consumer mode (flat or multi-workspace) — confirmed live: `✗ flowkit export is not available in author (flat) projects. Use your project's own build command for now: npm run build`. Use `npm run build` directly in a scaffolded project instead.
+
 ### `export` — Export workspace as standalone HTML viewer
 
 ```bash
@@ -519,11 +624,11 @@ By default the standalone export strips FlowLens (replay mode) so the bundle sta
 
 ## Sessions (FlowTracer / FlowLens)
 
-FlowTracer records prototype sessions to the browser's IndexedDB; FlowLens replays them. These commands manage the **committed session library** on disk — `workspaces/<ws>/lib/flowLens/sessions/<study>/`.
+Works in all three modes — confirmed via `sessions:ls` in a scaffolded flat-mode project. FlowTracer records prototype sessions to the browser's IndexedDB; FlowLens replays them. These commands manage the **committed session library** on disk — `workspaces/<ws>/lib/flowLens/sessions/<study>/` (repo mode) or `lib/flowLens/sessions/<study>/` at the workspace root (consumer mode).
 
 > **Browser → disk bridge:** The CLI cannot read IndexedDB directly. Export a session from the app's Export overlay to get a `.json` file, then import it with `sessions:import`. Alternatively, in dev mode, use the Archive icon in the FlowLens Recorded tab to promote a session to the library without leaving the browser.
 
-All commands default to the **active** workspace; append `:<name>` to target another (e.g. `sessions:ls:other`).
+All commands default to the **active** workspace (see [Authoring](#authoring) above for how "active" resolves per mode); append `:<name>` to target another workspace (e.g. `sessions:ls:other`) — note this is a different convention from Authoring's `--workspace:<name>` flag.
 
 ---
 
@@ -590,10 +695,13 @@ Validates the file is a `SessionExport`, checks `meta.workspaceId` matches the t
 
 ### `sessions:export` / `se` — Export a committed session back to disk
 
+The colon segment (if present) is the **workspace**, not the session — the session id/name/filename is always a separate argument:
+
 ```bash
-flowkit sessions:export:<id|name>
-flowkit sessions:export:<id|name> --dest ./handoffs/
-flowkit se:<name>
+flowkit sessions:export <id|name|file>              # active workspace
+flowkit sessions:export:<ws> <id|name|file>          # specific workspace
+flowkit sessions:export:<ws> <id|name|file> --dest ./handoffs/
+flowkit se:<ws> <id|name|file>                       # short alias, same rule
 ```
 
 Reads a session from the committed library by id, name, or filename and writes it to `--dest` (default: `./<slug>-<id>.flowkit-session.json`).
@@ -703,7 +811,7 @@ flowkit sessions:brief:<ws> --append # same as --agent
 
 ## Feedback
 
-Feedback comments live in the browser's local storage during active sessions. These commands let you commit a snapshot to disk (`workspaces/<ws>/.flowkit-feedback.json`) so it travels with the workspace and can be reviewed without opening the app.
+Works in all three modes — confirmed via `feedback:ls` in a scaffolded flat-mode project. Feedback comments live in the browser's local storage during active sessions. These commands let you commit a snapshot to disk (`workspaces/<ws>/.flowkit-feedback.json` in repo mode, `.flowkit-feedback.json` at the workspace root in consumer mode) so it travels with the workspace and can be reviewed without opening the app.
 
 > **UI bridge:** The feedback panel's "Export" button writes a JSON file and can emit the corresponding `flowkit feedback:import <file>` command — paste it to commit the snapshot.
 
@@ -740,6 +848,8 @@ Lists comments from the committed snapshot: reviewer, screen, status, short text
 
 Every workspace ships an **agent-ready** file set so a coding agent can start building immediately without reading the whole codebase. All files are generated from a single platform spec (`scripts/platform/agent-spec.js`).
 
+> ⚠️ **Known gap (as of 2026-07-10): `agent:sync` generates repo-mode-only content even in consumer mode.** Confirmed live in a scaffolded flat-mode project — `.agent/platform.md` points at `Documentation/*.md` files that don't ship to consumer projects at all, and references `@shared`/`@platform` path aliases that don't exist outside this repo (consumer-mode screens import from `'flowkit'` instead — see [Writing a screen](../README.md#writing-a-screen)). The command itself runs successfully and produces valid files (`INDEX.md`, `rules.md`, `platform.md`, memory file) — the *content* of `platform.md` just assumes repo mode unconditionally. Treat its pointers/import-path examples as reference-only in consumer mode until this is fixed.
+
 **Read order for a cold agent:**
 
 1. **memory file** (`CLAUDE.md` / `AGENTS.md` / `.cursor/rules/flowkit.mdc`) — auto-ingested; identity, read-order, hardest directives
@@ -762,6 +872,8 @@ Re-emits `.agent/INDEX.md`, `rules.md`, `platform.md`, and the memory file. Neve
 
 ## Build (developer handoff)
 
+> **Repo mode only** — see the note at the top of [Export](#export).
+
 ### `handoff` — Generate developer handoff zip
 
 ```bash
@@ -777,16 +889,22 @@ Output: `<name>-handoff-<date>.zip` at the project root.
 
 ## Import aliases
 
+**Repo mode:**
+
 | Alias         | Resolves to            |
 | ------------- | ---------------------- |
 | `@platform/`  | `src/`                 |
 | `@workspace/` | `workspaces/<active>/` |
 
+**Consumer mode (flat/multi-workspace):** no `@platform`/`@workspace` aliases — screens and `flowkit.config.ts` import directly from the `'flowkit'` package instead (`import { defineConfig } from 'flowkit'`, `import type { FlowScreenProps } from 'flowkit'`). The `flowkit/vite` plugin (`scripts/helpers/vite-plugin.js`) generates equivalent virtual modules (`virtual:flowkit/config|screens|flowplans|workspace`) from `flowkit.config.ts` + filesystem globs, resolved relative to the active workspace folder in multi-workspace mode (`flowkit.workspaces[0]` by default) or project root in flat mode.
+
 ---
 
 ## State
 
-flowkit tracks the active workspace in `src/workspaces.ts`. CLI state is stored in `scripts/.flowkit-state.json` — local only, not committed.
+**Repo mode:** flowkit tracks the active workspace in `src/workspaces.json`/`src/workspaces.ts`. CLI state is stored in `scripts/.flowkit-state.json` — local only, not committed.
+
+**Consumer mode:** mode and workspace list live in the project's own `package.json` under the `flowkit` key (see [Workspaces (flat/multi-workspace consumer mode)](#workspaces-flatmulti-workspace-consumer-mode)) — committed, not local state. There is no separate active-workspace pointer yet; the first entry in `flowkit.workspaces` is always what `npm run dev`/`npm run build` serve.
 
 ---
 
@@ -794,14 +912,24 @@ flowkit tracks the active workspace in `src/workspaces.ts`. CLI state is stored 
 
 Commands grouped by item type. Click the heading to jump to the full section.
 
-### [Workspaces](#workspaces)
+### [Workspaces (repo mode)](#workspaces-repo-mode)
 
-| Command                     | Alias | Description               |
-| --------------------------- | ----- | ------------------------- |
-| `new-workspace[:<name>]`    | `nw`  | Create workspace          |
-| `remove-workspace[:<name>]` | `rw`  | Remove workspace          |
-| `watch[:<name>]`            | —     | Watch for file changes    |
-| `status[:<name>]`           | —     | Workspace health snapshot |
+| Command                     | Alias | Description                                  |
+| --------------------------- | ----- | --------------------------------------------- |
+| `new-workspace[:<name>]`    | `nw`  | Create workspace (repo mode only)             |
+| `remove-workspace[:<name>]` | `rw`  | Remove workspace (repo mode only)             |
+| `watch[:<name>]`            | —     | Watch for file changes (repo mode only)       |
+| `status[:<name>]`           | —     | Workspace health snapshot (all modes)         |
+
+### [Workspaces (flat/multi-workspace consumer mode)](#workspaces-flatmulti-workspace-consumer-mode)
+
+| Command                             | Alias | Description                                    |
+| ------------------------------------ | ----- | ----------------------------------------------- |
+| `convert:multi [--name:<id>]`        | —     | Convert flat mode to multi-workspace mode       |
+| `convert:flat [--from:<id>] [--all]` | —     | Collapse multi-workspace mode back to flat      |
+| `create:workspace [--name:<id>]`     | —     | Add a workspace (multi-workspace mode only)     |
+| `remove:workspace [--name:<id>]`     | —     | Remove a workspace (multi-workspace mode only)  |
+| `rename:workspace <old> <new>`       | —     | Rename a workspace (multi-workspace mode only)  |
 
 ### [FlowPlans](#flowplans)
 
@@ -842,7 +970,7 @@ Commands grouped by item type. Click the heading to jump to the full section.
 | ---------------------------- | ----- | --------------------------------------- |
 | `sessions:ls`                | —     | List committed sessions                 |
 | `sessions:import <file>`     | —     | Import a session into committed library |
-| `sessions:export:<id\|name>` | `se`  | Export a committed session to disk      |
+| `sessions:export[:<ws>] <id\|name\|file>` | `se`  | Export a committed session to disk (workspace via colon, target always a separate arg) |
 | `sessions:check`             | —     | Validate the session library            |
 | `sessions:stats`             | —     | Library roll-up stats                   |
 | `sessions:sample`            | —     | Generate a synthetic test session       |
@@ -864,7 +992,7 @@ Commands grouped by item type. Click the heading to jump to the full section.
 | `feedback:dump`          | `fd`  | Export committed feedback to disk |
 | `feedback:ls`            | —     | List committed comments           |
 
-### [Export & Handoff](#export)
+### [Export & Handoff](#export) — repo mode only
 
 | Command                | Alias | Description                       |
 | ---------------------- | ----- | --------------------------------- |

@@ -2,6 +2,7 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { readFlowkitManifest, isMultiMode } from './flowkit-manifest.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export const ROOT = path.resolve(__dirname, '../..')
@@ -72,23 +73,50 @@ export function isRepoMode() {
 /**
  * Resolve the root directory for a workspace's files.
  * Repo mode: ROOT/workspaces/<name>
- * Flat mode: process.cwd() (the author project root)
+ * Flat mode (consumer project, no flowkit.mode: "multi" declared): process.cwd()
+ *   — the author project root is the one implicit workspace; `name` is ignored,
+ *   same as always.
+ * Multi-workspace mode (consumer project, flowkit.mode: "multi" in package.json):
+ *   process.cwd()/<name> if `name` is a real entry in flowkit.workspaces, else
+ *   process.cwd()/<first workspace> — matches the same "first entry" convention
+ *   the generated vite.config.ts uses (scripts/helpers/workspace-template.js's
+ *   callers), so `flowkit create:flow` (no --workspace flag) and `npm run dev`
+ *   target the same workspace by default.
+ *
+ * Without this branch, every authoring command (create:flow, create:screen,
+ * components:ls, etc.) run from a multi-workspace project's root always
+ * resolved to root itself — never a named workspace subfolder — silently
+ * operating on nothing or the wrong directory. Confirmed live: components:ls
+ * reported zero components immediately after `convert:multi` moved
+ * .flowkit/components.json into workspace-1/, because workspacePath('workspace-1')
+ * returned project root, not workspace-1/.
  */
 export function workspacePath(name) {
   if (isRepoMode()) return path.join(ROOT, 'workspaces', name)
-  return process.cwd()
+  const cwd = process.cwd()
+  if (!isMultiMode(cwd)) return cwd
+  const { workspaces } = readFlowkitManifest(cwd)
+  const resolved = name && workspaces.includes(name) ? name : workspaces[0]
+  return resolved ? path.join(cwd, resolved) : cwd
 }
 
 /**
  * Resolve the active workspace's display name.
  * Flat mode: the author project has exactly one implicit workspace — use its
  * directory's own name rather than a hardcoded placeholder.
+ * Multi-workspace mode: the first entry in flowkit.workspaces (see workspacePath()
+ * above for why "first entry" is the shared default convention).
  * Repo mode: read from src/workspaces.json, falling back to the first
  * workspace directory found.
  */
 export function getActiveWorkspaceName() {
   if (!isRepoMode()) {
-    return path.basename(process.cwd())
+    const cwd = process.cwd()
+    if (isMultiMode(cwd)) {
+      const { workspaces } = readFlowkitManifest(cwd)
+      if (workspaces[0]) return workspaces[0]
+    }
+    return path.basename(cwd)
   }
   try {
     const data = readWorkspacesJson()
@@ -119,13 +147,26 @@ export function requireRepoMode(commandLabel, flatModeHint) {
 /**
  * Hard safety net for any code path about to recursively delete a named
  * workspace's directory. Throws rather than deleting if the resolved path
- * collapses onto ROOT, CWD, or a filesystem root — which should never happen
- * for a *named* workspace, and only would if isRepoMode()/workspacePath()
- * regress the way they did once before (see note above isRepoMode()).
+ * collapses onto ROOT or a filesystem root — which should never happen for a
+ * *named* workspace, and only would if isRepoMode()/workspacePath() regress
+ * the way they did once before (see note above isRepoMode()).
+ *
+ * process.cwd() is unsafe to flag unconditionally: in repo mode a named
+ * workspace should always be a subdirectory of ROOT, never cwd itself, so
+ * cwd collapsing onto wsDir is a real misresolution. In flat mode, though,
+ * workspacePath() correctly returns process.cwd() for every call — the
+ * author project root IS the one implicit workspace by design — so this
+ * guard must not treat that as unsafe there, or every authoring/CRUD command
+ * (create:flow, create:screen, etc.) refuses to run in a real flat-mode
+ * project. Confirmed by running the authoring commands end-to-end against a
+ * flat-mode scaffold: this guard fired on the very first call before the fix.
  */
 export function assertScopedWorkspaceDir(wsDir, name) {
   const resolved = path.resolve(wsDir)
-  const unsafe = [ROOT, path.dirname(ROOT), process.cwd(), path.parse(resolved).root]
+  const unsafe = [ROOT, path.dirname(ROOT), path.parse(resolved).root]
+  // Only repo mode expects a named workspace to be a SUBdirectory of cwd —
+  // flat mode's workspacePath() correctly resolves to cwd itself.
+  if (isRepoMode()) unsafe.push(process.cwd())
   if (!name || unsafe.some(p => path.resolve(p) === resolved)) {
     throw new Error(
       `Refusing to delete unsafe path "${resolved}" for workspace "${name}". ` +

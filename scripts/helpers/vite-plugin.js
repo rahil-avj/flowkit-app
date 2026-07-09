@@ -260,6 +260,16 @@ export function flowkit(options = {}) {
   const cwd = options.workspaceRoot
     ? path.resolve(process.cwd(), options.workspaceRoot)
     : process.cwd()
+  // Two independent things `workspaceRoot` used to conflate into one flag:
+  //   1. which folder to read flowkit.config.ts/flows/flowplans/lib from (cwd, above)
+  //   2. whether flat-mode aliases (@platform/@core/@features/etc) need supplying
+  // Repo mode passes workspaceRoot AND already supplies its own aliases in the
+  // host vite.config.ts (see this repo's own vite.config.ts) — standalone
+  // defaults to false there. A standalone multi-workspace consumer project
+  // (create-flowkit-workspace) has no host vite.config.ts of its own to supply
+  // aliases, even though it still needs workspaceRoot to pick which workspace
+  // folder to serve — pass `standalone: true` explicitly for that case.
+  const standalone = options.standalone ?? !options.workspaceRoot
   let config = {}
   // Cache generated virtual module source; cleared on relevant file changes
   const cache = new Map()
@@ -304,16 +314,18 @@ export function flowkit(options = {}) {
     name: 'flowkit',
 
     config() {
-      // In flat mode, engine source lives in node_modules/flowkit/src (or a symlink
-      // to it). Point all @platform/* aliases at the logical symlink path so that
-      // react/react-dom resolve from the author project's node_modules rather than
-      // the symlink target's directory. preserveSymlinks: true enforces this.
-      const engineSrc = options.workspaceRoot
-        ? ENGINE_SRC
-        : path.join(cwd, 'node_modules/flowkit/src')
-      const flatAliases = options.workspaceRoot
-        ? {}
-        : {
+      // In standalone mode, engine source lives in node_modules/flowkit/src (or a
+      // symlink to it), resolved from the actual project root (process.cwd()) —
+      // NOT from `cwd`, which may be a workspace subfolder in the multi-workspace
+      // case, not the directory containing node_modules. Point all @platform/*
+      // aliases at the logical symlink path so that react/react-dom resolve from
+      // the author project's node_modules rather than the symlink target's
+      // directory. preserveSymlinks: true enforces this.
+      const engineSrc = standalone
+        ? path.join(process.cwd(), 'node_modules/flowkit/src')
+        : ENGINE_SRC
+      const flatAliases = standalone
+        ? {
             '@platform': engineSrc,
             '@core': path.join(engineSrc, 'core'),
             '@features': path.join(engineSrc, 'features'),
@@ -322,38 +334,44 @@ export function flowkit(options = {}) {
             '@kit': path.join(engineSrc, 'kits/shared'),
             flowkit: path.join(engineSrc, 'core/config/index.ts'),
           }
+        : {}
       return {
-        define: options.workspaceRoot
-          ? {}
-          : { 'import.meta.env.VITE_SINGLE_WORKSPACE': JSON.stringify('true') },
+        define: standalone
+          ? { 'import.meta.env.VITE_SINGLE_WORKSPACE': JSON.stringify('true') }
+          : {},
         resolve: {
           alias: { '@workspace': cwd, ...flatAliases },
           dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
           // Keep symlink identity intact so react/react-dom resolve from the
           // author project's node_modules, not the symlink target's directory.
-          preserveSymlinks: !options.workspaceRoot,
+          preserveSymlinks: standalone,
         },
         optimizeDeps: {
           // Do not pre-bundle flowkit or any of its internal alias paths.
           // Pre-bundling causes dual module instances: App.tsx loads FeedbackContext
           // via a relative path (raw ESM) while KitSideInspector loads via @platform
           // alias (pre-bundled chunk) → two createContext() calls → Provider/hook mismatch.
-          exclude: options.workspaceRoot
-            ? []
-            : ['flowkit', '@platform', '@core', '@features', '@shared', '@kit', '@flowlens'],
+          exclude: standalone
+            ? ['flowkit', '@platform', '@core', '@features', '@shared', '@kit', '@flowlens']
+            : [],
         },
         server: {
           fs: {
-            // cwd = the author project root (flat mode) or active workspace dir
-            // (repo mode) — the author/dev's own files.
+            // cwd = where flowkit.config.ts/flows/flowplans/lib live — the
+            // project root itself (flat mode, single-workspace standalone),
+            // or a workspace subfolder under the project root (multi-workspace
+            // standalone, or repo mode's active workspace dir).
+            // process.cwd() = the actual project root where vite.config.ts and
+            // node_modules live — always needed so Vite can serve index.html
+            // and resolve node_modules, even when cwd above is a subfolder of it.
             // dirname(ENGINE_SRC) = wherever flowkit's own source physically
-            // lives: node_modules/flowkit (flat mode) or this repo's own root
-            // (repo mode, since ENGINE_SRC is computed from this plugin
+            // lives: node_modules/flowkit (standalone mode) or this repo's own
+            // root (repo mode, since ENGINE_SRC is computed from this plugin
             // file's own location — see top of file). In repo mode this MUST
             // resolve to the real repo root, not the workspace subdirectory,
             // or Vite can't serve the root index.html once a workspace is
             // active (server.fs.allow narrows away from it → 403).
-            allow: [cwd, path.dirname(ENGINE_SRC)],
+            allow: [cwd, process.cwd(), path.dirname(ENGINE_SRC)],
           },
         },
       }

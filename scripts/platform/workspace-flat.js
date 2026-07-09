@@ -23,7 +23,95 @@ import { prompt, selectFromList } from '../helpers/prompt.js'
 import { g, r, b, d, c } from '../helpers/colors.js'
 import { writeWorkspaceContent } from '../helpers/workspace-template.js'
 
-const WORKSPACE_ENTRIES = ['flowkit.config.ts', 'index.ts', 'flows', 'flowplans', 'lib']
+// Everything that lives at a workspace's own root and must move/collapse together.
+// Found by auditing every wsDir-relative path referenced across scripts/authoring/,
+// scripts/authoring-support/, and scripts/platform/ — confirmed live: convert:multi
+// originally omitted .flowkit/, leaving a project with lib/components/PriceTag.tsx
+// moved into workspace-1/ but .flowkit/components.json (which references it) still
+// sitting at the old project root, silently orphaned.
+const WORKSPACE_ENTRIES = [
+  'flowkit.config.ts',
+  'index.ts',
+  'flows',
+  'flowplans',
+  'lib',
+  '.flowkit',
+  '.agent',
+  '.flowkit-feedback.json',
+]
+
+// The onwarn suppression is identical in both templates — INEFFECTIVE_DYNAMIC_IMPORT
+// is expected/harmless (see either scaffolder's own copy of this comment).
+const VITE_CONFIG_BUILD_BLOCK = `  build: {
+    rollupOptions: {
+      onwarn(warning, defaultHandler) {
+        // Screens are both statically listed (for eager type-checking) and
+        // dynamically imported (for code-splitting) by the virtual:flowkit/screens
+        // module flowkit/vite generates — harmless by design, not a real issue.
+        if (warning.code === 'INEFFECTIVE_DYNAMIC_IMPORT') return
+        defaultHandler(warning)
+      },
+    },
+  },`
+
+/**
+ * Writes the flat-mode vite.config.ts — bare flowkit(), root IS the one
+ * implicit workspace. Matches packages/create-flowkit-app/index.js's template
+ * exactly; keep both in sync if either changes.
+ */
+function writeFlatViteConfig(cwd) {
+  fs.writeFileSync(
+    path.join(cwd, 'vite.config.ts'),
+    `import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { flowkit } from 'flowkit/vite'
+
+export default defineConfig({
+  plugins: [react(), flowkit()],
+${VITE_CONFIG_BUILD_BLOCK}
+})
+`
+  )
+}
+
+/**
+ * Writes the multi-workspace vite.config.ts — flowkit({ workspaceRoot,
+ * standalone: true }), reading the active workspace from package.json's
+ * flowkit.workspaces[0] on every config load. Matches
+ * packages/create-flowkit-workspace/index.js's template exactly; keep both
+ * in sync if either changes.
+ */
+function writeMultiViteConfig(cwd) {
+  fs.writeFileSync(
+    path.join(cwd, 'vite.config.ts'),
+    `import fs from 'fs'
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { flowkit } from 'flowkit/vite'
+
+// Multi-workspace mode: the flowkit/vite plugin needs to know which workspace
+// folder to serve/build (there's no root-level flowkit.config.ts here — each
+// workspace has its own, nested one level down). Until a real active-workspace
+// switcher exists, this always resolves to the first entry in package.json's
+// flowkit.workspaces — re-read on every config load so \`flowkit
+// create:workspace\`/\`remove:workspace\`/\`rename:workspace\` take effect without
+// editing this file by hand.
+const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'))
+const activeWorkspace = pkg.flowkit?.workspaces?.[0]
+
+if (!activeWorkspace) {
+  throw new Error(
+    'No workspace found in package.json\\'s flowkit.workspaces — run \`flowkit create:workspace <name>\` first.'
+  )
+}
+
+export default defineConfig({
+  plugins: [react(), flowkit({ workspaceRoot: activeWorkspace, standalone: true })],
+${VITE_CONFIG_BUILD_BLOCK}
+})
+`
+  )
+}
 
 function moveEntries(fromDir, toDir, entries) {
   fs.mkdirSync(toDir, { recursive: true })
@@ -88,10 +176,24 @@ export async function cmdConvertMulti(_val, args = []) {
     process.exit(1)
   }
 
+  // vite.config.ts stays at project root (never part of WORKSPACE_ENTRIES —
+  // it describes the project, not a workspace) but its CONTENT must change:
+  // the flat-mode template has no workspaceRoot, so without rewriting it here
+  // the dev server/build silently reads nothing (no flowkit.config.ts left at
+  // root) and produces an empty bundle instead of erroring. Confirmed live —
+  // this was the exact failure mode that originally motivated this fix.
+  try {
+    writeMultiViteConfig(cwd)
+  } catch (err) {
+    console.error(r(`✗ Files moved, but failed to update vite.config.ts: ${err.message}`))
+    console.error(d(`  Fix manually: flowkit({ workspaceRoot: '${name}', standalone: true })`))
+    process.exit(1)
+  }
+
   console.log(g('✓') + ' Converted to multi-workspace mode')
   console.log(g('✓') + ' Workspace: ' + b(`${name}/`))
   console.log('')
-  console.log(d(`  Add another workspace any time: `) + c(`flowkit add:workspace <name>`))
+  console.log(d(`  Add another workspace any time: `) + c(`flowkit create:workspace --name:<name>`))
 }
 
 async function resolveNewWorkspaceName(args) {
@@ -110,7 +212,7 @@ async function resolveNewWorkspaceName(args) {
 
 export async function cmdAddWorkspace(_val, args = []) {
   const cwd = process.cwd()
-  requireMultiMode('flowkit add:workspace', cwd)
+  requireMultiMode('flowkit create:workspace', cwd)
 
   const name = await resolveNewWorkspaceName(args)
   const manifest = readFlowkitManifest(cwd)
@@ -367,6 +469,17 @@ export async function cmdConvertFlat(_val, args = []) {
     })
   } catch (err) {
     console.error(r(`✗ Conversion failed: ${err.message}`))
+    process.exit(1)
+  }
+
+  // Same reasoning as convert:multi's writeMultiViteConfig() call — vite.config.ts
+  // must be rewritten to the flat-mode template (no workspaceRoot) or the dev
+  // server/build keeps looking for a workspaceRoot subfolder that no longer exists.
+  try {
+    writeFlatViteConfig(cwd)
+  } catch (err) {
+    console.error(r(`✗ Files moved, but failed to update vite.config.ts: ${err.message}`))
+    console.error(d(`  Fix manually: flowkit() with no options`))
     process.exit(1)
   }
 
