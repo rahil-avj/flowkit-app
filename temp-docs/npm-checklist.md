@@ -1,11 +1,18 @@
 # FlowKit npm Publish Checklist
 
-First-time publish, two packages: `flowkit` (library) and `create-flowkit-app` (scaffolder).
+First-time publish, three packages: `flowkit` (library), `create-flowkit-app` (flat-mode scaffolder),
+`create-flowkit-workspace` (multi-workspace scaffolder).
 
-> **Verified against live code/commands on 2026-07-08.** Checked items below reflect an actual
-> command run or a file read on that date, not a status carried over from an earlier doc. Anything
-> still unchecked either requires a decision only a human can make (names, versions, account setup)
-> or requires real registry contact (Phase 7 is irreversible — nothing there was run).
+> **Verified against live code/commands on 2026-07-08, updated 2026-07-10.** Checked items below
+> reflect an actual command run or a file read on the date noted, not a status carried over from an
+> earlier doc. Anything still unchecked either requires a decision only a human can make (names,
+> versions, account setup) or requires real registry contact (Phase 7 is irreversible — nothing
+> there was run).
+>
+> **2026-07-10 update:** `create-flowkit-workspace` — previously untested by this checklist — went
+> through the same Phase 4/5 verification as the other two packages (see those sections). All
+> findings clean. `flowkit/package.json`'s `"private": true` failsafe has also been removed; all
+> three packages are now publish-ready pending only Phase 7's actual `npm publish` commands.
 
 ---
 
@@ -49,7 +56,7 @@ For **both** `flowkit/package.json` and `packages/create-flowkit-app/package.jso
   - `"./vite"` → `scripts/vite-plugin.js` — **confirmed importable** (`import('flowkit/vite')` resolves and loads in a real `file:`-installed consumer)
 - [x] For `flowkit`: `"peerDependencies"` present and reasonable — `react`/`react-dom` `^19.0.0`, 7 `@radix-ui/*` packages with real version ranges (not wildcards)
 - [x] For `flowkit`: `"files"` allowlist reviewed — `["scripts/", "src/", "dist/", "docs/", "index.html", "!scripts/tests/", "!scripts/build/format.mjs"]`, confirmed accurate via `npm pack --dry-run` (see Phase 4)
-- [x] No `"private": true` accidentally left in either package.json — **`flowkit/package.json` still correctly has `"private": true`** (expected/correct at this stage — it's the failsafe blocking accidental publish, not a bug to fix yet); `create-flowkit-app/package.json` has no `private` field, so it's publishable as soon as everything else is ready
+- [x] No `"private": true` accidentally left in either package.json — **RESOLVED 2026-07-10.** `flowkit/package.json`'s `"private": true` failsafe removed — this was the deliberate last gate before publish (see Phase 7); `create-flowkit-app`/`create-flowkit-workspace` never had the field. All three packages are now publishable.
 
 ---
 
@@ -78,6 +85,11 @@ For **both** `flowkit/package.json` and `packages/create-flowkit-app/package.jso
 - [x] `npm pack --dry-run --json` — ran successfully: 3 files (`index.js`, `package.json`, `templates/index.html`)
 - [x] Confirm `templates/` has everything needed — confirmed by design: `index.js` generates the full scaffolded project (2-flow/5-screen starter) via template literals at runtime, so `templates/` only needs to hold the one genuinely static file (`index.html`); nothing missing, nothing workspace-specific leaked in
 
+**For `create-flowkit-workspace` (verified 2026-07-10 — not previously covered by this checklist):**
+
+- [x] `npm pack --dry-run --json` — ran successfully: 4 files (`LICENSE`, `index.js`, `package.json`, `templates/index.html`), 7,283 bytes tarball / 19,017 bytes unpacked
+- [x] Confirm ABSENT / nothing leaked — file list matches `create-flowkit-app`'s shape plus its own `LICENSE` copy; no monorepo-internal paths present
+
 ---
 
 ## Phase 5 — Local Consumer Smoke Test (before touching the registry)
@@ -92,6 +104,18 @@ For **both** `flowkit/package.json` and `packages/create-flowkit-app/package.jso
 - [x] `npm run dev` inside the scaffolded project — **confirmed: Vite dev server boots in 159ms, serves HTTP 200 on `localhost:5173`**, zero `workspaces/` dir present
 - [x] `npm run build` inside the scaffolded project — **confirmed: production build succeeds** (2003 modules transformed, valid output). Two non-blocking warnings surfaced: (1) several screen components are both statically and dynamically imported via the generated `virtual:flowkit/screens` module, so Vite's `[INEFFECTIVE_DYNAMIC_IMPORT]` warning fires and code-splitting doesn't happen for those chunks; (2) the resulting main chunk is 635KB (177KB gzipped), over Vite's default 500KB warning threshold. Neither fails the build — both are optimization opportunities, not correctness bugs, and out of scope for this checklist to fix.
 
+**`create-flowkit-workspace` local consumer smoke test (verified 2026-07-10 — not previously covered):**
+
+- [x] Scaffold via `--local-dev --lang:ts` into a scratch dir outside the repo — **confirmed working**: `flowkit.mode: "multi"`, `flowkit.workspaces: ["workspace-1"]` written correctly to the generated `package.json`, `flowkit` devDependency points at the local checkout
+- [x] `npm install` — **confirmed: 0 vulnerabilities**, 97 packages
+- [x] `npm run dev` — **confirmed: Vite boots in 572ms, HTTP 200 on `localhost:5173`**
+- [x] `npm run build` — **confirmed: succeeds**, same non-blocking chunk-size warning as `create-flowkit-app` (main chunk 627KB / 176KB gzipped), not a correctness issue
+- [x] `flowkit create:workspace --name:workspace-2 --lang:ts` — **confirmed: adds `workspace-2/` dir, updates `package.json`'s `flowkit.workspaces[]` correctly**
+- [x] `flowkit rename:workspace workspace-2 workspace-renamed` — **confirmed: renames dir + updates manifest**
+- [x] Workspace isolation — `flowkit list:screens` (default → first workspace) vs. `flowkit list:screens --workspace:workspace-renamed` **confirmed both resolve independently**, no cross-workspace leakage
+- [x] `flowkit remove:workspace --name:workspace-renamed` — **confirmed: requires typed confirmation of the workspace name** (correct safety behavior, matches repo-mode `rw`'s pattern), then removes dir + updates manifest correctly
+- [x] Scratch directory cleaned up after test
+
 ---
 
 ## Phase 6 — Security / Legal Sweep
@@ -105,14 +129,19 @@ For **both** `flowkit/package.json` and `packages/create-flowkit-app/package.jso
 
 ## Phase 7 — Publish (irreversible past this line)
 
-**Nothing in this phase was run or attempted.** Phase 0 (npm login) and Phase 6 (LICENSE) are now both resolved — the only remaining gate is `flowkit/package.json`'s `"private": true` failsafe, which must be removed as a deliberate step right before running the commands below. Versions/dist-tag are decided (Phase 1) — commands below reflect that.
+**Nothing in this phase was run or attempted.** All gates are now clear: npm login (Phase 0), LICENSE
+(Phase 6), and — as of 2026-07-10 — `flowkit/package.json`'s `"private": true` failsafe has been
+removed and `create-flowkit-workspace` has passed the same Phase 4/5 verification as the other two
+packages. Versions/dist-tag are decided (Phase 1) — commands below reflect that.
 
 - [ ] Final `npm whoami` check
 - [ ] `cd` to `flowkit` package root, `npm publish --tag beta` (publishes `0.0.1-beta.0`)
 - [ ] Immediately verify: `npm view flowkit versions` and `npm view flowkit dist-tags` (confirm `beta` points to `0.0.1-beta.0`, `latest` is NOT set)
 - [ ] `cd` to `packages/create-flowkit-app`, `npm publish --tag beta` (publishes `0.0.1-beta.0`)
 - [ ] Immediately verify: `npm view create-flowkit-app versions` and `dist-tags`
-- [ ] Real-world install test against the actual registry (not `file:`) — use `npm create flowkit-app@beta my-real-test` (not `@latest`, since nothing is tagged `latest` yet)
+- [ ] `cd` to `packages/create-flowkit-workspace`, `npm publish --tag beta` (publishes `0.0.1-beta.0`)
+- [ ] Immediately verify: `npm view create-flowkit-workspace versions` and `dist-tags`
+- [ ] Real-world install test against the actual registry (not `file:`) — use `npm create flowkit-app@beta my-real-test` and `npm create flowkit-workspace@beta my-real-test-2` (not `@latest`, since nothing is tagged `latest` yet)
 
 ---
 
@@ -132,7 +161,7 @@ For **both** `flowkit/package.json` and `packages/create-flowkit-app/package.jso
 
 The JSONBin master-key risk and the missing-LICENSE gap that were tracked here are both resolved (JSONBin: confirmed clean 2026-07-08, re-confirmed 2026-07-09; LICENSE: added 2026-07-10 — see Phase 6).
 
-**Current highest-risk / most concrete remaining blocker: none left except the deliberate `"private": true` failsafe on `flowkit/package.json`.** npm login (`rahil316`), LICENSE, and package.json hygiene (repository/author/keywords/engines) are all resolved as of 2026-07-10. The only thing standing between here and Phase 7 is flipping `private` off on `flowkit` — which is correct to leave on until the actual publish step, not a bug.
+**No blockers remain.** npm login (`rahil316`), LICENSE, package.json hygiene (repository/author/keywords/engines), the `"private": true` failsafe removal, and `create-flowkit-workspace`'s Phase 4/5 verification are all resolved as of 2026-07-10. Every item in Phases 0–6 is checked for all three packages. The only remaining work is Phase 7 itself — the actual, irreversible `npm publish` commands — which requires a deliberate human go-ahead, not further verification.
 
 ---
 

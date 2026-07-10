@@ -59,6 +59,14 @@ flowkit -h
 flowkit help
 ```
 
+**Version:**
+
+```bash
+flowkit -v
+flowkit --version
+flowkit version
+```
+
 ---
 
 ## Workspaces (repo mode)
@@ -911,6 +919,13 @@ Output: `<name>-handoff-<date>.zip` at the project root.
 ## Quick reference
 
 Commands grouped by item type. Click the heading to jump to the full section.
+
+### Meta
+
+| Command             | Alias | Description                   |
+| -------------------- | ----- | ------------------------------ |
+| `help`               | `h`, `-h`, `--help` | Show CLI usage help |
+| `version`            | `-v`, `--version`   | Show installed flowkit version |
 
 ### [Workspaces (repo mode)](#workspaces-repo-mode)
 

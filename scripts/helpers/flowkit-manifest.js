@@ -1,6 +1,6 @@
 // Helper: read/write/validate the consumer project's flowkit.mode / flowkit.workspaces
 // declaration in package.json. Used only by flat-mode-facing commands (convert:multi,
-// convert:flat, add:workspace, remove:workspace, rename:workspace) — never by this
+// convert:flat, create:workspace, remove:workspace, rename:workspace) — never by this
 // repo's own repo-mode workspace CLI (nw/rw/watch), which is unrelated and untouched.
 //
 // Mode and workspace list are both declared explicitly in package.json, never inferred

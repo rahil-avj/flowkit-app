@@ -1,6 +1,5 @@
 {
   "name": "flowkit",
-  "private": true,
   "version": "0.0.1-beta.0",
   "description": "Browser-based UI prototyping platform for multi-screen, flow-based interactive previews.",
   "license": "MIT",

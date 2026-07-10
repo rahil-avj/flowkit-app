@@ -1,12 +1,16 @@
 // Platform command: prints CLI usage help.
-import { getActiveWorkspaceName } from '../helpers/paths.js'
+import path from 'path'
+import { getActiveWorkspaceName, isRepoMode, ROOT } from '../helpers/paths.js'
+import { readJson } from '../helpers/json.js'
 import { b, c, d } from '../helpers/colors.js'
 
 export function cmdHelp() {
   const ws = getActiveWorkspaceName()
+  const pkg = readJson(path.join(ROOT, 'package.json'), {})
+  const mode = isRepoMode() ? 'repo' : 'consumer (flat/multi-workspace)'
   console.log(`
-${b('flowkit')} — UI prototyping platform CLI
-${d(`Active workspace: ${ws || '(none)'}`)}
+${b('flowkit')} ${d(`v${pkg.version ?? 'unknown'}`)} — UI prototyping platform CLI
+${d(`Active workspace: ${ws || '(none)'}  ·  Mode: ${mode}`)}
 
 ${b('Syntax:')} short alias or long-form, both always work
   ${c('flowkit nw')}                         guided
@@ -14,7 +18,7 @@ ${b('Syntax:')} short alias or long-form, both always work
   ${c('flowkit new-workspace:<name>')}        same, long form
   ${c('flowkit nw:<name> --kit:apple --lang:ts --agent:claude')}   with flags
 
-${b('Workspaces (repo mode):')}
+${b('Workspaces (repo mode only')} ${d('— not available in flat/multi consumer projects, see below')}${b('):')}
   ${c('nw')} / ${c('new-workspace')}           Create workspace (guided or express)
   ${c('rw')} / ${c('remove-workspace')}        Remove workspace (requires confirmation)
   ${c('watch:flows')}                      Watch for file changes
@@ -41,6 +45,7 @@ ${b('Scaffold (authoring):')}
   ${c('screen:info')} ${d('--name:<id>')}            Show screen metadata + flowplan refs
   ${c('flowplan:info')} ${d('--name:<id>')}          Show flowplan steps
   ${c('components:ls')} / ${c('components:find')} / ${c('components:scan')}
+  ${c('promote:flow')} ${d('--flowplan:<path> --fork:"<label>" [--as:<new-id>]')}   Extract a fork into its own flowplan
 
   ${d('All scaffold commands accept --workspace:<name> to target a non-active workspace.')}
   ${d('screenOrder in flowkit.config.ts controls display order; scaffold commands keep it in sync.')}
@@ -53,34 +58,38 @@ ${b('FlowPlans:')}
   ${c('plan:check')} / ${c('fp:check')}       Validate flowplans (static lint)
 
 ${b('Sessions (FlowTracer / FlowLens library):')}
+  ${d('Note: this section uses space-separated flags (--flag value), not the --flag:value colon')}
+  ${d('convention used everywhere else in this CLI.')}
   ${c('sessions:ls')} ${d('[--json]')}         List committed sessions
-  ${c('sessions:import <file>')} ${d('[--force]')}   Import an exported session
-  ${c('sessions:export')} / ${c('se')}         Export a committed session back to disk
+  ${c('sessions:import <file>')} ${d('[--force] [--study <name|id>]')}   Import an exported session
+  ${c('sessions:export')} / ${c('se')} ${d('<id|name|file> [--dest <path>]')}   Export a committed session back to disk
   ${c('sessions:check')}                   Validate the library
   ${c('sessions:stats')}                   Roll-up: quality, completion, frustrated screens
   ${c('sessions:sample')}                  Generate a synthetic test session
-  ${c('sessions:rm <id|name>')}            Remove one committed session
-  ${c('sessions:purge')} / ${c('sp')}            Bulk remove  ${d('[--test-only] [--older-than:<days>]')}
+  ${c('sessions:rm <id|name|file>')}       Remove one committed session
+  ${c('sessions:purge')} / ${c('sp')} ${d('[--test-only] [--older-than <days>] [--study <name|id>]')}   Bulk remove
   ${c('sessions:brief')} ${d('[--append]')}          Agent brief from session data  ${d('(--append → project.md)')}
-  ${c('sessions:report')} ${d('--study:<name|id> --format:json|md|both [--dest <path>]')}
-                                       Unified report — ${c('lens:report')}/${c('sessions:brief')} are presets of this
+  ${c('sessions:report')} ${d('[--study <name|id>] [--format json|md|both] [--agent] [--dest <path>]')}
+                                       Unified report — ${c('lens:report')}/${c('sessions:brief')} are presets of this.
+                                       ${d('--agent appends to .agent/project.md instead of stdout.')}
   ${c('lens:report')} / ${c('lr')}             Export FlowLens analytics JSON  ${d('[--dest <path>]')}
-  ${c('sessions:study:new')} ${d('<name>')} / ${c('study:ls')} / ${c('study:archive')} / ${c('study:active')}
+  ${c('sessions:study:new')} ${d('<name> [--desc "<text>"]')} / ${c('study:ls')} / ${c('study:archive')} ${d('[--force]')} / ${c('study:active')}
                                        Manage FlowLens studies (named session cohorts)
 
 ${b('Feedback:')}
   ${c('feedback:import <file>')} / ${c('fi')}   Commit feedback from an exported JSON file
-  ${c('feedback:dump')} / ${c('fd')}            Export committed feedback to disk
+  ${c('feedback:dump')} / ${c('fd')} ${d('[--dest <path>]')}   Export committed feedback to disk
   ${c('feedback:ls')}                      List committed comments
 
-${b('Export & handoff:')}
-  ${c('export')}                           Standalone HTML viewer (no FlowLens)
-  ${c('export:full')}                      Standalone HTML viewer + FlowLens included
-  ${c('handoff')}                          Developer handoff zip
+${b('Export & handoff')} ${d('(repo mode only):')}
+  ${c('export')} ${d('[<workspace>|all]')}          Standalone HTML viewer (no FlowLens)  ${d('— guided prompt if omitted')}
+  ${c('export:full')} ${d('[<workspace>|all]')}     Standalone HTML viewer + FlowLens included
+  ${c('handoff')} ${d('[<workspace>]')}             Developer handoff zip  ${d('— guided prompt if omitted')}
 
 ${b('Agent onboarding:')}
   ${c('agent:sync')} ${d('[--agent:claude|agents|cursor|none]')}   Regenerate .agent/* from spec
 
-  ${c('flowkit -h')} / ${c('flowkit help')}  — show this help
+  ${c('flowkit -h')} / ${c('flowkit help')}     — show this help
+  ${c('flowkit -v')} / ${c('flowkit version')}  — show installed version
 `)
 }

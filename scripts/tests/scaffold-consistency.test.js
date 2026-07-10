@@ -8,7 +8,7 @@ import { workspaceScaffold } from '../helpers/scaffold.js'
 
 // scripts/helpers/scaffold.js (repo mode) and scripts/helpers/workspace-template.js
 // (the one shared source used by create-flowkit-app, create-flowkit-workspace,
-// and this repo's own `flowkit add:workspace` command — see that file's module
+// and this repo's own `flowkit create:workspace` command — see that file's module
 // doc-comment) hand-port the same demo content in two places. Screen/flow id
 // naming has already drifted between the two (scaffold.js suffixes ids with
 // -screen/-flow, workspace-template.js doesn't) so this only checks

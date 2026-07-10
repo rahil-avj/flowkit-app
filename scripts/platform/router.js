@@ -24,6 +24,7 @@ import { cmdAgentSync } from './agent-sync.js'
 import { cmdPlanLs, cmdPlanCheck, cmdProjectLs } from './plans.js'
 import { cmdFeedbackImport, cmdFeedbackDump, cmdFeedbackLs } from './feedback.js'
 import { cmdHelp } from './help.js'
+import { cmdVersion } from './version.js'
 import { cmdStatus } from './status.js'
 import { cmdCreateFlow, cmdRemoveFlow, cmdListFlows } from '../authoring/flows.js'
 import {
@@ -82,6 +83,10 @@ export async function route(argv) {
     firstArg === '-h'
   ) {
     cmdHelp()
+
+    // ── Version ──
+  } else if (p.cmd === 'version' || firstArg === '--version' || firstArg === '-v') {
+    cmdVersion()
 
     // ── Workspaces ──
   } else if (p.cmd === 'nw' || p.cmd === 'new-workspace') {
