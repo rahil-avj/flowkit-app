@@ -3,7 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { parseStringFlag } from '../helpers/args.js'
 import { resolveWorkspace } from '../helpers/workspace-resolve.js'
-import { workspacePath, assertScopedWorkspaceDir } from '../helpers/paths.js'
+import { workspacePath, assertScopedWorkspaceDir, resolveTypeImport } from '../helpers/paths.js'
 import { asJsStringLiteral } from '../helpers/validate.js'
 import { g, r, b, d, c } from '../helpers/colors.js'
 import {
@@ -39,9 +39,13 @@ function toTitleLabel(kebab) {
 }
 
 function screenTemplate(pascalName, label) {
-  return `import type { FlowScreenProps } from '@platform/types'
+  // onNext/db are prefixed with _ — the placeholder body doesn't use either yet,
+  // and this project's tsconfig has noUnusedLocals: true, which flags unused
+  // destructured bindings (TS6198) even though they're real, usable props the
+  // author will wire up as they build the screen out.
+  return `${resolveTypeImport('FlowScreenProps')}
 
-export default function ${pascalName}Screen({ onNext, db }: FlowScreenProps) {
+export default function ${pascalName}Screen({ onNext: _onNext, db: _db }: FlowScreenProps) {
   return (
     <div className="flex flex-col h-full bg-theme-base">
       {/* Build your screen here */}

@@ -244,7 +244,7 @@ src/
       panel.tsx                # Sessions panel UI
     script-patch/              # PatchScript generators + CopyScriptButton UI primitive
   modes/
-    flowlens/                  # FlowLens analytics mode (gated by VITE_ENABLE_FLOWLENS)
+    flowlens/                  # FlowLens analytics mode (presence-gated — delete this folder to strip it from a build)
       components/              # replay controller, timeline, heatmap, paths, funnel, metrics
       analyticsEngine.ts       # metrics computation from SessionExport
       exportUtils.ts           # CSV, JSON, Markdown, SVG, PNG export

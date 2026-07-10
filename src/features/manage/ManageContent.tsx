@@ -1,6 +1,5 @@
 import {
   CopyScriptButton,
-  generateEnvFlagPatch,
   generateFlowOrderPatch,
   generateWorkspaceOrderPatch,
 } from '@platform/features/script-patch'
@@ -150,18 +149,6 @@ export function ManageContent() {
             )
           })
         )}
-      </Accordion>
-
-      {/* ── Section 3: Sessions ───────────────────────────────────────────── */}
-      <Accordion label="Sessions & Env Flags">
-        <p style={{ fontSize: scale.text.xxs, color: theme.text.muted }}>
-          Enable FlowLens session recording in <code className="font-mono">.env.local</code>:
-        </p>
-        <CopyScriptButton
-          patch={generateEnvFlagPatch('VITE_ENABLE_FLOWLENS', 'true')}
-          size="sm"
-          label="Enable FlowLens mode"
-        />
       </Accordion>
     </div>
   )

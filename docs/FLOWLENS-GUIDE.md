@@ -29,17 +29,16 @@ FlowLens has two parts:
 - **FlowTracer** — runs inside the prototype and records every screen visit, tap, navigation, dwell, and frustration signal in real time.
 - **FlowLens Mode** — a separate analytics layer you switch into to replay sessions, inspect heatmaps, funnels, and reports.
 
-Enable FlowLens in dev:
+FlowLens is included by default in this repo (`npm run dev` / `npm run build` — no
+env var needed). Availability is **presence-based**: it's included whenever
+`src/modes/flowlens/index.ts` exists on disk, and stripped entirely (via Rollup dead
+code elimination) if that folder is removed. There is no `VITE_ENABLE_FLOWLENS`
+env-var gate — a doc/comment previously suggested one existed; it did not actually
+control anything and has been removed.
 
-```bash
-VITE_ENABLE_FLOWLENS=true npm run dev
-```
-
-Enable it in a production build:
-
-```bash
-VITE_ENABLE_FLOWLENS=true npm run build
-```
+To exclude FlowLens from a build, delete or rename `src/modes/flowlens/` before
+`npm run build`. `flowkit export` (repo mode) does this automatically; `flowkit
+export:full` preserves the folder to include FlowLens in a standalone export.
 
 Open the app, then click the **FlowLens** toggle (top-right of the canvas bar) to enter analytics mode.
 

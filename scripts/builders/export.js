@@ -33,18 +33,28 @@ function getStandaloneOutDir() {
   return match ? match[1] : 'dist-standalone'
 }
 
+const FLOWLENS_DIR = path.join(ROOT, 'src', 'modes', 'flowlens')
+const FLOWLENS_DIR_STASH = path.join(ROOT, 'src', 'modes', '.flowlens-stash')
+
 function buildStandalone(wsName, withLens = false) {
   console.log(d(`  building standalone for "${wsName}"${withLens ? ' (with FlowLens)' : ''}…`))
-  execSync(`npx vite build --config vite.config.standalone.ts`, {
-    cwd: ROOT,
-    stdio: 'inherit',
-    // FlowLens is stripped by default; --with-lens opts it into the build.
-    env: {
-      ...process.env,
-      FLOWKIT_WORKSPACE: wsName,
-      VITE_ENABLE_FLOWLENS: withLens ? 'true' : '',
-    },
-  })
+  // FlowLens inclusion is presence-based (see FlowLensModeContext.tsx's
+  // import.meta.glob on src/modes/flowlens/index.ts) — there is no env-var
+  // gate. To actually strip it from a plain `export`, rename the folder out
+  // of the way for the duration of this build, then always restore it
+  // afterward (even on failure), so the monorepo's own dev experience never
+  // loses the folder permanently.
+  const stashed = !withLens && fs.existsSync(FLOWLENS_DIR)
+  if (stashed) fs.renameSync(FLOWLENS_DIR, FLOWLENS_DIR_STASH)
+  try {
+    execSync(`npx vite build --config vite.config.standalone.ts`, {
+      cwd: ROOT,
+      stdio: 'inherit',
+      env: { ...process.env, FLOWKIT_WORKSPACE: wsName },
+    })
+  } finally {
+    if (stashed) fs.renameSync(FLOWLENS_DIR_STASH, FLOWLENS_DIR)
+  }
   const outDir = getStandaloneOutDir()
   const outHtml = path.join(ROOT, outDir, 'index.html')
   if (!fs.existsSync(outHtml))

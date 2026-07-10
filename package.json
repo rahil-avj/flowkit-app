@@ -39,7 +39,10 @@
       "types": "./dist/types/core/config/index.d.ts",
       "import": "./dist/lib/index.js"
     },
-    "./vite": "./scripts/helpers/vite-plugin.js"
+    "./vite": {
+      "types": "./scripts/helpers/vite-plugin.d.ts",
+      "import": "./scripts/helpers/vite-plugin.js"
+    }
   },
   "scripts": {
     "dev": "vite",

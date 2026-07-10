@@ -16,12 +16,16 @@ import {
 
 const PASCAL_RE = /^[A-Z][A-Za-z0-9]+$/
 
-function componentTemplate(name, desc) {
+function componentTemplate(name, desc, compPath) {
   // Force the comment onto one line — a newline in --desc would otherwise
   // break out of the `//` comment and inject raw code into the file below it.
   const singleLineDesc = desc ? desc.replace(/[\r\n]+/g, ' ').trim() : ''
   const descLine = singleLineDesc ? `// ${singleLineDesc}\n` : ''
-  return `${descLine}// Usage: import { ${name} } from '@workspace/lib/components'
+  // Always the direct-file default import — valid regardless of whether a
+  // barrel export exists now or later (barrels re-export the default as a
+  // named binding, but this file's own self-documentation shouldn't assume
+  // barrel state that's decided elsewhere and can change independently).
+  return `${descLine}// Usage: import ${name} from '@workspace/${compPath}/${name}'
 
 interface Props {
   className?: string
@@ -39,7 +43,7 @@ export default function ${name}({ className = '', children }: Props) {
 }
 
 /** Find the nearest index.ts barrel relative to a component path. */
-function findBarrel(wsDir, compRelPath) {
+export function findBarrel(wsDir, compRelPath) {
   // compRelPath: e.g. 'lib/components/ui'
   const barrelPath = path.join(wsDir, compRelPath, 'index.ts')
   if (fs.existsSync(barrelPath)) return barrelPath
@@ -120,7 +124,7 @@ export async function cmdCreateComponent(_val, args = []) {
 
   try {
     fs.mkdirSync(compDir, { recursive: true })
-    fs.writeFileSync(compFile, componentTemplate(name, desc))
+    fs.writeFileSync(compFile, componentTemplate(name, desc, compPath))
 
     const barrelPath = findBarrel(wsDir, compPath)
     let barrelUpdated = false
@@ -140,7 +144,12 @@ export async function cmdCreateComponent(_val, args = []) {
     }
     console.log(g(`✓ Registered: .flowkit/components.json`))
     console.log('')
-    console.log(d(`Usage: import { ${name} } from '@workspace/lib/components'`))
+    if (barrelUpdated && barrelPath) {
+      const barrelDir = path.relative(wsDir, path.dirname(barrelPath))
+      console.log(d(`Usage: import { ${name} } from '@workspace/${barrelDir}'`))
+    } else {
+      console.log(d(`Usage: import ${name} from '@workspace/${compPath}/${name}'`))
+    }
   } catch (e) {
     if (fs.existsSync(compFile)) fs.unlinkSync(compFile)
     console.error(r(`✗ Failed: ${e.message}`))

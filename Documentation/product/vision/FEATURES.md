@@ -37,7 +37,7 @@ The authoritative list of platform features and their current status. Update `St
 
 | #   | Feature                   | Subsystem | Phase | Status | Notes                                                                |
 | --- | ------------------------- | --------- | ----- | ------ | -------------------------------------------------------------------- |
-| 14  | FlowLens replay mode      | FlowLens  | 1     | done   | Build-gated (`VITE_ENABLE_FLOWLENS`); lazy chunk; real canvas replay |
+| 14  | FlowLens replay mode      | FlowLens  | 1     | done   | Presence-gated (folder-existence check); lazy chunk; real canvas replay |
 | 15  | Single-session analytics  | FlowLens  | 1     | done   | Metrics, Paths, Funnel, Heatmap tabs via `AnalyticsOverlay`          |
 | 16  | Cursor heatmap            | FlowLens  | 1     | done   | `HeatmapView.tsx`; real screen behind cursor density overlay         |
 | 17  | Multi-session Reports     | FlowLens  | 3     | active | `ReportsOverlay.tsx`; revamp in progress (two-pane layout, 4 tabs)   |

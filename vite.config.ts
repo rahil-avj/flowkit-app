@@ -156,7 +156,9 @@ export default defineConfig({
       },
     },
   },
-  // FlowLens is now a lazily-loaded MODE inside the main app (gated by
-  // VITE_ENABLE_FLOWLENS), not a separate entry point. The single index.html
-  // entry is the default, so no rollupOptions.input override is needed.
+  // FlowLens is now a lazily-loaded MODE inside the main app (presence-gated —
+  // see src/shared/contexts/FlowLensModeContext.tsx's import.meta.glob on
+  // src/modes/flowlens/index.ts; delete/rename that folder to strip it, no env
+  // var involved), not a separate entry point. The single index.html entry is
+  // the default, so no rollupOptions.input override is needed.
 })

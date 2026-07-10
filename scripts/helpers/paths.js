@@ -91,6 +91,18 @@ export function resolveDefineImport(exportName) {
 }
 
 /**
+ * Same mode-branch as resolveDefineImport(), for type-only imports whose
+ * repo-mode home is @platform/types rather than @platform/core/config (e.g.
+ * FlowScreenProps) — both resolve to the published 'flowkit' package's own
+ * public entry point in flat/multi-workspace consumer mode.
+ */
+export function resolveTypeImport(typeName) {
+  return isRepoMode()
+    ? `import type { ${typeName} } from '@platform/types'`
+    : `import type { ${typeName} } from 'flowkit'`
+}
+
+/**
  * Resolve the root directory for a workspace's files.
  * Repo mode: ROOT/workspaces/<name>
  * Flat mode (consumer project, no flowkit.mode: "multi" declared): process.cwd()

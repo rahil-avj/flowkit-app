@@ -74,7 +74,7 @@
 | Feature                                  | Description                                                                                                                                 | Users |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
 | Session recorder                         | IndexedDB-backed interaction recording via `WriteBatcher`; captures navigation, clicks, timing                                              | U3    |
-| FlowLens analytics mode                  | Optional lazy-loaded analytics/replay mode; enabled via `VITE_ENABLE_FLOWLENS=true`                                                         | U3    |
+| FlowLens analytics mode                  | Optional lazy-loaded analytics/replay mode; presence-gated (included whenever `src/modes/flowlens/` exists on disk)                        | U3    |
 | Session replay                           | In-browser session playback — watch exactly how a user navigated a flow                                                                     | U3    |
 | Session management CLI                   | `sessions:ls`, `sessions:import`, `sessions:export`, `sessions:rm`, `sessions:stats`, `sessions:sample`, `sessions:purge`, `sessions:brief` | U3    |
 | Analytics export (`flowkit lens:report`) | Exports FlowLens session analytics as structured JSON                                                                                       | U3    |

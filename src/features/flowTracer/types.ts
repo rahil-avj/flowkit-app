@@ -13,7 +13,7 @@ export type EventType =
   | 'flow.completed'
   | 'flow.exited-early'
   | 'flow.blocked'
-  | 'flow.transition' // a navigation resolved — carries action + any warnings/errors
+  | 'flow.transition' // navigation resolved WITH A PROBLEM (blocked or resolver threw/warned) — never fires on a clean nav
   // Screen
   | 'screen.visited'
   | 'screen.dwell-end'

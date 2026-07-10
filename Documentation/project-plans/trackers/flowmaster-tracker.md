@@ -56,8 +56,8 @@ FlowMaster is the flow execution engine. Its job is to take an authored flow def
 
 #### Analytics event stream
 
-- FlowMaster emits events to FlowTracer on every navigation: `flow.entered`, `flow.transition`, `screen.visited`, `screen.dwell-end`, `interaction.*`, `navigation.auto-advance`
-- `flow.transition` carries `{ action, from, to, blocked?, error?, warnings[] }` — records why a tap misbehaved
+- FlowMaster emits events to FlowTracer on every navigation: `flow.entered`, `screen.visited`, `screen.dwell-end`, `interaction.*`, `navigation.auto-advance`
+- `flow.transition` is NOT emitted on every navigation — only when one resolves with a problem (blocked by a guard, or a resolver threw/warned). Carries `{ action, from, to, blocked?, error?, warnings[] }` — records why a tap misbehaved
 - Emitting is fire-and-forget; FlowTracer is an observer — it never changes execution
 
 #### Flowplan playback (F4/F5)

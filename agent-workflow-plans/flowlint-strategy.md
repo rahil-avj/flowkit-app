@@ -1,5 +1,11 @@
 # FlowLint Strategy
 
+> "FlowLint" is this feature's name; the actual CLI command is **`flowkit check`**
+> (`flowkit check:screens`, `flowkit check:plans`, etc.) — not `flowkit lint`, to avoid
+> colliding with the existing `npm run lint` (plain ESLint) in this repo. Renamed throughout
+> this doc during implementation planning; see the file-structure and plan:check sections
+> below for the corrected paths and command names.
+
 ## Intent
 
 FlowLint is a FlowKit-aware workspace integrity checker. Its purpose is not to replace ESLint or TypeScript — it sits above them, catching structural and semantic violations that neither tool can express.
@@ -33,17 +39,17 @@ Without FlowLint, the agent either discovers the problem at dev server startup (
 ```
 1. POST-WRITE HOOK     (primary for agents)
    Fires after every file save in the workspace
-   Runs: flowkit lint:file <path>
+   Runs: flowkit check:file <path>
    Scope: the edited file + cross-references it touches
    Target: <100ms per file
 
 2. PRE-BUILD GATE      (existing plan:check, extended)
-   Runs: flowkit lint (full workspace)
+   Runs: flowkit check (full workspace)
    Fires before: npm run build
    Blocks the build on errors, warns on warnings
 
 3. ON-DEMAND COMMAND   (agent can call explicitly)
-   Runs: flowkit lint [--workspace:<ws>] [--fix]
+   Runs: flowkit check [--workspace:<ws>] [--fix]
    Full workspace check, optional auto-fix
 ```
 
@@ -63,8 +69,13 @@ Files: `workspaces/<ws>/flows/<flow>/<screen>/<ScreenName>.tsx`
 | `screen/missing-meta`       | No `export const screenMeta`                                          | Error    |
 | `screen/meta-missing-label` | `screenMeta` has no `label` field                                     | Warning  |
 | `screen/meta-id-mismatch`   | `screenMeta.id` present but doesn't match directory name              | Error    |
-| `screen/forbidden-import`   | Imports from `@shared/contexts`, `@core`, or `@features`              | Error    |
-| `screen/workspace-import`   | Imports from outside `@workspace/lib/...` (besides `@platform/types`) | Warning  |
+
+> **Forbidden cross-layer imports are NOT a FlowKit-check rule** — resolved during
+> implementation planning: `eslint-plugin-boundaries` (already configured in `eslint.config.js`
+> for `src/**`'s shared/core/features/modes/app layers) is extended with a new `workspace`
+> element type + dependency rule instead, rather than duplicating the same concern as a second,
+> parallel rule engine here. See `eslint.config.js`'s `boundaries/elements`/`boundaries/dependencies`
+> config for the actual enforcement.
 
 ### Domain: CONFIG
 
@@ -206,28 +217,37 @@ FlowLint does not run `tsc`. It uses targeted parsing:
 
 ### File Location
 
+Corrected to match this repo's actual current layout (`scripts/platform/`, `scripts/helpers/`,
+`scripts/authoring-support/` — this doc previously proposed a `scripts/cli/`/`scripts/lib/`
+structure that doesn't exist in this codebase):
+
 ```
-scripts/cli/agent/lint.js        command handler (flowkit lint, flowkit lint:file)
-scripts/lib/flowlint/
-  ├── index.js                   main lint runner — orchestrates all domains
-  ├── screens.js                 screen file rules
+scripts/platform/check.js        command handlers: cmdCheck, cmdCheckScreens, cmdCheckConfig,
+                                  cmdCheckPlans, cmdCheckComponents, cmdCheckDb — dispatched
+                                  from router.js's p.cmd === 'check' branch
+scripts/checks/                  (sibling to scripts/authoring-support/, scripts/helpers/)
+  ├── screens.js                 screen file rules (default-export + screenMeta shape only —
+                                  forbidden-import checks live in eslint.config.js instead)
   ├── config.js                  flowkit.config.ts rules
-  ├── flowplans.js               flowplan rules (extends existing plan:check logic)
+  ├── flowplans.js                flowplan rules — plan:check's cmdPlanCheck becomes a thin
+                                  wrapper calling into this module's runner
   ├── components.js              component registry rules
   ├── db.js                      mock db rules
   ├── reporter.js                formats output (human + JSON)
-  └── ast-utils.js               shared AST parsing helpers
+  └── ts-parse.js                 shared @typescript-eslint/parser AST-walk helpers
 ```
 
 ### Relation to Existing `plan:check`
 
-`flowkit plan:check` (in `scripts/cli/plans.js`) currently validates:
-
-- Flowplan files can be found
-- `defineFlow` id matches filename
-- Steps reference valid screenIds
-
-FlowLint absorbs and extends this. `plan:check` remains as the standalone command but its logic is extracted into `scripts/lib/flowlint/flowplans.js` so both commands share the same validation code.
+Corrected — checked `scripts/platform/plans.js`'s `cmdPlanCheck` directly rather than assume:
+today it only does crude string-presence checks (`src.includes('id:')` / `.includes('name:')` /
+`.includes('steps:')`), not real parsing. It does **not** currently validate that step
+`screenId`s reference real screens, or check `defineFlow`'s id against the filename, despite
+this doc previously describing it that way. There is not substantial existing logic to
+"extract" — `check:plans`'s rule module in `scripts/checks/flowplans.js` is written close to
+from scratch, and `plan:check`/`fp:check` become a thin wrapper delegating to it (kept as
+working, backward-compatible commands — not removed, since `plan:check` is a live `prebuild`
+gate in `package.json` that other tooling already depends on).
 
 ---
 
@@ -249,7 +269,7 @@ The post-write hook configuration for Claude Code (`.claude/settings.json`):
         "hooks": [
           {
             "type": "command",
-            "command": "flowkit lint:file --path:${file}"
+            "command": "flowkit check:file --path:${file}"
           }
         ]
       }
@@ -258,7 +278,7 @@ The post-write hook configuration for Claude Code (`.claude/settings.json`):
 }
 ```
 
-For agents without hook support: AGENTS.md instructs the agent to run `flowkit lint` after each batch of file changes and before declaring a task complete.
+For agents without hook support: AGENTS.md instructs the agent to run `flowkit check` after each batch of file changes and before declaring a task complete.
 
 ---
 
@@ -269,17 +289,17 @@ This is a dedicated sprint after the CLI library sprint ships.
 **In scope:**
 
 - All rule domains above (screens, config, flowplans, components, db)
-- `flowkit lint` command (full workspace)
-- `flowkit lint:file` command (single file, for hooks)
+- `flowkit check` command (full workspace)
+- `flowkit check:file` command (single file, for hooks)
 - `--fix` auto-fix for safe rules
 - `--json` machine-readable output
 - Post-write hook configuration for Claude Code
-- `plan:check` refactored to reuse `flowlint/flowplans.js`
+- `plan:check` refactored to delegate to `scripts/checks/flowplans.js`
 - AGENTS.md updated from "COMING SOON" to active documentation
 
 **Out of scope (future sprint):**
 
 - IDE extension integration (VS Code problems panel)
-- `flowkit lint:watch` continuous mode
+- `flowkit check:watch` continuous mode
 - Custom rule authoring API
 - Cross-workspace checks

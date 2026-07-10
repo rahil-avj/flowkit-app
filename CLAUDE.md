@@ -288,7 +288,6 @@ npm run dev
 - `npm run build:standalone` — plain `tsc -b && vite build` (default `vite.config.ts`) + `inline.js` post-process; NOT the real standalone export path
 - `flowkit export` / `flowkit export:full` — the actual standalone HTML export; runs `npx vite build --config vite.config.standalone.ts` (requires `FLOWKIT_WORKSPACE` env var, uses `vite-plugin-singlefile`, outputs to `dist-standalone/`) via `scripts/builders/export.js`
 - `npm run build:lib` — builds the publishable `flowkit` npm package (`tsc -p tsconfig.build.json && vite build --config vite.lib.config.ts`) — see Package/Publish Mode below
-- `VITE_ENABLE_FLOWLENS=true npm run build` — includes FlowLens analytics chunk
 
 **Test**
 
@@ -331,10 +330,15 @@ npm run dev
 
 Set in `.env.local` (not committed).
 
-| Flag                             | Effect                                             |
-| -------------------------------- | -------------------------------------------------- |
-| `VITE_ENABLE_FLOWLENS=true`      | Includes FlowLens analytics chunk in build and dev |
-| `VITE_ENABLE_FLOWKIT_WATCH=true` | Starts the file-watcher plugin in dev              |
+| Flag                             | Effect                                |
+| -------------------------------- | -------------------------------------- |
+| `VITE_ENABLE_FLOWKIT_WATCH=true` | Starts the file-watcher plugin in dev  |
+
+FlowLens inclusion is **not** env-flag-gated — it's presence-based (see
+`docs/FLOWLENS.md`'s Build gating section): included whenever
+`src/modes/flowlens/index.ts` exists, stripped via Rollup DCE if that folder is
+removed. `flowkit export`/`export:full` (repo mode) automate this by
+temporarily renaming the folder for a plain `export`.
 
 ---
 

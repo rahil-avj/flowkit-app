@@ -95,11 +95,14 @@ Cleanup: the debounce timer (`recentFlushRef`) is cleared in the component's unm
 ### Event types
 
 See `EventType` in `src/features/flowTracer/types.ts`. Notable: `flow.entered/completed/
-exited-early/blocked`, **`flow.transition`** (a navigation resolved — carries
-`action`, `from`, `to`, and any `warnings`/`error` from `do()`/`goTo()`/guards),
-`screen.visited/dwell-end/blocked`, `interaction.tap/double-tap/hover/swipe/
-effect/frustrated-click`, `navigation.*`, `state.db-init/db-patch/db-reset`,
-`simulator.*`.
+exited-early/blocked`, **`flow.transition`** (emitted only when a navigation resolves
+*with a problem* — a screen guard blocks it, or a `do()`/`goTo()` resolver throws/warns;
+never fires on a clean, successful navigation — carries `action`, `from`, `to`, and
+`blocked`/`error`/`warnings` describing what went wrong; confirmed in
+`src/core/layout/FlowEngine.ts`, both emission sites are gated behind a
+blocked/`warnings.length > 0` check), `screen.visited/dwell-end/blocked`,
+`interaction.tap/double-tap/hover/swipe/effect/frustrated-click`, `navigation.*`,
+`state.db-init/db-patch/db-reset`, `simulator.*`.
 
 `state.db-init` snapshots the db at record start **only if non-default**;
 `state.db-patch` carries the **changed-keys diff** (not the whole db) so replay

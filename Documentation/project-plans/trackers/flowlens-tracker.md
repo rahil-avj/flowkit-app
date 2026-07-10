@@ -28,8 +28,8 @@ FlowLens covers two tightly related subsystems: **FlowTracer** (the recorder, al
 
 #### FlowLens mode (replay + analytics — build-gated)
 
-- Gated: `VITE_ENABLE_FLOWLENS=true` required for standalone build; in dev, available if `src/modes/flowlens/index.ts` exists
-- Lazy-loaded chunk — zero bytes in standalone when flag is off (Rollup DCE via `import.meta.env` inlining)
+- Gated: presence-based — available whenever `src/modes/flowlens/index.ts` exists on disk, in both dev and standalone builds. `VITE_ENABLE_FLOWLENS` does not gate this (superseded by the presence-based mechanism; see the 2026-07-10 correction entry below — dead env var removed).
+- Lazy-loaded chunk — zero bytes in standalone when the folder is absent (Rollup DCE via `import.meta.glob`)
 - Toggle: canvas toolbar ScanEye button, Action Center, per-session card "Replay in FlowLens"
 - `FlowLensModeContext` sits above `DashboardProvider` so `replayActive` is readable by the dashboard
 
@@ -136,3 +136,11 @@ Append-only. Most recent at top.
 **Decision:** Events and cursor samples are queued through `sessionWriteBatcher` — a module-level `WriteBatcher(300)` in `sessionDb.ts` — not written directly to IndexedDB.
 **Reason:** At 60fps cursor tracking, individual writes would produce ~60 IndexedDB transactions/sec. The batcher reduces this to ~2/sec with no data loss — `stopRecording` calls `await sessionWriteBatcher.flush()` before reading counts.
 **Source:** `src/features/flowTracer/sessionDb.ts`; `FLOWLENS.md` Write Batching section
+
+---
+
+## 2026-07-10 — Correction: `VITE_ENABLE_FLOWLENS` was a dead env var, removed
+
+**Finding:** Despite this doc's earlier entries describing `VITE_ENABLE_FLOWLENS` as the standalone-build gate, it was never actually read anywhere in the app/build logic — confirmed via exhaustive grep across `src/`, `scripts/`, and all three vite configs. The real gate has always been the presence-based `import.meta.glob` check in `FlowLensModeContext.tsx` (that file's own code comment states "No env flag needed"). `scripts/builders/export.js` set the env var on the child build process, but `vite.config.standalone.ts` never read it and never touched `src/modes/flowlens/`, so `flowkit export` and `export:full` produced identical output regardless of the flag — a real functional bug, not just a doc inaccuracy.
+**Fix:** Removed `VITE_ENABLE_FLOWLENS` entirely — the dead export.js env-var pass-through, the `ManageContent.tsx` "Enable FlowLens mode" UI button (which also mislabeled itself as controlling session *recording*, which is separately gated by the `flowkit:sessions:enabled` localStorage toggle per the entry above), the now-unused `generateEnvFlagPatch` generator, and stale comments/docs referencing it (`vite.config.ts`, `CLAUDE.md`, `README.md`, `docs/FLOWLENS.md`, `docs/FLOWLENS-GUIDE.md`, `Documentation/README.md`, `Documentation/product/vision/FEATURES.md`, `Documentation/product/features-by-persona.md`). `scripts/builders/export.js`'s `buildStandalone()` now actually implements the presence-based gate directly — renames `src/modes/flowlens/` out of the way for a plain `export`, restores it in a `finally` block — so `export` vs. `export:full` now genuinely differ in output, which they previously did not.
+**Source:** `src/shared/contexts/FlowLensModeContext.tsx`; `scripts/builders/export.js`
