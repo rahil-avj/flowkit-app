@@ -71,6 +71,26 @@ export function isRepoMode() {
 }
 
 /**
+ * Resolve the correct import line for a `defineX` helper (defineFlow,
+ * defineConfig, etc.) for whichever mode is currently active — repo mode
+ * imports from the internal @platform/core/config alias, flat/multi-workspace
+ * mode imports from the published 'flowkit' package.
+ *
+ * Single source of truth for this decision. Before this existed, commands
+ * that generate a brand-new file from scratch (no existing import line to
+ * round-trip, unlike config-patch.js's read-modify-write flow) each hardcoded
+ * one mode's import path directly — confirmed live: scripts/authoring/
+ * flowplans.js's create:flowplan hardcoded 'flowkit' (wrong in repo mode) and
+ * scripts/authoring/promote-flow.js hardcoded '@platform/core/config' (wrong
+ * in flat/multi-workspace mode), each breaking the opposite mode's build.
+ */
+export function resolveDefineImport(exportName) {
+  return isRepoMode()
+    ? `import { ${exportName} } from '@platform/core/config'`
+    : `import { ${exportName} } from 'flowkit'`
+}
+
+/**
  * Resolve the root directory for a workspace's files.
  * Repo mode: ROOT/workspaces/<name>
  * Flat mode (consumer project, no flowkit.mode: "multi" declared): process.cwd()
@@ -92,7 +112,7 @@ export function isRepoMode() {
  * returned project root, not workspace-1/.
  */
 export function workspacePath(name) {
-  if (isRepoMode()) return path.join(ROOT, 'workspaces', name)
+  if (isRepoMode()) return path.join(ROOT, 'workspaces', name ?? '')
   const cwd = process.cwd()
   if (!isMultiMode(cwd)) return cwd
   const { workspaces } = readFlowkitManifest(cwd)
@@ -127,7 +147,7 @@ export function getActiveWorkspaceName() {
     /* fallthrough */
   }
   const dirs = listWorkspaceDirs()
-  return dirs[0] ?? 'demo'
+  return dirs[0] ?? null
 }
 
 /**
@@ -140,6 +160,28 @@ export function requireRepoMode(commandLabel, flatModeHint) {
   console.log('')
   console.log(`✗ ${commandLabel} is not available in author (flat) projects.`)
   if (flatModeHint) console.log(`  ${flatModeHint}`)
+  console.log('')
+  process.exit(1)
+}
+
+/**
+ * Call at the top of any repo-mode command that needs a real active
+ * workspace and can't proceed without one. Returns the resolved name, or
+ * prints a consistent message and exits.
+ *
+ * getActiveWorkspaceName() used to fall back to the hardcoded literal
+ * 'demo' when zero workspaces existed, defeating every caller's own "no
+ * active workspace" guard — confirmed live: `flowkit help` reported "Active
+ * workspace: demo" and `flowkit status` then failed with "Workspace not
+ * found" for a workspace that was never real. This is the replacement
+ * chokepoint callers that truly can't proceed without one should use.
+ */
+export function requireActiveWorkspace(commandLabel) {
+  const ws = getActiveWorkspaceName()
+  if (ws) return ws
+  console.log('')
+  console.log(`✗ ${commandLabel}: no workspace exists yet.`)
+  console.log(`  Create one: flowkit nw <name>`)
   console.log('')
   process.exit(1)
 }

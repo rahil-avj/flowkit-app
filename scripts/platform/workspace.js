@@ -19,6 +19,7 @@ import {
   parseStringFlag,
 } from '../helpers/registry.js'
 import { prompt, selectFromList } from '../helpers/prompt.js'
+import { assertKebab, ValidationError } from '../helpers/validate.js'
 import { specContext } from './agent-spec.js'
 import {
   renderAgentFiles,
@@ -57,6 +58,15 @@ export async function cmdNewWorkspace(val) {
   if (!wsName) {
     console.error(r('✗ Workspace name required.'))
     process.exit(1)
+  }
+  try {
+    assertKebab(wsName, 'Workspace name')
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      console.error(r(`✗ ${e.message}`))
+      process.exit(1)
+    }
+    throw e
   }
 
   const wsDir = workspacePath(wsName)

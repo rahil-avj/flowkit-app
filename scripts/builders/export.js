@@ -110,9 +110,13 @@ async function _cmdExport(val, args = [], withLens = false) {
     console.log(b(` Exporting: ${wsName}`))
     console.log(d(' ────────────────────────────────────'))
 
-    // Pre-export checks
+    // Pre-export checks. Lint target must be mode-aware — workspacePath()
+    // resolves correctly in repo/flat/multi-workspace mode; a hardcoded
+    // `workspaces/${wsName}` (the old code) only exists in repo mode and
+    // silently breaks `flowkit export` under flat/multi-workspace mode.
+    const wsDir = workspacePath(wsName)
     const tscOk = runCheck('TypeScript', 'npx tsc --noEmit')
-    const lintOk = runCheck('ESLint', `npx eslint workspaces/${wsName} --max-warnings 0`)
+    const lintOk = runCheck('ESLint', `npx eslint "${wsDir}" --max-warnings 0`)
     // FlowLens library — warn-only (a broken session shouldn't block an export).
     cmdSessionsCheck(wsName, { warnOnly: true })
     console.log('')

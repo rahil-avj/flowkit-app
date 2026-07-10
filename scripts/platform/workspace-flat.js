@@ -19,9 +19,33 @@ import {
   assertScopedConsumerWorkspaceDir,
 } from '../helpers/flowkit-manifest.js'
 import { parseStringFlag } from '../helpers/args.js'
+import { assertKebab, ValidationError } from '../helpers/validate.js'
 import { prompt, selectFromList } from '../helpers/prompt.js'
 import { g, r, b, d, c } from '../helpers/colors.js'
-import { writeWorkspaceContent } from '../helpers/workspace-template.js'
+import {
+  writeWorkspaceContent,
+  writeMultiWorkspaceViteConfig,
+} from '../helpers/workspace-template.js'
+
+/**
+ * Validate a workspace name at the point it's first accepted, before it
+ * becomes a directory name, a package.json flowkit.workspaces entry, or
+ * (via any later authoring command touching flowkit.config.ts) a value
+ * interpolated into generated source — the earlier a bad name is caught,
+ * the fewer downstream files can end up with it baked in. Prints a clean
+ * CLI error and exits rather than letting a ValidationError escape raw.
+ */
+function validateWorkspaceName(name, label) {
+  try {
+    assertKebab(name, label)
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      console.error(r(`✗ ${e.message}`))
+      process.exit(1)
+    }
+    throw e
+  }
+}
 
 // Everything that lives at a workspace's own root and must move/collapse together.
 // Found by auditing every wsDir-relative path referenced across scripts/authoring/,
@@ -74,44 +98,13 @@ ${VITE_CONFIG_BUILD_BLOCK}
   )
 }
 
-/**
- * Writes the multi-workspace vite.config.ts — flowkit({ workspaceRoot,
- * standalone: true }), reading the active workspace from package.json's
- * flowkit.workspaces[0] on every config load. Matches
- * packages/create-flowkit-workspace/index.js's template exactly; keep both
- * in sync if either changes.
- */
-function writeMultiViteConfig(cwd) {
-  fs.writeFileSync(
-    path.join(cwd, 'vite.config.ts'),
-    `import fs from 'fs'
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { flowkit } from 'flowkit/vite'
-
-// Multi-workspace mode: the flowkit/vite plugin needs to know which workspace
-// folder to serve/build (there's no root-level flowkit.config.ts here — each
-// workspace has its own, nested one level down). Until a real active-workspace
-// switcher exists, this always resolves to the first entry in package.json's
-// flowkit.workspaces — re-read on every config load so \`flowkit
-// create:workspace\`/\`remove:workspace\`/\`rename:workspace\` take effect without
-// editing this file by hand.
-const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'))
-const activeWorkspace = pkg.flowkit?.workspaces?.[0]
-
-if (!activeWorkspace) {
-  throw new Error(
-    'No workspace found in package.json\\'s flowkit.workspaces — run \`flowkit create:workspace <name>\` first.'
-  )
-}
-
-export default defineConfig({
-  plugins: [react(), flowkit({ workspaceRoot: activeWorkspace, standalone: true })],
-${VITE_CONFIG_BUILD_BLOCK}
-})
-`
-  )
-}
+// Multi-workspace vite.config.ts template lives in workspace-template.js
+// (writeMultiWorkspaceViteConfig) — the same shared file both scaffolder
+// packages already import from their own `flowkit` devDependency — so this
+// command and `create-flowkit-workspace` can never drift apart again the way
+// they did before (scaffolder wrote a bare `flowkit()` with no options,
+// silently producing an empty bundle).
+const writeMultiViteConfig = writeMultiWorkspaceViteConfig
 
 function moveEntries(fromDir, toDir, entries) {
   fs.mkdirSync(toDir, { recursive: true })
@@ -154,6 +147,7 @@ export async function cmdConvertMulti(_val, args = []) {
   }
 
   const name = parseStringFlag(args, 'name') || 'workspace-1'
+  validateWorkspaceName(name, 'Workspace name')
   const targetDir = path.join(cwd, name)
   assertScopedConsumerWorkspaceDir(targetDir, name, cwd)
 
@@ -207,6 +201,7 @@ async function resolveNewWorkspaceName(args) {
     console.error(r('✗ Workspace name required.'))
     process.exit(1)
   }
+  validateWorkspaceName(name, 'Workspace name')
   return name
 }
 
@@ -331,6 +326,7 @@ export async function cmdRenameWorkspace(_val, args = []) {
     console.error(r('✗ Usage: flowkit rename:workspace <old> <new>'))
     process.exit(1)
   }
+  validateWorkspaceName(newName, 'New workspace name')
 
   const manifest = readFlowkitManifest(cwd)
   if (!manifest.workspaces.includes(oldName)) {

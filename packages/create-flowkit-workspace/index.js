@@ -102,7 +102,7 @@ function usage() {
     npm create flowkit-workspace@latest my-project -- --lang:js
 
   ${d('The scaffolded project starts with one workspace folder ("workspace-1/").')}
-  ${d('Add more any time with `flowkit add:workspace <name>` inside the project.')}
+  ${d('Add more any time with `flowkit create:workspace <name>` inside the project.')}
 
   ${d('flowkit contributors: --local-dev points the generated project at your')}
   ${d('local flowkit checkout instead of the published package. Only works when')}
@@ -199,7 +199,7 @@ function writePackageJson(dir, name, language) {
     },
     // Declared explicitly, never inferred from folder shape — see
     // scripts/helpers/flowkit-manifest.js for the read/write helpers that
-    // consume this at runtime (flowkit convert:*/add:workspace/etc.).
+    // consume this at runtime (flowkit convert:*/create:workspace/etc.).
     flowkit: {
       mode: 'multi',
       workspaces: [DEFAULT_WORKSPACE_NAME],
@@ -224,19 +224,9 @@ function writePackageJson(dir, name, language) {
   fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2) + '\n')
 }
 
-function writeViteConfig(dir) {
-  fs.writeFileSync(
-    path.join(dir, 'vite.config.ts'),
-    `import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { flowkit } from 'flowkit/vite'
-
-export default defineConfig({
-  plugins: [react(), flowkit()],
-})
-`
-  )
-}
+// vite.config.ts is NOT generated here — see writeMultiWorkspaceViteConfig()
+// in scripts/helpers/workspace-template.js, imported dynamically further down
+// after `npm install` (same reasoning as writeWorkspaceContent() below).
 
 function writeTsConfig(dir) {
   fs.writeFileSync(
@@ -282,7 +272,7 @@ See "First session" below.
 
 ## Workspaces
 
-- \`flowkit add:workspace <name>\` — add another workspace
+- \`flowkit create:workspace <name>\` — add another workspace
 - \`flowkit remove:workspace <name>\` — remove a workspace
 - \`flowkit rename:workspace <old> <new>\` — rename a workspace
 - \`flowkit convert:flat\` — collapse back down to a single implicit workspace at root
@@ -407,7 +397,6 @@ async function main() {
     )
 
     writePackageJson(targetDir, projectName, language)
-    writeViteConfig(targetDir)
     if (language === 'ts') writeTsConfig(targetDir)
     writePostcssConfig(targetDir)
     writeClaude(targetDir)
@@ -419,12 +408,20 @@ async function main() {
         b(language === 'js' ? 'JavaScript (.jsx / .js)' : 'TypeScript (.tsx / .ts)')
     )
 
-    // Install BEFORE writing workspace content: writeWorkspaceContent() lives
-    // in flowkit itself (scripts/helpers/workspace-template.js — the one
-    // shared source of truth also used by create-flowkit-app and this repo's
-    // own `flowkit add:workspace` command) and is only resolvable from
-    // node_modules/flowkit once installed. See create-flowkit-app/index.js
-    // for the identical pattern and the --install-links symlink rationale.
+    // Install BEFORE writing vite.config.ts or workspace content: both
+    // writeMultiWorkspaceViteConfig() and writeWorkspaceContent() live in
+    // flowkit itself (scripts/helpers/workspace-template.js — the one shared
+    // source of truth also used by create-flowkit-app and this repo's own
+    // `flowkit create:workspace`/`convert:multi` commands) and are only
+    // resolvable from node_modules/flowkit once installed. See
+    // create-flowkit-app/index.js for the identical pattern and the
+    // --install-links symlink rationale.
+    //
+    // vite.config.ts specifically must come from the shared template (not a
+    // local copy in this file) so a freshly scaffolded project can never
+    // drift from what `flowkit convert:multi` produces — confirmed as a real
+    // bug: this file used to write a bare `flowkit()` with no options here,
+    // silently producing an empty bundle (no workspaceRoot, no standalone).
     console.log(`  ${d('Installing dependencies (this may take a moment)...')}`)
     execSync(`npm install${WANTS_LOCAL_DEV ? ' --install-links' : ''}`, {
       cwd: targetDir,
@@ -435,7 +432,8 @@ async function main() {
     const templateUrl = pathToFileURL(
       path.join(targetDir, 'node_modules', 'flowkit', 'scripts', 'helpers', 'workspace-template.js')
     ).href
-    const { writeWorkspaceContent } = await import(templateUrl)
+    const { writeWorkspaceContent, writeMultiWorkspaceViteConfig } = await import(templateUrl)
+    writeMultiWorkspaceViteConfig(targetDir)
     const wsDir = path.join(targetDir, DEFAULT_WORKSPACE_NAME)
     fs.mkdirSync(wsDir, { recursive: true })
     writeWorkspaceContent(wsDir, DEFAULT_WORKSPACE_NAME, language)
@@ -452,7 +450,7 @@ async function main() {
     console.log(`    ${c(`cd ${projectName}`)}`)
     console.log(`    ${c('npm run dev')}`)
     console.log('')
-    console.log(`  ${d(`Add another workspace any time: flowkit add:workspace <name>`)}`)
+    console.log(`  ${d(`Add another workspace any time: flowkit create:workspace <name>`)}`)
     console.log('')
   } catch (err) {
     console.error(r(`\n  ✗ Failed: ${err.message}`))

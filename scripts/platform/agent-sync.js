@@ -6,7 +6,7 @@ import {
   workspacePath,
   isRepoMode,
   PLATFORM_WORKSPACES_FILE,
-  getActiveWorkspaceName,
+  requireActiveWorkspace,
 } from '../helpers/paths.js'
 import { g, r, b, d } from '../helpers/colors.js'
 import { readJson, writeJson } from '../helpers/json.js'
@@ -201,7 +201,7 @@ export function ctxFor(ws) {
 
 /** flowkit agent:sync[:<ws>] [--agent:<target>] — re-emit generated files (never project.md). */
 export function cmdAgentSync(val, args = []) {
-  const ws = (val || '').trim() || getActiveWorkspaceName()
+  const ws = (val || '').trim() || requireActiveWorkspace('flowkit agent:sync')
   const wsDir = workspacePath(ws)
   if (!fs.existsSync(wsDir)) {
     console.error(r(`✗ Workspace not found: ${wsDir}`))

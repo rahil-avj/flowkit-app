@@ -57,7 +57,7 @@ function listFlowplans(ws, project) {
 // ─── plan:ls ──────────────────────────────────────────────────────────────────
 
 export function cmdPlanLs(val, args) {
-  const ws = resolveWorkspace('')
+  const ws = resolveWorkspace(val)
   const projectFlag = (args.find(a => a.startsWith('--project:')) || '').slice('--project:'.length)
   const plans = listFlowplans(ws, projectFlag || null)
 
@@ -84,12 +84,12 @@ export function cmdPlanLs(val, args) {
 // ─── plan:check ───────────────────────────────────────────────────────────────
 
 export function cmdPlanCheck(val, args) {
-  const ws = resolveWorkspace('')
+  const ws = resolveWorkspace(val)
   const projectFlag = (args.find(a => a.startsWith('--project:')) || '').slice('--project:'.length)
-  const plans = listFlowplans(ws, projectFlag || null)
+  const plans = ws ? listFlowplans(ws, projectFlag || null) : []
 
   console.log('')
-  console.log(b(` plan:check — ${ws}`))
+  console.log(b(` plan:check — ${ws || '(no workspace)'}`))
   console.log(d(' ────────────────────────────────────────────'))
 
   if (plans.length === 0) {

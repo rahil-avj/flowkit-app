@@ -3,7 +3,8 @@ import fs from 'fs'
 import path from 'path'
 import { parseStringFlag } from '../helpers/args.js'
 import { resolveWorkspace } from '../helpers/workspace-resolve.js'
-import { workspacePath } from '../helpers/paths.js'
+import { workspacePath, assertScopedWorkspaceDir } from '../helpers/paths.js'
+import { assertWithinWorkspace, ValidationError } from '../helpers/validate.js'
 import { g, r, b, d, c } from '../helpers/colors.js'
 import {
   readComponents,
@@ -16,7 +17,10 @@ import {
 const PASCAL_RE = /^[A-Z][A-Za-z0-9]+$/
 
 function componentTemplate(name, desc) {
-  const descLine = desc ? `// ${desc}\n` : ''
+  // Force the comment onto one line — a newline in --desc would otherwise
+  // break out of the `//` comment and inject raw code into the file below it.
+  const singleLineDesc = desc ? desc.replace(/[\r\n]+/g, ' ').trim() : ''
+  const descLine = singleLineDesc ? `// ${singleLineDesc}\n` : ''
   return `${descLine}// Usage: import { ${name} } from '@workspace/lib/components'
 
 interface Props {
@@ -70,6 +74,7 @@ function removeExportFromBarrel(barrelPath, name) {
 export async function cmdCreateComponent(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
+  assertScopedWorkspaceDir(wsDir, wsName)
   const name = parseStringFlag(args, 'name')
   const compPath = parseStringFlag(args, 'path')
   const desc = parseStringFlag(args, 'desc') || ''
@@ -87,6 +92,16 @@ export async function cmdCreateComponent(_val, args = []) {
   if (!PASCAL_RE.test(name)) {
     console.error(r(`✗ Component name '${name}' must be PascalCase (e.g. StatusBadge)`))
     process.exit(1)
+  }
+
+  try {
+    assertWithinWorkspace(wsDir, compPath, '--path')
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      console.error(r(`✗ ${e.message}`))
+      process.exit(1)
+    }
+    throw e
   }
 
   const existing = findComponent(wsDir, name)
@@ -136,6 +151,7 @@ export async function cmdCreateComponent(_val, args = []) {
 export async function cmdRemoveComponent(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
+  assertScopedWorkspaceDir(wsDir, wsName)
   const name = parseStringFlag(args, 'name')
   const compPath = parseStringFlag(args, 'path')
 
@@ -154,6 +170,16 @@ export async function cmdRemoveComponent(_val, args = []) {
     process.exit(1)
   }
 
+  try {
+    assertWithinWorkspace(wsDir, resolvedPath, '--path')
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      console.error(r(`✗ ${e.message}`))
+      process.exit(1)
+    }
+    throw e
+  }
+
   const compFile = path.join(wsDir, resolvedPath, `${name}.tsx`)
   if (fs.existsSync(compFile)) fs.unlinkSync(compFile)
 
@@ -170,6 +196,7 @@ export async function cmdRemoveComponent(_val, args = []) {
 export async function cmdComponentsFind(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
+  assertScopedWorkspaceDir(wsDir, wsName)
   const name = parseStringFlag(args, 'name')
 
   if (!name) {
@@ -216,6 +243,7 @@ export async function cmdComponentsFind(_val, args = []) {
 export async function cmdComponentsLs(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
+  assertScopedWorkspaceDir(wsDir, wsName)
   const filterPath = parseStringFlag(args, 'path')
 
   let entries = readComponents(wsDir)
@@ -245,6 +273,7 @@ export async function cmdComponentsLs(_val, args = []) {
 export async function cmdComponentsScan(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
+  assertScopedWorkspaceDir(wsDir, wsName)
 
   const libDir = path.join(wsDir, 'lib', 'components')
   if (!fs.existsSync(libDir)) {
@@ -291,12 +320,23 @@ export async function cmdComponentsScan(_val, args = []) {
 export async function cmdAddExport(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
+  assertScopedWorkspaceDir(wsDir, wsName)
   const barrelRel = parseStringFlag(args, 'barrel')
   const name = parseStringFlag(args, 'name')
 
   if (!barrelRel || !name) {
     console.error(r('✗ --barrel:<path/to/index.ts> and --name:<ExportName> are required'))
     process.exit(1)
+  }
+
+  try {
+    assertWithinWorkspace(wsDir, barrelRel, '--barrel')
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      console.error(r(`✗ ${e.message}`))
+      process.exit(1)
+    }
+    throw e
   }
 
   const barrelPath = path.join(wsDir, barrelRel)
@@ -331,11 +371,22 @@ export async function cmdAddExport(_val, args = []) {
 export async function cmdListExports(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
+  assertScopedWorkspaceDir(wsDir, wsName)
   const barrelRel = parseStringFlag(args, 'barrel')
 
   if (!barrelRel) {
     console.error(r('✗ --barrel:<path/to/index.ts> is required'))
     process.exit(1)
+  }
+
+  try {
+    assertWithinWorkspace(wsDir, barrelRel, '--barrel')
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      console.error(r(`✗ ${e.message}`))
+      process.exit(1)
+    }
+    throw e
   }
 
   const barrelPath = path.join(wsDir, barrelRel)

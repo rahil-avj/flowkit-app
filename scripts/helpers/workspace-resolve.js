@@ -1,15 +1,16 @@
 // Helper: resolves a workspace name from a CLI value or falls back to the active one.
 import fs from 'fs'
 import path from 'path'
-import { workspacePath, getActiveWorkspaceName } from './paths.js'
+import { workspacePath, getActiveWorkspaceName, requireActiveWorkspace } from './paths.js'
 import { red } from './colors.js'
 
 /**
  * Resolve a workspace name from a CLI value string (e.g. from `:<name>` flag).
- * Falls back to the active workspace. Exits with code 1 if the directory doesn't exist.
+ * Falls back to the active workspace. Exits with code 1 if no workspace is
+ * active, or if the resolved directory doesn't exist.
  */
 export function resolveWorkspace(val) {
-  const ws = (val || '').trim() || getActiveWorkspaceName()
+  const ws = (val || '').trim() || requireActiveWorkspace('flowkit')
   if (!fs.existsSync(workspacePath(ws))) {
     console.error(red(`✗ Workspace not found: ${workspacePath(ws)}`))
     process.exit(1)

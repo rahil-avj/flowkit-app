@@ -4,6 +4,7 @@ import path from 'path'
 import { parseStringFlag } from '../helpers/args.js'
 import { resolveWorkspace } from '../helpers/workspace-resolve.js'
 import { workspacePath, assertScopedWorkspaceDir } from '../helpers/paths.js'
+import { asJsStringLiteral } from '../helpers/validate.js'
 import { g, r, b, d, c } from '../helpers/colors.js'
 import {
   readWorkspaceConfig,
@@ -49,7 +50,7 @@ export default function ${pascalName}Screen({ onNext, db }: FlowScreenProps) {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const screenMeta = { label: '${label}', desc: '' }
+export const screenMeta = { label: ${asJsStringLiteral(label)}, desc: '' }
 `
 }
 

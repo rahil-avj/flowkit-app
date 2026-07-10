@@ -3,7 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { parseStringFlag } from '../helpers/args.js'
 import { resolveWorkspace } from '../helpers/workspace-resolve.js'
-import { workspacePath } from '../helpers/paths.js'
+import { workspacePath, resolveDefineImport, assertScopedWorkspaceDir } from '../helpers/paths.js'
 import { g, r, b, d, c } from '../helpers/colors.js'
 import { readWorkspaceConfig } from '../authoring-support/config-patch.js'
 
@@ -40,7 +40,7 @@ function parseFlowplan(filePath) {
 /** Format a single step object back to source. */
 function formatStep(step) {
   const parts = [`screenId: '${step.screenId}'`]
-  if (step.on) parts.push(`on: '${step.on}'`)
+  if (step.on) parts.push(`on: '${step.on.replace(/'/g, "\\'")}'`)
   if (step.actionNote) parts.push(`actionNote: '${step.actionNote.replace(/'/g, "\\'")}'`)
   if (step.decisionNote) parts.push(`decisionNote: '${step.decisionNote.replace(/'/g, "\\'")}'`)
   if (step.annotation) parts.push(`annotation: '${step.annotation.replace(/'/g, "\\'")}'`)
@@ -57,7 +57,7 @@ function rewriteSteps(filePath, steps) {
 }
 
 function flowplanTemplate(id, displayName) {
-  return `import { defineFlow } from 'flowkit'
+  return `${resolveDefineImport('defineFlow')}
 
 export default defineFlow({
   id: '${id}',
@@ -74,6 +74,7 @@ export default defineFlow({
 export async function cmdCreateFlowplan(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
+  assertScopedWorkspaceDir(wsDir, wsName)
   let id = parseStringFlag(args, 'name')
 
   if (!id) {
@@ -112,6 +113,7 @@ export async function cmdCreateFlowplan(_val, args = []) {
 export async function cmdRemoveFlowplan(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
+  assertScopedWorkspaceDir(wsDir, wsName)
   const id = parseStringFlag(args, 'name')
   const force = args.includes('--force')
 
@@ -138,6 +140,7 @@ export async function cmdRemoveFlowplan(_val, args = []) {
 export async function cmdAddStep(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
+  assertScopedWorkspaceDir(wsDir, wsName)
   const fpId = parseStringFlag(args, 'flowplan')
   const screenId = parseStringFlag(args, 'screen')
   const on = parseStringFlag(args, 'on')
@@ -198,6 +201,7 @@ export async function cmdAddStep(_val, args = []) {
 export async function cmdRemoveStep(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
+  assertScopedWorkspaceDir(wsDir, wsName)
   const fpId = parseStringFlag(args, 'flowplan')
   const indexStr = parseStringFlag(args, 'index')
 
@@ -237,6 +241,7 @@ export async function cmdRemoveStep(_val, args = []) {
 export async function cmdListSteps(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
+  assertScopedWorkspaceDir(wsDir, wsName)
   const fpId = parseStringFlag(args, 'flowplan')
 
   if (!fpId) {
@@ -278,6 +283,7 @@ export async function cmdListSteps(_val, args = []) {
 export async function cmdFlowplanInfo(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
+  assertScopedWorkspaceDir(wsDir, wsName)
   const fpId = parseStringFlag(args, 'name')
 
   if (!fpId) {

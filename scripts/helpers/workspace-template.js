@@ -1,6 +1,6 @@
 // Shared per-workspace content generator — the one source of truth for demo
 // workspace content (flowkit.config.ts, flowplans, five screens, db, tokens.css)
-// across three call sites: this repo's own `flowkit add:workspace` command
+// across three call sites: this repo's own `flowkit create:workspace` command
 // (scripts/platform/workspace-flat.js), and the two standalone scaffolder
 // packages (create-flowkit-app, create-flowkit-workspace), which import this
 // file from their own `flowkit` devDependency at scaffold-time (i.e. from
@@ -331,6 +331,66 @@ export function writeTokensCss(dir, workspaceName) {
   fs.mkdirSync(path.join(dir, 'lib', 'design-system'), { recursive: true })
   const content = `/* ${workspaceName} — Design Tokens */\n/* No UI kit is pre-installed. Add your own CSS variables here, or ask\n   Flowaid (see CLAUDE.md) to help you pick and wire up a component approach. */\n:root {\n  /* --my-brand: #1a1a2e; */\n}\n`
   fs.writeFileSync(path.join(dir, 'lib', 'design-system', 'tokens.css'), content)
+}
+
+// The onwarn suppression is identical everywhere this build block is used —
+// INEFFECTIVE_DYNAMIC_IMPORT is expected/harmless: screens are both statically
+// listed (for eager type-checking) and dynamically imported (for code-splitting)
+// by the virtual:flowkit/screens module flowkit/vite generates.
+const VITE_CONFIG_BUILD_BLOCK = `  build: {
+    rollupOptions: {
+      onwarn(warning, defaultHandler) {
+        if (warning.code === 'INEFFECTIVE_DYNAMIC_IMPORT') return
+        defaultHandler(warning)
+      },
+    },
+  },`
+
+/**
+ * Writes the multi-workspace project's vite.config.ts — flowkit({ workspaceRoot,
+ * standalone: true }), reading the active workspace from package.json's
+ * flowkit.workspaces[0] on every config load (so create:workspace/remove:workspace/
+ * rename:workspace take effect without hand-editing this file).
+ *
+ * Single source of truth for this template — both scripts/platform/workspace-flat.js
+ * (flowkit convert:multi, run against this monorepo's own consumer-mode helpers)
+ * and packages/create-flowkit-workspace/index.js (scaffolding a brand-new project)
+ * must produce byte-identical output, or a freshly scaffolded multi-workspace
+ * project silently diverges from what `convert:multi` produces from a flat one —
+ * confirmed as a real bug: the scaffolder used to write a bare `flowkit()` with
+ * no options, which builds an empty bundle (no workspaceRoot, no standalone) since
+ * nothing else in a from-scratch project supplies the platform aliases.
+ */
+export function writeMultiWorkspaceViteConfig(dir) {
+  fs.writeFileSync(
+    path.join(dir, 'vite.config.ts'),
+    `import fs from 'fs'
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { flowkit } from 'flowkit/vite'
+
+// Multi-workspace mode: the flowkit/vite plugin needs to know which workspace
+// folder to serve/build (there's no root-level flowkit.config.ts here — each
+// workspace has its own, nested one level down). Until a real active-workspace
+// switcher exists, this always resolves to the first entry in package.json's
+// flowkit.workspaces — re-read on every config load so \`flowkit
+// create:workspace\`/\`remove:workspace\`/\`rename:workspace\` take effect without
+// editing this file by hand.
+const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'))
+const activeWorkspace = pkg.flowkit?.workspaces?.[0]
+
+if (!activeWorkspace) {
+  throw new Error(
+    'No workspace found in package.json\\'s flowkit.workspaces — run \`flowkit create:workspace <name>\` first.'
+  )
+}
+
+export default defineConfig({
+  plugins: [react(), flowkit({ workspaceRoot: activeWorkspace, standalone: true })],
+${VITE_CONFIG_BUILD_BLOCK}
+})
+`
+  )
 }
 
 /** Writes the full demo content set (config, flowplans, five screens, db, tokens) for one workspace folder. */

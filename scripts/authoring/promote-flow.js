@@ -3,7 +3,13 @@ import fs from 'fs'
 import path from 'path'
 import { parseStringFlag } from '../helpers/args.js'
 import { resolveWorkspace } from '../helpers/workspace-resolve.js'
-import { workspacePath, assertScopedWorkspaceDir } from '../helpers/paths.js'
+import { workspacePath, assertScopedWorkspaceDir, resolveDefineImport } from '../helpers/paths.js'
+import {
+  assertKebab,
+  assertWithinWorkspace,
+  asJsStringLiteral,
+  ValidationError,
+} from '../helpers/validate.js'
 import { g, r, c, d } from '../helpers/colors.js'
 
 // Phase-1 "merge/slice" pipeline. Takes a flowplan file and a fork label; writes a
@@ -33,6 +39,20 @@ export async function cmdPromoteFlow(_val, args = []) {
       )
     )
     process.exit(1)
+  }
+
+  // assertWithinWorkspace rejects both `../`-style traversal AND absolute
+  // paths outside the workspace — path.resolve(wsDir, absolutePath) ignores
+  // wsDir entirely for an absolute second argument, so the same check covers
+  // both branches of the ternary below without needing to special-case either.
+  try {
+    assertWithinWorkspace(wsDir, fileArg, '--flowplan')
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      console.error(r(`✗ ${e.message}`))
+      process.exit(1)
+    }
+    throw e
   }
 
   const filePath = path.isAbsolute(fileArg) ? fileArg : path.join(wsDir, fileArg)
@@ -89,6 +109,15 @@ export async function cmdPromoteFlow(_val, args = []) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
   const newId = newIdArg || `${slug}-flow`
+  try {
+    assertKebab(newId, '--as')
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      console.error(r(`✗ ${e.message}`))
+      process.exit(1)
+    }
+    throw e
+  }
   const pascal = slug
     .split('-')
     .filter(Boolean)
@@ -104,12 +133,13 @@ export async function cmdPromoteFlow(_val, args = []) {
 
   // ── Write the new flowplan ────────────────────────────────────────────────────
 
-  const newFlow = `import { defineFlow } from "@platform/core/config";
+  const forkLabelLiteral = asJsStringLiteral(forkLabel)
+  const newFlow = `${resolveDefineImport('defineFlow')};
 
-// Promoted from "${forkLabel}" fork in ${path.basename(filePath)} via promote:flow.
+// Promoted from ${forkLabelLiteral} fork in ${path.basename(filePath)} via promote:flow.
 export default defineFlow({
-  id: "${newId}",
-  name: "${forkLabel}",
+  id: ${asJsStringLiteral(newId)},
+  name: ${forkLabelLiteral},
   steps: [
 ${stepsBody
   .split('\n')
@@ -131,13 +161,15 @@ ${stepsBody
   console.log(`
   forks: [
     {
-      label: "${forkLabel}",
+      label: ${forkLabelLiteral},
       // ...keep the fork's db condition if any...
-      steps: [{ ref: "${newId}" }],
+      steps: [{ ref: ${asJsStringLiteral(newId)} }],
     },
   ],
 `)
-  console.log(c('Or, to inline it as a plain step instead of a fork, use:  { ref: "' + newId + '" }'))
+  console.log(
+    c('Or, to inline it as a plain step instead of a fork, use:  { ref: ' + asJsStringLiteral(newId) + ' }')
+  )
   console.log('')
   console.log('Then verify:  npx tsc -b  &&  npx vitest run')
 }

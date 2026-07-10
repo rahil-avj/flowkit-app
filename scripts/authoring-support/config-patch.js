@@ -6,6 +6,8 @@
 
 import fs from 'fs'
 import path from 'path'
+import { resolveDefineImport } from '../helpers/paths.js'
+import { asJsStringLiteral } from '../helpers/validate.js'
 
 function getConfigPath(wsDir) {
   return path.join(wsDir, 'flowkit.config.ts')
@@ -13,7 +15,10 @@ function getConfigPath(wsDir) {
 
 // Fallback import line if a config file somehow has none to preserve (should
 // not happen for any real scaffolded file, repo-mode or flat-mode/standalone).
-const DEFAULT_IMPORT_LINE = `import { defineConfig } from 'flowkit'`
+// Resolved per-mode rather than hardcoded — see resolveDefineImport().
+function defaultImportLine() {
+  return resolveDefineImport('defineConfig')
+}
 
 /** Parse flowkit.config.ts into a plain JS object without TypeScript compilation. */
 function readConfig(wsDir) {
@@ -29,7 +34,7 @@ function readConfig(wsDir) {
   // create:flow rewrote a flat-mode project's working import into the
   // repo-mode path, and nothing caught it until `npm run build` failed).
   const importMatch = src.match(/^import\s+.*$/m)
-  const importLine = importMatch ? importMatch[0] : DEFAULT_IMPORT_LINE
+  const importLine = importMatch ? importMatch[0] : defaultImportLine()
   // Strip the import line (always the same single line)
   src = src.replace(/^import\s+.*\n/m, '')
   // Replace `export default defineConfig(` with a returnable expression
@@ -72,10 +77,10 @@ function writeConfig(wsDir, config) {
   }
 
   const lines = [
-    config._importLine || DEFAULT_IMPORT_LINE,
+    config._importLine || defaultImportLine(),
     ``,
     `export default defineConfig({`,
-    `  workspace: { name: '${config.workspace.name}' },`,
+    `  workspace: { name: ${asJsStringLiteral(config.workspace.name)} },`,
     `  flows: [`,
     flowsStr,
     `  ],`,
