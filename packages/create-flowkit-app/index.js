@@ -388,6 +388,33 @@ dist/
   )
 }
 
+function writeReadme(dir, name) {
+  fs.writeFileSync(
+    path.join(dir, 'README.md'),
+    `# ${name}
+
+A [FlowKit](https://github.com/rahil-avj/flowkit-app) author project.
+
+## Getting started
+
+\`\`\`bash
+npm run dev      # start the dev server
+npm run build    # production build
+\`\`\`
+
+## Project layout
+
+- \`flows/\` — screen components, organized by flow then screen name
+- \`flowplans/\` — playback scripts (sequences of screens with interaction definitions)
+- \`lib/\` — shared data, components, and utilities
+- \`flowkit.config.ts\` — flow and screen registration
+
+See \`docs/CLI.md\` for the full \`flowkit\` CLI command reference, and \`CLAUDE.md\`
+if you're working with an AI coding agent on this project.
+`
+  )
+}
+
 // ── Copy docs from installed flowkit ──────────────────────────────────────────
 
 function copyDocsFromFlowkit(targetDir) {
@@ -426,6 +453,7 @@ async function main() {
     writePostcssConfig(targetDir)
     writeClaude(targetDir)
     writeGitignore(targetDir)
+    writeReadme(targetDir, projectName)
 
     console.log(`  ${g('✓')} Scaffolded project files`)
     console.log(

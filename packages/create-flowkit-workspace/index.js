@@ -344,6 +344,38 @@ function writePostcssConfig(dir) {
   )
 }
 
+function writeReadme(dir, name) {
+  fs.writeFileSync(
+    path.join(dir, 'README.md'),
+    `# ${name}
+
+A [FlowKit](https://github.com/rahil-avj/flowkit-app) multi-workspace author project.
+
+## Getting started
+
+\`\`\`bash
+npm run dev      # start the dev server
+npm run build    # production build
+\`\`\`
+
+## Workspaces
+
+This project starts with one workspace, \`${DEFAULT_WORKSPACE_NAME}/\`. Each workspace
+folder is independent, with its own \`flows/\`, \`flowplans/\`, and \`lib/\`.
+
+\`\`\`bash
+flowkit create:workspace <name>          # add a workspace
+flowkit remove:workspace <name>          # remove a workspace
+flowkit rename:workspace <old> <new>     # rename a workspace
+flowkit convert:flat                     # collapse back to a single implicit workspace
+\`\`\`
+
+See \`docs/CLI.md\` for the full \`flowkit\` CLI command reference, and \`CLAUDE.md\`
+if you're working with an AI coding agent on this project.
+`
+  )
+}
+
 function writeGitignore(dir) {
   fs.writeFileSync(
     path.join(dir, '.gitignore'),
@@ -401,6 +433,7 @@ async function main() {
     writePostcssConfig(targetDir)
     writeClaude(targetDir)
     writeGitignore(targetDir)
+    writeReadme(targetDir, projectName)
 
     console.log(`  ${g('✓')} Scaffolded project files`)
     console.log(
