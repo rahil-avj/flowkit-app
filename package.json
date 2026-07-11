@@ -32,7 +32,8 @@
     "docs/",
     "index.html",
     "!scripts/tests/",
-    "!scripts/builders/format.mjs"
+    "!scripts/builders/format.mjs",
+    "!scripts/dev/"
   ],
   "exports": {
     ".": {

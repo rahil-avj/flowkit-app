@@ -22,6 +22,9 @@ workspaces
 # FlowLens generated reports (per-workspace, gitignored)
 workspaces/*/lib/flowLens/reports/
 
+# Canary scope-toggle transient state (scripts/dev/scope-toggle.js)
+scripts/dev/.pre-canary-snapshot.json
+
 # Temporary CLI artifacts
 .flowkit-backup.json
 flowkit-dump-*/
