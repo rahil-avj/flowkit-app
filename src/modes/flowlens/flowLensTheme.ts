@@ -10,6 +10,6 @@
 export {
   FLOWLENS_ACCENT,
   FLOWLENS_ACCENT_SOFT,
-} from '@platform/shared/contexts/FlowLensModeContext'
+} from '@flowkit-shared/contexts/FlowLensModeContext'
 
 export const FLOWLENS_ACCENT_BORDER = 'rgba(139, 92, 246, 0.5)'

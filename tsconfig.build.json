@@ -10,10 +10,10 @@
     "outDir": "./dist/types",
     "rootDir": "./src",
     "paths": {
-      "@platform/types/index": ["./src/types/index.ts"],
-      "@platform/types/*": ["./src/types/*"],
-      "@platform/shared/contexts/*": ["./src/shared/contexts/*"],
-      "@platform/*": ["./src/*"]
+      "@flowkit/types/index": ["./src/types/index.ts"],
+      "@flowkit/types/*": ["./src/types/*"],
+      "@flowkit/shared/contexts/*": ["./src/shared/contexts/*"],
+      "@flowkit/*": ["./src/*"]
     },
     "skipLibCheck": true
   },

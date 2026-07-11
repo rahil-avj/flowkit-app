@@ -103,7 +103,7 @@ export function generateFlowOrderPatch(
 ): PatchScript {
   const script = `node << 'FLOWKIT_FLOW_ORDER'
 const fs = require('fs');
-const configPath = 'workspaces/${ws}/flowkit.config.ts';
+const configPath = 'workspaces/${ws}/workspace.ts';
 let src = fs.readFileSync(configPath, 'utf8');
 const projectFlowMap = ${JSON.stringify(projectFlowMap, null, 2)};
 
@@ -119,7 +119,7 @@ Object.entries(projectFlowMap).forEach(([project, flows]) => {
     src = replaced;
   } else {
     // Insert the projects block if absent — append before closing brace of defineConfig arg.
-    console.warn('Could not auto-patch ' + project + '. Edit flowkit.config.ts manually:');
+    console.warn('Could not auto-patch ' + project + '. Edit workspace.ts manually:');
     console.warn('  ' + project + ': { flows: ' + flowsStr + ' }');
   }
 });

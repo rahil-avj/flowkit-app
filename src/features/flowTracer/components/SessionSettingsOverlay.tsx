@@ -1,5 +1,5 @@
-import OverlayShell from '@platform/shared/components/overlays/OverlayShell'
-import Select from '@platform/shared/components/ui/Select'
+import OverlayShell from '@flowkit-shared/components/overlays/OverlayShell'
+import Select from '@flowkit-shared/components/ui/Select'
 import { Lock, X } from 'lucide-react'
 import { useState } from 'react'
 

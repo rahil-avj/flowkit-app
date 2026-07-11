@@ -1,12 +1,13 @@
 // Shared per-workspace content generator — the one source of truth for demo
-// workspace content (flowkit.config.ts, flowplans, five screens, db, tokens.css)
-// across three call sites: this repo's own `flowkit create:workspace` command
-// (scripts/platform/workspace-flat.js), and the two standalone scaffolder
-// packages (create-flowkit-app, create-flowkit-workspace), which import this
-// file from their own `flowkit` devDependency at scaffold-time (i.e. from
-// node_modules/flowkit/scripts/helpers/workspace-template.js, after their own
-// `npm install` completes) — they cannot depend on the monorepo directly, since
-// both must stay independently publishable with zero runtime deps on this repo.
+// workspace content (the workspace config file, flowplans, five screens, db,
+// tokens.css) across three call sites: this repo's own `flowkit
+// create:workspace` command (scripts/platform/workspace-flat.js), and the two
+// standalone scaffolder packages (create-flowkit-app, create-flowkit-workspace),
+// which import this file from their own `flowkit` devDependency at scaffold-time
+// (i.e. from node_modules/flowkit/scripts/helpers/workspace-template.js, after
+// their own `npm install` completes) — they cannot depend on the monorepo
+// directly, since both must stay independently publishable with zero runtime
+// deps on this repo.
 //
 // Ported from scripts/helpers/scaffold.js's repo-mode workspaceScaffold() — same
 // flows/screens/content, adapted from the useDashboard() hook (repo mode) to the
@@ -17,10 +18,11 @@
 // scaffold.js's -screen/-flow id suffixes).
 import fs from 'fs'
 import path from 'path'
+import { WORKSPACE_CONFIG_FILENAME } from './config-filenames.js'
 
 export function writeFlowkitConfig(dir, workspaceName) {
   fs.writeFileSync(
-    path.join(dir, 'flowkit.config.ts'),
+    path.join(dir, WORKSPACE_CONFIG_FILENAME),
     `import { defineConfig } from 'flowkit'
 
 export default defineConfig({
@@ -130,6 +132,10 @@ export function writeSetupScreen(dir, language) {
     `import type { FlowScreenProps } from 'flowkit'`,
     'FlowScreenProps',
     `export default function SetupScreen({ onAction, db }__PROPS__) {
+  // db is typed Record<string, unknown> in FlowScreenProps — loosen it here,
+  // same convention repo-mode's useDashboard() hook already uses (db: Record<string, any>).
+  const anyDb = ${isJs ? 'db' : 'db as any // eslint-disable-line @typescript-eslint/no-explicit-any'}
+
   return (
     <div className="flex flex-col h-full bg-theme-base">
       <div className="flex items-center px-4 h-12 border-b border-theme-border-subtle">
@@ -138,11 +144,11 @@ export function writeSetupScreen(dir, language) {
       <div className="flex flex-col gap-3 p-4">
         <div className="rounded-[10px] bg-theme-surface shadow-theme-card p-3 flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-theme-blue-dim flex items-center justify-center text-ui-sm font-bold text-theme-blue">
-            {db?.user?.name?.[0] ?? 'U'}
+            {anyDb?.user?.name?.[0] ?? 'U'}
           </div>
           <div>
-            <p className="text-ui-sm font-medium text-theme-text-primary">{db?.user?.name ?? 'User'}</p>
-            <p className="text-ui-xs text-theme-text-muted">{db?.user?.email ?? ''}</p>
+            <p className="text-ui-sm font-medium text-theme-text-primary">{anyDb?.user?.name ?? 'User'}</p>
+            <p className="text-ui-xs text-theme-text-muted">{anyDb?.user?.email ?? ''}</p>
           </div>
         </div>
         <div className="rounded-[10px] bg-theme-surface shadow-theme-card divide-y divide-theme-border-subtle">
@@ -180,6 +186,10 @@ export function writeReadyScreen(dir, language) {
     `import type { FlowScreenProps } from 'flowkit'`,
     'FlowScreenProps',
     `export default function ReadyScreen({ onAction, db }__PROPS__) {
+  // db is typed Record<string, unknown> in FlowScreenProps — loosen it here,
+  // same convention repo-mode's useDashboard() hook already uses (db: Record<string, any>).
+  const anyDb = ${isJs ? 'db' : 'db as any // eslint-disable-line @typescript-eslint/no-explicit-any'}
+
   return (
     <div className="flex flex-col h-full bg-theme-base items-center justify-center gap-6 p-6">
       <div className="w-16 h-16 rounded-full bg-theme-green-dim flex items-center justify-center">
@@ -188,7 +198,7 @@ export function writeReadyScreen(dir, language) {
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-ui-xl font-bold text-theme-text-primary">You're all set</h1>
         <p className="text-ui-sm text-theme-text-secondary">
-          {db?.user?.name ?? 'User'}, your project is ready.
+          {anyDb?.user?.name ?? 'User'}, your project is ready.
         </p>
       </div>
       <button
@@ -213,12 +223,16 @@ export function writeHomeScreen(dir, language) {
   const itemsType = isJs
     ? ''
     : `: Array<{ id: number; title: string; desc: string; status: string }>`
+  const dbCast = isJs ? 'db' : 'db as any // eslint-disable-line @typescript-eslint/no-explicit-any'
   const content = screenFile(
     isJs,
     `import type { FlowScreenProps } from 'flowkit'`,
     'FlowScreenProps',
     `export default function HomeScreen({ onAction, db }__PROPS__) {
-  const items${itemsType} = db?.items ?? []
+  // db is typed Record<string, unknown> in FlowScreenProps — loosen it here,
+  // same convention repo-mode's useDashboard() hook already uses (db: Record<string, any>).
+  const anyDb = ${dbCast}
+  const items${itemsType} = anyDb?.items ?? []
 
   return (
     <div className="flex flex-col h-full bg-theme-base">
@@ -262,12 +276,16 @@ export const screenMeta = { id: 'home', label: 'Home Screen' }
 
 export function writeDetailScreen(dir, language) {
   const isJs = language === 'js'
+  const dbCast = isJs ? 'db' : 'db as any // eslint-disable-line @typescript-eslint/no-explicit-any'
   const content = screenFile(
     isJs,
     `import type { FlowScreenProps } from 'flowkit'`,
     'FlowScreenProps',
     `export default function DetailScreen({ onAction, db }__PROPS__) {
-  const item = db?.items?.[0]
+  // db is typed Record<string, unknown> in FlowScreenProps — loosen it here,
+  // same convention repo-mode's useDashboard() hook already uses (db: Record<string, any>).
+  const anyDb = ${dbCast}
+  const item = anyDb?.items?.[0]
   const badgeClass =
     item?.status === 'active'
       ? 'bg-theme-green-dim text-theme-green'
@@ -348,9 +366,10 @@ const VITE_CONFIG_BUILD_BLOCK = `  build: {
 
 /**
  * Writes the multi-workspace project's vite.config.ts — flowkit({ workspaceRoot,
- * standalone: true }), reading the active workspace from package.json's
- * flowkit.workspaces[0] on every config load (so create:workspace/remove:workspace/
- * rename:workspace take effect without hand-editing this file).
+ * standalone: true }), reading the active workspace's declared path from
+ * package.json's flowkit.workspaces (the first entry, by key order) on every
+ * config load (so create:workspace/remove:workspace/rename:workspace take
+ * effect without hand-editing this file).
  *
  * Single source of truth for this template — both scripts/platform/workspace-flat.js
  * (flowkit convert:multi, run against this monorepo's own consumer-mode helpers)
@@ -370,14 +389,17 @@ import react from '@vitejs/plugin-react'
 import { flowkit } from 'flowkit/vite'
 
 // Multi-workspace mode: the flowkit/vite plugin needs to know which workspace
-// folder to serve/build (there's no root-level flowkit.config.ts here — each
-// workspace has its own, nested one level down). Until a real active-workspace
+// folder to serve/build (there's no root-level workspace config file here —
+// each workspace has its own, nested one level down). Until a real active-workspace
 // switcher exists, this always resolves to the first entry in package.json's
-// flowkit.workspaces — re-read on every config load so \`flowkit
+// flowkit.workspaces (an object keyed by workspace name with an explicit path,
+// not a plain name array) — re-read on every config load so \`flowkit
 // create:workspace\`/\`remove:workspace\`/\`rename:workspace\` take effect without
 // editing this file by hand.
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'))
-const activeWorkspace = pkg.flowkit?.workspaces?.[0]
+const workspaces = pkg.flowkit?.workspaces ?? {}
+const activeWorkspaceName = Object.keys(workspaces)[0]
+const activeWorkspace = activeWorkspaceName ? workspaces[activeWorkspaceName].path : undefined
 
 if (!activeWorkspace) {
   throw new Error(

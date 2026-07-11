@@ -1,4 +1,4 @@
-import type { FlowkitConfig } from '@platform/types/index'
+import type { FlowkitConfig } from '@flowkit/types/index'
 import type React from 'react'
 
 // ─── Mode detection ───────────────────────────────────────────────────────────
@@ -44,7 +44,7 @@ const tokenModulesOld = import.meta.glob('/workspaces/*/design-system/tokens.css
   import: 'default',
 }) as Record<string, () => Promise<string>>
 
-const configModules = import.meta.glob('/workspaces/*/flowkit.config.ts', {
+const configModules = import.meta.glob('/workspaces/*/workspace.ts', {
   eager: true,
 }) as Record<string, { default: FlowkitConfig }>
 
@@ -94,7 +94,7 @@ export function listWorkspaceNames(): string[] {
 
 export function getWorkspaceConfig(name: string): FlowkitConfig {
   if (isSingle) return _virtualConfig
-  const mod = configModules[`/workspaces/${name}/flowkit.config.ts`]
+  const mod = configModules[`/workspaces/${name}/workspace.ts`]
   return mod?.default ?? {}
 }
 

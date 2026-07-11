@@ -1,22 +1,23 @@
-import { useFlowPlaybackOptional } from '@features/flowplan/FlowPlaybackContext'
+import type { WireframeView } from '@flowkit/types/index'
 import {
   FeedbackPanel,
   FeedbackTabProvider,
   useFeedback,
   useFeedbackTabContext,
-} from '@platform/features/feedback'
+} from '@flowkit-features/feedback'
 import {
   DbInspector,
   type DbViewMode,
   type DebugSubTab,
   FlowDebuggerContent,
-} from '@platform/features/flow-debugger'
+} from '@flowkit-features/flow-debugger'
+import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
 import {
   SessionsPanel,
   useSavedSessionCount,
   useSessionRecorderOptional,
-} from '@platform/features/flowTracer'
-import { CopyScriptButton, generateScreenMetaPatch } from '@platform/features/script-patch'
+} from '@flowkit-features/flowTracer'
+import { CopyScriptButton, generateScreenMetaPatch } from '@flowkit-features/script-patch'
 import {
   AccessibilitySettings,
   ColorBlindSVGDefs,
@@ -25,20 +26,19 @@ import {
   SimControl,
   type SimSubTab,
   SimToggle,
-} from '@platform/features/simulator'
-import PanelErrorBoundary from '@platform/shared/components/errors/PanelErrorBoundary'
-import Button from '@platform/shared/components/ui/Button'
-import PanelNoteField from '@platform/shared/components/ui/PanelNoteField'
-import SegmentedControl from '@platform/shared/components/ui/SegmentedControl'
-import Toggle from '@platform/shared/components/ui/Toggle'
-import Tooltip from '@platform/shared/components/ui/Tooltip'
-import { LS_SESSIONS_ENABLED } from '@platform/shared/constants/storageKeys'
-import { useActiveWorkspace } from '@platform/shared/contexts/ActiveWorkspaceContext'
-import { useDashboard } from '@platform/shared/contexts/DashboardContext'
-import { useDevMode } from '@platform/shared/contexts/DevModeContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
-import type { WireframeView } from '@platform/types/index'
-import { getWorkspaceSimulator } from '@shared/utils/workspaceModules'
+} from '@flowkit-features/simulator'
+import PanelErrorBoundary from '@flowkit-shared/components/errors/PanelErrorBoundary'
+import Button from '@flowkit-shared/components/ui/Button'
+import PanelNoteField from '@flowkit-shared/components/ui/PanelNoteField'
+import SegmentedControl from '@flowkit-shared/components/ui/SegmentedControl'
+import Toggle from '@flowkit-shared/components/ui/Toggle'
+import Tooltip from '@flowkit-shared/components/ui/Tooltip'
+import { LS_SESSIONS_ENABLED } from '@flowkit-shared/constants/storageKeys'
+import { useActiveWorkspace } from '@flowkit-shared/contexts/ActiveWorkspaceContext'
+import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
+import { useDevMode } from '@flowkit-shared/contexts/DevModeContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
+import { getWorkspaceSimulator } from '@flowkit-shared/utils/workspaceModules'
 import { FileCode, FileDown, StickyNote, Trash2 } from 'lucide-react'
 import {
   type ComponentType,
@@ -58,8 +58,8 @@ import PanelBody from './PanelBody'
 import Sidebar from './Sidebar'
 import SidebarButton from './SidebarButton'
 
-export { COLOR_BLIND_FILTERS } from '@platform/features/simulator/accessibility/colorBlindFilters'
-export { ColorBlindSVGDefs } from '@platform/features/simulator/accessibility/ColorBlindSVGDefs'
+export { COLOR_BLIND_FILTERS } from '@flowkit-features/simulator/accessibility/colorBlindFilters'
+export { ColorBlindSVGDefs } from '@flowkit-features/simulator/accessibility/ColorBlindSVGDefs'
 
 // ─── Persistence ──────────────────────────────────────────────────────────────
 
@@ -743,7 +743,7 @@ export function SimulatorContent({
 function FlowDeclaredControls({
   controls,
 }: {
-  controls: import('@platform/types/index').SimulatorControl[]
+  controls: import('@flowkit/types/index').SimulatorControl[]
 }) {
   if (controls.length === 0) {
     return (

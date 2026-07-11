@@ -5,8 +5,14 @@ import { parseStringFlag } from '../helpers/args.js'
 import { resolveWorkspace } from '../helpers/workspace-resolve.js'
 import { workspacePath, assertScopedWorkspaceDir } from '../helpers/paths.js'
 import { g, r, b, d } from '../helpers/colors.js'
-import { addFlow, removeFlow, readWorkspaceConfig, flowExists } from '../authoring-support/config-patch.js'
+import {
+  addFlow,
+  removeFlow,
+  readWorkspaceConfig,
+  flowExists,
+} from '../authoring-support/config-patch.js'
 import { prompt, selectFromList } from '../helpers/prompt.js'
+import { WORKSPACE_CONFIG_FILENAME } from '../helpers/config-filenames.js'
 
 const KEBAB_RE = /^[a-z][a-z0-9-]*$/
 
@@ -52,7 +58,7 @@ export async function cmdCreateFlow(_val, args = []) {
     fs.mkdirSync(flowDir, { recursive: true })
     addFlow(wsDir, flowId)
     console.log(g(`✓ Flow created:  flows/${flowId}/`))
-    console.log(g(`✓ Registered:    flowkit.config.ts → flows[] + screenOrder`))
+    console.log(g(`✓ Registered:    ${WORKSPACE_CONFIG_FILENAME} → flows[] + screenOrder`))
     console.log('')
     console.log(
       d(`Next: flowkit create:screen --flow:${flowId} --name:<first-screen> --label:"Screen Name"`)
@@ -104,7 +110,7 @@ export async function cmdRemoveFlow(_val, args = []) {
   removeFlow(wsDir, flowId)
   if (fs.existsSync(flowDir)) fs.rmSync(flowDir, { recursive: true, force: true })
   console.log(g(`✓ Flow removed:  flows/${flowId}/`))
-  console.log(g(`✓ Unregistered:  flowkit.config.ts`))
+  console.log(g(`✓ Unregistered:  ${WORKSPACE_CONFIG_FILENAME}`))
 }
 
 export async function cmdListFlows(_val, args = []) {

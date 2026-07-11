@@ -6,7 +6,7 @@ import {
   LS_FLOWPLAN_SHOW_WRONG_CLICK,
   LS_FLOWPLAN_STRICT_MODE,
   LS_FLOWPLAN_WRONG_CLICK_COLOR,
-} from '@platform/shared/constants/storageKeys'
+} from '@flowkit-shared/constants/storageKeys'
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react'
 
 // ── FlowplanSettingsContext ─────────────────────────────────────────────────────

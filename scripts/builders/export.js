@@ -1,16 +1,29 @@
-// Builder: standalone HTML export pipeline (export / export:full).
+// Builder: standalone HTML export pipeline. Same guided flow in both modes —
+// flowkit export prompts for workspace (only when 2+ candidates exist: repo
+// mode with multiple workspaces/, or multi-workspace consumer mode) then
+// always prompts for an export profile (reading flowkit.json's
+// exportProfiles) — or pass --profile:<name> / --workspace:<name> to skip
+// either prompt. No FlowLens on/off distinction right now — every export
+// always ships the full codebase (proper feature-gating is a future task).
 import fs from 'fs'
 import path from 'path'
 import { execSync } from 'child_process'
-import { ROOT, workspacePath, requireRepoMode, listWorkspaceDirs } from '../helpers/paths.js'
+import { ROOT, workspacePath, listWorkspaceDirs, isRepoMode } from '../helpers/paths.js'
+import {
+  isMultiMode,
+  readFlowkitManifest,
+  workspaceEntryPath,
+} from '../helpers/flowkit-manifest.js'
+import { parseStringFlag } from '../helpers/args.js'
 import { g, r, b, d, c } from '../helpers/colors.js'
 import { selectFromList } from '../helpers/prompt.js'
-import { cmdSessionsCheck } from '../platform/sessions/index.js'
+import { PROJECT_CONFIG_FILENAME } from '../helpers/config-filenames.js'
+import { readProjectConfig, runConsumerExport, runRepoExport } from './run-export.js'
 
-function runCheck(label, cmd, env) {
+function runCheck(label, cmd, cwd) {
   process.stdout.write(`  ${d('checking')} ${label}… `)
   try {
-    execSync(cmd, { cwd: ROOT, stdio: 'pipe', env: { ...process.env, ...env } })
+    execSync(cmd, { cwd, stdio: 'pipe' })
     process.stdout.write(g('✓') + '\n')
     return true
   } catch (e) {
@@ -23,170 +36,208 @@ function runCheck(label, cmd, env) {
   }
 }
 
-const USE_GENERIC_NAME = true
+const DEFAULT_PROFILE_LABEL = 'Default (full export)'
 
-function getStandaloneOutDir() {
-  // Read outDir directly from vite.config.standalone.ts via a simple regex — avoids executing the config
-  const configPath = path.join(ROOT, 'vite.config.standalone.ts')
-  const src = fs.readFileSync(configPath, 'utf8')
-  const match = src.match(/outDir\s*:\s*["'`]([^"'`]+)["'`]/)
-  return match ? match[1] : 'dist-standalone'
-}
-
-const FLOWLENS_DIR = path.join(ROOT, 'src', 'modes', 'flowlens')
-const FLOWLENS_DIR_STASH = path.join(ROOT, 'src', 'modes', '.flowlens-stash')
-
-function buildStandalone(wsName, withLens = false) {
-  console.log(d(`  building standalone for "${wsName}"${withLens ? ' (with FlowLens)' : ''}…`))
-  // FlowLens inclusion is presence-based (see FlowLensModeContext.tsx's
-  // import.meta.glob on src/modes/flowlens/index.ts) — there is no env-var
-  // gate. To actually strip it from a plain `export`, rename the folder out
-  // of the way for the duration of this build, then always restore it
-  // afterward (even on failure), so the monorepo's own dev experience never
-  // loses the folder permanently.
-  const stashed = !withLens && fs.existsSync(FLOWLENS_DIR)
-  if (stashed) fs.renameSync(FLOWLENS_DIR, FLOWLENS_DIR_STASH)
-  try {
-    execSync(`npx vite build --config vite.config.standalone.ts`, {
-      cwd: ROOT,
-      stdio: 'inherit',
-      env: { ...process.env, FLOWKIT_WORKSPACE: wsName },
-    })
-  } finally {
-    if (stashed) fs.renameSync(FLOWLENS_DIR_STASH, FLOWLENS_DIR)
+/** Resolves --profile:<name> or prompts; always offers the no-profile default. */
+async function resolveProfile(args, exportProfiles) {
+  const profileFlag = parseStringFlag(args, 'profile')
+  let profileName
+  if (profileFlag) {
+    if (profileFlag !== 'default' && !exportProfiles[profileFlag]) {
+      console.error(r(`✗ Profile not found in ${PROJECT_CONFIG_FILENAME}: ${profileFlag}`))
+      process.exit(1)
+    }
+    profileName = profileFlag
+  } else {
+    const profileKeys = Object.keys(exportProfiles)
+    const options = [DEFAULT_PROFILE_LABEL, ...profileKeys]
+    console.log(c('? ') + 'Select export profile (↑↓ Enter):')
+    const selection = await selectFromList(options)
+    console.log('\n')
+    profileName = selection === DEFAULT_PROFILE_LABEL ? 'default' : selection
   }
-  const outDir = getStandaloneOutDir()
-  const outHtml = path.join(ROOT, outDir, 'index.html')
-  if (!fs.existsSync(outHtml))
-    throw new Error(`Standalone build produced no index.html in ${outDir}`)
-  return { outHtml, outDir }
+  const profile = profileName === 'default' ? {} : exportProfiles[profileName]
+  return { profileName, profile }
 }
 
-/** export:full — include FlowLens replay/analytics in the standalone build. */
-export async function cmdExportFull(val, args = []) {
-  return _cmdExport(val, args, true)
+function reportResult(finalPath, relativeTo) {
+  const bytes = fs.statSync(finalPath).size
+  const kb = (bytes / 1024).toFixed(1)
+  const mb = bytes / (1024 * 1024)
+  console.log('')
+  console.log(g('✓') + ' Exported: ' + b(path.relative(relativeTo, finalPath)))
+  console.log(d(`  ${kb} KB — fully self-contained, open in any browser`))
+  if (mb > 10) {
+    console.log(
+      r(
+        `  ⚠ File is ${mb.toFixed(1)} MB — large assets may be inlined. Consider removing static imports of images/fonts.`
+      )
+    )
+  }
 }
 
-export async function cmdExport(val, args = []) {
-  return _cmdExport(val, args, false)
+export async function cmdExport(_val, args = []) {
+  if (isRepoMode()) return _cmdExportRepo(args)
+  return _cmdExportConsumer(args)
 }
 
-async function _cmdExport(val, args = [], withLens = false) {
-  requireRepoMode(
-    'flowkit export',
-    "Use your project's own build command for now:\n    npm run build"
-  )
+// ── Repo mode ────────────────────────────────────────────────────────────────
 
-  // Legacy flag kept for backwards compat with any scripts that still pass it
-  if (args.includes('--with-lens')) withLens = true
+async function _cmdExportRepo(args) {
   const existing = listWorkspaceDirs()
-
   if (!existing.length) {
     console.error(r('✗ No workspaces found.'))
     process.exit(1)
   }
 
-  // Single flat prompt — workspace names + "All workspaces"
-  let targets
-  if (val) {
-    if (val === 'all') {
-      targets = existing
-    } else {
-      targets = [val]
-    }
-  } else {
-    const options = [...existing, '— All workspaces']
-    console.log(c('? ') + 'Select export target (↑↓ Enter):')
-    const selection = await selectFromList(options, null)
-    console.log('\n')
-    targets = selection.startsWith('—') ? existing : [selection]
-  }
-
-  // Validate all targets exist
-  for (const ws of targets) {
-    const wsDir = workspacePath(ws)
-    if (!fs.existsSync(wsDir)) {
-      console.error(r(`✗ Workspace not found: ${wsDir}`))
+  const workspaceFlag = parseStringFlag(args, 'workspace')
+  let workspaceName
+  if (workspaceFlag) {
+    if (!existing.includes(workspaceFlag)) {
+      console.error(r(`✗ Workspace not found: ${workspaceFlag}`))
       process.exit(1)
     }
+    workspaceName = workspaceFlag
+  } else if (existing.length === 1) {
+    workspaceName = existing[0]
+  } else {
+    console.log(c('? ') + 'Select workspace to export (↑↓ Enter):')
+    workspaceName = await selectFromList(existing)
+    console.log('\n')
   }
 
-  const now = new Date()
-  const date = now.toISOString().slice(0, 10)
-  const time = now.toTimeString().slice(0, 5).replace(':', '-')
+  const projectConfig = readProjectConfig(ROOT)
+  const { profileName, profile } = await resolveProfile(args, projectConfig.exportProfiles)
 
-  for (const wsName of targets) {
-    console.log('')
-    console.log(b(` Exporting: ${wsName}`))
-    console.log(d(' ────────────────────────────────────'))
+  console.log('')
+  console.log(b(` Exporting: ${workspaceName}`))
+  console.log(d(' ────────────────────────────────────'))
 
-    // Pre-export checks. Lint target must be mode-aware — workspacePath()
-    // resolves correctly in repo/flat/multi-workspace mode; a hardcoded
-    // `workspaces/${wsName}` (the old code) only exists in repo mode and
-    // silently breaks `flowkit export` under flat/multi-workspace mode.
-    const wsDir = workspacePath(wsName)
-    const tscOk = runCheck('TypeScript', 'npx tsc --noEmit')
-    const lintOk = runCheck('ESLint', `npx eslint "${wsDir}" --max-warnings 0`)
-    // FlowLens library — warn-only (a broken session shouldn't block an export).
-    cmdSessionsCheck(wsName, { warnOnly: true })
-    console.log('')
+  const wsDir = workspacePath(workspaceName)
+  const tscOk = runCheck('TypeScript', 'npx tsc --noEmit', ROOT)
+  const lintOk = runCheck('ESLint', `npx eslint "${wsDir}" --max-warnings 0`, ROOT)
+  console.log('')
 
-    if (!tscOk || !lintOk) {
-      console.error(r(`✗ Export blocked for "${wsName}" — fix errors above.`))
-      if (targets.length === 1) process.exit(1)
-      continue
+  if (!tscOk || !lintOk) {
+    console.error(r(`✗ Export blocked for "${workspaceName}" — fix errors above.`))
+    process.exit(1)
+  }
+
+  try {
+    const { finalPath } = await runRepoExport({
+      root: ROOT,
+      workspaceName,
+      profileName,
+      profile,
+    })
+    reportResult(finalPath, ROOT)
+  } catch (e) {
+    console.error(r(`✗ Build failed for "${workspaceName}": ${e.message}`))
+    process.exit(1)
+  }
+}
+
+// ── Consumer mode (flat/multi-workspace) ────────────────────────────────────
+
+/**
+ * Checks the consumer project's own node_modules for vite-plugin-singlefile;
+ * installs it if missing.
+ *
+ * If flowkit itself is currently installed via a `file:` spec as a real
+ * directory copy (--local-dev / contributor testing, per each scaffolder's
+ * own documented --install-links rationale), a plain `npm install` here
+ * would silently re-resolve it back into a symlink, which breaks
+ * isRepoMode() detection (see scripts/helpers/paths.js). Re-apply
+ * --install-links in that case so this install doesn't undo that.
+ */
+function ensureSinglefilePlugin(projectRoot) {
+  const pluginPath = path.join(projectRoot, 'node_modules', 'vite-plugin-singlefile')
+  if (fs.existsSync(pluginPath)) return
+  console.log(d('  Installing vite-plugin-singlefile (first standalone export)...'))
+  const flowkitLinkPath = path.join(projectRoot, 'node_modules', 'flowkit')
+  const isFlowkitRealDir =
+    fs.existsSync(flowkitLinkPath) && !fs.lstatSync(flowkitLinkPath).isSymbolicLink()
+  const installLinksFlag = isFlowkitRealDir ? ' --install-links' : ''
+  execSync(`npm install --save-dev vite-plugin-singlefile${installLinksFlag}`, {
+    cwd: projectRoot,
+    stdio: 'inherit',
+  })
+}
+
+async function _cmdExportConsumer(args) {
+  const projectRoot = process.cwd()
+
+  // ── Workspace step — only asked in multi-mode with 2+ workspaces ──────────
+  let workspaceName
+  const workspaceFlag = parseStringFlag(args, 'workspace')
+  if (isMultiMode(projectRoot)) {
+    const manifest = readFlowkitManifest(projectRoot)
+    if (!manifest.workspaceNames.length) {
+      console.error(r('✗ No workspaces found.'))
+      process.exit(1)
     }
-
-    try {
-      const { outHtml: builtHtml, outDir: relOutDir } = buildStandalone(wsName, withLens)
-      const outDir = path.join(ROOT, relOutDir)
-      const outName = USE_GENERIC_NAME ? 'index.html' : `${wsName}-${date}-${time}.html`
-      const outPath = path.join(outDir, outName)
-      let finalPath = outPath
-      const isInPlace = builtHtml === outPath // true when USE_GENERIC_NAME and outDir matches vite's outDir
-      // conflict check: file exists and was not just written by this build
-      if (fs.existsSync(outPath) && !isInPlace) {
-        const ext = path.extname(outName)
-        const base = path.basename(outName, ext)
-        const stampedName = `${base}_${date}-${time}${ext}`
-        console.log(`\n  ${r('!')} File already exists: ${b(outName)}`)
-        console.log(c('? ') + 'What would you like to do? (↑↓ Enter):')
-        const choice = await selectFromList(
-          [
-            `Replace   — overwrite ${outName}`,
-            `Keep both — save as ${stampedName}`,
-            `Cancel    — discard this export`,
-          ],
-          null
-        )
-        console.log('\n')
-        if (choice.startsWith('Cancel')) {
-          if (fs.existsSync(builtHtml)) fs.unlinkSync(builtHtml)
-          console.log(d('  Export cancelled.'))
-          continue
-        }
-        if (choice.startsWith('Keep')) finalPath = path.join(outDir, stampedName)
+    if (workspaceFlag) {
+      if (!manifest.workspaceNames.includes(workspaceFlag)) {
+        console.error(r(`✗ Workspace not found in flowkit.workspaces: ${workspaceFlag}`))
+        process.exit(1)
       }
-      // move built file to final destination unless it's already there (USE_GENERIC_NAME in-place case)
-      if (!isInPlace) {
-        fs.copyFileSync(builtHtml, finalPath)
-        fs.unlinkSync(builtHtml)
-      }
-      const bytes = fs.statSync(finalPath).size
-      const kb = (bytes / 1024).toFixed(1)
-      const mb = bytes / (1024 * 1024)
-      console.log('')
-      console.log(g('✓') + ' Exported: ' + b(`${relOutDir}/${path.basename(finalPath)}`))
-      console.log(d(`  ${kb} KB — fully self-contained, open in any browser`))
-      if (mb > 10)
-        console.log(
-          r(
-            `  ⚠ File is ${mb.toFixed(1)} MB — large assets may be inlined. Consider removing static imports of images/fonts.`
-          )
-        )
-    } catch (e) {
-      console.error(r(`✗ Build failed for "${wsName}": ${e.message}`))
-      if (targets.length === 1) process.exit(1)
+      workspaceName = workspaceFlag
+    } else if (manifest.workspaceNames.length === 1) {
+      workspaceName = manifest.workspaceNames[0]
+    } else {
+      console.log(c('? ') + 'Select workspace to export (↑↓ Enter):')
+      workspaceName = await selectFromList(manifest.workspaceNames)
+      console.log('\n')
     }
+  } else {
+    workspaceName = path.basename(projectRoot)
+  }
+  const resolvedWorkspacePath = isMultiMode(projectRoot)
+    ? workspaceEntryPath(readFlowkitManifest(projectRoot), workspaceName)
+    : '.'
+
+  const projectConfig = readProjectConfig(projectRoot)
+  const { profileName, profile } = await resolveProfile(args, projectConfig.exportProfiles)
+
+  // ── Pre-flight checks (reused, already mode-safe) ─────────────────────────
+  const wsDir = workspacePath(workspaceName)
+  const tscOk = runCheck('TypeScript', 'npx tsc --noEmit', projectRoot)
+  // Scaffolded consumer projects don't ship an ESLint config today — skip the
+  // check entirely rather than hard-fail on a missing-config crash unrelated
+  // to real code errors. tsc still gates the export.
+  const hasEslintConfig = [
+    'eslint.config.js',
+    'eslint.config.mjs',
+    'eslint.config.cjs',
+    '.eslintrc.json',
+    '.eslintrc.js',
+    '.eslintrc.cjs',
+  ].some(f => fs.existsSync(path.join(projectRoot, f)))
+  let lintOk = true
+  if (hasEslintConfig) {
+    lintOk = runCheck('ESLint', `npx eslint "${wsDir}" --max-warnings 0`, projectRoot)
+  } else {
+    console.log(`  ${d('checking')} ESLint… ${d('skipped (no eslint config found)')}`)
+  }
+  console.log('')
+  if (!tscOk || !lintOk) {
+    console.error(r('✗ Export blocked — fix errors above.'))
+    process.exit(1)
+  }
+
+  ensureSinglefilePlugin(projectRoot)
+
+  try {
+    const { finalPath } = await runConsumerExport({
+      projectRoot,
+      workspacePath: resolvedWorkspacePath,
+      workspaceName,
+      profileName,
+      profile,
+    })
+    reportResult(finalPath, projectRoot)
+  } catch (e) {
+    console.error(r(`✗ Build failed: ${e.message}`))
+    process.exit(1)
   }
 }

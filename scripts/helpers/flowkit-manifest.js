@@ -26,14 +26,46 @@ function writePackageJson(pkg, cwd = process.cwd()) {
   fs.writeFileSync(packageJsonPath(cwd), JSON.stringify(pkg, null, 2) + '\n')
 }
 
-/** Reads the flowkit manifest block. Absent/missing key defaults to flat mode, no workspaces list. */
+/**
+ * Reads the flowkit manifest block. Absent/missing key defaults to flat mode, no workspaces.
+ *
+ * `workspaces` is an object keyed by workspace name with an explicit `path`
+ * (e.g. `{ "workspace-1": { "path": "workspace-1" } }`) — not just a plain name
+ * array — so folder location is declared data, not assumed by convention.
+ * Tolerates the older plain-array shape (`["workspace-1"]`) from
+ * already-scaffolded projects predating this change, treating each entry as
+ * `{ path: name }` (the only convention that ever existed before this).
+ *
+ * `workspaceNames` is a derived, ordered array of just the keys — most
+ * call sites only need "which names exist, in what order" and can use this
+ * instead of re-deriving it from the object every time.
+ */
 export function readFlowkitManifest(cwd = process.cwd()) {
   const pkg = readPackageJson(cwd)
   const flowkit = pkg.flowkit ?? {}
+  const rawWorkspaces = flowkit.workspaces
+
+  let workspaces
+  if (Array.isArray(rawWorkspaces)) {
+    // Backward-compat: old plain-array shape — each name's path was always
+    // just its own name, so that's the only sane migration.
+    workspaces = Object.fromEntries(rawWorkspaces.map(name => [name, { path: name }]))
+  } else if (rawWorkspaces && typeof rawWorkspaces === 'object') {
+    workspaces = rawWorkspaces
+  } else {
+    workspaces = {}
+  }
+
   return {
     mode: flowkit.mode === 'multi' ? 'multi' : 'flat',
-    workspaces: Array.isArray(flowkit.workspaces) ? flowkit.workspaces : [],
+    workspaces,
+    workspaceNames: Object.keys(workspaces),
   }
+}
+
+/** Resolves a workspace name's declared path, relative to `cwd`. Falls back to `name` itself if absent. */
+export function workspaceEntryPath(manifest, name) {
+  return manifest.workspaces[name]?.path ?? name
 }
 
 export function isMultiMode(cwd = process.cwd()) {

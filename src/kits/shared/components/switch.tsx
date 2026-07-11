@@ -1,6 +1,6 @@
 'use client'
 
-import { cn } from '@kit/lib/utils'
+import { cn } from '@flowkit-kit/lib/utils'
 import * as SwitchPrimitives from '@radix-ui/react-switch'
 import * as React from 'react'
 

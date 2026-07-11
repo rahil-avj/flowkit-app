@@ -1,6 +1,6 @@
-import Input from '@platform/shared/components/ui/Input'
-import Toggle from '@platform/shared/components/ui/Toggle'
-import type { Theme } from '@platform/theme'
+import type { Theme } from '@flowkit/theme'
+import Input from '@flowkit-shared/components/ui/Input'
+import Toggle from '@flowkit-shared/components/ui/Toggle'
 import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 

@@ -1,5 +1,6 @@
 /* @vitest-environment jsdom */
-import type { InspectorTab } from '@core/layout/inspectorTabs'
+import type { FlowNode } from '@flowkit/types/index'
+import type { InspectorTab } from '@flowkit-core/layout/inspectorTabs'
 import {
   useAppShortcuts,
   useCanvasShortcuts,
@@ -9,8 +10,7 @@ import {
   useNavigationShortcuts,
   usePanelShortcuts,
   useSidebarShortcuts,
-} from '@core/shortcuts/useKeyboardShortcuts'
-import type { FlowNode } from '@platform/types/index'
+} from '@flowkit-core/shortcuts/useKeyboardShortcuts'
 import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

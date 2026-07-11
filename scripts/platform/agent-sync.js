@@ -102,7 +102,7 @@ export function renderPlatform(ctx) {
     `Terse map of the platform surfaces you can reach. Each ends in a pointer to the full doc.\n\n` +
     `${surfaces}\n\n` +
     `## CLI\n\n| Command | What |\n|---|---|\n${cli}\n\n` +
-    `\n> **Flow ordering** is set in \`flowkit.config.ts\` → \`projects.<proj>.flows[]\`. Use the **Manage tab** (right panel → Manage) to generate a terminal script for reordering.\n>\n> **Default screen** (cold load / device home button / reset-to-first) is set in \`flowkit.config.ts\` → \`startScreen\`; a flowplan's \`homeScreen\` overrides it while that plan is playing.\n>\n> **To remove a flow or screen**, delete the folder manually: \`rm -rf workspaces/${ctx.name}/flows/<flow>/\`\n\n` +
+    `\n> **Flow ordering** is set in \`workspace.ts\` → \`projects.<proj>.flows[]\`. Use the **Manage tab** (right panel → Manage) to generate a terminal script for reordering.\n>\n> **Default screen** (cold load / device home button / reset-to-first) is set in \`workspace.ts\` → \`startScreen\`; a flowplan's \`homeScreen\` overrides it while that plan is playing.\n>\n> **To remove a flow or screen**, delete the folder manually: \`rm -rf workspaces/${ctx.name}/flows/<flow>/\`\n\n` +
     `_Generated (spec v${AGENT_SPEC_VERSION}). Facts mirror the platform source — \`flowkit agent:sync\` to refresh._\n`
   )
 }

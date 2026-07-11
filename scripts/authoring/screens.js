@@ -15,6 +15,7 @@ import {
   screenExists,
   listScreens,
 } from '../authoring-support/config-patch.js'
+import { WORKSPACE_CONFIG_FILENAME } from '../helpers/config-filenames.js'
 
 const KEBAB_RE = /^[a-z][a-z0-9-]*$/
 
@@ -128,7 +129,7 @@ export async function cmdCreateScreen(_val, args = []) {
     addScreen(wsDir, flowId, screenId)
     console.log(g(`✓ Directory:  flows/${flowId}/${screenId}/`))
     console.log(g(`✓ Screen:     flows/${flowId}/${screenId}/${pascalName}Screen.tsx`))
-    console.log(g(`✓ Registered: flowkit.config.ts → screenOrder.${flowId}[]`))
+    console.log(g(`✓ Registered: ${WORKSPACE_CONFIG_FILENAME} → screenOrder.${flowId}[]`))
     console.log('')
     console.log(
       d(
@@ -173,7 +174,7 @@ export async function cmdRemoveScreen(_val, args = []) {
   if (fs.existsSync(screenDir)) fs.rmSync(screenDir, { recursive: true, force: true })
 
   console.log(g(`✓ Removed:      flows/${flowId}/${screenId}/`))
-  console.log(g(`✓ Unregistered: flowkit.config.ts → screenOrder.${flowId}[]`))
+  console.log(g(`✓ Unregistered: ${WORKSPACE_CONFIG_FILENAME} → screenOrder.${flowId}[]`))
 }
 
 export async function cmdRenameScreen(_val, args = []) {
@@ -237,7 +238,7 @@ export async function cmdRenameScreen(_val, args = []) {
 
   console.log(g(`✓ Renamed:   flows/${flowId}/${oldId}/ → flows/${flowId}/${newId}/`))
   console.log(g(`✓ Renamed:   ${oldPascal}Screen.tsx → ${newPascal}Screen.tsx`))
-  console.log(g(`✓ Updated:   flowkit.config.ts → screenOrder.${flowId}[]`))
+  console.log(g(`✓ Updated:   ${WORKSPACE_CONFIG_FILENAME} → screenOrder.${flowId}[]`))
 }
 
 export async function cmdMoveScreen(_val, args = []) {
@@ -284,7 +285,9 @@ export async function cmdMoveScreen(_val, args = []) {
   moveScreen(wsDir, screenId, fromFlow, toFlow)
 
   console.log(g(`✓ Moved:   flows/${fromFlow}/${screenId}/ → flows/${toFlow}/${screenId}/`))
-  console.log(g(`✓ Updated: flowkit.config.ts (removed from '${fromFlow}', added to '${toFlow}')`))
+  console.log(
+    g(`✓ Updated: ${WORKSPACE_CONFIG_FILENAME} (removed from '${fromFlow}', added to '${toFlow}')`)
+  )
 }
 
 export async function cmdListScreens(_val, args = []) {

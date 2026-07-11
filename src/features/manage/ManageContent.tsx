@@ -2,11 +2,11 @@ import {
   CopyScriptButton,
   generateFlowOrderPatch,
   generateWorkspaceOrderPatch,
-} from '@platform/features/script-patch'
-import { useActiveWorkspace } from '@platform/shared/contexts/ActiveWorkspaceContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
-import { useWorkspaceHierarchy } from '@platform/shared/utils/useWorkspaceHierarchy'
-import { getWorkspaceConfig } from '@platform/shared/utils/workspaceModules'
+} from '@flowkit-features/script-patch'
+import { useActiveWorkspace } from '@flowkit-shared/contexts/ActiveWorkspaceContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
+import { useWorkspaceHierarchy } from '@flowkit-shared/utils/useWorkspaceHierarchy'
+import { getWorkspaceConfig } from '@flowkit-shared/utils/workspaceModules'
 import { ChevronDown } from 'lucide-react'
 import type React from 'react'
 import { useState } from 'react'

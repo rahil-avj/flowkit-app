@@ -48,7 +48,9 @@ function writeText(p, content) {
 function replaceOnce(content, oldStr, newStr, label) {
   const idx = content.indexOf(oldStr)
   if (idx === -1) {
-    throw new Error(`Expected to find ${JSON.stringify(oldStr)} in ${label}, but it was not present.`)
+    throw new Error(
+      `Expected to find ${JSON.stringify(oldStr)} in ${label}, but it was not present.`
+    )
   }
   return content.slice(0, idx) + newStr + content.slice(idx + oldStr.length)
 }
@@ -114,9 +116,19 @@ function turnOn(scope) {
   for (const t of TARGETS) {
     let pkgContent = readText(t.pkgPath)
     const [nameFull, namePre, origName, namePost] = getNameLine(pkgContent)
-    pkgContent = replaceOnce(pkgContent, nameFull, `${namePre}${scope}/${origName}${namePost}`, t.pkgPath)
+    pkgContent = replaceOnce(
+      pkgContent,
+      nameFull,
+      `${namePre}${scope}/${origName}${namePost}`,
+      t.pkgPath
+    )
     const [versionFull, versionPre, , versionPost] = getVersionLine(pkgContent)
-    pkgContent = replaceOnce(pkgContent, versionFull, `${versionPre}${canaryVersion}${versionPost}`, t.pkgPath)
+    pkgContent = replaceOnce(
+      pkgContent,
+      versionFull,
+      `${versionPre}${canaryVersion}${versionPost}`,
+      t.pkgPath
+    )
     writeText(t.pkgPath, pkgContent)
 
     if (t.indexPath) {
@@ -156,13 +168,23 @@ function turnOff(scope) {
     const [nameFull, namePre, , namePost] = getNameLine(pkgContent)
     pkgContent = replaceOnce(pkgContent, nameFull, `${namePre}${orig.name}${namePost}`, t.pkgPath)
     const [versionFull, versionPre, , versionPost] = getVersionLine(pkgContent)
-    pkgContent = replaceOnce(pkgContent, versionFull, `${versionPre}${orig.version}${versionPost}`, t.pkgPath)
+    pkgContent = replaceOnce(
+      pkgContent,
+      versionFull,
+      `${versionPre}${orig.version}${versionPost}`,
+      t.pkgPath
+    )
     writeText(t.pkgPath, pkgContent)
 
     if (t.indexPath) {
       let indexContent = readText(t.indexPath)
       const [rangeFull, rangePre] = getPublishedRangeLine(indexContent)
-      indexContent = replaceOnce(indexContent, rangeFull, `${rangePre}'${orig.publishedRange}'`, t.indexPath)
+      indexContent = replaceOnce(
+        indexContent,
+        rangeFull,
+        `${rangePre}'${orig.publishedRange}'`,
+        t.indexPath
+      )
       writeText(t.indexPath, indexContent)
     }
   }

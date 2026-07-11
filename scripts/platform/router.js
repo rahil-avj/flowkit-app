@@ -1,7 +1,7 @@
 // Platform: the CLI's central command dispatcher — parses argv and routes to every subcommand.
 import { r, d } from '../helpers/colors.js'
 import { cmdNewWorkspace, cmdRemoveWorkspace, cmdWatch } from './workspace.js'
-import { cmdExport, cmdExportFull } from '../builders/export.js'
+import { cmdExport } from '../builders/export.js'
 import { cmdHandoff } from '../builders/handoff.js'
 import {
   cmdSessionsLs,
@@ -102,9 +102,6 @@ export async function route(argv) {
     cmdStatus(p.val)
 
     // ── Export / Handoff ──
-  } else if (p.cmd === 'export' && (p.val === 'full' || p.val?.startsWith('full:'))) {
-    const wsVal = p.val === 'full' ? '' : p.val.slice('full:'.length)
-    await cmdExportFull(wsVal, rest)
   } else if (p.cmd === 'export') {
     await cmdExport(p.val, rest)
   } else if (p.cmd === 'handoff') {

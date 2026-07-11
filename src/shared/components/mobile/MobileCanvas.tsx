@@ -1,19 +1,19 @@
-import KitSideExplorer from '@platform/core/layout/KitSideExplorer'
-import { COLOR_BLIND_FILTERS, ColorBlindSVGDefs } from '@platform/core/layout/KitSideInspector'
+import type { FlowNode, WireframeView } from '@flowkit/types/index'
+import KitSideExplorer from '@flowkit-core/layout/KitSideExplorer'
+import { COLOR_BLIND_FILTERS, ColorBlindSVGDefs } from '@flowkit-core/layout/KitSideInspector'
 import {
   DbContent,
   FeedbackContent,
   ScreenInfoContent,
   SessionsContent,
   SimulatorContent,
-} from '@platform/core/layout/KitSideInspector'
-import { useFeedback } from '@platform/features/feedback/context/FeedbackContext'
-import { FlowDebuggerContent } from '@platform/features/flow-debugger'
-import { MobilePlaybackBar, useFlowPlaybackOptional } from '@platform/features/flowplan'
-import { useSessionSettings } from '@platform/features/flowTracer/components/useSessionSettings'
-import { GoToOverlayContent } from '@platform/features/go-to-overlay'
-import { Z } from '@platform/shared/constants/zIndex'
-import type { FlowNode, WireframeView } from '@platform/types/index'
+} from '@flowkit-core/layout/KitSideInspector'
+import { useFeedback } from '@flowkit-features/feedback/context/FeedbackContext'
+import { FlowDebuggerContent } from '@flowkit-features/flow-debugger'
+import { MobilePlaybackBar, useFlowPlaybackOptional } from '@flowkit-features/flowplan'
+import { useSessionSettings } from '@flowkit-features/flowTracer/components/useSessionSettings'
+import { GoToOverlayContent } from '@flowkit-features/go-to-overlay'
+import { Z } from '@flowkit-shared/constants/zIndex'
 import {
   Activity, // inspect sub-tabs + feedback top tab
   Briefcase, // settings sub-tabs
@@ -149,6 +149,18 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       }),
     []
   )
+  const [interactiveScreensPreview, setInteractiveScreensPreview] = useState(
+    () => localStorage.getItem(LS_INTERACTIVE_SCREENS_PREVIEW) === 'true'
+  )
+  const toggleInteractiveScreensPreview = useCallback(
+    () =>
+      setInteractiveScreensPreview(v => {
+        const n = !v
+        localStorage.setItem(LS_INTERACTIVE_SCREENS_PREVIEW, String(n))
+        return n
+      }),
+    []
+  )
   const [showSessionsFeature, setShowSessionsFeature] = useState(
     () => localStorage.getItem(LS_SESSIONS_ENABLED) === 'true'
   )
@@ -223,6 +235,8 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       openImportModal: () => { },
       toggleAutoHideScrollbars,
       autoHideScrollbars,
+      toggleInteractiveScreensPreview,
+      interactiveScreensPreview,
       showSessionsFeature,
       toggleSessionsFeature,
       autoRecordOnPlay,
@@ -242,6 +256,8 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       cloudSyncSlot,
       toggleAutoHideScrollbars,
       autoHideScrollbars,
+      toggleInteractiveScreensPreview,
+      interactiveScreensPreview,
       showSessionsFeature,
       toggleSessionsFeature,
       autoRecordOnPlay,
@@ -278,7 +294,17 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
 
       {/* Screen content */}
       <div className="absolute inset-0 flex flex-col" style={{ filter: combinedFilter }}>
-        {ActiveComponent && <ActiveComponent />}
+        {ActiveComponent &&
+          (interactiveScreensPreview ? (
+            <ActiveComponent
+              isFlow={false}
+              onAction={(actionName: string) => navigateTo(actionName)}
+              onNext={() => {}}
+              onBack={() => {}}
+            />
+          ) : (
+            <ActiveComponent />
+          ))}
       </div>
 
       {/* Flowplan playback bar — mobile has no side-panel Play/Stop button
@@ -382,14 +408,15 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
 // ── Mobile settings content ───────────────────────────────────────────────────
 // Thin shim — renders the relevant Settings section inline without the overlay shell.
 
+import type { ColorBlindMode } from '@flowkit/types/index'
+import { workspaces } from '@flowkit/workspaces'
 import {
   LS_AUTO_HIDE_SCROLLBARS,
+  LS_INTERACTIVE_SCREENS_PREVIEW,
   LS_LEFT_PANEL_W,
   LS_RIGHT_PANEL_W,
   LS_SESSIONS_ENABLED,
-} from '@platform/shared/constants/storageKeys'
-import type { ColorBlindMode } from '@platform/types/index'
-import { workspaces } from '@platform/workspaces'
+} from '@flowkit-shared/constants/storageKeys'
 
 import { useActiveWorkspace } from '../../contexts/ActiveWorkspaceContext'
 import { useDashboard as _useDashboard, useSimulator } from '../../contexts/DashboardContext'
@@ -457,6 +484,13 @@ function MobileSettingsContent({ section, ctx }: MobileSettingsContentProps) {
             size="sm"
             checked={ctx.autoHideScrollbars}
             onChange={ctx.toggleAutoHideScrollbars}
+          />
+        </SettingRow>
+        <SettingRow label="Interactive Screens preview">
+          <Toggle
+            size="sm"
+            checked={ctx.interactiveScreensPreview}
+            onChange={ctx.toggleInteractiveScreensPreview}
           />
         </SettingRow>
         <SectionLabel title="Accessibility" />

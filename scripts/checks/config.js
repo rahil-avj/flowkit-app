@@ -1,4 +1,4 @@
-// flowkit check:config — flowkit.config.ts consistency rules, plus the shared esbuild-based
+// flowkit check:config — workspace config file consistency rules, plus the shared esbuild-based
 // TypeScript module reader other check domains (flowplans.js) reuse.
 //
 // Reuses the exact esbuild-bundle-then-import() pattern already implemented in
@@ -8,11 +8,12 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import esbuild from 'esbuild'
+import { WORKSPACE_CONFIG_FILENAME } from '../helpers/config-filenames.js'
 
 // Shared shim so esbuild can bundle files that `import { defineConfig, defineFlow } from
-// 'flowkit'` (or '@platform/core/config' in repo mode) without needing the real package
+// 'flowkit'` (or '@flowkit-core/config' in repo mode) without needing the real package
 // resolvable — identity functions are all any of these files actually need at check-time.
-const SHIM_SPECIFIERS = ['flowkit', '@platform/core/config']
+const SHIM_SPECIFIERS = ['flowkit', '@flowkit-core/config']
 
 async function readTsModule(filePath) {
   if (!fs.existsSync(filePath)) return null
@@ -47,9 +48,9 @@ async function readTsModule(filePath) {
   return mod.default ?? mod
 }
 
-/** Reads workspace/flowkit.config.ts, returning the evaluated FlowkitConfig object, or null. */
+/** Reads workspace/<WORKSPACE_CONFIG_FILENAME>, returning the evaluated FlowkitConfig object, or null. */
 export async function readWorkspaceConfig(wsDir) {
-  return readTsModule(path.join(wsDir, 'flowkit.config.ts'))
+  return readTsModule(path.join(wsDir, WORKSPACE_CONFIG_FILENAME))
 }
 
 /** Reads an arbitrary flowplan .ts file, returning the evaluated FlowplanDef object, or null. */
@@ -71,7 +72,7 @@ export async function checkConfig(wsDir, report) {
       report.add({
         ruleId: 'config/flow-mismatch',
         severity: 'error',
-        file: 'flowkit.config.ts',
+        file: WORKSPACE_CONFIG_FILENAME,
         message: `screenOrder has an entry for flow '${flowId}', but it's not listed in flows[].`,
         fix: `Add '${flowId}' to flows[], or remove its screenOrder entry.`,
       })
@@ -83,7 +84,7 @@ export async function checkConfig(wsDir, report) {
       report.add({
         ruleId: 'config/empty-flow',
         severity: 'warning',
-        file: 'flowkit.config.ts',
+        file: WORKSPACE_CONFIG_FILENAME,
         message: `Flow '${flowId}' has no screens in screenOrder.`,
         fix: `flowkit create:screen --flow:${flowId} --name:<id>`,
       })
@@ -96,7 +97,7 @@ export async function checkConfig(wsDir, report) {
         report.add({
           ruleId: 'config/orphaned-id',
           severity: 'error',
-          file: 'flowkit.config.ts',
+          file: WORKSPACE_CONFIG_FILENAME,
           message: `screenOrder.${flowId} lists '${screenId}', which has no matching directory.`,
           fix: `Expected: flows/${flowId}/${screenId}/`,
           clifix: `flowkit create:screen --flow:${flowId} --name:${screenId}`,
@@ -113,7 +114,7 @@ export async function checkConfig(wsDir, report) {
           report.add({
             ruleId: 'config/orphaned-dir',
             severity: 'warning',
-            file: 'flowkit.config.ts',
+            file: WORKSPACE_CONFIG_FILENAME,
             message: `flows/${flowId}/${dirName}/ exists but is not listed in screenOrder.${flowId}.`,
             fix: `Add '${dirName}' to screenOrder.${flowId}, or remove the directory if unused.`,
           })

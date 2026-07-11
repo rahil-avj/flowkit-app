@@ -1,4 +1,4 @@
-import { Z } from '@platform/shared/constants/zIndex'
+import { Z } from '@flowkit-shared/constants/zIndex'
 import { Menu } from 'lucide-react'
 
 interface MobileFABProps {

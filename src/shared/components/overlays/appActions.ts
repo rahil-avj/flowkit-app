@@ -1,4 +1,4 @@
-import type { InspectorTab } from '@platform/shared/constants/tabs'
+import type { InspectorTab } from '@flowkit-shared/constants/tabs'
 
 // Small delay to let the feedback tab mount and register its modal opener refs
 function afterTabMount(fn: () => void) {
@@ -39,6 +39,8 @@ export interface ActionCtx {
   openImportModal: () => void
   toggleAutoHideScrollbars: () => void
   autoHideScrollbars: boolean
+  toggleInteractiveScreensPreview: () => void
+  interactiveScreensPreview: boolean
   // Sessions feature
   showSessionsFeature: boolean
   toggleSessionsFeature: () => void

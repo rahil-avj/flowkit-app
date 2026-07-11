@@ -1,4 +1,4 @@
-import type { SessionExport } from '@platform/features/flowTracer/types'
+import type { SessionExport } from '@flowkit-features/flowTracer/types'
 import { ChevronLeft, ChevronRight, Pause, Play, SkipBack } from 'lucide-react'
 import { useCallback, useEffect, useRef } from 'react'
 

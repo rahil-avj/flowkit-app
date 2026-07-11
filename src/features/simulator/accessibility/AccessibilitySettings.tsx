@@ -1,9 +1,9 @@
-import { ControlAccordion } from '@platform/features/simulator/controls'
-import SegmentedBarChart from '@platform/shared/components/ui/SegmentedBarChart'
-import Select from '@platform/shared/components/ui/Select'
-import { useSimulator } from '@platform/shared/contexts/DashboardContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
-import type { ColorBlindMode } from '@platform/types/index'
+import type { ColorBlindMode } from '@flowkit/types/index'
+import { ControlAccordion } from '@flowkit-features/simulator/controls'
+import SegmentedBarChart from '@flowkit-shared/components/ui/SegmentedBarChart'
+import Select from '@flowkit-shared/components/ui/Select'
+import { useSimulator } from '@flowkit-shared/contexts/DashboardContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import { Eye } from 'lucide-react'
 
 // ─── CVD data ─────────────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import { LS_LEFT_PANEL_OPEN, LS_RIGHT_PANEL_OPEN } from '@platform/shared/constants/storageKeys'
+import { LS_LEFT_PANEL_OPEN, LS_RIGHT_PANEL_OPEN } from '@flowkit-shared/constants/storageKeys'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {

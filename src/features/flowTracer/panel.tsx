@@ -1,8 +1,8 @@
-import { Button, EmptyState, IconButton, Input, Tag } from '@platform/shared/components/ui'
+import { Button, EmptyState, IconButton, Input, Tag } from '@flowkit-shared/components/ui'
 import {
   FLOWLENS_AVAILABLE,
   useFlowLensModeOptional,
-} from '@platform/shared/contexts/FlowLensModeContext'
+} from '@flowkit-shared/contexts/FlowLensModeContext'
 import {
   Download,
   GitMerge,

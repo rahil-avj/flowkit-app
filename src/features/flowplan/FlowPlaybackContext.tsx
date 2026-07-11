@@ -1,8 +1,8 @@
-import type { CompiledFlowplan, CompiledStep } from '@features/flowplan/compileFlowplan'
-import { useDashboard } from '@platform/shared/contexts/DashboardContext'
-import { useFlowLensModeOptional } from '@platform/shared/contexts/FlowLensModeContext'
-import { useSessionRecorderShared } from '@platform/shared/contexts/SessionRecorderContext'
-import { applyDotPathPatch } from '@platform/shared/utils/applyDotPathPatch'
+import type { CompiledFlowplan, CompiledStep } from '@flowkit-features/flowplan/compileFlowplan'
+import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
+import { useFlowLensModeOptional } from '@flowkit-shared/contexts/FlowLensModeContext'
+import { useSessionRecorderShared } from '@flowkit-shared/contexts/SessionRecorderContext'
+import { applyDotPathPatch } from '@flowkit-shared/utils/applyDotPathPatch'
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 
 // ── FlowPlaybackContext ─────────────────────────────────────────────────────────

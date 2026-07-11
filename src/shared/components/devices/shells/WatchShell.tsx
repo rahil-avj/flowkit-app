@@ -1,4 +1,4 @@
-import type { DevicePreset } from '@platform/types/index'
+import type { DevicePreset } from '@flowkit/types/index'
 import React, { useEffect, useState } from 'react'
 
 import { useNavigation, useSimulator } from '../../../contexts/DashboardContext'

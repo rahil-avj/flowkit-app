@@ -1,5 +1,5 @@
-import { ToolbarTooltipContent } from '@platform/core/canvas/ToolbarBtn'
-import Tooltip from '@platform/shared/components/ui/Tooltip'
+import { ToolbarTooltipContent } from '@flowkit-core/canvas/ToolbarBtn'
+import Tooltip from '@flowkit-shared/components/ui/Tooltip'
 import React, { createContext, useContext } from 'react'
 
 // ─── Rail side context ────────────────────────────────────────────────────────

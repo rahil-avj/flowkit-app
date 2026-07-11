@@ -3,15 +3,15 @@ import { defineConfig } from 'vitest/config'
 
 // Unit-test config for pure logic (applyDotPathPatch, compileFlowplan, …).
 // Mirrors the path aliases from vite.config.ts so test files can import via
-// @platform/* etc. Node environment — no DOM needed for the pure-logic suites.
+// @flowkit/* etc. Node environment — no DOM needed for the pure-logic suites.
 export default defineConfig({
   resolve: {
     alias: {
-      '@platform': path.resolve(__dirname, './src'),
-      '@kit': path.resolve(__dirname, './src/kits/shared'),
-      '@core': path.resolve(__dirname, './src/core'),
-      '@features': path.resolve(__dirname, './src/features'),
-      '@shared': path.resolve(__dirname, './src/shared'),
+      '@flowkit': path.resolve(__dirname, './src'),
+      '@flowkit-kit': path.resolve(__dirname, './src/kits/shared'),
+      '@flowkit-core': path.resolve(__dirname, './src/core'),
+      '@flowkit-features': path.resolve(__dirname, './src/features'),
+      '@flowkit-shared': path.resolve(__dirname, './src/shared'),
       '@flowlens': path.resolve(__dirname, './src/modes/flowlens'),
     },
   },

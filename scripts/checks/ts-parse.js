@@ -39,7 +39,8 @@ export function parseTopLevel(filePath) {
 /** True if the file has `export default function Name(...) { ... }` at the top level. */
 export function hasDefaultFunctionExport(body) {
   return body.some(
-    node => node.type === 'ExportDefaultDeclaration' && node.declaration.type === 'FunctionDeclaration'
+    node =>
+      node.type === 'ExportDefaultDeclaration' && node.declaration.type === 'FunctionDeclaration'
   )
 }
 

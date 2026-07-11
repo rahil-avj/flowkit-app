@@ -11,6 +11,7 @@ import path from 'path'
 import { execSync } from 'child_process'
 import { fileURLToPath } from 'url'
 import { g, r, b, d, c } from '../helpers/colors.js'
+import { WORKSPACE_CONFIG_FILENAME } from '../helpers/config-filenames.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '../..')
@@ -35,7 +36,10 @@ const label = parseStringFlag(args, 'name')
 // candidate, or the precondition check below fails confusingly instead of
 // this function just scaffolding fresh into it.
 function isUsableScaffold(dir) {
-  return fs.existsSync(path.join(dir, 'package.json')) && fs.existsSync(path.join(dir, 'flowkit.config.ts'))
+  return (
+    fs.existsSync(path.join(dir, 'package.json')) &&
+    fs.existsSync(path.join(dir, WORKSPACE_CONFIG_FILENAME))
+  )
 }
 
 function nextRun() {
@@ -66,7 +70,9 @@ function nextRun() {
     // failed partial scaffold) — clear it and scaffold fresh into the same
     // slot rather than skipping to the next number, since nothing of value
     // is being discarded.
-    console.log(d(`  ${dirName}/ exists but has no usable scaffold content — clearing and rescaffolding.`))
+    console.log(
+      d(`  ${dirName}/ exists but has no usable scaffold content — clearing and rescaffolding.`)
+    )
     fs.rmSync(scaffoldDir, { recursive: true, force: true })
     return { n, scaffoldDir, dirName, reportPath }
   }
@@ -79,7 +85,10 @@ const run = nextRun()
 function verifyScaffold(dir) {
   const binPath = path.join(dir, 'node_modules', '.bin', 'flowkit')
   if (!fs.existsSync(binPath)) {
-    return { ok: false, reason: `flowkit bin not found at ${binPath} — dependencies not installed?` }
+    return {
+      ok: false,
+      reason: `flowkit bin not found at ${binPath} — dependencies not installed?`,
+    }
   }
   let helpOutput
   try {
@@ -120,7 +129,9 @@ console.log(d('Verifying scaffold preconditions...'))
 const check = verifyScaffold(run.scaffoldDir)
 if (!check.ok) {
   console.error(r(`✗ Precondition check failed: ${check.reason}`))
-  console.error(d('  The study cannot proceed against a broken scaffold. Fix the scaffold or delete'))
+  console.error(
+    d('  The study cannot proceed against a broken scaffold. Fix the scaffold or delete')
+  )
   console.error(d(`  ${run.dirName}/ and re-run this script to scaffold fresh.`))
   process.exit(1)
 }
@@ -156,4 +167,8 @@ console.log(c('Scaffold dir: ') + run.scaffoldDir)
 console.log(c('Report path:  ') + run.reportPath)
 console.log(c('Monorepo commit: ') + commitHash)
 console.log('')
-console.log(d('Next: spawn the sub-agent against the scaffold dir above, per .claude/skills/agent-dx-study/SKILL.md.'))
+console.log(
+  d(
+    'Next: spawn the sub-agent against the scaffold dir above, per .claude/skills/agent-dx-study/SKILL.md.'
+  )
+)

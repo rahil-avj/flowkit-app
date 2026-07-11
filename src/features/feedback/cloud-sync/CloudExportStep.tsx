@@ -1,6 +1,6 @@
-import Button from '@platform/shared/components/ui/Button'
-import Modal from '@platform/shared/components/ui/Modal'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
+import Button from '@flowkit-shared/components/ui/Button'
+import Modal from '@flowkit-shared/components/ui/Modal'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import { Cloud, Eye, EyeOff, KeyRound, Loader2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 

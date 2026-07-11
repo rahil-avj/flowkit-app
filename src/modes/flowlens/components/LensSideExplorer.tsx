@@ -1,13 +1,13 @@
-import PanelBody from '@platform/core/layout/PanelBody'
-import Sidebar from '@platform/core/layout/Sidebar'
-import SidebarButton from '@platform/core/layout/SidebarButton'
-import { useFlowLensSidebarShortcuts } from '@platform/core/shortcuts/useKeyboardShortcuts'
-import EmptyState from '@platform/shared/components/ui/EmptyState'
+import PanelBody from '@flowkit-core/layout/PanelBody'
+import Sidebar from '@flowkit-core/layout/Sidebar'
+import SidebarButton from '@flowkit-core/layout/SidebarButton'
+import { useFlowLensSidebarShortcuts } from '@flowkit-core/shortcuts/useKeyboardShortcuts'
+import EmptyState from '@flowkit-shared/components/ui/EmptyState'
 import FilterPanel, {
   type FilterGroup,
   type FilterState,
-} from '@platform/shared/components/ui/FilterPanel'
-import Input from '@platform/shared/components/ui/Input'
+} from '@flowkit-shared/components/ui/FilterPanel'
+import Input from '@flowkit-shared/components/ui/Input'
 import { Activity, Archive, CircleDot, Clock, FolderGit2, Search, Upload, X } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 

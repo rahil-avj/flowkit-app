@@ -1,4 +1,4 @@
-import { Z } from '@platform/shared/constants/zIndex'
+import { Z } from '@flowkit-shared/constants/zIndex'
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 

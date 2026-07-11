@@ -1,7 +1,7 @@
-import Button from '@platform/shared/components/ui/Button'
-import Checkbox from '@platform/shared/components/ui/Checkbox'
-import Modal from '@platform/shared/components/ui/Modal'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
+import Button from '@flowkit-shared/components/ui/Button'
+import Checkbox from '@flowkit-shared/components/ui/Checkbox'
+import Modal from '@flowkit-shared/components/ui/Modal'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import {
   AlertCircle,
   Check,

@@ -4,7 +4,7 @@ import type {
   ConnectionMode,
   DevicePreset,
   NetworkSpeed,
-} from '@platform/types/index'
+} from '@flowkit/types/index'
 import { createContext, useContext } from 'react'
 
 export interface SimulatorContextValue {

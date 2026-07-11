@@ -36,8 +36,8 @@ export function specContext({ name, kit = 'none', isStandalone = false, language
   const kitCss =
     kit && kit !== 'none'
       ? isStandalone
-        ? `@platform/kits/standalone/${kit}/index.css`
-        : '@kit/index.css'
+        ? `@flowkit/kits/standalone/${kit}/index.css`
+        : '@flowkit-kit/index.css'
       : null
   return { name, kit, isStandalone, language, format, ext, dext, kitCss }
 }
@@ -59,7 +59,7 @@ export function directives(ctx) {
       },
       {
         kind: 'always',
-        text: 'use path aliases: `@platform/` → `src/`, `@workspace/` → this workspace. Never relative `../../`',
+        text: 'use path aliases: `@flowkit/` → `src/`, `@workspace/` → this workspace. Never relative `../../`',
       },
     ],
   }
@@ -89,7 +89,7 @@ export function directives(ctx) {
         kind: 'to',
         task: 'reorder flows',
         action:
-          'edit the `flows[]` array in `flowkit.config.ts`, or use the **Manage tab** (right panel) to copy a terminal patch script',
+          'edit the `flows[]` array in `workspace.ts`, or use the **Manage tab** (right panel) to copy a terminal patch script',
       },
       {
         kind: 'never',
@@ -228,7 +228,7 @@ export function indexRows(_ctx) {
     },
     {
       task: 'Reorder flows',
-      action: 'edit `flowkit.config.ts` → `flows[]`, or use **Manage tab** in right panel',
+      action: 'edit `workspace.ts` → `flows[]`, or use **Manage tab** in right panel',
       detail: 'platform.md → Flows',
     },
     {
@@ -261,8 +261,8 @@ export function platformSurfaces(ctx) {
   const flowsSurface = {
     area: 'Flows (Flowplan hierarchy)',
     api: '`defineFlow({ id, name, steps[], homeScreen? })` — authored in `flowplans/<flow>.ts`',
-    from: '`@platform/core/config` → `defineFlow`',
-    note: 'Screen folders: `flows/<flow>/<screen>/`. Ordering declared in `flowkit.config.ts` → `projects.<proj>.flows[]`. `homeScreen` overrides the device home button while that plan is playing; workspace-level default is `flowkit.config.ts` → `startScreen`.',
+    from: '`@flowkit-core/config` → `defineFlow`',
+    note: 'Screen folders: `flows/<flow>/<screen>/`. Ordering declared in `workspace.ts` → `projects.<proj>.flows[]`. `homeScreen` overrides the device home button while that plan is playing; workspace-level default is `workspace.ts` → `startScreen`.',
     doc: 'FLOWMASTER.md',
   }
 
@@ -278,21 +278,21 @@ export function platformSurfaces(ctx) {
     {
       area: 'Navigation',
       api: '`useFlowNav()` → `navigateTo(target)`, `goNext()`, `goBack()`, `isFlow`, `flowState`',
-      from: '`@shared/utils/useFlowNav`',
+      from: '`@flowkit-shared/utils/useFlowNav`',
       note: 'target = a screen id, "next", "back", or "__complete__"',
       doc: 'FLOWMASTER.md',
     },
     {
       area: 'Data',
       api: '`useDashboard()` → `db`, `updateDb(fn)`, `resetDb()`',
-      from: '`@shared/contexts/DashboardContext`',
+      from: '`@flowkit-shared/contexts/DashboardContext`',
       note: 'screens use db/updateDb only — NOT navigateTo',
       doc: 'FLOWKIT.md',
     },
     {
       area: 'Screen props',
       api: '`FlowScreenProps` → `onAction?`, `onNext?`, `onBack?`, `isFlow?`, `flowState?`, `db?`',
-      from: '`@platform/types`',
+      from: '`@flowkit/types`',
       note: 'screens are pure markup with element `id`s',
       doc: 'FLOWMASTER.md',
     },
@@ -301,21 +301,21 @@ export function platformSurfaces(ctx) {
     {
       area: 'Simulator',
       api: '`ControlAccordion`, `SimToggle`, `SimSegmented`, `SimSelect`, `SimAction`, `SimTextInput`, `SimNumberInput`, `SimControl`',
-      from: '`@platform/core/layout`',
+      from: '`@flowkit-core/layout`',
       note: '`bind="db.auth.isLoggedIn"` path; default-export a JSX component from `data/simulator.tsx`',
       doc: 'FLOWKIT.md',
     },
     {
       area: 'Device & orientation defaults',
-      api: '`flowkit.config.ts` → `defaultDevice` (a `DevicePreset.label`), `defaultOrientation` ("portrait" | "landscape")',
-      from: '`@platform/core/config` → `defineConfig`',
+      api: '`workspace.ts` → `defaultDevice` (a `DevicePreset.label`), `defaultOrientation` ("portrait" | "landscape")',
+      from: '`@flowkit-core/config` → `defineConfig`',
       note: 'Both optional. `defaultDevice` must match a label in `src/shared/components/devices`; falls back to the platform default when unset/unrecognized. `defaultOrientation` is ignored if the resolved device lacks `supportsLandscape`.',
       doc: 'CLI.md',
     },
     {
       area: 'Theme',
       api: '`useTheme()` → `theme` (`bg.*`, `text.*`, `accent.*`, `shadow.*`), `mode`, `setMode`',
-      from: '`@platform/contexts/ThemeContext`',
+      from: '`@flowkit-shared/contexts/ThemeContext`',
       note: 'prefer tokens over hardcoded colors',
       doc: 'FLOWKIT.md',
     },

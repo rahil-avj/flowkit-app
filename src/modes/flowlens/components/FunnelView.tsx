@@ -1,4 +1,4 @@
-import type { SessionExport } from '@platform/features/flowTracer/types'
+import type { SessionExport } from '@flowkit-features/flowTracer/types'
 import { useState } from 'react'
 
 import type { FunnelStep } from '../analyticsEngine'

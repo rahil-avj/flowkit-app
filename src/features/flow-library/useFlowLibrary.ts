@@ -1,13 +1,13 @@
-import { useActiveWorkspace } from '@platform/shared/contexts/ActiveWorkspaceContext'
-import { useWorkspaceHierarchy } from '@platform/shared/utils/useWorkspaceHierarchy'
-import { getWorkspaceConfig } from '@platform/shared/utils/workspaceModules'
 import {
   type FlowplanDef,
   type FlowStep,
   type Fork,
   isFlowplanRef,
   type WireframeView,
-} from '@platform/types/index'
+} from '@flowkit/types/index'
+import { useActiveWorkspace } from '@flowkit-shared/contexts/ActiveWorkspaceContext'
+import { useWorkspaceHierarchy } from '@flowkit-shared/utils/useWorkspaceHierarchy'
+import { getWorkspaceConfig } from '@flowkit-shared/utils/workspaceModules'
 import { useMemo } from 'react'
 
 // ── useFlowLibrary ──────────────────────────────────────────────────────────────

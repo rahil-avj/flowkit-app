@@ -17,6 +17,7 @@ import {
   requireMultiMode,
   requireFlatMode,
   assertScopedConsumerWorkspaceDir,
+  workspaceEntryPath,
 } from '../helpers/flowkit-manifest.js'
 import { parseStringFlag } from '../helpers/args.js'
 import { assertKebab, ValidationError } from '../helpers/validate.js'
@@ -26,14 +27,15 @@ import {
   writeWorkspaceContent,
   writeMultiWorkspaceViteConfig,
 } from '../helpers/workspace-template.js'
+import { WORKSPACE_CONFIG_FILENAME } from '../helpers/config-filenames.js'
 
 /**
  * Validate a workspace name at the point it's first accepted, before it
  * becomes a directory name, a package.json flowkit.workspaces entry, or
- * (via any later authoring command touching flowkit.config.ts) a value
- * interpolated into generated source — the earlier a bad name is caught,
- * the fewer downstream files can end up with it baked in. Prints a clean
- * CLI error and exits rather than letting a ValidationError escape raw.
+ * (via any later authoring command touching the workspace config file) a
+ * value interpolated into generated source — the earlier a bad name is
+ * caught, the fewer downstream files can end up with it baked in. Prints a
+ * clean CLI error and exits rather than letting a ValidationError escape raw.
  */
 function validateWorkspaceName(name, label) {
   try {
@@ -54,7 +56,7 @@ function validateWorkspaceName(name, label) {
 // moved into workspace-1/ but .flowkit/components.json (which references it) still
 // sitting at the old project root, silently orphaned.
 const WORKSPACE_ENTRIES = [
-  'flowkit.config.ts',
+  WORKSPACE_CONFIG_FILENAME,
   'index.ts',
   'flows',
   'flowplans',
@@ -141,8 +143,10 @@ export async function cmdConvertMulti(_val, args = []) {
   const cwd = process.cwd()
   requireFlatMode('flowkit convert:multi', cwd)
 
-  if (!fs.existsSync(path.join(cwd, 'flowkit.config.ts'))) {
-    console.error(r('✗ No flowkit.config.ts found at project root — nothing to convert.'))
+  if (!fs.existsSync(path.join(cwd, WORKSPACE_CONFIG_FILENAME))) {
+    console.error(
+      r(`✗ No ${WORKSPACE_CONFIG_FILENAME} found at project root — nothing to convert.`)
+    )
     process.exit(1)
   }
 
@@ -162,7 +166,7 @@ export async function cmdConvertMulti(_val, args = []) {
       // still at its expected staged location and stagedMove's catch can roll
       // it back cleanly. Renaming first would leave nothing at tmpDir to roll
       // back if the manifest write failed right after.
-      writeFlowkitManifest({ mode: 'multi', workspaces: [name] }, cwd)
+      writeFlowkitManifest({ mode: 'multi', workspaces: { [name]: { path: name } } }, cwd)
       fs.renameSync(tmpDir, targetDir)
     })
   } catch (err) {
@@ -173,7 +177,7 @@ export async function cmdConvertMulti(_val, args = []) {
   // vite.config.ts stays at project root (never part of WORKSPACE_ENTRIES —
   // it describes the project, not a workspace) but its CONTENT must change:
   // the flat-mode template has no workspaceRoot, so without rewriting it here
-  // the dev server/build silently reads nothing (no flowkit.config.ts left at
+  // the dev server/build silently reads nothing (no workspace config file left at
   // root) and produces an empty bundle instead of erroring. Confirmed live —
   // this was the exact failure mode that originally motivated this fix.
   try {
@@ -211,7 +215,7 @@ export async function cmdAddWorkspace(_val, args = []) {
 
   const name = await resolveNewWorkspaceName(args)
   const manifest = readFlowkitManifest(cwd)
-  if (manifest.workspaces.includes(name)) {
+  if (manifest.workspaceNames.includes(name)) {
     console.error(r(`✗ Workspace "${name}" already exists in flowkit.workspaces.`))
     process.exit(1)
   }
@@ -252,7 +256,7 @@ export async function cmdAddWorkspace(_val, args = []) {
     process.exit(1)
   }
 
-  writeFlowkitManifest({ workspaces: [...manifest.workspaces, name] }, cwd)
+  writeFlowkitManifest({ workspaces: { ...manifest.workspaces, [name]: { path: name } } }, cwd)
 
   console.log(g('✓') + ' Workspace created: ' + b(`${name}/`))
   console.log(
@@ -270,21 +274,21 @@ export async function cmdRemoveWorkspace(_val, args = []) {
   const manifest = readFlowkitManifest(cwd)
   let name = parseStringFlag(args, 'name') || args.find(a => !a.startsWith('--'))
   if (!name) {
-    if (!manifest.workspaces.length) {
+    if (!manifest.workspaceNames.length) {
       console.log(d('  No workspaces found.'))
       return
     }
     console.log(c('? ') + 'Select workspace to remove (↑↓ Enter):')
-    name = await selectFromList(manifest.workspaces)
+    name = await selectFromList(manifest.workspaceNames)
     console.log('\n')
   }
 
-  if (!manifest.workspaces.includes(name)) {
+  if (!manifest.workspaceNames.includes(name)) {
     console.error(r(`✗ Workspace not found in flowkit.workspaces: ${name}`))
     process.exit(1)
   }
 
-  const wsDir = path.join(cwd, name)
+  const wsDir = path.join(cwd, workspaceEntryPath(manifest, name))
   assertScopedConsumerWorkspaceDir(wsDir, name, cwd)
   if (!fs.existsSync(wsDir)) {
     console.error(r(`✗ Workspace folder not found: ${wsDir}`))
@@ -305,10 +309,8 @@ export async function cmdRemoveWorkspace(_val, args = []) {
   assertScopedConsumerWorkspaceDir(wsDir, name, cwd)
   fs.rmSync(wsDir, { recursive: true, force: true })
 
-  writeFlowkitManifest(
-    { workspaces: manifest.workspaces.filter(w => w !== name) },
-    cwd
-  )
+  const { [name]: _removed, ...remainingWorkspaces } = manifest.workspaces
+  writeFlowkitManifest({ workspaces: remainingWorkspaces }, cwd)
 
   console.log(g('✓') + ' Removed: ' + b(wsDir))
   console.log(d(`  package.json flowkit.workspaces updated.`))
@@ -329,16 +331,16 @@ export async function cmdRenameWorkspace(_val, args = []) {
   validateWorkspaceName(newName, 'New workspace name')
 
   const manifest = readFlowkitManifest(cwd)
-  if (!manifest.workspaces.includes(oldName)) {
+  if (!manifest.workspaceNames.includes(oldName)) {
     console.error(r(`✗ Workspace not found in flowkit.workspaces: ${oldName}`))
     process.exit(1)
   }
-  if (manifest.workspaces.includes(newName)) {
+  if (manifest.workspaceNames.includes(newName)) {
     console.error(r(`✗ Workspace "${newName}" already exists in flowkit.workspaces.`))
     process.exit(1)
   }
 
-  const oldDir = path.join(cwd, oldName)
+  const oldDir = path.join(cwd, workspaceEntryPath(manifest, oldName))
   const newDir = path.join(cwd, newName)
   assertScopedConsumerWorkspaceDir(oldDir, oldName, cwd)
   assertScopedConsumerWorkspaceDir(newDir, newName, cwd)
@@ -353,10 +355,8 @@ export async function cmdRenameWorkspace(_val, args = []) {
   }
 
   fs.renameSync(oldDir, newDir)
-  writeFlowkitManifest(
-    { workspaces: manifest.workspaces.map(w => (w === oldName ? newName : w)) },
-    cwd
-  )
+  const { [oldName]: _renamed, ...otherWorkspaces } = manifest.workspaces
+  writeFlowkitManifest({ workspaces: { ...otherWorkspaces, [newName]: { path: newName } } }, cwd)
 
   console.log(g('✓') + ' Renamed: ' + b(`${oldName}/`) + ' → ' + b(`${newName}/`))
   console.log(d(`  package.json flowkit.workspaces updated.`))
@@ -369,11 +369,11 @@ async function resolveConvertFlatSource(args) {
   const allFlag = args.includes('--all')
 
   if (fromFlag) {
-    if (!manifest.workspaces.includes(fromFlag)) {
+    if (!manifest.workspaceNames.includes(fromFlag)) {
       console.error(r(`✗ Workspace not found in flowkit.workspaces: ${fromFlag}`))
       process.exit(1)
     }
-    const others = manifest.workspaces.filter(w => w !== fromFlag)
+    const others = manifest.workspaceNames.filter(w => w !== fromFlag)
     if (others.length && !allFlag) {
       console.error(
         r(
@@ -386,14 +386,14 @@ async function resolveConvertFlatSource(args) {
     return { survivor: fromFlag, toDelete: allFlag ? others : [] }
   }
 
-  if (manifest.workspaces.length === 1) {
-    return { survivor: manifest.workspaces[0], toDelete: [] }
+  if (manifest.workspaceNames.length === 1) {
+    return { survivor: manifest.workspaceNames[0], toDelete: [] }
   }
 
   if (allFlag) {
     console.error(
       r(
-        `✗ Multiple workspaces exist (${manifest.workspaces.join(', ')}). ` +
+        `✗ Multiple workspaces exist (${manifest.workspaceNames.join(', ')}). ` +
           `Pass --from <name> alongside --all to say which one survives.`
       )
     )
@@ -402,7 +402,7 @@ async function resolveConvertFlatSource(args) {
 
   console.error(
     r(
-      `✗ Multiple workspaces exist (${manifest.workspaces.join(', ')}). ` +
+      `✗ Multiple workspaces exist (${manifest.workspaceNames.join(', ')}). ` +
         `Pass --from <name> to pick a survivor, or --from <name> --all to delete the rest.`
     )
   )
@@ -413,6 +413,7 @@ export async function cmdConvertFlat(_val, args = []) {
   const cwd = process.cwd()
   requireMultiMode('flowkit convert:flat', cwd)
 
+  const manifest = readFlowkitManifest(cwd)
   const { survivor, toDelete } = await resolveConvertFlatSource(args)
 
   if (toDelete.length) {
@@ -427,13 +428,13 @@ export async function cmdConvertFlat(_val, args = []) {
       return
     }
     for (const name of toDelete) {
-      const wsDir = path.join(cwd, name)
+      const wsDir = path.join(cwd, workspaceEntryPath(manifest, name))
       assertScopedConsumerWorkspaceDir(wsDir, name, cwd)
       if (fs.existsSync(wsDir)) fs.rmSync(wsDir, { recursive: true, force: true })
     }
   }
 
-  const survivorDir = path.join(cwd, survivor)
+  const survivorDir = path.join(cwd, workspaceEntryPath(manifest, survivor))
   assertScopedConsumerWorkspaceDir(survivorDir, survivor, cwd)
   if (!fs.existsSync(survivorDir)) {
     console.error(r(`✗ Workspace folder not found: ${survivorDir}`))

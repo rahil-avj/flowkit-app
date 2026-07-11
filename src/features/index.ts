@@ -1,6 +1,6 @@
 // Layer barrel — import specific features by name.
-// Prefer: import { FeedbackPanel } from '@features/feedback'
-// over:   import { FeedbackPanel } from '@features'
+// Prefer: import { FeedbackPanel } from '@flowkit-features/feedback'
+// over:   import { FeedbackPanel } from '@flowkit-features'
 export * from './command-palette/index'
 export * from './feedback/index'
 export * from './flow-debugger/index'

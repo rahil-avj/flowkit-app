@@ -1,6 +1,6 @@
-import { LS_THEME } from '@platform/shared/constants/storageKeys'
-import type { Theme, UIScale } from '@platform/theme'
-import { dark, light, uiScale } from '@platform/theme'
+import type { Theme, UIScale } from '@flowkit/theme'
+import { dark, light, uiScale } from '@flowkit/theme'
+import { LS_THEME } from '@flowkit-shared/constants/storageKeys'
 import type { ReactNode } from 'react'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 

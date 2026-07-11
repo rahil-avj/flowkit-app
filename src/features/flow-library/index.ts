@@ -1,5 +1,5 @@
 // Public API for the flow-library feature.
-// Import from '@features/flow-library' — never reach inside internals.
+// Import from '@flowkit-features/flow-library' — never reach inside internals.
 export { default as FlowCanvas } from './FlowCanvas'
 export { default as FlowLibrary } from './FlowLibrary'
 export type { FlowRunRecord } from './runHistory'

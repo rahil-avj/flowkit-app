@@ -1,4 +1,13 @@
 // Public API for workspace config + flowplan authoring helpers.
-// Import from '@platform/core/config'.
-export type { AnnotationTag, AnnotationTagColor, FlowScreenProps } from '../../types/index'
+// Import from '@flowkit-core/config'.
+export type {
+  AnnotationTag,
+  AnnotationTagColor,
+  FlowkitConfig,
+  FlowkitProjectConfig,
+  FlowplanDef,
+  FlowplanStepEntry,
+  FlowScreenProps,
+  SimulatorControl,
+} from '../../types/index'
 export { defineConfig, defineFlow, tag } from './defineConfig'

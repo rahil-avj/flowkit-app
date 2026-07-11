@@ -7,6 +7,12 @@ import { fileURLToPath, pathToFileURL } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+// Kept as a local literal, not imported from scripts/helpers/config-filenames.js
+// — this package must stay independently publishable with zero runtime deps on
+// the monorepo (see the standalone-prompt-helpers comment below). If flowkit's
+// own WORKSPACE_CONFIG_FILENAME ever changes again, update this too.
+const WORKSPACE_CONFIG_FILENAME = 'workspace.ts'
+
 const RESET = '\x1b[0m'
 const BOLD = '\x1b[1m'
 const GREEN = '\x1b[32m'
@@ -200,9 +206,11 @@ function writePackageJson(dir, name, language) {
     // Declared explicitly, never inferred from folder shape — see
     // scripts/helpers/flowkit-manifest.js for the read/write helpers that
     // consume this at runtime (flowkit convert:*/create:workspace/etc.).
+    // workspaces is an object keyed by name with an explicit path, not a
+    // plain name array — folder location is declared data, not assumed.
     flowkit: {
       mode: 'multi',
-      workspaces: [DEFAULT_WORKSPACE_NAME],
+      workspaces: { [DEFAULT_WORKSPACE_NAME]: { path: DEFAULT_WORKSPACE_NAME } },
     },
     devDependencies: {
       flowkit: FLOWKIT_DEP,
@@ -218,6 +226,9 @@ function writePackageJson(dir, name, language) {
             typescript: '~6.0.0',
             '@types/react': '^19.0.0',
             '@types/react-dom': '^19.0.0',
+            // vite.config.ts's own fs.readFileSync('./package.json') (reading
+            // the active workspace from flowkit.workspaces) needs Node's types.
+            '@types/node': '^24.0.0',
           }),
     },
   }
@@ -247,7 +258,7 @@ function writeTsConfig(dir) {
         },
         // Multi-workspace mode: every workspace folder's flows/flowplans/lib
         // need type coverage, not just one implicit root workspace's.
-        include: ['*/flows', '*/flowplans', '*/lib', '*/flowkit.config.ts', 'vite.config.ts'],
+        include: ['*/flows', '*/flowplans', '*/lib', `*/${WORKSPACE_CONFIG_FILENAME}`, 'vite.config.ts'],
       },
       null,
       2
@@ -382,6 +393,7 @@ function writeGitignore(dir) {
     `node_modules/
 dist/
 .env.local
+.flowkit-export-*.mjs
 `
   )
 }

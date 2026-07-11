@@ -1,5 +1,5 @@
-import Button from '@platform/shared/components/ui/Button'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
+import Button from '@flowkit-shared/components/ui/Button'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import { Cloud, Eye, EyeOff, Link } from 'lucide-react'
 import { useState } from 'react'
 

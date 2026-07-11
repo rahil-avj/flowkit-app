@@ -1,4 +1,4 @@
-import type { CursorSample, SessionExport } from '@platform/features/flowTracer/types'
+import type { CursorSample, SessionExport } from '@flowkit-features/flowTracer/types'
 
 import { computeSessionMetrics } from '../../analyticsEngine'
 

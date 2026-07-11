@@ -1,7 +1,7 @@
-import { useFeedback } from '@platform/features/feedback/context/FeedbackContext'
-import Checkbox from '@platform/shared/components/ui/Checkbox'
-import Select from '@platform/shared/components/ui/Select'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
+import { useFeedback } from '@flowkit-features/feedback/context/FeedbackContext'
+import Checkbox from '@flowkit-shared/components/ui/Checkbox'
+import Select from '@flowkit-shared/components/ui/Select'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 
 import { useFeedbackTabContext } from '../context'
 

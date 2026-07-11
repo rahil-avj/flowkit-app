@@ -168,7 +168,11 @@ ${stepsBody
   ],
 `)
   console.log(
-    c('Or, to inline it as a plain step instead of a fork, use:  { ref: ' + asJsStringLiteral(newId) + ' }')
+    c(
+      'Or, to inline it as a plain step instead of a fork, use:  { ref: ' +
+        asJsStringLiteral(newId) +
+        ' }'
+    )
   )
   console.log('')
   console.log('Then verify:  npx tsc -b  &&  npx vitest run')

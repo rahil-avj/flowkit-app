@@ -1,8 +1,8 @@
-import { type PanelLayoutState, usePanelLayout } from '@platform/core/layout/hooks/usePanelLayout'
+import { type PanelLayoutState, usePanelLayout } from '@flowkit-core/layout/hooks/usePanelLayout'
 import {
   LS_LEFT_PANEL_W as LS_LEFT,
   LS_RIGHT_PANEL_W as LS_RIGHT,
-} from '@platform/shared/constants/storageKeys'
+} from '@flowkit-shared/constants/storageKeys'
 
 /**
  * Panel resize for the default FlowKit canvas.

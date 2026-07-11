@@ -30,7 +30,7 @@ specify, which still failed to classify any file at all.
   - `boundaries/dependencies`'s `rules`/`{ type: 'x' }` shorthand migrated to `policies`/
     `{ element: { types: 'x' } }` (`rules` still works but is deprecated with a warning).
   - Added `import/resolver` (`eslint-import-resolver-typescript`, new devDependency) and
-    `boundaries/root-path`, both required for the plugin to resolve `@platform`/`@shared`/etc.
+    `boundaries/root-path`, both required for the plugin to resolve `@flowkit`/`@shared`/etc.
     path aliases back to real file paths at all — without them, only literal relative-path
     imports could ever be classified, which doesn't match how `CLAUDE.md` instructs imports to
     be written in this codebase (aliases only).
@@ -48,6 +48,7 @@ across 11 pre-existing `src/` files** that were always violations per `CLAUDE.md
 layer rules, just never caught:
 
 **`core → features`** (disallowed — `core` may only depend on `shared`):
+
 - `src/core/canvas/PreviewCanvas.tsx`
 - `src/core/layout/FlowEngine.ts`
 - `src/core/layout/FlowMaster.tsx`
@@ -57,6 +58,7 @@ layer rules, just never caught:
 
 **`shared → core` / `shared → features`** (both disallowed — `shared` is the foundation layer,
 may only depend on itself):
+
 - `src/shared/components/mobile/MobileCanvas.tsx`
 - `src/shared/components/overlays/ActionCenter.tsx`
 - `src/shared/components/overlays/Settings.tsx`

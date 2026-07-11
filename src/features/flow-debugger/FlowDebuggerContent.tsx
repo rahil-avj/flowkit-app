@@ -2,8 +2,8 @@ import {
   readStorage,
   STORAGE_DEBUG_SUBTAB,
   SubTabBar,
-} from '@platform/core/layout/KitSideInspector'
-import { useSessionRecorderOptional } from '@platform/features/flowTracer/context'
+} from '@flowkit-core/layout/KitSideInspector'
+import { useSessionRecorderOptional } from '@flowkit-features/flowTracer/context'
 import { useCallback, useState } from 'react'
 
 import { DEBUG_SUB_TABS, type DebugSubTab } from './debugSubTabs'

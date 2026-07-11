@@ -128,7 +128,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@platform': path.resolve(__dirname, './src'),
+      // Broad src/-wide alias, renamed from @platform. Note the bare (no @)
+      // 'flowkit' alias below is a different, narrower thing — an internal
+      // self-reference mirroring the published package name, not related to
+      // this rename — the two deliberately coexist.
+      '@flowkit': path.resolve(__dirname, './src'),
       // @workspace resolves to the active workspace so screen files can import
       // @workspace/components/*, @workspace/design-system/tokens.css etc.
       // Db/simulator are loaded via import.meta.glob in workspaceModules.ts
@@ -140,10 +144,10 @@ export default defineConfig({
           : path.resolve(__dirname, './src/workspace-stub')
       })(),
       flowkit: path.resolve(__dirname, './src/core/config/index.ts'),
-      '@kit': path.resolve(__dirname, './src/kits/shared'),
-      '@core': path.resolve(__dirname, './src/core'),
-      '@features': path.resolve(__dirname, './src/features'),
-      '@shared': path.resolve(__dirname, './src/shared'),
+      '@flowkit-kit': path.resolve(__dirname, './src/kits/shared'),
+      '@flowkit-core': path.resolve(__dirname, './src/core'),
+      '@flowkit-features': path.resolve(__dirname, './src/features'),
+      '@flowkit-shared': path.resolve(__dirname, './src/shared'),
       '@flowlens': path.resolve(__dirname, './src/modes/flowlens'),
     },
   },

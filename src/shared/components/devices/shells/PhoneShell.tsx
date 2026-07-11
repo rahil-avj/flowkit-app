@@ -1,4 +1,4 @@
-import type { DevicePreset } from '@platform/types/index'
+import type { DevicePreset } from '@flowkit/types/index'
 import { ArrowLeft, Circle, Plane, Square, Wifi, WifiOff } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 

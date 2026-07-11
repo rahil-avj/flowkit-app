@@ -9,10 +9,11 @@ import {
   writeWorkspacesJson,
   getActiveWorkspaceName,
 } from './paths.js'
+import { WORKSPACE_CONFIG_FILENAME } from './config-filenames.js'
 
 function readConfigDescription(name) {
   try {
-    const configPath = path.join(workspacePath(name), 'flowkit.config.ts')
+    const configPath = path.join(workspacePath(name), WORKSPACE_CONFIG_FILENAME)
     const src = fs.readFileSync(configPath, 'utf8')
     const m = src.match(/workspace\s*:\s*\{[^}]*description\s*:\s*['"`]([^'"`]+)['"`]/)
     return m ? m[1] : null

@@ -1,5 +1,5 @@
-import { LS_FEEDBACK, LS_LAST_REVIEWER } from '@platform/shared/constants/storageKeys'
-import { FeedbackComment, FeedbackTag } from '@platform/types/index'
+import { FeedbackComment, FeedbackTag } from '@flowkit/types/index'
+import { LS_FEEDBACK, LS_LAST_REVIEWER } from '@flowkit-shared/constants/storageKeys'
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 
 import { buildCloudSyncSlot, type CloudSyncSlot,useCloudSync } from '../cloud-sync'

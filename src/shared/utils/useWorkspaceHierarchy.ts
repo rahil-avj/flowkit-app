@@ -15,15 +15,6 @@
  * resolves them at build time). All globs live here, inline.
  */
 
-import {
-  type CompiledFlowplan,
-  compileFlowplan,
-  type ResolvedScreen,
-  type ScreenResolver,
-} from '@features/flowplan/compileFlowplan'
-import { useFlowPlaybackOptional } from '@features/flowplan/FlowPlaybackContext'
-import { DEVICE_PRESETS } from '@platform/shared/components/devices'
-import { getWorkspaceConfig } from '@platform/shared/utils/workspaceModules'
 import type {
   AnnotationTag,
   FlowkitConfig,
@@ -32,7 +23,16 @@ import type {
   ScreenMeta,
   WireframeView,
   WorkspaceHierarchyNode,
-} from '@platform/types/index'
+} from '@flowkit/types/index'
+import {
+  type CompiledFlowplan,
+  compileFlowplan,
+  type ResolvedScreen,
+  type ScreenResolver,
+} from '@flowkit-features/flowplan/compileFlowplan'
+import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
+import { DEVICE_PRESETS } from '@flowkit-shared/components/devices'
+import { getWorkspaceConfig } from '@flowkit-shared/utils/workspaceModules'
 import React, { useEffect, useMemo, useState } from 'react'
 
 // ─── Mode detection ───────────────────────────────────────────────────────────
@@ -181,11 +181,11 @@ export interface WorkspaceHierarchyResult {
   hasHierarchy: boolean
   /** screenId → active annotation tags (expiresAt filtered). */
   tagsByScreen: Map<string, AnnotationTag[]>
-  /** Author-set default screen id from flowkit.config.ts (`startScreen`), if any. */
+  /** Author-set default screen id from workspace.ts (`startScreen`), if any. */
   startScreenId?: string
-  /** Author-set default device preset label from flowkit.config.ts (`defaultDevice`), if valid. */
+  /** Author-set default device preset label from workspace.ts (`defaultDevice`), if valid. */
   defaultDeviceLabel?: string
-  /** Author-set default orientation from flowkit.config.ts (`defaultOrientation`), if any. */
+  /** Author-set default orientation from workspace.ts (`defaultOrientation`), if any. */
   defaultOrientation?: 'portrait' | 'landscape'
 }
 
@@ -538,7 +538,7 @@ function makeFlowplanRunner(
     }, [compilationError])
 
     React.useEffect(() => {
-      import('@platform/core/layout/FlowMaster')
+      import('@flowkit-core/layout/FlowMaster')
         .then(m => setComp(() => m.default as React.ComponentType<{ flow: CompiledFlowplan }>))
         .catch(err => setError(String(err)))
     }, [])

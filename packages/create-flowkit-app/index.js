@@ -7,6 +7,12 @@ import { fileURLToPath, pathToFileURL } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+// Kept as a local literal, not imported from scripts/helpers/config-filenames.js
+// — this package must stay independently publishable with zero runtime deps on
+// the monorepo (see the standalone-prompt-helpers comment below). If flowkit's
+// own WORKSPACE_CONFIG_FILENAME ever changes again, update this too.
+const WORKSPACE_CONFIG_FILENAME = 'workspace.ts'
+
 const RESET = '\x1b[0m'
 const BOLD = '\x1b[1m'
 const GREEN = '\x1b[32m'
@@ -273,7 +279,7 @@ function writeTsConfig(dir) {
           noFallthroughCasesInSwitch: true,
           skipLibCheck: true,
         },
-        include: ['flows', 'flowplans', 'lib', 'flowkit.config.ts', 'vite.config.ts'],
+        include: ['flows', 'flowplans', 'lib', WORKSPACE_CONFIG_FILENAME, 'vite.config.ts'],
       },
       null,
       2
@@ -384,6 +390,7 @@ function writeGitignore(dir) {
     `node_modules/
 dist/
 .env.local
+.flowkit-export-*.mjs
 `
   )
 }
@@ -407,7 +414,7 @@ npm run build    # production build
 - \`flows/\` — screen components, organized by flow then screen name
 - \`flowplans/\` — playback scripts (sequences of screens with interaction definitions)
 - \`lib/\` — shared data, components, and utilities
-- \`flowkit.config.ts\` — flow and screen registration
+- \`${WORKSPACE_CONFIG_FILENAME}\` — flow and screen registration
 
 See \`docs/CLI.md\` for the full \`flowkit\` CLI command reference, and \`CLAUDE.md\`
 if you're working with an AI coding agent on this project.

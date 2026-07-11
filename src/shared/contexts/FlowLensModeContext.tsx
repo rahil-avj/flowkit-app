@@ -1,4 +1,4 @@
-import type { SessionExport } from '@platform/features/flowTracer/types'
+import type { SessionExport } from '@flowkit-features/flowTracer/types'
 import type { ComponentType, ReactNode } from 'react'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 

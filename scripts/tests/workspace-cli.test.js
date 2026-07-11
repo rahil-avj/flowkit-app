@@ -15,6 +15,7 @@ import {
   spawnCLI,
   WORKSPACES_DIR,
 } from './helpers.js'
+import { WORKSPACE_CONFIG_FILENAME } from '../helpers/config-filenames.js'
 
 const WS_ONE = 'twsone'
 const WS_TWO = 'twstwo'
@@ -50,7 +51,7 @@ describe('Suite B — Workspace CLI lifecycle', () => {
     const base = path.join(ROOT, 'workspaces', WS_ONE)
     const expected = [
       path.join(base, 'index.ts'),
-      path.join(base, 'flowkit.config.ts'),
+      path.join(base, WORKSPACE_CONFIG_FILENAME),
       path.join(base, 'lib/data/db.ts'),
       path.join(base, 'lib/data/simulator.tsx'),
       path.join(base, 'lib/design-system/tokens.css'),
@@ -91,7 +92,7 @@ describe('Suite B — Workspace CLI lifecycle', () => {
   it('B6 — Scaffold TypeScript files pass ESLint', () => {
     const targets = [
       `workspaces/${WS_ONE}/index.ts`,
-      `workspaces/${WS_ONE}/flowkit.config.ts`,
+      `workspaces/${WS_ONE}/${WORKSPACE_CONFIG_FILENAME}`,
       `workspaces/${WS_ONE}/lib/data/db.ts`,
     ]
     for (const t of targets) {

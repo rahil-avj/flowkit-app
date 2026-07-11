@@ -1,5 +1,5 @@
-import type { PaletteGroup, PaletteItem } from '@platform/features/command-palette'
-import { CommandPalette } from '@platform/features/command-palette'
+import type { PaletteGroup, PaletteItem } from '@flowkit-features/command-palette'
+import { CommandPalette } from '@flowkit-features/command-palette'
 import { Terminal } from 'lucide-react'
 import { useMemo } from 'react'
 
@@ -24,8 +24,8 @@ const STAY_OPEN_IDS = new Set([
 function actionBadges(
   action: (typeof APP_ACTIONS)[number],
   ctx: ActionCtx
-): import('@platform/features/command-palette').PaletteBadge[] {
-  const badges: import('@platform/features/command-palette').PaletteBadge[] = []
+): import('@flowkit-features/command-palette').PaletteBadge[] {
+  const badges: import('@flowkit-features/command-palette').PaletteBadge[] = []
 
   if (action.beta) badges.push({ label: 'BETA', style: 'blue' })
 

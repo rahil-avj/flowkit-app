@@ -1,6 +1,6 @@
 /* @vitest-environment jsdom */
-import type { CanvasState } from '@core/canvas/canvasReducer'
-import { canvasReducer, makeInitialState } from '@core/canvas/canvasReducer'
+import type { CanvasState } from '@flowkit-core/canvas/canvasReducer'
+import { canvasReducer, makeInitialState } from '@flowkit-core/canvas/canvasReducer'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 // ─── Constants (mirror of canvasConfig.ts + sidebarConfig.ts) ─────────────────

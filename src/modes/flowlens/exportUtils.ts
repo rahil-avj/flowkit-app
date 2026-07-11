@@ -2,9 +2,9 @@ import {
   eventsCsvBlob,
   markdownSummaryBlob,
   metricsCsvBlob,
-} from '@platform/features/flowTracer/exportBlobs'
-import { SessionDb } from '@platform/features/flowTracer/sessionDb'
-import type { SessionExport } from '@platform/features/flowTracer/types'
+} from '@flowkit-features/flowTracer/exportBlobs'
+import { SessionDb } from '@flowkit-features/flowTracer/sessionDb'
+import type { SessionExport } from '@flowkit-features/flowTracer/types'
 
 // ─── JSON import ───────────────────────────────────────────────────────────────
 

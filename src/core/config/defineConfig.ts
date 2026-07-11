@@ -6,25 +6,65 @@ import type { AnnotationTag, FlowkitConfig, FlowplanDef } from '../../types/inde
 // at author time. They return their argument unchanged — no runtime cost.
 //
 // Usage:
-//   // workspaces/<ws>/flowkit.config.ts
-//   import { defineConfig } from "@platform/core/config";
+//   // workspaces/<ws>/workspace.ts
+//   import { defineConfig } from "@flowkit-core/config";
 //   export default defineConfig({ projects: { shop: { label: "Shop" } } });
 //
 //   // workspaces/<ws>/projects/<p>/flowplans/Checkout.ts
-//   import { defineFlow } from "@platform/core/config";
+//   import { defineFlow } from "@flowkit-core/config";
 //   export default defineFlow({ id: "checkout-flow", name: "Checkout", steps: [...] });
 
-/** Author a workspace manifest with full type-checking + autocomplete. */
+/**
+ * Author a workspace manifest with full type-checking + autocomplete.
+ *
+ * Identity function — returns `config` unchanged. It exists purely so
+ * `workspace.ts` gets type inference at the call site without an explicit
+ * type annotation; there is no runtime behavior or validation.
+ *
+ * @param config - The workspace manifest (flows, screenOrder, projects, etc.)
+ * @returns The same `config` object, unmodified.
+ *
+ * @example
+ * ```ts
+ * // workspaces/<ws>/workspace.ts
+ * import { defineConfig } from "flowkit";
+ * export default defineConfig({ flows: ["onboarding", "checkout"] });
+ * ```
+ */
 export function defineConfig(config: FlowkitConfig): FlowkitConfig {
   return config
 }
 
-/** Author a Flowplan with full type-checking + autocomplete. */
+/**
+ * Author a Flowplan with full type-checking + autocomplete.
+ *
+ * Identity function — returns `flow` unchanged, same rationale as
+ * {@link defineConfig}.
+ *
+ * @param flow - The flowplan definition (id, name, steps, simulator, etc.)
+ * @returns The same `flow` object, unmodified.
+ *
+ * @example
+ * ```ts
+ * // workspaces/<ws>/flowplans/checkout.ts
+ * import { defineFlow } from "flowkit";
+ * export default defineFlow({ id: "checkout", name: "Checkout", steps: [...] });
+ * ```
+ */
 export function defineFlow(flow: FlowplanDef): FlowplanDef {
   return flow
 }
 
-/** Author an annotation tag with full type-checking + autocomplete. */
+/**
+ * Author an annotation tag with full type-checking + autocomplete.
+ *
+ * Identity/constructor helper — merges `label` into `options` and returns
+ * the result unchanged; no runtime validation is performed.
+ *
+ * @param label - Display label shown as the badge text.
+ * @param options - Optional icon, color, note, and expiry (see {@link AnnotationTag}).
+ * @returns An `AnnotationTag` object combining `label` and `options`.
+ */
 export function tag(label: string, options?: Omit<AnnotationTag, 'label'>): AnnotationTag {
   return { label, ...options }
 }

@@ -24,15 +24,17 @@ ${b('Workspaces (repo mode only')} ${d('— not available in flat/multi consumer
   ${c('watch:flows')}                      Watch for file changes
   ${c('status')}                           Health snapshot: flows, router, sessions, feedback, agent
 
-${b('Workspaces (flat/multi-workspace author projects):')}
+${b('Workspaces (flat consumer projects):')}
   ${c('convert:multi')} ${d('[--name:<id>]')}       Convert a flat project to multi-workspace mode
+
+${b('Workspaces (multi-workspace consumer projects only):')}
   ${c('convert:flat')} ${d('[--from:<id>] [--all]')}  Collapse multi-workspace mode back to flat
-  ${c('create:workspace')} ${d('[--name:<id>] [--lang:ts|js]')}   Add a workspace (multi mode only)
+  ${c('create:workspace')} ${d('[--name:<id>] [--lang:ts|js]')}   Add a workspace
   ${c('remove:workspace')} ${d('[--name:<id>]')}     Remove a workspace (requires confirmation)
   ${c('rename:workspace')} ${d('<old> <new>')}       Rename a workspace
 
 ${b('Scaffold (authoring):')}
-  ${c('create:flow')} ${d('--name:<id>')}            Add a flow + register in config
+  ${c('create:flow')} ${d('--name:<id>')}            Add a flow + register in workspace.ts
   ${c('create:screen')} ${d('--flow:<id> --name:<id>')}  Add a screen to a flow
   ${c('create:flowplan')} ${d('--name:<id>')}         Add a flowplan script
   ${c('create:component')} ${d('--name:<id>')}        Add a workspace component
@@ -48,7 +50,7 @@ ${b('Scaffold (authoring):')}
   ${c('promote:flow')} ${d('--flowplan:<path> --fork:"<label>" [--as:<new-id>]')}   Extract a fork into its own flowplan
 
   ${d('All scaffold commands accept --workspace:<name> to target a non-active workspace.')}
-  ${d('screenOrder in flowkit.config.ts controls display order; scaffold commands keep it in sync.')}
+  ${d('screenOrder in workspace.ts controls display order; scaffold commands keep it in sync.')}
 
 ${b('Projects:')}
   ${c('project:ls')} / ${c('pj:ls')}          List projects + plan counts
@@ -81,10 +83,9 @@ ${b('Feedback:')}
   ${c('feedback:dump')} / ${c('fd')} ${d('[--dest <path>]')}   Export committed feedback to disk
   ${c('feedback:ls')}                      List committed comments
 
-${b('Export & handoff')} ${d('(repo mode only):')}
-  ${c('export')} ${d('[<workspace>|all]')}          Standalone HTML viewer (no FlowLens)  ${d('— guided prompt if omitted')}
-  ${c('export:full')} ${d('[<workspace>|all]')}     Standalone HTML viewer + FlowLens included
-  ${c('handoff')} ${d('[<workspace>]')}             Developer handoff zip  ${d('— guided prompt if omitted')}
+${b('Export & handoff:')}
+  ${c('export')} ${d('[--workspace:<name>] [--profile:<name>]')}   Standalone HTML export — guided flow, works in every mode
+  ${c('handoff')} ${d('[<workspace>]')}             Developer handoff zip  ${d('— repo mode only, guided prompt if omitted')}
 
 ${b('Agent onboarding:')}
   ${c('agent:sync')} ${d('[--agent:claude|agents|cursor|none]')}   Regenerate .agent/* from spec

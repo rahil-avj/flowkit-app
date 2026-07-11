@@ -1,7 +1,7 @@
-import { useFeedback } from '@platform/features/feedback/context/FeedbackContext'
-import { useNavigation } from '@platform/shared/contexts/DashboardContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
-import type { WireframeView } from '@platform/types/index'
+import type { WireframeView } from '@flowkit/types/index'
+import { useFeedback } from '@flowkit-features/feedback/context/FeedbackContext'
+import { useNavigation } from '@flowkit-shared/contexts/DashboardContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import { Plus, SlidersHorizontal } from 'lucide-react'
 import React, { useCallback, useEffect } from 'react'
 

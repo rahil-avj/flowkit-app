@@ -1,10 +1,10 @@
-import { useFlowPlaybackOptional } from '@features/flowplan/FlowPlaybackContext'
-import Button from '@platform/shared/components/ui/Button'
-import SharedEmptyState from '@platform/shared/components/ui/EmptyState'
-import Tag from '@platform/shared/components/ui/Tag'
-import { useNavigation } from '@platform/shared/contexts/DashboardContext'
-import { useExplorerCommands } from '@platform/shared/utils/explorerCommands'
-import { type FlowplanDef, type FlowStep, type Fork, isFlowplanRef } from '@platform/types/index'
+import { type FlowplanDef, type FlowStep, type Fork, isFlowplanRef } from '@flowkit/types/index'
+import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
+import Button from '@flowkit-shared/components/ui/Button'
+import SharedEmptyState from '@flowkit-shared/components/ui/EmptyState'
+import Tag from '@flowkit-shared/components/ui/Tag'
+import { useNavigation } from '@flowkit-shared/contexts/DashboardContext'
+import { useExplorerCommands } from '@flowkit-shared/utils/explorerCommands'
 import {
   CheckCircle2,
   ChevronLeft,

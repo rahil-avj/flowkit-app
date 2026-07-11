@@ -1,4 +1,4 @@
-import { type FlowNavContextValue, FlowNavCtx } from '@platform/shared/contexts/FlowNavContext'
+import { type FlowNavContextValue, FlowNavCtx } from '@flowkit-shared/contexts/FlowNavContext'
 import { useContext } from 'react'
 
 /**

@@ -1,5 +1,5 @@
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
-import { type FlowplanDef, type FlowStep, type Fork, isFlowplanRef } from '@platform/types/index'
+import { type FlowplanDef, type FlowStep, type Fork, isFlowplanRef } from '@flowkit/types/index'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import { GitFork } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 

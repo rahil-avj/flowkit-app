@@ -2,7 +2,7 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { readFlowkitManifest, isMultiMode } from './flowkit-manifest.js'
+import { readFlowkitManifest, isMultiMode, workspaceEntryPath } from './flowkit-manifest.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export const ROOT = path.resolve(__dirname, '../..')
@@ -73,7 +73,7 @@ export function isRepoMode() {
 /**
  * Resolve the correct import line for a `defineX` helper (defineFlow,
  * defineConfig, etc.) for whichever mode is currently active — repo mode
- * imports from the internal @platform/core/config alias, flat/multi-workspace
+ * imports from the internal @flowkit-core/config alias, flat/multi-workspace
  * mode imports from the published 'flowkit' package.
  *
  * Single source of truth for this decision. Before this existed, commands
@@ -81,24 +81,24 @@ export function isRepoMode() {
  * round-trip, unlike config-patch.js's read-modify-write flow) each hardcoded
  * one mode's import path directly — confirmed live: scripts/authoring/
  * flowplans.js's create:flowplan hardcoded 'flowkit' (wrong in repo mode) and
- * scripts/authoring/promote-flow.js hardcoded '@platform/core/config' (wrong
+ * scripts/authoring/promote-flow.js hardcoded '@flowkit-core/config' (wrong
  * in flat/multi-workspace mode), each breaking the opposite mode's build.
  */
 export function resolveDefineImport(exportName) {
   return isRepoMode()
-    ? `import { ${exportName} } from '@platform/core/config'`
+    ? `import { ${exportName} } from '@flowkit-core/config'`
     : `import { ${exportName} } from 'flowkit'`
 }
 
 /**
  * Same mode-branch as resolveDefineImport(), for type-only imports whose
- * repo-mode home is @platform/types rather than @platform/core/config (e.g.
+ * repo-mode home is @flowkit/types rather than @flowkit-core/config (e.g.
  * FlowScreenProps) — both resolve to the published 'flowkit' package's own
  * public entry point in flat/multi-workspace consumer mode.
  */
 export function resolveTypeImport(typeName) {
   return isRepoMode()
-    ? `import type { ${typeName} } from '@platform/types'`
+    ? `import type { ${typeName} } from '@flowkit/types'`
     : `import type { ${typeName} } from 'flowkit'`
 }
 
@@ -109,11 +109,14 @@ export function resolveTypeImport(typeName) {
  *   — the author project root is the one implicit workspace; `name` is ignored,
  *   same as always.
  * Multi-workspace mode (consumer project, flowkit.mode: "multi" in package.json):
- *   process.cwd()/<name> if `name` is a real entry in flowkit.workspaces, else
- *   process.cwd()/<first workspace> — matches the same "first entry" convention
- *   the generated vite.config.ts uses (scripts/helpers/workspace-template.js's
- *   callers), so `flowkit create:flow` (no --workspace flag) and `npm run dev`
- *   target the same workspace by default.
+ *   process.cwd()/<declared path> if `name` is a real entry in flowkit.workspaces,
+ *   else process.cwd()/<first workspace's declared path> — matches the same
+ *   "first entry" convention the generated vite.config.ts uses
+ *   (scripts/helpers/workspace-template.js's callers), so `flowkit create:flow`
+ *   (no --workspace flag) and `npm run dev` target the same workspace by
+ *   default. The declared `path` (not just the workspace name) is what's
+ *   joined onto cwd — see workspaceEntryPath() — so a workspace whose folder
+ *   doesn't match its own name still resolves correctly.
  *
  * Without this branch, every authoring command (create:flow, create:screen,
  * components:ls, etc.) run from a multi-workspace project's root always
@@ -127,9 +130,11 @@ export function workspacePath(name) {
   if (isRepoMode()) return path.join(ROOT, 'workspaces', name ?? '')
   const cwd = process.cwd()
   if (!isMultiMode(cwd)) return cwd
-  const { workspaces } = readFlowkitManifest(cwd)
-  const resolved = name && workspaces.includes(name) ? name : workspaces[0]
-  return resolved ? path.join(cwd, resolved) : cwd
+  const manifest = readFlowkitManifest(cwd)
+  const resolvedName =
+    name && manifest.workspaceNames.includes(name) ? name : manifest.workspaceNames[0]
+  if (!resolvedName) return cwd
+  return path.join(cwd, workspaceEntryPath(manifest, resolvedName))
 }
 
 /**
@@ -145,8 +150,8 @@ export function getActiveWorkspaceName() {
   if (!isRepoMode()) {
     const cwd = process.cwd()
     if (isMultiMode(cwd)) {
-      const { workspaces } = readFlowkitManifest(cwd)
-      if (workspaces[0]) return workspaces[0]
+      const { workspaceNames } = readFlowkitManifest(cwd)
+      if (workspaceNames[0]) return workspaceNames[0]
     }
     return path.basename(cwd)
   }
@@ -231,7 +236,7 @@ export function assertScopedWorkspaceDir(wsDir, name) {
 
 /**
  * Resolve the active workspace name.
- * Flat mode: read from flowkit.config.ts workspace.name, or use dirname.
+ * Flat mode: read from the workspace config file's workspace.name, or use dirname.
  */
 export function activeWorkspaceDir() {
   if (isRepoMode()) {

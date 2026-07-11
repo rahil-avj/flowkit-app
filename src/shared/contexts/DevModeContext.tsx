@@ -1,4 +1,4 @@
-import type { ScreenMetaPatchEntry } from '@features/script-patch'
+import type { ScreenMetaPatchEntry } from '@flowkit-features/script-patch'
 import type { ReactNode } from 'react'
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 

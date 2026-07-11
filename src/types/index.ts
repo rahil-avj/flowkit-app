@@ -486,7 +486,7 @@ export interface FeedbackComment {
 // existing FlowMaster/useFlowEngine — the engine is never modified.
 //
 // Authoring lives in: workspaces/<ws>/projects/<proj>/[modules/<mod>/]flowplans/<Name>.ts
-// authored with defineFlow({ ... }) from @platform/core/config.
+// authored with defineFlow({ ... }) from @flowkit-core/config.
 
 /**
  * A dot-path patch applied onto the flow's db copy.
@@ -618,7 +618,7 @@ export interface FlowplanDef {
 
 // ─── Workspace Config & Hierarchy (Phase 1) ────────────────────────────────────
 
-/** Per-project options in flowkit.config.ts. All optional. */
+/** Per-project options in workspace.ts. All optional. */
 export interface FlowkitProjectConfig {
   /** Display name (defaults to folder name). */
   label?: string
@@ -690,6 +690,7 @@ export interface WorkspaceHierarchyNode {
 
 // ─── Annotation Tags ─────────────────────────────────────────────────────────
 
+/** Badge color options for an {@link AnnotationTag} — maps to theme.accent.* tokens. */
 export type AnnotationTagColor = 'blue' | 'green' | 'red' | 'amber' | 'purple'
 
 export interface AnnotationTag {

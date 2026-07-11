@@ -1,8 +1,8 @@
-import { useFeedback } from '@platform/features/feedback'
-import { type HighlightColor, useFlowplanSettings } from '@platform/features/flowplan'
-import { useSessionSettings } from '@platform/features/flowTracer'
-import { LS_LEFT_PANEL_W, LS_RIGHT_PANEL_W } from '@platform/shared/constants/storageKeys'
-import type { ColorBlindMode } from '@platform/types/index'
+import type { ColorBlindMode } from '@flowkit/types/index'
+import { useFeedback } from '@flowkit-features/feedback'
+import { type HighlightColor, useFlowplanSettings } from '@flowkit-features/flowplan'
+import { useSessionSettings } from '@flowkit-features/flowTracer'
+import { LS_LEFT_PANEL_W, LS_RIGHT_PANEL_W } from '@flowkit-shared/constants/storageKeys'
 import {
   LayoutPanelLeft,
   MessageSquare,
@@ -127,6 +127,16 @@ function InterfaceSection({ ctx }: InterfaceSectionProps) {
             size="sm"
             checked={ctx.autoHideScrollbars}
             onChange={ctx.toggleAutoHideScrollbars}
+          />
+        </SettingRow>
+        <SettingRow
+          label="Interactive Screens preview"
+          hint="Let onAction buttons navigate when previewing a screen from the Screens tab, without entering Flows playback. onNext/onBack stay inert — there's no sequential order outside a flow."
+        >
+          <Toggle
+            size="sm"
+            checked={ctx.interactiveScreensPreview}
+            onChange={ctx.toggleInteractiveScreensPreview}
           />
         </SettingRow>
       </SettingGroup>

@@ -1,4 +1,4 @@
-import type { DotPathPatch } from '@platform/types/index'
+import type { DotPathPatch } from '@flowkit/types/index'
 
 // ── applyDotPathPatch ───────────────────────────────────────────────────────────
 //

@@ -1,8 +1,8 @@
-import { useFeedback } from '@platform/features/feedback/context/FeedbackContext'
-import Button from '@platform/shared/components/ui/Button'
-import EmptyState from '@platform/shared/components/ui/EmptyState'
-import { useNavigation } from '@platform/shared/contexts/DashboardContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
+import { useFeedback } from '@flowkit-features/feedback/context/FeedbackContext'
+import Button from '@flowkit-shared/components/ui/Button'
+import EmptyState from '@flowkit-shared/components/ui/EmptyState'
+import { useNavigation } from '@flowkit-shared/contexts/DashboardContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import { FileSearch, ListFilter, Monitor } from 'lucide-react'
 
 import { useFeedbackTabContext } from '../context'

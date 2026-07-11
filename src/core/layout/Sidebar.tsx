@@ -1,5 +1,5 @@
-import Tooltip from '@platform/shared/components/ui/Tooltip'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
+import Tooltip from '@flowkit-shared/components/ui/Tooltip'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import { ChevronsLeft, ChevronsRight, Moon, Settings, Sun } from 'lucide-react'
 import React from 'react'
 

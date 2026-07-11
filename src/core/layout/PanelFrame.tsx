@@ -1,4 +1,4 @@
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 
 import type { PanelDragHandle } from './hooks/usePanelDrag'
 import ResizeHandle from './ResizeHandle'

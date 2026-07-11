@@ -1,5 +1,5 @@
 // Public API for the feedback feature.
-// Import from '@features/feedback' — never reach inside components/.
+// Import from '@flowkit-features/feedback' — never reach inside components/.
 export { default as AuthorAvatar } from './components/AuthorAvatar'
 export { TEAM_MEMBERS, type TeamMember } from './components/teamMembers'
 export type { CommentFilter } from './context'

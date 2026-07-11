@@ -21,12 +21,7 @@ import {
 import { prompt, selectFromList } from '../helpers/prompt.js'
 import { assertKebab, ValidationError } from '../helpers/validate.js'
 import { specContext } from './agent-spec.js'
-import {
-  renderAgentFiles,
-  renderProjectStub,
-  writeAgentMeta,
-  AGENT_TARGETS,
-} from './agent-sync.js'
+import { renderAgentFiles, renderProjectStub, writeAgentMeta, AGENT_TARGETS } from './agent-sync.js'
 
 export function restartVite() {
   try {
@@ -289,7 +284,7 @@ export async function cmdNewWorkspace(val) {
   if (selectedKit !== 'none') {
     const kitType = isStandaloneKit ? 'standalone' : 'shared'
     const cssPath = isStandaloneKit
-      ? `@platform/kits/standalone/${selectedKit}/index.css`
+      ? `@flowkit/kits/standalone/${selectedKit}/index.css`
       : '@kit/index.css'
     console.log(g('✓') + ' Kit: ' + b(`[${selectedKit}]`) + d(` — ${kitType}, via ${cssPath}`))
   }

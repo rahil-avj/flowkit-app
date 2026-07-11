@@ -1,6 +1,6 @@
 /**
  * config-patch.js
- * Surgical read/write helpers for flowkit.config.ts.
+ * Surgical read/write helpers for the workspace config file (see WORKSPACE_CONFIG_FILENAME).
  * All operations use read → modify → full regeneration to avoid regex fragility.
  */
 
@@ -8,9 +8,10 @@ import fs from 'fs'
 import path from 'path'
 import { resolveDefineImport } from '../helpers/paths.js'
 import { asJsStringLiteral } from '../helpers/validate.js'
+import { WORKSPACE_CONFIG_FILENAME } from '../helpers/config-filenames.js'
 
 function getConfigPath(wsDir) {
-  return path.join(wsDir, 'flowkit.config.ts')
+  return path.join(wsDir, WORKSPACE_CONFIG_FILENAME)
 }
 
 // Fallback import line if a config file somehow has none to preserve (should
@@ -20,14 +21,15 @@ function defaultImportLine() {
   return resolveDefineImport('defineConfig')
 }
 
-/** Parse flowkit.config.ts into a plain JS object without TypeScript compilation. */
+/** Parse the workspace config file into a plain JS object without TypeScript compilation. */
 function readConfig(wsDir) {
   const configPath = getConfigPath(wsDir)
-  if (!fs.existsSync(configPath)) throw new Error(`flowkit.config.ts not found at ${configPath}`)
+  if (!fs.existsSync(configPath))
+    throw new Error(`${WORKSPACE_CONFIG_FILENAME} not found at ${configPath}`)
 
   let src = fs.readFileSync(configPath, 'utf8')
   // Capture the import line verbatim rather than discarding it — repo-mode
-  // configs import defineConfig from '@platform/core/config', flat/standalone
+  // configs import defineConfig from '@flowkit-core/config', flat/standalone
   // configs import it from the published 'flowkit' package. Hardcoding either
   // one in writeConfig() below would silently break the other mode's build
   // the next time any authoring command mutates the file (confirmed live:
@@ -64,7 +66,7 @@ function formatScreenArray(screens) {
   return `[\n${inner}\n    ]`
 }
 
-/** Regenerate the entire flowkit.config.ts from a plain config object. */
+/** Regenerate the entire workspace config file from a plain config object. */
 function writeConfig(wsDir, config) {
   const configPath = getConfigPath(wsDir)
   const flowsStr = config.flows.map(f => `    '${f}',`).join('\n')

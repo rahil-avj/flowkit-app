@@ -1,5 +1,5 @@
 // Public API for the flowplan feature.
-// Import from '@features/flowplan' — never reach inside internals.
+// Import from '@flowkit-features/flowplan' — never reach inside internals.
 export type {
   CompiledFlowplan,
   CompiledStep,

@@ -1,11 +1,11 @@
-import { useSessionRecorderOptional } from '@platform/features/flowTracer/context'
-import { TransitionLogEntry, useDashboard } from '@platform/shared/contexts/DashboardContext'
 import type {
   FlowConfig,
   InteractionCtx,
   InteractionRule,
   TransitionAnimation,
-} from '@platform/types/index'
+} from '@flowkit/types/index'
+import { useSessionRecorderOptional } from '@flowkit-features/flowTracer/context'
+import { TransitionLogEntry, useDashboard } from '@flowkit-shared/contexts/DashboardContext'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 // ─── Flowplan gating (optional — engine stays flowplan-agnostic otherwise) ────

@@ -1,4 +1,4 @@
-import { SessionRecorderCtx } from '@shared/contexts/SessionRecorderContext'
+import { SessionRecorderCtx } from '@flowkit-shared/contexts/SessionRecorderContext'
 import {
   createContext,
   type MutableRefObject,

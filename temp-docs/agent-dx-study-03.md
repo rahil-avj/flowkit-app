@@ -21,8 +21,8 @@
 
 - **Where:** `scripts/authoring/screens.js`'s `screenTemplate()` — generated `import type { FlowScreenProps } from '@platform/types'` unconditionally, regardless of mode.
 - **Impact:** `@platform/types` only resolves in repo mode (a real tsconfig/vite alias there). In flat or multi-workspace consumer mode, this import is unresolvable — confirmed via direct reproduction: creating `settings/profile` and `settings/notifications` via `create:screen` in `temp-test-03` produced `TS2307: Cannot find module '@platform/types'` on both, immediately, before any other code was written.
-- **Why earlier today's F1 fix didn't catch this:** F1 (from Report 01) fixed the *scaffolder's* initial content generator (`workspace-template.js`, used once at project creation) to correctly import from `'flowkit'` in consumer mode. It did not touch `create:screen` — a completely separate code path used every time an author adds a screen *after* scaffolding, in any mode, for the lifetime of the project. This means F1's fix was necessary but not sufficient — the exact same class of bug existed in the live authoring command and had never been exercised by Report 01's study (which used the scaffolder's initial screens, not `create:screen`-authored ones, for its `tsc` checks).
-- **Fix:** Added `resolveTypeImport()` to `scripts/helpers/paths.js` (parallel to the existing `resolveDefineImport()` helper, same mode-branch pattern), and switched `screenTemplate()` to use it. Verified: freshly created screens in both flat mode (`temp-test-03` pre-conversion) and multi-workspace mode (`app-b`, a workspace created *after* conversion) both correctly import `from 'flowkit'`.
+- **Why earlier today's F1 fix didn't catch this:** F1 (from Report 01) fixed the _scaffolder's_ initial content generator (`workspace-template.js`, used once at project creation) to correctly import from `'flowkit'` in consumer mode. It did not touch `create:screen` — a completely separate code path used every time an author adds a screen _after_ scaffolding, in any mode, for the lifetime of the project. This means F1's fix was necessary but not sufficient — the exact same class of bug existed in the live authoring command and had never been exercised by Report 01's study (which used the scaffolder's initial screens, not `create:screen`-authored ones, for its `tsc` checks).
+- **Fix:** Added `resolveTypeImport()` to `scripts/helpers/paths.js` (parallel to the existing `resolveDefineImport()` helper, same mode-branch pattern), and switched `screenTemplate()` to use it. Verified: freshly created screens in both flat mode (`temp-test-03` pre-conversion) and multi-workspace mode (`app-b`, a workspace created _after_ conversion) both correctly import `from 'flowkit'`.
 - **Severity:** Critical — same class/impact as F1 (silent `tsc --noEmit` false-failure on ordinary, correct usage), and arguably worse discoverability since it fires on the single most common authoring action (adding a screen), not just at initial scaffold time.
 
 ### F10 (Medium, NEW — found and fixed during this exercise) — `create:screen`'s generated placeholder fails `noUnusedLocals` on arrival
@@ -44,24 +44,24 @@
 
 - **`convert:multi` itself worked flawlessly** — clean conversion, correct `workspace-1/` restructure, correct `vite.config.ts` rewrite (matches the template fixed in this session's earlier `create-flowkit-workspace` vite-config-drift fix), mode detection immediately correct (`flowkit help` → `Mode: consumer`, active workspace → `workspace-1`).
 - **Workspace isolation after conversion is exactly correct** — `create:workspace --name:app-b` produced a fully independent sibling workspace; `list:screens --workspace:<name>` correctly scoped to each, zero cross-contamination between `workspace-1`'s custom `settings` flow and `app-b`'s separate scaffold content.
-- **The fix generalizes correctly across the mode transition** — screens created in `app-b` (a workspace that didn't exist until *after* conversion) correctly used the fixed `resolveTypeImport()` path, confirming the fix isn't scaffold-time-specific or tied to any particular workspace's creation order.
+- **The fix generalizes correctly across the mode transition** — screens created in `app-b` (a workspace that didn't exist until _after_ conversion) correctly used the fixed `resolveTypeImport()` path, confirming the fix isn't scaffold-time-specific or tied to any particular workspace's creation order.
 - **Full monorepo suite unaffected**: 134 vitest + 32 integration tests pass, lint clean, after all three new fixes (F9, F10) plus this session's earlier F1/F6/F7 fixes.
 - **`npm run build` and `npm run dev` both succeed cleanly** on the fully converted, multi-workspace project with custom content from two different workspaces.
 
 ## Verification summary
 
-| Check | Result |
-|---|---|
-| `tsc --noEmit` on fresh flat-mode scaffold + new screens (pre-fix) | FAIL — `@platform/types` unresolvable (F9) |
-| `tsc --noEmit` on same, post-F9/F10 fix | New screens clean; F11's pre-existing scaffold errors remain (flat mode only) |
-| `convert:multi` | PASS — clean conversion, correct structure |
-| `tsc --noEmit` post-conversion (full project, 2 workspaces) | **PASS — exit 0** (F11 self-resolves post-conversion) |
-| `npm run build` post-conversion | PASS — clean, known chunk-size warning only |
-| `npm run dev` post-conversion | PASS — HTTP 200 |
-| Workspace isolation (`list:screens` per workspace) | PASS — correct scoping, zero leakage |
-| Full monorepo test suite + lint | PASS — 134 + 32 tests, clean lint |
+| Check                                                              | Result                                                                        |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| `tsc --noEmit` on fresh flat-mode scaffold + new screens (pre-fix) | FAIL — `@platform/types` unresolvable (F9)                                    |
+| `tsc --noEmit` on same, post-F9/F10 fix                            | New screens clean; F11's pre-existing scaffold errors remain (flat mode only) |
+| `convert:multi`                                                    | PASS — clean conversion, correct structure                                    |
+| `tsc --noEmit` post-conversion (full project, 2 workspaces)        | **PASS — exit 0** (F11 self-resolves post-conversion)                         |
+| `npm run build` post-conversion                                    | PASS — clean, known chunk-size warning only                                   |
+| `npm run dev` post-conversion                                      | PASS — HTTP 200                                                               |
+| Workspace isolation (`list:screens` per workspace)                 | PASS — correct scoping, zero leakage                                          |
+| Full monorepo test suite + lint                                    | PASS — 134 + 32 tests, clean lint                                             |
 
 ## Open questions / follow-ups
 
 - **F11 needs a dedicated root-cause pass** — specifically comparing flat mode's `tsconfig.json`/glob `include` resolution against multi-workspace mode's, to understand why identical code behaves differently. Isolated repro attempts didn't reproduce it, so the next step is likely comparing the two `tsconfig.json`s' `include` fields directly and/or testing with `--listFiles`/`--explainFiles` to see what's actually being included differently between the two modes.
-- **Any other authoring command besides `create:screen` worth auditing for the same class of bug as F9?** This exercise only found it because a fresh flow/screen/flowplan cycle was run manually — worth a systematic grep-based sweep (already partially done: confirmed `flowplans.js` correctly uses the existing `resolveDefineImport()` helper, and `components.js`'s only reference is a non-compiled usage comment, not a real import) across the rest of `scripts/authoring/*.js` for any other hardcoded `@platform`/`@shared`/`@core` reference in generated *code* (not comments).
+- **Any other authoring command besides `create:screen` worth auditing for the same class of bug as F9?** This exercise only found it because a fresh flow/screen/flowplan cycle was run manually — worth a systematic grep-based sweep (already partially done: confirmed `flowplans.js` correctly uses the existing `resolveDefineImport()` helper, and `components.js`'s only reference is a non-compiled usage comment, not a real import) across the rest of `scripts/authoring/*.js` for any other hardcoded `@flowkit`/`@shared`/`@core` reference in generated _code_ (not comments).

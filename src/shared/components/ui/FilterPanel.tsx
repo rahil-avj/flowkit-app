@@ -1,4 +1,4 @@
-import { Z } from '@platform/shared/constants/zIndex'
+import { Z } from '@flowkit-shared/constants/zIndex'
 import { SlidersHorizontal, X } from 'lucide-react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'

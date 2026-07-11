@@ -1,28 +1,29 @@
-import { useFlowPlaybackOptional } from '@features/flowplan/FlowPlaybackContext'
-import { useFeedback } from '@platform/features/feedback/context/FeedbackContext'
-import { useSessionSettings } from '@platform/features/flowTracer/components/useSessionSettings'
-import { useSessionRecorderOptional } from '@platform/features/flowTracer/context'
-import { GoToOverlay } from '@platform/features/go-to-overlay'
-import DeviceMockup from '@platform/shared/components/devices/DeviceMockup'
-import PanelErrorBoundary from '@platform/shared/components/errors/PanelErrorBoundary'
-import MobileCanvas from '@platform/shared/components/mobile/MobileCanvas'
-import ActionCenter from '@platform/shared/components/overlays/ActionCenter'
-import type { ActionCtx } from '@platform/shared/components/overlays/appActions'
-import HelpModal from '@platform/shared/components/overlays/HelpModal'
-import Settings from '@platform/shared/components/overlays/Settings'
-import Tooltip from '@platform/shared/components/ui/Tooltip'
+import type { FlowNode, FlowScreenProps, WireframeView } from '@flowkit/types/index'
+import { workspaces } from '@flowkit/workspaces'
+import { useFeedback } from '@flowkit-features/feedback/context/FeedbackContext'
+import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
+import { useSessionSettings } from '@flowkit-features/flowTracer/components/useSessionSettings'
+import { useSessionRecorderOptional } from '@flowkit-features/flowTracer/context'
+import { GoToOverlay } from '@flowkit-features/go-to-overlay'
+import DeviceMockup from '@flowkit-shared/components/devices/DeviceMockup'
+import PanelErrorBoundary from '@flowkit-shared/components/errors/PanelErrorBoundary'
+import MobileCanvas from '@flowkit-shared/components/mobile/MobileCanvas'
+import ActionCenter from '@flowkit-shared/components/overlays/ActionCenter'
+import type { ActionCtx } from '@flowkit-shared/components/overlays/appActions'
+import HelpModal from '@flowkit-shared/components/overlays/HelpModal'
+import Settings from '@flowkit-shared/components/overlays/Settings'
+import Tooltip from '@flowkit-shared/components/ui/Tooltip'
 import {
   LS_AUTO_HIDE_SCROLLBARS,
+  LS_INTERACTIVE_SCREENS_PREVIEW,
   LS_SESSIONS_ENABLED,
-} from '@platform/shared/constants/storageKeys'
-import { useActiveWorkspace } from '@platform/shared/contexts/ActiveWorkspaceContext'
-import { useDashboard } from '@platform/shared/contexts/DashboardContext'
-import { useDevMode } from '@platform/shared/contexts/DevModeContext'
-import { useFlowLensModeOptional } from '@platform/shared/contexts/FlowLensModeContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
-import { useIsMobile } from '@platform/shared/utils/useIsMobile'
-import type { FlowNode, WireframeView } from '@platform/types/index'
-import { workspaces } from '@platform/workspaces'
+} from '@flowkit-shared/constants/storageKeys'
+import { useActiveWorkspace } from '@flowkit-shared/contexts/ActiveWorkspaceContext'
+import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
+import { useDevMode } from '@flowkit-shared/contexts/DevModeContext'
+import { useFlowLensModeOptional } from '@flowkit-shared/contexts/FlowLensModeContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
+import { useIsMobile } from '@flowkit-shared/utils/useIsMobile'
 import {
   ChevronDown,
   Hand,
@@ -80,7 +81,7 @@ const DISABLED_LENS = {
 // FlowLens mode — presence-based. flowlensLoader comes from import.meta.glob in
 // FlowLensModeContext; when src/modes/flowlens/ is absent the glob is empty,
 // loader is undefined, and Rollup DCEs the entire flowlens chunk.
-import { flowlensLoader } from '@platform/shared/contexts/FlowLensModeContext'
+import { flowlensLoader } from '@flowkit-shared/contexts/FlowLensModeContext'
 interface FlowLensModeProps {
   views: unknown[]
   effectiveLeftW: number
@@ -154,6 +155,23 @@ function DesktopCanvas({ flows, views }: Props) {
     })
   }, [])
 
+  // ── Interactive Screens-tab preview ──────────────────────────────────────────
+  // Off by default — the Screens tab is a static structural preview outside
+  // flowplan playback (no flow/navigation context exists there). When enabled,
+  // onAction() is wired to navigateTo() so screens using the direct-id
+  // navigation convention (onAction?.('some-view-id')) work; onNext/onBack stay
+  // inert since there's no sequential screen order outside a flow.
+  const [interactiveScreensPreview, setInteractiveScreensPreview] = useState(
+    () => localStorage.getItem(LS_INTERACTIVE_SCREENS_PREVIEW) === 'true'
+  )
+  const toggleInteractiveScreensPreview = useCallback(() => {
+    setInteractiveScreensPreview(v => {
+      const next = !v
+      localStorage.setItem(LS_INTERACTIVE_SCREENS_PREVIEW, String(next))
+      return next
+    })
+  }, [])
+
   // ── Sessions feature ─────────────────────────────────────────────────────────
   const [showSessionsFeature, setShowSessionsFeature] = useState(
     () => localStorage.getItem(LS_SESSIONS_ENABLED) === 'true'
@@ -199,6 +217,8 @@ function DesktopCanvas({ flows, views }: Props) {
       openImportModal,
       toggleAutoHideScrollbars,
       autoHideScrollbars,
+      toggleInteractiveScreensPreview,
+      interactiveScreensPreview,
       showSessionsFeature,
       toggleSessionsFeature,
       autoRecordOnPlay,
@@ -222,6 +242,8 @@ function DesktopCanvas({ flows, views }: Props) {
       openImportModal,
       toggleAutoHideScrollbars,
       autoHideScrollbars,
+      toggleInteractiveScreensPreview,
+      interactiveScreensPreview,
       showSessionsFeature,
       toggleSessionsFeature,
       autoRecordOnPlay,
@@ -543,6 +565,8 @@ function DesktopCanvas({ flows, views }: Props) {
         kitTheme={workspaceConfig.kit ?? 'apple'}
         showSessionsFeature={showSessionsFeature}
         isPanelDragging={isPanelDragging}
+        interactiveScreensPreview={interactiveScreensPreview}
+        navigateTo={navigateTo}
       />
 
       {/* ── Left panel ── */}
@@ -664,6 +688,8 @@ interface CanvasContentProps {
   kitTheme: string
   showSessionsFeature: boolean
   isPanelDragging: boolean
+  interactiveScreensPreview: boolean
+  navigateTo: (id: string) => void
 }
 
 function CanvasContent({
@@ -686,6 +712,8 @@ function CanvasContent({
   totalCommentCount,
   openFeedbackTab,
   autoHideScrollbars,
+  interactiveScreensPreview,
+  navigateTo,
   breakKeepFit,
   kitTheme,
   showSessionsFeature,
@@ -807,10 +835,21 @@ function CanvasContent({
             >
               {ActiveComponent ? (
                 // Static Screens-tab preview — outside flowplan playback there's no
-                // navigation/flow context, so only db is meaningful here. Screens
-                // authored against FlowScreenProps (the flat-mode convention) would
-                // otherwise see db as undefined until entering playback via FlowMaster.
-                <ActiveComponent db={db} />
+                // sequential screen order or interaction-rule map, so onNext/onBack
+                // stay inert. When Interactive Screens Preview is on (Settings →
+                // Interface), onAction is wired to navigateTo() for the direct-id
+                // navigation convention (onAction?.('some-view-id')).
+                <ActiveComponent
+                  {...(interactiveScreensPreview
+                    ? ({
+                        db,
+                        isFlow: false,
+                        onAction: (actionName: string) => navigateTo(actionName),
+                        onNext: () => {},
+                        onBack: () => {},
+                      } satisfies FlowScreenProps)
+                    : { db })}
+                />
               ) : (
                 <div className="flex-1 flex items-center justify-center h-full bg-theme-elevated text-theme-text-disabled text-ui-sm font-sans">
                   No view selected

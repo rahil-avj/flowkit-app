@@ -1,4 +1,3 @@
-import { DEVICE_PRESETS } from '@platform/shared/components/devices'
 import type {
   AutoPlayConfig,
   ColorBlindMode,
@@ -6,9 +5,10 @@ import type {
   DashboardState,
   DevicePreset,
   NetworkSpeed,
-} from '@platform/types/index'
-import type { WorkspaceConfig } from '@platform/workspaces'
-import { getWorkspaceDb } from '@shared/utils/workspaceModules'
+} from '@flowkit/types/index'
+import type { WorkspaceConfig } from '@flowkit/workspaces'
+import { DEVICE_PRESETS } from '@flowkit-shared/components/devices'
+import { getWorkspaceDb } from '@flowkit-shared/utils/workspaceModules'
 import type { ReactNode } from 'react'
 import {
   createContext,
@@ -130,9 +130,9 @@ export function DashboardProvider({
 }: {
   children: ReactNode
   firstViewId: string
-  /** Author-set default device preset label (flowkit.config.ts `defaultDevice`). Falls back to DEVICE_PRESETS[0]. */
+  /** Author-set default device preset label (workspace.ts `defaultDevice`). Falls back to DEVICE_PRESETS[0]. */
   initialDeviceLabel?: string
-  /** Author-set default orientation (flowkit.config.ts `defaultOrientation`). Falls back to "portrait". */
+  /** Author-set default orientation (workspace.ts `defaultOrientation`). Falls back to "portrait". */
   initialOrientation?: Orientation
   workspaceConfig?: WorkspaceConfig
   onSwitchWorkspace?: (name?: string) => void

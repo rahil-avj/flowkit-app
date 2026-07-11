@@ -37,8 +37,10 @@ env-var gate — a doc/comment previously suggested one existed; it did not actu
 control anything and has been removed.
 
 To exclude FlowLens from a build, delete or rename `src/modes/flowlens/` before
-`npm run build`. `flowkit export` (repo mode) does this automatically; `flowkit
-export:full` preserves the folder to include FlowLens in a standalone export.
+`npm run build`. `flowkit export` (standalone HTML export, works in every mode)
+always includes FlowLens if the folder is present — there's currently no
+export-time flag to exclude it separately from a regular build; remove the
+folder first if you need a FlowLens-free standalone export.
 
 Open the app, then click the **FlowLens** toggle (top-right of the canvas bar) to enter analytics mode.
 

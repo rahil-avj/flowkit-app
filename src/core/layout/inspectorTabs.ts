@@ -1,8 +1,8 @@
-import { InspectorTab } from '@shared/constants/tabs'
+import { InspectorTab } from '@flowkit-shared/constants/tabs'
 import { Activity, Database, Info, MessageSquare, Settings2, Workflow } from 'lucide-react'
 import type React from 'react'
 
-export type { InspectorTab } from '@shared/constants/tabs'
+export type { InspectorTab } from '@flowkit-shared/constants/tabs'
 export type InspectorMode = 'fixed' | 'floating'
 
 export const ALL_TABS: InspectorTab[] = ['feedback', 'info', 'simulator', 'flow', 'db', 'sessions']

@@ -1,6 +1,6 @@
-import { useFeedback } from '@platform/features/feedback/context/FeedbackContext'
-import { useNavigation } from '@platform/shared/contexts/DashboardContext'
-import { FeedbackComment, FeedbackTag, WireframeView } from '@platform/types/index'
+import { FeedbackComment, FeedbackTag, WireframeView } from '@flowkit/types/index'
+import { useFeedback } from '@flowkit-features/feedback/context/FeedbackContext'
+import { useNavigation } from '@flowkit-shared/contexts/DashboardContext'
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
 import { createContext, useContext, useEffect, useState } from 'react'
 

@@ -1,5 +1,5 @@
-import { SessionDb } from '@platform/features/flowTracer/sessionDb'
-import type { SessionEvent, SessionMeta, SessionRemark } from '@platform/features/flowTracer/types'
+import { SessionDb } from '@flowkit-features/flowTracer/sessionDb'
+import type { SessionEvent, SessionMeta, SessionRemark } from '@flowkit-features/flowTracer/types'
 import { ArrowLeft, Check, Pencil, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 

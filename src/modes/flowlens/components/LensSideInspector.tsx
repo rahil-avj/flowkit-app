@@ -1,10 +1,10 @@
-import PanelBody from '@platform/core/layout/PanelBody'
-import Sidebar from '@platform/core/layout/Sidebar'
-import SidebarButton from '@platform/core/layout/SidebarButton'
-import { SessionDb } from '@platform/features/flowTracer/sessionDb'
-import type { SessionExport } from '@platform/features/flowTracer/types'
-import SegmentedControl from '@platform/shared/components/ui/SegmentedControl'
-import { useFlowLensMode } from '@platform/shared/contexts/FlowLensModeContext'
+import PanelBody from '@flowkit-core/layout/PanelBody'
+import Sidebar from '@flowkit-core/layout/Sidebar'
+import SidebarButton from '@flowkit-core/layout/SidebarButton'
+import { SessionDb } from '@flowkit-features/flowTracer/sessionDb'
+import type { SessionExport } from '@flowkit-features/flowTracer/types'
+import SegmentedControl from '@flowkit-shared/components/ui/SegmentedControl'
+import { useFlowLensMode } from '@flowkit-shared/contexts/FlowLensModeContext'
 import {
   BarChart3,
   Filter,

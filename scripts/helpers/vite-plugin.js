@@ -4,7 +4,8 @@
  * Generates virtual modules that replace all import.meta.glob patterns
  * which hardcode workspaces/<name>/... paths. In flat-layout author projects
  * the workspaces/ directory does not exist — the plugin reconstructs the same
- * data from flowkit.config.ts + direct filesystem globs from CWD.
+ * data from the workspace config file (see WORKSPACE_CONFIG_FILENAME) + direct
+ * filesystem globs from CWD.
  *
  * Virtual modules produced:
  *   virtual:flowkit/config      — parsed FlowkitConfig object
@@ -21,20 +22,30 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import { handleSaveSession } from './flowlens-session.js'
+import { WORKSPACE_CONFIG_FILENAME } from './config-filenames.js'
 
 // src/ directory of the flowkit package — resolved relative to this plugin file.
-// In flat mode (author project) all @platform/* aliases point here.
+// In flat mode (author project) all @flowkit/* aliases point here.
 const ENGINE_SRC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../src')
 
 // ── Config reader ──────────────────────────────────────────────────────────────
 
+// Repo-mode workspace files import defineConfig/defineFlow from
+// '@flowkit-core/config'; flat/standalone-mode ones import from 'flowkit'.
+// Both must shim to the same identity-function stand-in — this plugin runs
+// against workspace config files in both modes (e.g. from the standalone
+// export build, which eagerly bundles everything reachable, unlike the dev
+// server's lazy virtual-module resolution).
+const SHIM_SPECIFIERS = ['flowkit', '@flowkit-core/config']
+
 async function readFlowkitConfig(cwd) {
-  const configPath = path.join(cwd, 'flowkit.config.ts')
+  const configPath = path.join(cwd, WORKSPACE_CONFIG_FILENAME)
   if (!fs.existsSync(configPath)) return {}
 
-  // Provide a shim for 'flowkit' so esbuild can bundle it inline.
-  // The real package may not be resolvable from /tmp (repo mode) or may not be
-  // installed yet (scaffold time). Identity functions are all the config file uses.
+  // Provide a shim so esbuild can bundle either import style inline.
+  // The real package/alias may not be resolvable from /tmp (repo mode) or may
+  // not be installed yet (scaffold time). Identity functions are all the
+  // config file uses.
   const shimFile = path.join(os.tmpdir(), 'flowkit-shim.mjs')
   if (!fs.existsSync(shimFile)) {
     fs.writeFileSync(
@@ -52,7 +63,7 @@ async function readFlowkitConfig(cwd) {
     bundle: true,
     format: 'esm',
     outfile,
-    alias: { flowkit: shimFile },
+    alias: Object.fromEntries(SHIM_SPECIFIERS.map(s => [s, shimFile])),
     external: ['react', 'react-dom'],
     logLevel: 'silent',
   })
@@ -261,8 +272,8 @@ export function flowkit(options = {}) {
     ? path.resolve(process.cwd(), options.workspaceRoot)
     : process.cwd()
   // Two independent things `workspaceRoot` used to conflate into one flag:
-  //   1. which folder to read flowkit.config.ts/flows/flowplans/lib from (cwd, above)
-  //   2. whether flat-mode aliases (@platform/@core/@features/etc) need supplying
+  //   1. which folder to read the workspace config file/flows/flowplans/lib from (cwd, above)
+  //   2. whether flat-mode aliases (@flowkit/@flowkit-core/@flowkit-features/etc) need supplying
   // Repo mode passes workspaceRoot AND already supplies its own aliases in the
   // host vite.config.ts (see this repo's own vite.config.ts) — standalone
   // defaults to false there. A standalone multi-workspace consumer project
@@ -317,7 +328,7 @@ export function flowkit(options = {}) {
       // In standalone mode, engine source lives in node_modules/flowkit/src (or a
       // symlink to it), resolved from the actual project root (process.cwd()) —
       // NOT from `cwd`, which may be a workspace subfolder in the multi-workspace
-      // case, not the directory containing node_modules. Point all @platform/*
+      // case, not the directory containing node_modules. Point all @flowkit/*
       // aliases at the logical symlink path so that react/react-dom resolve from
       // the author project's node_modules rather than the symlink target's
       // directory. preserveSymlinks: true enforces this.
@@ -326,12 +337,12 @@ export function flowkit(options = {}) {
         : ENGINE_SRC
       const flatAliases = standalone
         ? {
-            '@platform': engineSrc,
-            '@core': path.join(engineSrc, 'core'),
-            '@features': path.join(engineSrc, 'features'),
-            '@shared': path.join(engineSrc, 'shared'),
+            '@flowkit': engineSrc,
+            '@flowkit-core': path.join(engineSrc, 'core'),
+            '@flowkit-features': path.join(engineSrc, 'features'),
+            '@flowkit-shared': path.join(engineSrc, 'shared'),
             '@flowlens': path.join(engineSrc, 'modes/flowlens'),
-            '@kit': path.join(engineSrc, 'kits/shared'),
+            '@flowkit-kit': path.join(engineSrc, 'kits/shared'),
             flowkit: path.join(engineSrc, 'core/config/index.ts'),
           }
         : {}
@@ -349,15 +360,23 @@ export function flowkit(options = {}) {
         optimizeDeps: {
           // Do not pre-bundle flowkit or any of its internal alias paths.
           // Pre-bundling causes dual module instances: App.tsx loads FeedbackContext
-          // via a relative path (raw ESM) while KitSideInspector loads via @platform
+          // via a relative path (raw ESM) while KitSideInspector loads via @flowkit
           // alias (pre-bundled chunk) → two createContext() calls → Provider/hook mismatch.
           exclude: standalone
-            ? ['flowkit', '@platform', '@core', '@features', '@shared', '@kit', '@flowlens']
+            ? [
+                'flowkit',
+                '@flowkit',
+                '@flowkit-core',
+                '@flowkit-features',
+                '@flowkit-shared',
+                '@flowkit-kit',
+                '@flowlens',
+              ]
             : [],
         },
         server: {
           fs: {
-            // cwd = where flowkit.config.ts/flows/flowplans/lib live — the
+            // cwd = where the workspace config file/flows/flowplans/lib live — the
             // project root itself (flat mode, single-workspace standalone),
             // or a workspace subfolder under the project root (multi-workspace
             // standalone, or repo mode's active workspace dir).
@@ -393,7 +412,7 @@ export function flowkit(options = {}) {
         path.join(cwd, 'flows'),
         path.join(cwd, 'flowplans'),
         path.join(cwd, 'lib'),
-        path.join(cwd, 'flowkit.config.ts'),
+        path.join(cwd, WORKSPACE_CONFIG_FILENAME),
       ]
       server.watcher.add(watchDirs)
 
@@ -421,7 +440,8 @@ export function flowkit(options = {}) {
         path.join(cwd, 'lib'),
       ]
       const isRelevant =
-        file === path.join(cwd, 'flowkit.config.ts') || watchDirs.some(d => file.startsWith(d))
+        file === path.join(cwd, WORKSPACE_CONFIG_FILENAME) ||
+        watchDirs.some(d => file.startsWith(d))
 
       if (isRelevant) {
         invalidate(server)

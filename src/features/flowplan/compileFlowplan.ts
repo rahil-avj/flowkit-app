@@ -5,8 +5,8 @@ import type {
   Fork,
   InteractionRule,
   SimulatorControl,
-} from '@platform/types/index'
-import { isFlowplanRef } from '@platform/types/index'
+} from '@flowkit/types/index'
+import { isFlowplanRef } from '@flowkit/types/index'
 
 // ── compileFlowplan ─────────────────────────────────────────────────────────────
 //
