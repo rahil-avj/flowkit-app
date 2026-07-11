@@ -3,6 +3,7 @@
    base  = 150ms — component transitions (toggle, expand, chip)
    slow  = 200ms — panel / modal entrance / exit           */
 @import 'tailwindcss';
+@source "../src/**/*.{tsx,ts,css}";
 @source "../src/kits/**/*.{tsx,css}";
 @source "../src/kits/standalone/**/*.css";
 
