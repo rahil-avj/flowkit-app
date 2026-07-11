@@ -28,9 +28,10 @@
   "files": [
     "scripts/",
     "src/",
-    "dist/",
+    "dist/lib/",
+    "dist/types/",
     "docs/",
-    "index.html",
+    "./index.html",
     "!scripts/tests/",
     "!scripts/builders/format.mjs",
     "!scripts/dev/"
