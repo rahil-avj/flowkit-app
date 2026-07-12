@@ -4,7 +4,7 @@
 
 |                  |                                                   |
 | ---------------- | ------------------------------------------------- |
-| **Tasks**        | 6 (2 ship-blockers · 2 fast-follow · 2 hardening) |
+| **Tasks**        | 6 (1 ship-blocker · 2 fast-follow · 2 hardening · 1 resolved-as-wontfix) |
 | **Total effort** | ~1.5 days                                         |
 | **Branch**       | `fix/pre-launch-audit`                            |
 | **Prereq**       | `npm install` done · `npm run dev` works          |
@@ -12,7 +12,7 @@
 > [!IMPORTANT]
 > **Before you touch anything.** FlowKit is a browser-only prototyping tool — there is no server, database, or deployed production. "Shipping" means publishing a new build / standalone HTML export. So none of these fixes require migrations, downtime, or coordination.
 >
-> This runbook covers code-level fixes only. If "shipping" means an actual npm publish of the `flowkit`/`create-flowkit-app` packages, see [`npm-publish-checklist.md`](./npm-publish-checklist.md) for the registry/packaging steps — its Phase 6 security sweep overlaps with Task 1 below (same JSONBin master-key issue).
+> This runbook covers code-level fixes only. If "shipping" means an actual npm publish of the `flowkit`/`create-flowkit-app` packages, see [`npm-publish-checklist.md`](./npm-publish-checklist.md) for the registry/packaging steps. Its Phase 6 security sweep previously overlapped with Task 1 below (JSONBin master-key handling) — Task 1 is now resolved as wontfix, so that overlap no longer applies; Phase 6 should be read on its own.
 >
 > Make a branch first: `git checkout -b fix/pre-launch-audit`. Commit after **each** task with the message shown in that task. If `npm run build` or `npm test` fails after a change, stop and re-read the step — do not push.
 >
@@ -24,7 +24,7 @@
 
 | #   | Task                                                                                                                      | Severity | Phase            |
 | --- | ------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------- |
-| 1   | [Block JSONBin master keys from the build & export](#task-1--block-jsonbin-master-keys-from-the-build--export)            | 🟡 High  | A — ship-blocker |
+| 1   | [Block JSONBin master keys from the build & export](#task-1--block-jsonbin-master-keys-from-the-build--export)            | ⚪ Resolved as wontfix | — |
 | 2   | [Index the IndexedDB snapshot queries](#task-2--index-the-indexeddb-snapshot-queries)                                     | 🟡 High  | A — ship-blocker |
 | 3   | [Make the coverage gate tell the truth](#task-3--make-the-coverage-gate-tell-the-truth)                                   | 🟡 High  | B — fast-follow  |
 | 4   | [Add a Playwright smoke suite (or drop the dep)](#task-4--add-a-playwright-smoke-suite-or-drop-the-dep)                   | 🟡 High  | B — fast-follow  |
@@ -41,87 +41,24 @@
 
 # Phase A — Ship-blockers (do these before launch)
 
-Tasks 1 and 2. Both are Small. Together < 1 hour of editing plus verification.
+Task 2 only — Task 1 was resolved as wontfix (see below). Small, ~35 min of editing plus verification.
 
 ---
 
 ## Task 1 — Block JSONBin master keys from the build & export
 
+> **RESOLVED — wontfix.** Product decision: no client-side master-key rejection. `assertNotMasterKey()` (the runtime guard this task described adding, later implemented in `src/features/feedback/cloud-sync/jsonbin.ts`) has been **removed outright**, not hardened — the codebase now performs no master-vs-scoped-key distinction at all before sending `X-Access-Key`. Users are solely responsible for supplying a scoped Access Key. `inline.js`'s build-time warning/hard-fail (Step 2 below) was never implemented and is not planned. Do not re-open this task without a fresh product decision — see `src/features/feedback/cloud-sync/jsonbin.ts` for current behavior.
+
 |                     |                                                                   |
 | ------------------- | ----------------------------------------------------------------- |
-| **Severity**        | 🟡 High · Security                                                |
-| **Files**           | `src/features/feedback/context/FeedbackContext.tsx` · `inline.js` |
-| **Effort**          | Small (~20 min)                                                   |
-| **Risk if skipped** | Leaked credential in shared prototype                             |
+| **Severity**        | ~~🟡 High · Security~~ — N/A, wontfix                             |
+| **Files**           | `src/features/feedback/cloud-sync/jsonbin.ts` (not `FeedbackContext.tsx` — file moved/refactored since this task was written) |
+| **Effort**          | N/A                                                                |
+| **Risk accepted**   | A leaked JSONBin master key pasted into this app's cloud-sync UI grants full account access, not just scoped-bin access. Accepted as a client-only-prototyping-tool risk the user must manage themselves. |
 
-### Why
+### Why this was originally proposed (kept for context, no longer acted on)
 
-A JSONBin **master key** (any key starting with `$2a$`) grants full account access. The code supports embedding a key at build time, and the standalone HTML export inlines it verbatim — so a master key would be readable by anyone the prototype is shared with. Today the only guard is a warning that **does not stop the build**. We make it impossible to ship one.
-
-### Step 1 — Reject master keys at the network call
-
-Open `src/features/feedback/context/FeedbackContext.tsx`. Find `pushToJsonBin` (around line 21). Add a guard as the very first line of the function body.
-
-**Before** (line 21–22):
-
-```ts
-async function pushToJsonBin(filename: string, content: string, key: string): Promise<string> {
-  const isMaster = key.startsWith('$2a$')
-```
-
-**After:**
-
-```ts
-async function pushToJsonBin(filename: string, content: string, key: string): Promise<string> {
-  // Master keys ($2a$…) grant full account access and must never be used here.
-  // Only scoped Access Keys are permitted from client code.
-  if (key.startsWith('$2a$')) {
-    throw new Error(
-      'Refusing to use a JSONBin master key. Create a scoped Access Key instead.'
-    )
-  }
-  const isMaster = false // master keys are rejected above; always use X-Access-Key
-```
-
-> **Note:** leaving `isMaster` defined (as `false`) means you do **not** have to edit the `[isMaster ? 'X-Master-Key' : 'X-Access-Key']` line below it — it keeps compiling and now always sends the safe `X-Access-Key` header.
-
-### Step 2 — Make the export build hard-fail
-
-Open `inline.js` at the repo root. Find the block near line 64 that starts with `// Warn if a JSONBin master key…`. Replace the whole `if` block.
-
-**Before** (line 64–71):
-
-```js
-// Warn if a JSONBin master key was bundled into the output
-if (html.includes('X-Master-Key') || /\$2a\$\d+\$/.test(html)) {
-  console.warn(
-    '\n⚠️  WARNING: A JSONBin master key may be embedded…' +
-      '   This key grants full account access…' +
-      '   Remove the key from JSONBIN_CONFIG.providedKey before sharing.\n'
-  )
-}
-```
-
-**After:**
-
-```js
-// HARD-FAIL if a JSONBin master key leaked into the standalone output.
-if (html.includes('X-Master-Key') || /\$2a\$\d+\$/.test(html)) {
-  console.error(
-    '\n✗ BUILD ABORTED: a JSONBin master key is embedded in the output.\n' +
-      '   This grants full account access to anyone who opens the HTML.\n' +
-      '   Clear JSONBIN_CONFIG.providedKey (or use a scoped Access Key) and rebuild.\n'
-  )
-  process.exit(1)
-}
-```
-
-### ✓ Verify
-
-- [ ] Run `npm run build` — it still succeeds (default `providedKey` is empty).
-- [ ] **Negative test:** temporarily set `providedKey: '$2a$10$test'` in `FeedbackContext.tsx`, run `npm run build:standalone` — it must **exit with an error**, not a warning. Then revert the key back to `''`.
-- [ ] `npm run lint` passes; no TypeScript errors.
-- [ ] Commit: `git commit -am "fix(feedback): reject JSONBin master keys; hard-fail export on leak"`
+A JSONBin **master key** (any key starting with `$2a$`) grants full account access. The code supports embedding a key at build time, and the standalone HTML export inlines it verbatim — so a master key would be readable by anyone the prototype is shared with. The original guard (`assertNotMasterKey`, matching only the `$2a$` prefix) has since been removed entirely rather than fixed/hardened.
 
 ---
 
@@ -610,15 +547,15 @@ Pick one source of truth — prefer the timestamped `events` list — and stop r
 
 | When         | Tasks    | Gate before moving on                                                                         |
 | ------------ | -------- | --------------------------------------------------------------------------------------------- |
-| Day 1 AM     | 1 · 2    | Both committed; `npm run build` + `build:standalone` green; manual record/replay/delete works |
+| Day 1 AM     | 2        | Committed; `npm run build` + `build:standalone` green; manual record/replay/delete works       |
 | Day 1 PM     | 5 · 6    | New pollution + screenshot tests pass; lint clean                                             |
-| → **Launch** | —        | Tasks 1, 2, 5, 6 merged to main. **This clears the ship-blockers.**                           |
+| → **Launch** | —        | Tasks 2, 5, 6 merged to main (Task 1 resolved as wontfix). **This clears the ship-blockers.**   |
 | Week 1       | 3 · 4    | Coverage gate honest; first Playwright smoke test green in CI                                 |
 | Week 1–2     | 7 · 8 · 9 · 10 | flowTracer logic bugs closed — not ship-blocking, but real correctness bugs in the recorder |
 
 ### Definition of done for the whole runbook
 
-- All ten tasks committed on `fix/pre-launch-audit` (or a follow-up branch for Phase D).
+- Tasks 2–10 committed on `fix/pre-launch-audit` (or a follow-up branch for Phase D). Task 1 is resolved as wontfix, not pending.
 - `npm run lint && npm test && npm run build` all pass from a clean checkout.
 - The negative tests in Tasks 1 and 6 were actually run once and observed to fail-safe.
 - PR opened against `main` with this runbook linked.

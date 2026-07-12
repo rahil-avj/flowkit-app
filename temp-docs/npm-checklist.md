@@ -120,7 +120,7 @@ For **both** `flowkit/package.json` and `packages/create-flowkit-app/package.jso
 
 ## Phase 6 — Security / Legal Sweep
 
-- [x] Grep the pack contents for hardcoded secrets/tokens/keys, especially `JSONBIN_CONFIG` — **confirmed resolved, no live secret in the pack.** Extracted the actual tarball (not just source) and grepped it directly: every `JSONBIN`/`MASTER_KEY` hit is either the config object's name, the guard code in `scripts/build/inline.js` that warns on a detected master-key pattern, or `packages/create-flowkit-app`'s handoff template's literal placeholder string `VITE_JSONBIN_MASTER_KEY=` (an empty env-var template). The actual `JSONBIN_CONFIG.providedKey` in `src/features/feedback/cloud-sync/constants.ts` is `''` (empty) by default. No `sk_live`/`sk_test`/`AKIA`/private-key patterns found anywhere in the pack. **This was previously the checklist's "Highest-Risk Item" — closed as of 2026-07-08.**
+- [x] Grep the pack contents for hardcoded secrets/tokens/keys — **confirmed resolved, no live secret in the pack.** Extracted the actual tarball (not just source) and grepped it directly. No `sk_live`/`sk_test`/`AKIA`/private-key patterns found anywhere in the pack. **This was previously the checklist's "Highest-Risk Item" — closed as of 2026-07-08.**
 - [x] `npm audit` on the package's own dependency tree — **confirmed: `npm audit --omit=dev` reports 0 vulnerabilities**
 - [x] Confirm LICENSE file exists in repo root — **RESOLVED 2026-07-10.** MIT LICENSE added at repo root, copied into both scaffolder packages, `license: "MIT"` field added to all three `package.json` files. Confirmed present in `npm pack --dry-run` output for all three packages.
 - [ ] Check for any workspace/customer-specific data accidentally committed under `src/` or `scripts/` — not exhaustively audited this session; the `nClarity` workspace-consolidation decision (per `decisions.md`) suggests this has had at least one prior cleanup pass, but no fresh audit was done here since `workspaces/` doesn't ship via `files[]` anyway (confirmed absent from the pack in Phase 4) — lower urgency than it first appears.
@@ -174,7 +174,7 @@ has passed the same Phase 4/5 verification as the other two packages. Versions/d
 
 ## Highest-Risk Item
 
-The JSONBin master-key risk and the missing-LICENSE gap that were tracked here are both resolved (JSONBin: confirmed clean 2026-07-08, re-confirmed 2026-07-09; LICENSE: added 2026-07-10 — see Phase 6).
+The missing-LICENSE gap that was tracked here is resolved (added 2026-07-10 — see Phase 6).
 
 **No blockers remain.** npm login (`rahil316`), LICENSE, package.json hygiene (repository/author/keywords/engines), the `"private": true` failsafe removal, and `create-flowkit-workspace`'s Phase 4/5 verification are all resolved as of 2026-07-10. Every item in Phases 0–6 is checked for all three packages. The only remaining work is Phase 7 itself — the actual, irreversible `npm publish` commands — which requires a deliberate human go-ahead, not further verification.
 
@@ -184,7 +184,7 @@ The JSONBin master-key risk and the missing-LICENSE gap that were tracked here a
 
 Of the concrete, checkable items across all 8 phases, the large majority that can be verified without publishing were checked and passed:
 
-- **Fully verified working:** build output (`build:lib`, path-alias fix, pack contents for both packages), full Phase 5 local consumer smoke test (install, type resolution, `flowkit/vite` import, scaffold via `--local-dev`, flat-mode dev server boot, flat-mode production build), `npm audit` clean, JSONBin secret sweep clean.
+- **Fully verified working:** build output (`build:lib`, path-alias fix, pack contents for both packages), full Phase 5 local consumer smoke test (install, type resolution, `flowkit/vite` import, scaffold via `--local-dev`, flat-mode dev server boot, flat-mode production build), `npm audit` clean, secret sweep clean.
 - **Confirmed still open, needs a human decision:** starting versions, dist-tag choice, `license`/`repository`/`author`/`keywords` fields, npm account/2FA/login.
 - **Confirmed still open, needs an artifact:** LICENSE file in repo root.
 - **Correctly not attempted:** everything in Phase 7 (irreversible) and Phase 8 (depends on Phase 7).

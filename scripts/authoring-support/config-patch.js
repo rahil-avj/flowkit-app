@@ -151,10 +151,16 @@ export function renameScreen(wsDir, flowId, oldId, newId) {
 }
 
 export function moveScreen(wsDir, screenId, fromFlowId, toFlowId) {
+  if (fromFlowId === toFlowId) {
+    throw new Error(`Screen '${screenId}' is already in flow '${fromFlowId}'`)
+  }
   const config = readConfig(wsDir)
   const fromScreens = config.screenOrder[fromFlowId] || []
   const fromIdx = fromScreens.indexOf(screenId)
   if (fromIdx === -1) throw new Error(`Screen '${screenId}' not found in flow '${fromFlowId}'`)
+  if (config.screenOrder[toFlowId]?.includes(screenId)) {
+    throw new Error(`Screen '${screenId}' already exists in flow '${toFlowId}'`)
+  }
   config.screenOrder[fromFlowId].splice(fromIdx, 1)
   if (!config.screenOrder[toFlowId]) config.screenOrder[toFlowId] = []
   config.screenOrder[toFlowId].push(screenId)

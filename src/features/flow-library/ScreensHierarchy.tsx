@@ -207,7 +207,7 @@ function TreeNode({
             toggle(nodeKey)
           }
         }}
-        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-left transition-colors duration-120 focus-visible:outline-none focus-visible:ring-1"
+        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-colors duration-120 focus-visible:outline-none focus-visible:ring-1"
         style={{
           color: theme.text.secondary,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -238,7 +238,7 @@ function TreeNode({
         </div>
       </button>
       {isOpen && (
-        <div className="ml-[13px] border-l" style={{ borderColor: theme.bg.borderSubtle }}>
+        <div className="ml-3.25 border-l" style={{ borderColor: theme.bg.borderSubtle }}>
           {visibleChildren.map(c => (
             <TreeNode
               key={`${c.kind}:${c.id}`}
@@ -286,7 +286,7 @@ function ScreenRow({
   return (
     <div className="mb-0.5">
       <div
-        className="group relative flex items-center rounded-[6px] transition-colors duration-120"
+        className="group relative flex items-center rounded-md transition-colors duration-120"
         style={{
           background: active ? theme.accent.blueDim : 'transparent',
         }}

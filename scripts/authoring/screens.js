@@ -216,19 +216,40 @@ export async function cmdRenameScreen(_val, args = []) {
   const oldFile = path.join(oldDir, `${oldPascal}Screen.tsx`)
   const newFile = path.join(oldDir, `${newPascal}Screen.tsx`)
 
-  // Patch component function name inside the file
-  if (fs.existsSync(oldFile)) {
-    let src = fs.readFileSync(oldFile, 'utf8')
-    src = src.replace(
-      new RegExp(`export default function ${oldPascal}Screen\\b`),
-      `export default function ${newPascal}Screen`
-    )
-    fs.writeFileSync(oldFile, src)
-    if (oldFile !== newFile) fs.renameSync(oldFile, newFile)
+  // Steps below mutate the filesystem and then the config; if any step past
+  // the first throws, roll back everything already applied so a failure never
+  // leaves the screen file/dir renamed while workspace.ts still points at the
+  // old id (or vice versa).
+  let fileContentPatched = false
+  let filePatchedBackup = null
+  let fileRenamed = false
+  let dirRenamed = false
+  try {
+    if (fs.existsSync(oldFile)) {
+      filePatchedBackup = fs.readFileSync(oldFile, 'utf8')
+      const patched = filePatchedBackup.replace(
+        new RegExp(`export default function ${oldPascal}Screen\\b`),
+        `export default function ${newPascal}Screen`
+      )
+      fs.writeFileSync(oldFile, patched)
+      fileContentPatched = true
+      if (oldFile !== newFile) {
+        fs.renameSync(oldFile, newFile)
+        fileRenamed = true
+      }
+    }
+    fs.renameSync(oldDir, newDir)
+    dirRenamed = true
+    renameScreen(wsDir, flowId, oldId, newId)
+  } catch (e) {
+    if (dirRenamed) fs.renameSync(newDir, oldDir)
+    if (fileRenamed) fs.renameSync(newFile, oldFile)
+    if (fileContentPatched && filePatchedBackup !== null) {
+      fs.writeFileSync(oldFile, filePatchedBackup)
+    }
+    console.error(r(`✗ Rename failed, rolled back: ${e.message}`))
+    process.exit(1)
   }
-
-  fs.renameSync(oldDir, newDir)
-  renameScreen(wsDir, flowId, oldId, newId)
 
   const refs = findFlowplanRefs(wsDir, oldId)
   if (refs.length > 0) {
@@ -259,6 +280,11 @@ export async function cmdMoveScreen(_val, args = []) {
     kebabValidate(toFlow, 'to-flow')
   } catch (e) {
     console.error(r(`✗ ${e.message}`))
+    process.exit(1)
+  }
+
+  if (fromFlow === toFlow) {
+    console.error(r(`✗ Screen '${screenId}' is already in flow '${fromFlow}'`))
     process.exit(1)
   }
 

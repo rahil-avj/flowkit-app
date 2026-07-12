@@ -77,10 +77,8 @@ agent bootstrap) · `Package-Publish` (npm distribution) · `Product` (vision/UX
 | 25 | Simulator controls (built-in) | done | | Connection, network, CVD filters, blur |
 | 26 | Custom simulator controls | done | | `data/simulator.tsx`; `SimControl`, `ControlAccordion`, etc. |
 | 27 | In-canvas feedback wall | done | | Per-screen comments, tag filtering, screenshot attach |
-| 28 | Feedback cloud sync (JSONBin) | done | 2026-07-03 | Master-key path removed (see T-9). Fully contained in `src/features/feedback/cloud-sync/`, verified via a real deletion dry-run — deleting the folder surfaces exactly 3 importing files, nothing else. |
 | 29 | Feedback import (JSON + Markdown) | done | | Drag-drop, file picker, clipboard; auto-detect format |
 | 36 | Feature management system (registry → entitlement resolver → gate) | planned | 2026-07-02 | Confirmed not started — `src/core/features/` does not exist. 3-layer design: Registry → Entitlement Resolver → Feature Gate; `useFeature()` hook + `<FeatureGate>`. 7 features slated for v1 registration: flowlens, flowplans, feedback, flowTracer, flowDebugger, flowLibrary, simulator. Current ad-hoc flags (`FLOWLENS_AVAILABLE`, `LS_SESSIONS_ENABLED`) are the pre-cursors to replace. |
-| T-9 | ✅ Security: JSONBin master key not blocked at build/export | done | 2026-07-03 | Fixed — master-key support removed outright (not just gated) on both push and pull. Also found and deleted a second, previously-undiscovered master-key path (`src/shared/utils/useJsonBinKeyValidation.ts`, dead code, zero consumers). Fixed the pre-existing `shared/` → `features/` layering violation this touched along the way (`ExportModal`/`ImportModal` relocated into `features/feedback/`). Entire JSONBin surface now contained in `src/features/feedback/cloud-sync/`. |
 | T-10 | Prototype pollution: dot-path writers have no `__proto__` guard | broken | | `applyDotPathPatch.ts` and `DbInspector.tsx`'s local `setAtPath` both walk into arbitrary keys with no `__proto__`/`constructor`/`prototype` check. Not exploitable today (author-controlled input only) but a footgun the moment imported/untrusted JSON routes through these writers. Runbook Task 5. |
 | T-11 | Unvalidated imported screenshot data-URIs | broken | | `FeedbackContext.tsx` interpolates an imported comment's `screenshot` field raw into markdown export (`![…](screenshot)`) — a crafted string can inject markup. Runbook Task 6. |
 
@@ -144,7 +142,7 @@ agent bootstrap) · `Package-Publish` (npm distribution) · `Product` (vision/UX
 
 ## Priority rollup (for whoever builds the tracker app's default view)
 
-~~T-9 (JSONBin master key)~~ done · ~~T-4 (startRecording args)~~ done, type-only fix · ~~T-1 (stale
+~~T-4 (startRecording args)~~ done, type-only fix · ~~T-1 (stale
 recState closure)~~ removed, false positive · ~~T-2 (recentFlushRef leak)~~ done, generalized to
 cover `inactivityTimerRef` too · ~~T-3 (getSnapshots full scan)~~ done, no migration needed, helpers
 deduped · ~~T-5 (remarks dedup)~~ done, fixed at root cause · ~~T-30 (remarks timestamp restore)~~

@@ -122,12 +122,6 @@ export function CloudImportTab({
         <span className="text-theme-text-muted" style={{ fontSize: scale.text.xxs }}>
           Scoped access key only. Stored locally on your device.
         </span>
-        {importReadKey.trim().startsWith('$2a$') && (
-          <span className="text-theme-red" style={{ fontSize: scale.text.xxs }}>
-            This is a master key — it will be rejected. Use a collection-scoped access key
-            instead.
-          </span>
-        )}
       </div>
 
       <Button

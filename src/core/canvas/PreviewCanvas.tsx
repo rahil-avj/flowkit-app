@@ -1240,6 +1240,14 @@ function WorkspaceBar({ panelOpen }: { panelOpen: boolean }) {
   )
 }
 
+// Safety net for `onSwitch`: the happy path unmounts this row entirely (a
+// workspace switch remounts the tree), so `switching` normally never needs to
+// be reset. If `onSwitch` throws before that remount (e.g. storeWorkspace()
+// hitting a full/blocked localStorage) or otherwise doesn't cause one, this
+// timeout clears the stuck "switching…" state instead of leaving the row
+// permanently disabled until a manual page reload.
+const SWITCH_TIMEOUT_MS = 4000
+
 function WorkspaceSwitchRow({
   workspace,
   onSwitch,
@@ -1248,12 +1256,28 @@ function WorkspaceSwitchRow({
   onSwitch: (name: string) => void
 }) {
   const [switching, setSwitching] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [])
+
+  const handleClick = () => {
+    setSwitching(true)
+    try {
+      onSwitch(workspace.name)
+      timeoutRef.current = setTimeout(() => setSwitching(false), SWITCH_TIMEOUT_MS)
+    } catch (e) {
+      console.error('Workspace switch failed:', e)
+      setSwitching(false)
+    }
+  }
+
   return (
     <button
-      onClick={() => {
-        setSwitching(true)
-        onSwitch(workspace.name)
-      }}
+      onClick={handleClick}
       disabled={switching}
       className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-theme-hover ${switching ? 'opacity-60' : 'opacity-100'}`}
     >

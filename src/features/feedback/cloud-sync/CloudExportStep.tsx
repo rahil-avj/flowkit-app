@@ -127,12 +127,6 @@ export function CloudKeyStepModal({
           <span className="text-ui-2xs text-theme-text-muted">
             Stored locally. Won't be asked again.
           </span>
-          {draftKey.trim().startsWith('$2a$') && (
-            <span className="text-ui-2xs" style={{ color: theme.accent.red }}>
-              This is a master key — it will be rejected. Use a collection-scoped access key
-              instead.
-            </span>
-          )}
         </div>
       </div>
     </Modal>

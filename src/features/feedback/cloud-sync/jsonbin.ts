@@ -1,22 +1,10 @@
 import { JSONBIN_CONFIG } from './constants'
 
-// Only scoped Access Keys are accepted. JSONBin master keys grant full account
-// access (not just the bins created with them) — accepting one here would mean
-// a single leaked key compromises the whole account, not just this app's data.
-function assertNotMasterKey(key: string): void {
-  if (key.startsWith('$2a$')) {
-    throw new Error(
-      'Master keys are not supported — use a scoped Access Key from your JSONBin dashboard instead.'
-    )
-  }
-}
-
 export async function pushToJsonBin(
   filename: string,
   content: string,
   accessKey: string
 ): Promise<string> {
-  assertNotMasterKey(accessKey)
   const res = await fetch('https://api.jsonbin.io/v3/b', {
     method: 'POST',
     headers: {
@@ -39,7 +27,6 @@ export async function pushToJsonBin(
 }
 
 export async function fetchFromJsonBin(binUrl: string, accessKey: string): Promise<string> {
-  assertNotMasterKey(accessKey)
   const match = binUrl.match(/\/b\/([a-f0-9]+)/i)
   if (!match) throw new Error('Invalid bin URL. Paste the full JSONBin link.')
   const binId = match[1]

@@ -427,11 +427,21 @@ export async function cmdConvertFlat(_val, args = []) {
       console.log(d('  Aborted — confirmation did not match.'))
       return
     }
+    // Persist the manifest after each successful delete rather than once at
+    // the end — if a later entry in toDelete throws (e.g. a permissions
+    // error), earlier ones are already gone from disk and must not remain
+    // listed in flowkit.workspaces as a phantom entry.
+    let remainingWorkspaces = manifest.workspaces
     for (const name of toDelete) {
       const wsDir = path.join(cwd, workspaceEntryPath(manifest, name))
       assertScopedConsumerWorkspaceDir(wsDir, name, cwd)
       if (fs.existsSync(wsDir)) fs.rmSync(wsDir, { recursive: true, force: true })
+      const { [name]: _removed, ...rest } = remainingWorkspaces
+      remainingWorkspaces = rest
+      writeFlowkitManifest({ workspaces: remainingWorkspaces }, cwd)
     }
+    manifest.workspaces = remainingWorkspaces
+    manifest.workspaceNames = Object.keys(remainingWorkspaces)
   }
 
   const survivorDir = path.join(cwd, workspaceEntryPath(manifest, survivor))

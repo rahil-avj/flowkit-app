@@ -89,7 +89,7 @@ Browser-based UI prototyping platform (React 19 + Vite 8 + Tailwind v4) for mult
 │   │   ├── command-palette/        Global quick-action overlay (PaletteItem, PaletteGroup)
 │   │   ├── feedback/
 │   │   │   ├── context/FeedbackContext.tsx  Comment wall state, IndexedDB image store
-│   │   │   └── cloud-sync/          Export/import to JSONBin; jsonbin.ts enforces scoped Access Keys only (rejects master keys)
+│   │   │   └── cloud-sync/          Export/import to JSONBin; no master-key rejection — users are responsible for supplying a scoped Access Key
 │   │   ├── figma-export/           Figma handoff sidebar
 │   │   ├── flow-debugger/
 │   │   │   └── DbInspector.tsx     Live DB view/edit
