@@ -41,7 +41,7 @@ export default function SegmentedBarChart({
   const activeSegment = segments.find(s => s.key === activeKey)
 
   return (
-    <div className="relative w-full mt-2 mb-1 flex flex-col gap-1.5 px-1">
+    <div className="relative w-full min-w-0 mt-2 mb-1 flex flex-col gap-1.5 px-1">
       <div
         className="flex justify-between items-center font-black tracking-wider uppercase mb-0.5 text-theme-text-muted text-ui-2xs"
         style={{ fontSize: scale.text.xxs }}
@@ -53,10 +53,10 @@ export default function SegmentedBarChart({
       </div>
 
       {/* Sliding Pointer Indicator */}
-      <div className="relative w-full h-6.5">
+      <div className="relative w-full min-w-0 h-6.5 overflow-hidden">
         {/* Floating Active Label */}
         <div
-          className="absolute bottom-1.5"
+          className="absolute bottom-1.5 max-w-full"
           style={{
             left: pointerLeft,
             transform: `translateX(-${parseFloat(pointerLeft)}%)`,
@@ -110,7 +110,7 @@ export default function SegmentedBarChart({
 
       {/* Legend percentages */}
       <div
-        className="flex w-full font-extrabold text-slate-500 font-mono mt-0.5 px-0.5 h-3"
+        className="flex w-full min-w-0 font-extrabold text-slate-500 font-mono mt-0.5 px-0.5 h-3"
         style={{ fontSize: scale.text.xxs }}
       >
         {segments.map((seg, idx) => {
@@ -126,7 +126,7 @@ export default function SegmentedBarChart({
               key={seg.key}
               onMouseEnter={() => setHoveredKey(seg.key)}
               onMouseLeave={() => setHoveredKey(null)}
-              className="inline-block whitespace-nowrap transition-opacity duration-150 ease-in-out"
+              className="inline-block min-w-0 overflow-hidden whitespace-nowrap text-ellipsis transition-opacity duration-150 ease-in-out"
               style={{
                 width: `${widthPct}%`,
                 color: seg.color,

@@ -1,14 +1,12 @@
 import type { WireframeView } from '@flowkit/types/index'
-import { workspaces } from '@flowkit/workspaces'
 import type { PanelDragHandle } from '@flowkit-core/layout/hooks/usePanelDrag'
 import PanelFrame from '@flowkit-core/layout/PanelFrame'
 import { useFlowLensPanelShortcuts } from '@flowkit-core/shortcuts/useKeyboardShortcuts'
 import type { SessionExport } from '@flowkit-features/flowTracer/types'
+import WorkspaceSwitcherBar from '@flowkit-shared/components/WorkspaceSwitcherBar'
 import { useActiveWorkspace } from '@flowkit-shared/contexts/ActiveWorkspaceContext'
-import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
 import { useFlowLensMode } from '@flowkit-shared/contexts/FlowLensModeContext'
-import { ChevronDown, FileText } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { FLOWLENS_ACCENT } from '../flowLensTheme'
 import { replayFromSnapshot } from '../replayState'
@@ -204,7 +202,6 @@ export default function FlowLensMode({
         accentColor={FLOWLENS_ACCENT}
         className="z-30 shadow-theme-float pointer-events-auto"
       >
-        <WorkspaceBar />
         <div className="flex flex-1 min-h-0">
           <LensSideExplorer
             entries={entries}
@@ -217,6 +214,7 @@ export default function FlowLensMode({
             onOpenChange={setLeftOpen}
           />
         </div>
+        <WorkspaceSwitcherBar panelOpen={leftOpen} />
       </PanelFrame>
 
       {/* ── Right panel: rail + tabbed session info / reports ── */}
@@ -283,108 +281,3 @@ export default function FlowLensMode({
   )
 }
 
-// ── WorkspaceBar ──────────────────────────────────────────────────────────────
-
-function WorkspaceBar() {
-  const activeWorkspace = useActiveWorkspace()
-  const { switchWorkspace } = useDashboard()
-  const current = workspaces.find(w => w.name === activeWorkspace) ?? workspaces[0] ?? null
-  const others = workspaces.filter(w => w.name !== activeWorkspace)
-  const [open, setOpen] = useState(false)
-  const triggerRef = useRef<HTMLButtonElement>(null)
-  const [dropdownPos, setDropdownPos] = useState<{
-    top: number
-    left: number
-    width: number
-  } | null>(null)
-  if (!current) return null
-
-  const handleOpen = () => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect()
-      setDropdownPos({ top: rect.bottom, left: rect.left, width: Math.max(rect.width, 180) })
-    }
-    setOpen(v => !v)
-  }
-
-  return (
-    <div className="h-8 relative shrink-0 flex items-center border-b border-theme-border bg-theme-elevated">
-      <button
-        ref={triggerRef}
-        onClick={handleOpen}
-        className="flex-1 h-full flex items-center gap-2 px-3 transition-colors hover:bg-white/3 min-w-0 text-theme-text-primary"
-      >
-        <FileText size={14} strokeWidth={1.5} className="shrink-0 text-theme-text-muted" />
-        <span className="text-xs font-semibold truncate">{current?.label ?? activeWorkspace}</span>
-        {others.length > 0 && (
-          <ChevronDown
-            size={11}
-            className={`shrink-0 transition-transform ml-auto text-theme-text-muted ${open ? 'rotate-180' : ''}`}
-          />
-        )}
-      </button>
-
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div
-            className="fixed z-50 py-1 bg-theme-elevated border border-theme-border border-t-0 shadow-theme-float"
-            style={{ top: dropdownPos!.top, left: dropdownPos!.left, width: dropdownPos!.width }}
-          >
-            <div className="flex items-center gap-2 px-3 py-1.5">
-              <div className="rounded-full bg-blue-400 shrink-0 size-1.5" />
-              <span className="text-xs font-semibold truncate flex-1 text-theme-text-primary">
-                {current?.label ?? activeWorkspace}
-              </span>
-              <span className="px-1.5 py-0.5 rounded text-ui-2xs bg-theme-blue-dim text-theme-blue">
-                active
-              </span>
-            </div>
-            {others.length > 0 && (
-              <>
-                <div className="h-px bg-theme-border my-1" />
-                {others.map(w => (
-                  <WorkspaceSwitchRow
-                    key={w.name}
-                    workspace={w}
-                    onClose={() => setOpen(false)}
-                    onSwitch={switchWorkspace}
-                  />
-                ))}
-              </>
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
-function WorkspaceSwitchRow({
-  workspace,
-  onClose,
-  onSwitch,
-}: {
-  workspace: { name: string; label: string }
-  onClose: () => void
-  onSwitch: (name: string) => void
-}) {
-  const [switching, setSwitching] = useState(false)
-  return (
-    <button
-      onClick={() => {
-        setSwitching(true)
-        onClose()
-        onSwitch(workspace.name)
-      }}
-      disabled={switching}
-      className={`w-full flex items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-white/4 text-theme-text-secondary ${switching ? 'opacity-60' : ''}`}
-    >
-      <div className="rounded-full shrink-0 bg-theme-text-muted size-1.5" />
-      <span className="text-xs truncate flex-1">{workspace.label}</span>
-      <span className="text-ui-2xs text-theme-text-disabled">
-        {switching ? 'switching…' : 'switch'}
-      </span>
-    </button>
-  )
-}

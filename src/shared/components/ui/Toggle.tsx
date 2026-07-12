@@ -72,7 +72,7 @@ export default function Toggle({
 
   return (
     <label
-      className="inline-flex items-center gap-[10px] select-none"
+      className="inline-flex items-center gap-2.5 select-none"
       style={{
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.38 : 1,

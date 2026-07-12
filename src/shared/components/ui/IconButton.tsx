@@ -53,7 +53,7 @@ export default function IconButton({
     <button
       disabled={disabled || loading}
       className={cn(
-        'inline-flex items-center justify-center rounded-[6px] border shrink-0',
+        'inline-flex items-center justify-center rounded-md border shrink-0',
         'transition-[background,opacity] duration-150 ease-out',
         'outline-none focus-visible:ring-offset-1',
         disabled || loading ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer',

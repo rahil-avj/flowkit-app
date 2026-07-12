@@ -1,3 +1,4 @@
+import IconButton from '@flowkit-shared/components/ui/IconButton'
 import Tooltip from '@flowkit-shared/components/ui/Tooltip'
 import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import { ChevronsLeft, ChevronsRight, Moon, Settings, Sun } from 'lucide-react'
@@ -75,7 +76,7 @@ export default function Sidebar({
 
         <div style={{ height: 1, width: 28, background: theme.bg.border, marginBottom: 4 }} />
 
-        {children}
+        <div className="flex flex-col items-center gap-1 w-full">{children}</div>
 
         {footerSlot && (
           <div className="mt-auto mb-1 flex flex-col items-center w-full">{footerSlot}</div>
@@ -88,41 +89,23 @@ export default function Sidebar({
               placement={tooltipPlacement}
               showDelay={1500}
             >
-              <button
+              <IconButton
                 onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')}
                 aria-label={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-                className="flex items-center justify-center rounded-lg transition-colors"
-                style={{ width: 32, height: 32, color: theme.text.disabled }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.color = theme.text.muted
-                  e.currentTarget.style.background = theme.bg.hover
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.color = theme.text.disabled
-                  e.currentTarget.style.background = 'transparent'
-                }}
-              >
-                {mode === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-              </button>
+                variant="ghost"
+                className="size-7"
+                icon={mode === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+              />
             </Tooltip>
             {onOpenSettings && (
               <Tooltip content="Settings" placement={tooltipPlacement} showDelay={1500}>
-                <button
+                <IconButton
                   onClick={onOpenSettings}
                   aria-label="Open settings"
-                  className="flex items-center justify-center rounded-lg transition-colors"
-                  style={{ width: 32, height: 32, color: theme.text.disabled }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.color = theme.text.muted
-                    e.currentTarget.style.background = theme.bg.hover
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.color = theme.text.disabled
-                    e.currentTarget.style.background = 'transparent'
-                  }}
-                >
-                  <Settings size={15} />
-                </button>
+                  variant="ghost"
+                  className="size-7"
+                  icon={<Settings size={15} />}
+                />
               </Tooltip>
             )}
           </div>

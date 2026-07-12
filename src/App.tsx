@@ -5,6 +5,7 @@ import PreviewCanvas from './core/canvas/PreviewCanvas'
 import { useAppShortcuts } from './core/shortcuts/useKeyboardShortcuts'
 import { FeedbackProvider } from './features/feedback/context/FeedbackContext'
 import { FigmaExportView } from './features/figma-export'
+import { DbHighlightSettingsProvider } from './features/flow-debugger'
 import { FlowplanSettingsProvider } from './features/flowplan/FlowplanSettingsContext'
 import { FlowPlaybackProvider } from './features/flowplan/FlowPlaybackContext'
 import { SessionRecorderProvider, useSessionRecorderOptional } from './features/flowTracer/context'
@@ -133,11 +134,13 @@ function WorkspaceRunner({ name, onSwitch }: WorkspaceRunnerProps) {
                       onSwitchWorkspace={onSwitch}
                     >
                       <FlowplanSettingsProvider>
-                        <FlowPlaybackProvider>
-                          <FeedbackProvider>
-                            <PreviewCanvas flows={FLOWS} views={ALL_VIEWS} />
-                          </FeedbackProvider>
-                        </FlowPlaybackProvider>
+                        <DbHighlightSettingsProvider>
+                          <FlowPlaybackProvider>
+                            <FeedbackProvider>
+                              <PreviewCanvas flows={FLOWS} views={ALL_VIEWS} />
+                            </FeedbackProvider>
+                          </FlowPlaybackProvider>
+                        </DbHighlightSettingsProvider>
                       </FlowplanSettingsProvider>
                     </DashboardProvider>
                   )}

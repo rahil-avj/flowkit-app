@@ -17,7 +17,6 @@ export interface SidebarButtonProps {
   isActive: boolean
   badge?: number
   onClick: () => void
-  indent?: boolean
   /** Active accent colour — defaults to theme green. Pass a CSS var or hex for overrides. */
   activeColor?: string
   /** Shortcut hint shown in the rich tooltip. */
@@ -30,7 +29,6 @@ export default function SidebarButton({
   isActive,
   badge,
   onClick,
-  indent,
   activeColor,
   shortcut,
 }: SidebarButtonProps) {
@@ -46,20 +44,18 @@ export default function SidebarButton({
   const btn = (
     <button
       onClick={onClick}
-      className={`relative flex items-center justify-center w-full transition-all duration-150 ${indent ? 'h-9' : 'h-14'}`}
+      className="relative flex items-center justify-center w-full transition-all duration-150"
       style={{ '--rail-accent': activeColor ?? 'var(--theme-accent-green)' } as React.CSSProperties}
     >
       {/* Active: filled rounded square; inactive: ghost */}
       <span
-        className={`relative flex items-center justify-center rounded-lg transition-all duration-150 ${
-          indent ? 'size-7' : 'size-10'
-        } ${
+        className={`relative flex items-center justify-center rounded-md size-7 transition-all duration-150 ${
           isActive
             ? 'bg-(--rail-accent) text-white shadow-theme-float'
             : 'bg-transparent text-theme-text-muted hover:bg-theme-hover hover:text-theme-text-secondary'
         }`}
       >
-        <Icon size={indent ? 13 : 17} />
+        <Icon size={15} />
         {!!badge && (
           <span
             className="absolute -top-1 -right-1 min-w-3.5 h-3.5 rounded-full flex items-center justify-center font-black text-ui-2xs text-white"

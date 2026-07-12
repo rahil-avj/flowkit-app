@@ -50,7 +50,6 @@ function topDirectives(ctx) {
     flat.find(x => x.text?.includes('path aliases')),
     flat.find(x => x.text?.includes('hardcode hex')),
     flat.find(x => x.text?.includes('injected from')),
-    flat.find(x => x.text?.includes('secret phrase')),
   ].filter(Boolean)
   return want
 }

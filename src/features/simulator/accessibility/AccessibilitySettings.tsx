@@ -1,5 +1,4 @@
 import type { ColorBlindMode } from '@flowkit/types/index'
-import { ControlAccordion } from '@flowkit-features/simulator/controls'
 import SegmentedBarChart from '@flowkit-shared/components/ui/SegmentedBarChart'
 import Select from '@flowkit-shared/components/ui/Select'
 import { useSimulator } from '@flowkit-shared/contexts/DashboardContext'
@@ -151,7 +150,7 @@ export default function AccessibilitySettings() {
   }
 
   return (
-    <ControlAccordion label="Accessibility Options" defaultOpen>
+<>
       {/* Color vision */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-1.5 px-1">
@@ -206,9 +205,9 @@ export default function AccessibilitySettings() {
                 borderColor: `${theme.bg.border}80`,
               }}
             >
-              <span>Source:</span>
+              <span className="shrink-0">Source:</span>
               <span
-                className="font-semibold truncate px-2"
+                className="font-semibold truncate min-w-0 flex-1 px-2"
                 title={CVD_DETAILS[colorBlindMode].source}
               >
                 {CVD_DETAILS[colorBlindMode].source}
@@ -323,13 +322,16 @@ export default function AccessibilitySettings() {
               borderColor: `${theme.bg.border}80`,
             }}
           >
-            <span>Source:</span>
-            <span className="font-semibold truncate w-full px-2" title={acuityCategory.source}>
+            <span className="shrink-0">Source:</span>
+            <span
+              className="font-semibold truncate min-w-0 flex-1 px-2"
+              title={acuityCategory.source}
+            >
               {acuityCategory.source}
             </span>
           </div>
         </div>
       </div>
-    </ControlAccordion>
+</>
   )
 }

@@ -96,7 +96,7 @@ function Segment({ value, children, title, iconTop, iconLeft, iconRight }: Segme
     <button
       onClick={() => onChange(value)}
       title={title}
-      className="flex-1 rounded-[6px] text-[10px] font-bold cursor-pointer border-none transition-all duration-150 ease-[ease] flex items-center justify-center"
+      className="flex-1 min-w-0 rounded-md text-[10px] font-bold cursor-pointer border-none transition-all duration-150 ease-[ease] flex items-center justify-center"
       style={{
         padding: hasIcon && !hasLabel ? '6px' : '6px 10px',
         backgroundColor: isActive ? accent : 'transparent',
@@ -136,7 +136,7 @@ function SegmentIcon({ children }: { children: React.ReactNode }) {
 SegmentIcon.__isSegmentIcon = true
 
 function SegmentLabel({ children }: { children: React.ReactNode }) {
-  return <>{children}</>
+  return <span className="truncate min-w-0">{children}</span>
 }
 SegmentLabel.__isSegmentLabel = true
 

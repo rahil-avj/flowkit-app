@@ -1,5 +1,4 @@
 import type { FlowNode, WireframeView } from '@flowkit/types/index'
-import { workspaces } from '@flowkit/workspaces'
 import { useFeedback } from '@flowkit-features/feedback/context/FeedbackContext'
 import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
 import { useSessionSettings } from '@flowkit-features/flowTracer/components/useSessionSettings'
@@ -13,18 +12,20 @@ import type { ActionCtx } from '@flowkit-shared/components/overlays/appActions'
 import HelpModal from '@flowkit-shared/components/overlays/HelpModal'
 import Settings from '@flowkit-shared/components/overlays/Settings'
 import Tooltip from '@flowkit-shared/components/ui/Tooltip'
+import WorkspaceSwitcherBar from '@flowkit-shared/components/WorkspaceSwitcherBar'
 import { LS_AUTO_HIDE_SCROLLBARS, LS_SESSIONS_ENABLED } from '@flowkit-shared/constants/storageKeys'
-import { useActiveWorkspace } from '@flowkit-shared/contexts/ActiveWorkspaceContext'
 import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
 import { useDevMode } from '@flowkit-shared/contexts/DevModeContext'
-import { useFlowLensModeOptional } from '@flowkit-shared/contexts/FlowLensModeContext'
+import {
+  FLOWLENS_ACCENT,
+  useFlowLensModeOptional,
+} from '@flowkit-shared/contexts/FlowLensModeContext'
 import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import { useIsMobile } from '@flowkit-shared/utils/useIsMobile'
 import {
-  ChevronDown,
+  AppWindow,
   Hand,
   Maximize2,
-  MessageSquare,
   MessageSquare as RemarkIcon,
   Minimize2,
   Pause,
@@ -61,7 +62,7 @@ import { CANVAS_H, CANVAS_W, ZOOM_MAX, ZOOM_MIN } from './canvasConfig'
 import { canvasReducer, type CanvasState, makeInitialState } from './canvasReducer'
 import { useHandTool } from './hooks/useHandTool'
 import { usePanelResize } from './hooks/usePanelResize'
-import { ToolbarBtn, ToolbarTooltipContent } from './ToolbarBtn'
+import { ModeSegmentedToggle, ToolbarBtn, ToolbarTooltipContent } from './ToolbarBtn'
 
 // Safe fallback used when useFlowLensModeOptional returns null during HMR
 // re-renders before the provider tree is restored.
@@ -119,14 +120,8 @@ function DesktopCanvas({ flows, views }: Props) {
   const isLandscape = orientation === 'landscape'
   const effectiveDeviceW = isLandscape ? devicePreset.height : devicePreset.width
   const effectiveDeviceH = isLandscape ? devicePreset.width : devicePreset.height
-  const {
-    totalCommentCount,
-    openFeedbackTab,
-    openCommentForm,
-    cloudSyncSlot,
-    openExportModal,
-    openImportModal,
-  } = useFeedback()
+  const { openFeedbackTab, openCommentForm, cloudSyncSlot, openExportModal, openImportModal } =
+    useFeedback()
   const { theme, mode, setMode } = useTheme()
   const { toggleDevMode } = useDevMode()
   const flowLens = useFlowLensModeOptional() ?? DISABLED_LENS
@@ -534,8 +529,6 @@ function DesktopCanvas({ flows, views }: Props) {
         toggleKeepFit={toggleKeepFit}
         toggleFullscreen={toggleFullscreen}
         fullscreen={state.fullscreen}
-        totalCommentCount={totalCommentCount}
-        openFeedbackTab={openFeedbackTab}
         autoHideScrollbars={autoHideScrollbars}
         breakKeepFit={breakKeepFit}
         kitTheme={workspaceConfig.kit ?? 'apple'}
@@ -560,7 +553,7 @@ function DesktopCanvas({ flows, views }: Props) {
             onOpenSettings={openSettings}
           />
         </div>
-        <WorkspaceBar panelOpen={leftOpen} />
+        <WorkspaceSwitcherBar panelOpen={leftOpen} />
       </PanelFrame>
 
       {/* ── Right panel ── */}
@@ -663,8 +656,6 @@ interface CanvasContentProps {
   toggleKeepFit: () => void
   toggleFullscreen: () => void
   fullscreen: boolean
-  totalCommentCount: number
-  openFeedbackTab: () => void
   autoHideScrollbars: boolean
   breakKeepFit: () => void
   kitTheme: string
@@ -689,14 +680,13 @@ function CanvasContent({
   toggleKeepFit,
   toggleFullscreen,
   fullscreen,
-  totalCommentCount,
-  openFeedbackTab,
   autoHideScrollbars,
   breakKeepFit,
   kitTheme,
   showSessionsFeature,
   isPanelDragging,
 }: CanvasContentProps) {
+  const { theme } = useTheme()
   const recorder = useSessionRecorderOptional()
   const recState = recorder?.state ?? 'idle'
   const flowLens = useFlowLensModeOptional() ?? DISABLED_LENS
@@ -926,36 +916,30 @@ function CanvasContent({
             {fullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
           </ToolbarBtn>
 
-          <ToolbarBtn
-            onClick={openFeedbackTab}
-            title="Feedback"
-            tooltip={{
-              label: 'Feedback',
-              hint:
-                totalCommentCount > 0
-                  ? `${totalCommentCount} comment${totalCommentCount !== 1 ? 's' : ''}`
-                  : 'Leave a comment',
-            }}
-            tint="green"
-          >
-            <MessageSquare size={15} />
-            {totalCommentCount > 0 && (
-              <span className="text-ui-2xs font-bold">{totalCommentCount}</span>
-            )}
-          </ToolbarBtn>
-
           {flowLens.available && (
             <>
               {deviderV}
-              <ToolbarBtn
-                onClick={() => (flowLens.enabled ? flowLens.exit() : flowLens.enter())}
-                title="FlowLens mode"
-                tooltip={{ label: 'FlowLens mode', hint: 'Replay & analyze recorded sessions' }}
-                tint="violet"
-                active={flowLens.enabled}
-              >
-                <ScanEye size={14} />
-              </ToolbarBtn>
+              <ModeSegmentedToggle
+                active={flowLens.enabled ? 'flowlens' : 'flowkit'}
+                onChange={key => {
+                  if (key === 'flowlens' && !flowLens.enabled) flowLens.enter()
+                  if (key === 'flowkit' && flowLens.enabled) flowLens.exit()
+                }}
+                options={[
+                  {
+                    key: 'flowkit',
+                    icon: <AppWindow size={14} />,
+                    tooltip: { label: 'FlowKit mode', hint: 'Interactive preview' },
+                    accent: theme.accent.blue,
+                  },
+                  {
+                    key: 'flowlens',
+                    icon: <ScanEye size={14} />,
+                    tooltip: { label: 'FlowLens mode', hint: 'Replay & analyze recorded sessions' },
+                    accent: FLOWLENS_ACCENT,
+                  },
+                ]}
+              />
             </>
           )}
         </div>
@@ -1063,247 +1047,3 @@ function formatElapsed(ms: number) {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-// ── WorkspaceBar ──────────────────────────────────────────────────────────────
-
-// Glob all workspace logos at build time (repo mode). Pattern must be a string literal.
-// In flat mode WORKSPACE_LOGOS is {} — logo comes from virtual:flowkit/workspace instead.
-const _isSingleWs = import.meta.env.VITE_SINGLE_WORKSPACE === 'true'
-const WORKSPACE_LOGOS = import.meta.glob('../../../workspaces/*/lib/assets/logo.*', {
-  eager: true,
-  query: '?url',
-  import: 'default',
-}) as Record<string, string>
-
-function getWorkspaceLogo(name: string): string | null {
-  if (_isSingleWs) {
-    // virtual:flowkit/workspace logo is imported at workspaceModules level; re-export here
-    // would create a circular dep. Instead, the flat logo is unused — workspace bar is
-    // hidden in single-workspace mode (no switcher shown).
-    return null
-  }
-  const entry = Object.entries(WORKSPACE_LOGOS).find(([p]) =>
-    p.includes(`/workspaces/${name}/lib/assets/logo.`)
-  )
-  return entry?.[1] ?? null
-}
-
-// Deterministic color per workspace name — stable across renders and sessions.
-const AVATAR_COLORS = [
-  '#6366F1',
-  '#8B5CF6',
-  '#EC4899',
-  '#EF4444',
-  '#F97316',
-  '#EAB308',
-  '#22C55E',
-  '#14B8A6',
-  '#0EA5E9',
-]
-function workspaceColor(name: string): string {
-  let h = 0
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xfffffff
-  return AVATAR_COLORS[h % AVATAR_COLORS.length]
-}
-
-function WorkspaceAvatar({
-  name,
-  label,
-  size = 40,
-}: {
-  name: string
-  label: string
-  size?: number
-}) {
-  const logo = getWorkspaceLogo(name)
-  const radius = size <= 24 ? 5 : 8
-
-  if (logo) {
-    return (
-      <span
-        className="shrink-0 overflow-hidden flex items-center justify-center bg-theme-elevated"
-        style={{ width: size, height: size, borderRadius: radius }}
-      >
-        <img src={logo} alt={label} className="object-contain size-full" draggable={false} />
-      </span>
-    )
-  }
-
-  return (
-    <span
-      className="shrink-0 flex items-center justify-center font-black text-white select-none"
-      style={{
-        width: size,
-        height: size,
-        borderRadius: radius,
-        background: workspaceColor(name),
-        fontSize: size <= 24 ? 10 : 16,
-        letterSpacing: '-0.02em',
-      }}
-    >
-      {(label?.[0] ?? '?').toUpperCase()}
-    </span>
-  )
-}
-
-function WorkspaceBar({ panelOpen }: { panelOpen: boolean }) {
-  const activeWorkspace = useActiveWorkspace()
-  const { switchWorkspace } = useDashboard()
-  const current = workspaces.find(w => w.name === activeWorkspace) ?? workspaces[0] ?? null
-  const others = workspaces.filter(w => w.name !== activeWorkspace)
-  const [open, setOpen] = useState(false)
-  const triggerRef = useRef<HTMLButtonElement>(null)
-  const [dropdownPos, setDropdownPos] = useState<{
-    top: number
-    left: number
-    width: number
-  } | null>(null)
-  if (!current) return null
-
-  const handleOpen = () => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect()
-      setDropdownPos({ top: rect.top, left: rect.left, width: Math.max(rect.width, 200) })
-    }
-    setOpen(v => !v)
-  }
-
-  return (
-    <div
-      className="relative shrink-0 flex items-center border-t border-theme-border bg-theme-elevated"
-      style={{ height: 57 }}
-    >
-      <button
-        ref={triggerRef}
-        onClick={handleOpen}
-        className="flex-1 h-full flex items-center gap-3 px-2 transition-colors hover:bg-white/3 min-w-0"
-      >
-        <WorkspaceAvatar
-          name={activeWorkspace}
-          label={current.label ?? activeWorkspace}
-          size={40}
-        />
-        {panelOpen && (
-          <>
-            <div className="flex flex-col items-start min-w-0 flex-1">
-              <span className="text-ui-sm font-bold truncate text-theme-text-primary leading-tight">
-                {current.label ?? activeWorkspace}
-              </span>
-              <span className="text-ui-xs truncate text-theme-text-muted leading-tight">
-                {activeWorkspace}
-              </span>
-            </div>
-            <ChevronDown
-              size={12}
-              className={`shrink-0 transition-transform mr-1 text-theme-text-disabled ${open ? 'rotate-0' : 'rotate-180'}`}
-            />
-          </>
-        )}
-      </button>
-
-      {open && dropdownPos && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div
-            className="fixed z-50 overflow-hidden bg-theme-elevated border border-theme-border shadow-theme-float rounded-[10px]"
-            style={{
-              bottom: `calc(100vh - ${dropdownPos.top} + 4px)`,
-              left: dropdownPos.left,
-              width: dropdownPos.width,
-            }}
-          >
-            {/* Active workspace row — clicking dismisses */}
-            <div
-              className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-theme-hover transition-colors"
-              onClick={() => setOpen(false)}
-            >
-              <WorkspaceAvatar
-                name={activeWorkspace}
-                label={current.label ?? activeWorkspace}
-                size={28}
-              />
-              <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-ui-sm font-semibold truncate text-theme-text-primary leading-tight">
-                  {current.label ?? activeWorkspace}
-                </span>
-                <span className="text-ui-2xs truncate text-theme-text-muted leading-tight">
-                  {activeWorkspace}
-                </span>
-              </div>
-              <span className="px-1.5 py-0.5 rounded-sm text-ui-2xs font-bold bg-theme-blue-dim text-theme-blue shrink-0">
-                active
-              </span>
-            </div>
-
-            {others.length > 0 && (
-              <>
-                <div className="h-px bg-theme-border" />
-                {others.map(w => (
-                  <WorkspaceSwitchRow key={w.name} workspace={w} onSwitch={switchWorkspace} />
-                ))}
-              </>
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
-// Safety net for `onSwitch`: the happy path unmounts this row entirely (a
-// workspace switch remounts the tree), so `switching` normally never needs to
-// be reset. If `onSwitch` throws before that remount (e.g. storeWorkspace()
-// hitting a full/blocked localStorage) or otherwise doesn't cause one, this
-// timeout clears the stuck "switching…" state instead of leaving the row
-// permanently disabled until a manual page reload.
-const SWITCH_TIMEOUT_MS = 4000
-
-function WorkspaceSwitchRow({
-  workspace,
-  onSwitch,
-}: {
-  workspace: { name: string; label: string; description?: string }
-  onSwitch: (name: string) => void
-}) {
-  const [switching, setSwitching] = useState(false)
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    }
-  }, [])
-
-  const handleClick = () => {
-    setSwitching(true)
-    try {
-      onSwitch(workspace.name)
-      timeoutRef.current = setTimeout(() => setSwitching(false), SWITCH_TIMEOUT_MS)
-    } catch (e) {
-      console.error('Workspace switch failed:', e)
-      setSwitching(false)
-    }
-  }
-
-  return (
-    <button
-      onClick={handleClick}
-      disabled={switching}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-theme-hover ${switching ? 'opacity-60' : 'opacity-100'}`}
-    >
-      <WorkspaceAvatar name={workspace.name} label={workspace.label} size={28} />
-      <div className="flex flex-col min-w-0 flex-1">
-        <span className="text-ui-sm font-semibold truncate text-theme-text-primary leading-tight">
-          {workspace.label}
-        </span>
-        <span className="text-ui-2xs truncate leading-tight text-theme-text-muted">
-          {workspace.description ?? (
-            <span className="italic text-theme-text-disabled">no description</span>
-          )}
-        </span>
-      </div>
-      <span className="text-ui-2xs text-theme-text-disabled shrink-0">
-        {switching ? 'switching…' : 'switch →'}
-      </span>
-    </button>
-  )
-}

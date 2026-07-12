@@ -156,3 +156,90 @@ export function ToolbarBtn({
   }
   return btn
 }
+
+// ─── ModeSegmentedToggle ──────────────────────────────────────────────────────
+
+interface ModeSegmentedToggleOption {
+  key: string
+  icon: React.ReactNode
+  tooltip: { label: string; hint?: string }
+  /** Accent color applied to the icon + soft background when this segment is active. */
+  accent: string
+}
+
+interface ModeSegmentedToggleProps {
+  options: [ModeSegmentedToggleOption, ModeSegmentedToggleOption]
+  active: string
+  onChange: (key: string) => void
+}
+
+// Fixed per-segment box (width + gap) so the sliding indicator's transform can
+// be computed from the active index alone — no ref measurement needed.
+const SEGMENT_W = 30
+const SEGMENT_GAP = 2
+
+/**
+ * Two-option segmented control for mutually-exclusive modes (e.g. FlowKit ↔
+ * FlowLens). Unlike ToolbarBtn's on/off `active` toggle, both segments are
+ * always visible so the current mode and the alternative are both legible at
+ * a glance. A solid pill slides between segments on toggle, tinted with the
+ * newly-active mode's own accent color.
+ */
+export function ModeSegmentedToggle({ options, active, onChange }: ModeSegmentedToggleProps) {
+  const { theme } = useTheme()
+  const activeIndex = Math.max(
+    0,
+    options.findIndex(o => o.key === active)
+  )
+  const activeOpt = options[activeIndex]
+
+  return (
+    <div
+      className="relative flex items-center p-0.5"
+      style={{ borderRadius: 8, background: theme.bg.hover, gap: SEGMENT_GAP }}
+    >
+      <div
+        className="absolute top-0.5 left-0.5"
+        style={{
+          width: SEGMENT_W,
+          height: 24,
+          borderRadius: 6,
+          background: activeOpt.accent,
+          transform: `translateX(${activeIndex * (SEGMENT_W + SEGMENT_GAP)}px)`,
+          transition: 'transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), background 0.18s',
+        }}
+      />
+      {options.map(opt => {
+        const isActive = opt.key === active
+        return (
+          <Tooltip
+            key={opt.key}
+            content={<ToolbarTooltipContent {...opt.tooltip} />}
+            placement="top"
+            showDelay={1500}
+          >
+            <button
+              onClick={() => onChange(opt.key)}
+              style={{
+                position: 'relative',
+                width: SEGMENT_W,
+                height: 24,
+                borderRadius: 6,
+                border: 'none',
+                background: 'transparent',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'color 0.18s',
+                color: isActive ? '#fff' : theme.text.secondary,
+              }}
+            >
+              {opt.icon}
+            </button>
+          </Tooltip>
+        )
+      })}
+    </div>
+  )
+}

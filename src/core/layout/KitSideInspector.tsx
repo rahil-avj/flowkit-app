@@ -103,7 +103,7 @@ function ContentHeader({ title, actions, theme }: ContentHeaderProps) {
       style={{ background: theme.bg.surface, borderBottom: `1px solid ${theme.bg.border}` }}
     >
       <span
-        className="font-black tracking-widest uppercase flex-1"
+        className="font-black flex-1"
         style={{ fontSize: 'var(--font-size-ui-xs)', color: theme.text.muted }}
       >
         {title}
@@ -720,7 +720,6 @@ export function SimulatorContent({
             <SimControl
               label="Enable Simulator"
               bind="simulatorEnabled"
-              description="Apply simulator overrides to the active screen"
             />
             <div
               className="flex flex-col gap-2 transition-opacity duration-200"
@@ -1009,7 +1008,7 @@ function KitSideInspectorInner({
             <SidebarButton
               label={TAB_META[t].label}
               icon={TAB_META[t].icon}
-              isActive={t === activeTab}
+              isActive={t === activeTab && isOpen}
               badge={
                 t === 'feedback'
                   ? totalCommentCount || undefined

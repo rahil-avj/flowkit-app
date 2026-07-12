@@ -48,6 +48,12 @@ const configModules = import.meta.glob('/workspaces/*/workspace.ts', {
   eager: true,
 }) as Record<string, { default: FlowkitConfig }>
 
+const logoModules = import.meta.glob('/workspaces/*/lib/assets/logo.*', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+}) as Record<string, string>
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export function getWorkspaceDb(name: string): Record<string, unknown> {
@@ -96,6 +102,16 @@ export function getWorkspaceConfig(name: string): FlowkitConfig {
   if (isSingle) return _virtualConfig
   const mod = configModules[`/workspaces/${name}/workspace.ts`]
   return mod?.default ?? {}
+}
+
+// Single-workspace/flat mode has no workspace switcher (only one workspace
+// exists), so a virtual-module logo path isn't needed here — always null.
+export function getWorkspaceLogo(name: string): string | null {
+  if (isSingle) return null
+  const entry = Object.entries(logoModules).find(([p]) =>
+    p.includes(`/workspaces/${name}/lib/assets/logo.`)
+  )
+  return entry?.[1] ?? null
 }
 
 export async function loadWorkspaceTokens(name: string): Promise<void> {

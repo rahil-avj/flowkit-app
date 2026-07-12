@@ -1,4 +1,3 @@
-import { ControlAccordion } from '@flowkit-features/simulator/controls'
 import SegmentedControl from '@flowkit-shared/components/ui/SegmentedControl'
 import { useSimulator } from '@flowkit-shared/contexts/DashboardContext'
 import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
@@ -9,7 +8,7 @@ export default function DeviceSettings() {
   const { connectionMode, setConnectionMode, networkSpeed, setNetworkSpeed } = useSimulator()
 
   return (
-    <ControlAccordion label="OS & Device Settings" defaultOpen>
+<>
       <div className="flex flex-col gap-1.5">
         <span
           className="font-black tracking-widest px-1"
@@ -86,6 +85,6 @@ export default function DeviceSettings() {
           </SegmentedControl.Segment>
         </SegmentedControl>
       </div>
-    </ControlAccordion>
+</>
   )
 }

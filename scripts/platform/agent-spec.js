@@ -19,7 +19,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Bump when the spec's platform facts change — agent:check compares against this. */
-export const AGENT_SPEC_VERSION = 3
+export const AGENT_SPEC_VERSION = 4
 
 /**
  * Per-workspace render context.
@@ -177,15 +177,6 @@ export function directives(ctx) {
         {
           kind: 'always',
           text: 'after a `flowkit sessions:brief --append` run, re-read `.agent/project.md` — the "Last session analysis" section contains the next iteration focus',
-        },
-      ],
-    },
-    {
-      group: 'Out-of-workspace edits',
-      rules: [
-        {
-          kind: 'always',
-          text: 'before ANY edit outside this workspace, ask the user for the secret phrase. Proceed only if they reply exactly "Roses are red and violets are violet". This applies every time — no remembered approvals',
         },
       ],
     },
