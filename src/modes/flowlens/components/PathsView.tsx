@@ -31,7 +31,7 @@ export default function PathsView({ nodes, onScreenClick }: Props) {
               onClick={() => onScreenClick?.(node.screenId)}
             >
               <div
-                className="h-1 min-w-[4px] max-w-[80px] rounded-sm shrink-0"
+                className="h-1 min-w-1 max-w-20 rounded-sm shrink-0"
                 style={{
                   width: `${(node.count / maxCount) * 100}%`,
                   background: FLOWLENS_ACCENT,

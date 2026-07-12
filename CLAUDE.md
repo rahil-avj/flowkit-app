@@ -306,7 +306,6 @@ npm run dev
 
 - `npm run lint` / `npm run lint:fix`
 - `npm run format` / `npm run format:check`
-- `npm run setup-hooks` — installs Husky git hooks (`husky`)
 
 **CLI (flowkit)**
 

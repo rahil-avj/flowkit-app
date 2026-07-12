@@ -4,6 +4,7 @@ import { Component } from 'react'
 interface Props {
   children: ReactNode
   fallback: ReactNode
+  onError?: (error: Error, info: ErrorInfo) => void
 }
 
 interface State {
@@ -23,6 +24,7 @@ export default class PanelErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('[PanelErrorBoundary]', error, info.componentStack)
+    this.props.onError?.(error, info)
   }
 
   reset = () => this.setState({ caught: false })

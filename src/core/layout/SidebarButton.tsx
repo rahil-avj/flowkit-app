@@ -51,7 +51,7 @@ export default function SidebarButton({
     >
       {/* Active: filled rounded square; inactive: ghost */}
       <span
-        className={`relative flex items-center justify-center rounded-[8px] transition-all duration-150 ${
+        className={`relative flex items-center justify-center rounded-lg transition-all duration-150 ${
           indent ? 'size-7' : 'size-10'
         } ${
           isActive
@@ -62,7 +62,7 @@ export default function SidebarButton({
         <Icon size={indent ? 13 : 17} />
         {!!badge && (
           <span
-            className="absolute -top-1 -right-1 min-w-[14px] h-[14px] rounded-full flex items-center justify-center font-black text-ui-2xs text-white"
+            className="absolute -top-1 -right-1 min-w-3.5 h-3.5 rounded-full flex items-center justify-center font-black text-ui-2xs text-white"
             style={{ background: 'var(--theme-accent-red)' }}
           >
             {badge > 9 ? '9+' : badge}

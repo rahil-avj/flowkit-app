@@ -34,14 +34,14 @@ export function ExportMenu({ items, label = 'Export' }: { items: ExportItem[]; l
         onClick={() => setOpen(v => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-1 text-ui-2xs font-semibold text-theme-text-secondary bg-transparent border border-theme-border rounded-[6px] py-1 px-2 cursor-pointer"
+        className="flex items-center gap-1 text-ui-2xs font-semibold text-theme-text-secondary bg-transparent border border-theme-border rounded-md py-1 px-2 cursor-pointer"
       >
         <Download size={12} /> {label} <ChevronDown size={11} />
       </button>
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-[calc(100%+4px)] z-80 min-w-[180px] bg-theme-elevated border border-theme-border rounded-lg py-1 shadow-theme-float"
+          className="absolute right-0 top-[calc(100%+4px)] z-80 min-w-45 bg-theme-elevated border border-theme-border rounded-lg py-1 shadow-theme-float"
         >
           {items.map(item => (
             <button
@@ -133,7 +133,7 @@ export function ViewAllButton({
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1 shrink-0 text-ui-2xs font-semibold bg-transparent rounded-[6px] py-1 px-2 cursor-pointer transition-colors"
+      className="flex items-center gap-1 shrink-0 text-ui-2xs font-semibold bg-transparent rounded-md py-1 px-2 cursor-pointer transition-colors"
       style={{
         color: FLOWLENS_ACCENT,
         border: `1px solid ${FLOWLENS_ACCENT}`,

@@ -153,7 +153,7 @@ function Legend({ max }: { max: number }) {
     <div className="flex items-center gap-2">
       <span className="text-[10px] text-theme-text-muted">less</span>
       <div
-        className="w-[120px] h-2 rounded-[4px]"
+        className="w-30 h-2 rounded-sm"
         style={{
           background: `linear-gradient(to right, ${css})`,
         }}

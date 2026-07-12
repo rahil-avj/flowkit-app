@@ -112,7 +112,7 @@ export default function PlaybackBar({
           return (
             <div
               key={s.sequenceId}
-              className="absolute top-[-2px] w-[2px] h-2 opacity-60 rounded-[1px]"
+              className="absolute -top-0.5 w-0.5 h-2 opacity-60 rounded-[1px]"
               style={{
                 background: FLOWLENS_ACCENT,
                 width: 2,
@@ -177,7 +177,7 @@ export default function PlaybackBar({
             </option>
           ))}
         </select>
-        <span className="text-theme-text-disabled text-ui-2xs tabular-nums min-w-[56px] text-right">
+        <span className="text-theme-text-disabled text-ui-2xs tabular-nums min-w-14 text-right">
           {currentIdx + 1} / {events.length}
         </span>
       </div>

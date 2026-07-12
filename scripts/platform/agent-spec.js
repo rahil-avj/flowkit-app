@@ -123,7 +123,7 @@ export function directives(ctx) {
         kind: 'to',
         task: 'make a screen freely navigable from the Screens tab (no flow active) as well as during flow playback',
         action:
-          '`const { navigateTo } = useDashboard()`, guarded with `isFlow` (a prop FlowMaster injects only during playback): `onClick={() => !isFlow && navigateTo(id)}`. Without the guard, the click also fires during flow playback and desyncs DashboardContext\'s view history from FlowEngine\'s own step index — see scripts/helpers/scaffold.js\'s NOTE comment for the full mechanism.',
+          "`const { navigateTo } = useDashboard()`, guarded with `isFlow` (a prop FlowMaster injects only during playback): `onClick={() => !isFlow && navigateTo(id)}`. Without the guard, the click also fires during flow playback and desyncs DashboardContext's view history from FlowEngine's own step index — see scripts/helpers/scaffold.js's NOTE comment for the full mechanism.",
       },
       {
         kind: 'never',
@@ -292,7 +292,7 @@ export function platformSurfaces(ctx) {
       area: 'Data',
       api: '`useDashboard()` → `db`, `updateDb(fn)`, `resetDb()`, `navigateTo(id)`',
       from: '`@flowkit-shared/contexts/DashboardContext`',
-      note: "db/updateDb/resetDb always safe; navigateTo() only for standalone Screens-tab navigation, guarded on `isFlow` (see Navigation group above) — during flow playback use useFlowNav() instead",
+      note: 'db/updateDb/resetDb always safe; navigateTo() only for standalone Screens-tab navigation, guarded on `isFlow` (see Navigation group above) — during flow playback use useFlowNav() instead',
       doc: 'FLOWKIT.md',
     },
     {

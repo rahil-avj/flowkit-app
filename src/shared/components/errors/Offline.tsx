@@ -16,14 +16,14 @@ export default function Offline({ onRetry }: OfflineProps) {
         <div className="font-18 font-bold tracking-tight text-faded">Offline</div>
 
         <div
-          className="flex items-center justify-center w-[180px] h-[120px] rounded-lg"
+          className="flex items-center justify-center w-45 h-30 rounded-lg"
           style={{ background: theme.bg.surface, border: `2px solid ${theme.bg.border}` }}
         >
           <WifiOff size={48} strokeWidth={1.5} color={theme.accent.red} />
         </div>
 
-        <div className="flex flex-col gap-[6px]">
-          <h1 className="text-[20px] font-extrabold m-0">No Internet Connection</h1>
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-h3 font-extrabold m-0">No Internet Connection</h1>
           <p className="text-ui-sm text-theme-text-secondary m-0 leading-normal">
             It looks like you are offline. Please check your network cables or Wi-Fi status and try
             again.

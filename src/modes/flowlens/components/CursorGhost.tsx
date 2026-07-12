@@ -39,7 +39,7 @@ export default function CursorGhost({ session, currentSequenceId, activeScreenId
 
   return createPortal(
     <div
-      className="absolute ml-[-9px] mt-[-9px] rounded-full pointer-events-none z-5 size-[18px]"
+      className="absolute -ml-2.25 -mt-2.25 rounded-full pointer-events-none z-5 size-4.5"
       style={{
         left: `${cursor.x * 100}%`,
         top: `${cursor.y * 100}%`,

@@ -14,8 +14,6 @@ npm run dev       # start the dev server
 
 Then open [http://localhost:5173](http://localhost:5173).
 
-If you're contributing (not just running the app), also run `npm run setup-hooks` once — see [Code quality](#code-quality) below for why this isn't automatic.
-
 ---
 
 ## What it is
@@ -273,11 +271,8 @@ src/
 | Prettier   | `npm run format:check`       | Auto-applied to staged files on commit                                             |
 | Tests      | `npm test`                   | Vitest — pure logic suites                                                         |
 | Coverage   | `npm run test:coverage`      | Thresholds: statements 91%, branches 86%, functions 95%, lines 93%                 |
-| Pre-commit | `npm run setup-hooks` (once) | Husky + lint-staged runs ESLint + Prettier on staged `*.{ts,tsx,json,md,css}`      |
 
 Architecture layer boundaries (`shared → core → features → modes → app`) are enforced as ESLint **errors** via `eslint-plugin-boundaries`. Cross-layer imports fail lint.
-
-**Why `setup-hooks` isn't automatic:** it used to run via npm's `prepare` lifecycle script, which also fires for git/`file:` dependencies — meaning every author's `npm install` of the `flowkit` package would've installed all devDependencies and run Husky just to set up git hooks nobody but contributors to this repo need. Run `npm run setup-hooks` once after cloning; it's not needed again unless you delete `.husky/`.
 
 ---
 

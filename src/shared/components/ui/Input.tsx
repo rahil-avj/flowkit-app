@@ -20,7 +20,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
       {label && <label className="text-ui-xs font-bold text-theme-text-secondary">{label}</label>}
       <div className="relative flex items-center w-full">
         {leftIcon && (
-          <div className="absolute left-[10px] flex items-center text-theme-text-muted">
+          <div className="absolute left-2.5 flex items-center text-theme-text-muted">
             {leftIcon}
           </div>
         )}
@@ -29,12 +29,12 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
           disabled={disabled}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className={`w-full h-8 text-ui-sm rounded-[6px] bg-theme-base text-theme-text-primary outline-none transition-[border-color] duration-150 ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-text'} ${leftIcon ? 'pl-8' : 'pl-[10px]'} ${rightIcon ? 'pr-8' : 'pr-[10px]'} ${error ? 'border border-theme-red' : isFocused ? 'border border-theme-blue' : 'border border-theme-border'}`}
+          className={`w-full h-8 text-ui-sm rounded-md bg-theme-base text-theme-text-primary outline-none transition-[border-color] duration-150 ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-text'} ${leftIcon ? 'pl-8' : 'pl-2.5'} ${rightIcon ? 'pr-8' : 'pr-2.5'} ${error ? 'border border-theme-red' : isFocused ? 'border border-theme-blue' : 'border border-theme-border'}`}
           style={style}
           {...props}
         />
         {rightIcon && (
-          <div className="absolute right-[10px] flex items-center text-theme-text-muted">
+          <div className="absolute right-2.5 flex items-center text-theme-text-muted">
             {rightIcon}
           </div>
         )}

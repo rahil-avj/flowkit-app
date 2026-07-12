@@ -555,6 +555,15 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
                 Screen crashed — check the console
               </div>
             }
+            onError={(error, info) =>
+              recorderOpt?.logEvent('session.error', {
+                message: error.message,
+                stack: error.stack,
+                componentStack: info.componentStack,
+                boundary: 'panel:screen',
+                screenId: activeScreenId,
+              })
+            }
           >
             <div className={`flex flex-col size-full ${animClass}`}>
               <ScreenComp {...screenProps} />

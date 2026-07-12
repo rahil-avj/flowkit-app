@@ -35,7 +35,7 @@ export default function NoWorkspace({ onAction }: NoWorkspaceProps) {
         {onAction && (
           <button
             onClick={onAction}
-            className="rounded-[6px] bg-theme-blue px-3 py-[6px] text-ui-sm font-semibold text-white transition-colors duration-120 hover:opacity-90"
+            className="rounded-md bg-theme-blue px-3 py-1.5 text-ui-sm font-semibold text-white transition-colors duration-120 hover:opacity-90"
           >
             Refresh
           </button>

@@ -8,5 +8,5 @@ export function handleSaveSession(
   req: IncomingMessage,
   res: ServerResponse,
   flowLensDir: string,
-  bootstrapExtra?: object,
+  bootstrapExtra?: object
 ): Promise<void>

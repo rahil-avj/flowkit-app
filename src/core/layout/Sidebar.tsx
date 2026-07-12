@@ -91,7 +91,7 @@ export default function Sidebar({
               <button
                 onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')}
                 aria-label={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-                className="flex items-center justify-center rounded-[8px] transition-colors"
+                className="flex items-center justify-center rounded-lg transition-colors"
                 style={{ width: 32, height: 32, color: theme.text.disabled }}
                 onMouseEnter={e => {
                   e.currentTarget.style.color = theme.text.muted
@@ -110,7 +110,7 @@ export default function Sidebar({
                 <button
                   onClick={onOpenSettings}
                   aria-label="Open settings"
-                  className="flex items-center justify-center rounded-[8px] transition-colors"
+                  className="flex items-center justify-center rounded-lg transition-colors"
                   style={{ width: 32, height: 32, color: theme.text.disabled }}
                   onMouseEnter={e => {
                     e.currentTarget.style.color = theme.text.muted

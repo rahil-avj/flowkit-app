@@ -90,7 +90,7 @@ export default function BottomSheet({
 
       {/* Sheet — fixed height, slides up from bottom */}
       <div
-        className="fixed bottom-0 h-[82vh] flex flex-col bg-theme-base rounded-t-[16px] shadow-theme-float will-change-transform overflow-hidden inset-x-0"
+        className="fixed bottom-0 h-[82vh] flex flex-col bg-theme-base rounded-t-2xl shadow-theme-float will-change-transform overflow-hidden inset-x-0"
         style={{
           zIndex: Z.modal + 1,
           transform: isOpen ? `translateY(${dragOffset}px)` : 'translateY(100%)',
@@ -105,25 +105,25 @@ export default function BottomSheet({
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
-          className="pt-[10px] flex justify-center shrink-0 cursor-grab touch-none select-none"
+          className="pt-2.5 flex justify-center shrink-0 cursor-grab touch-none select-none"
         >
           <div className="w-9 h-1 rounded-sm bg-theme-text-disabled" />
         </div>
 
         {/* Top-level tab bar */}
-        <div className="flex shrink-0 border-b border-theme-border px-1 mt-[6px]">
+        <div className="flex shrink-0 border-b border-theme-border px-1 mt-1.5">
           {tabs.map(tab => {
             const active = tab.id === activeTabId
             return (
               <button
                 key={tab.id}
                 onClick={() => onTabChange?.(tab.id)}
-                className={`flex-1 flex flex-col items-center justify-center gap-[3px] pt-2 pb-[10px] px-1 bg-transparent border-x-0 border-t-0 border-b-2 cursor-pointer text-[10px] relative transition-[color,border-color] duration-150 ${active ? 'border-b-theme-blue text-theme-blue font-bold' : 'border-b-transparent text-theme-text-muted font-medium'}`}
+                className={`flex-1 flex flex-col items-center justify-center gap-0.75 pt-2 pb-2.5 px-1 bg-transparent border-x-0 border-t-0 border-b-2 cursor-pointer text-[10px] relative transition-[color,border-color] duration-150 ${active ? 'border-b-theme-blue text-theme-blue font-bold' : 'border-b-transparent text-theme-text-muted font-medium'}`}
               >
                 <span className="flex relative">
                   {tab.icon}
                   {(tab.badge ?? 0) > 0 && (
-                    <span className="absolute -top-1 -right1.5 bg-theme-red text-white text-[8px] font-extrabold min-w-[13px] h-[13px] rounded-full flex items-center justify-center px-[2px]">
+                    <span className="absolute -top-1 -right1.5 bg-theme-red text-white text-[8px] font-extrabold min-w-3.25 h-3.25 rounded-full flex items-center justify-center px-0.5">
                       {(tab.badge ?? 0) > 9 ? '9+' : tab.badge}
                     </span>
                   )}

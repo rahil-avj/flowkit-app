@@ -1,3 +1,4 @@
+import type { ErrorInfo, ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 
 import PreviewCanvas from './core/canvas/PreviewCanvas'
@@ -6,7 +7,7 @@ import { FeedbackProvider } from './features/feedback/context/FeedbackContext'
 import { FigmaExportView } from './features/figma-export'
 import { FlowplanSettingsProvider } from './features/flowplan/FlowplanSettingsContext'
 import { FlowPlaybackProvider } from './features/flowplan/FlowPlaybackContext'
-import { SessionRecorderProvider } from './features/flowTracer/context'
+import { SessionRecorderProvider, useSessionRecorderOptional } from './features/flowTracer/context'
 import Forbidden from './shared/components/errors/Forbidden'
 import Maintenance from './shared/components/errors/Maintenance'
 import NotFound from './shared/components/errors/NotFound'
@@ -49,6 +50,37 @@ function resolveInitialWorkspace(): string | null {
   return null
 }
 
+// ─── ConnectedWorkspaceErrorBoundary ───────────────────────────────────────────
+// Bridges WorkspaceErrorBoundary (a class component, can't use hooks) to the
+// session recorder so a workspace-level crash is captured as session data —
+// not just a console.error — when a recording is active. Must render as a
+// descendant of SessionRecorderProvider, not a sibling/ancestor of it.
+
+function ConnectedWorkspaceErrorBoundary({
+  workspaceName,
+  children,
+}: {
+  workspaceName: string
+  children: ReactNode
+}) {
+  const recorder = useSessionRecorderOptional()
+
+  const handleError = (error: Error, info: ErrorInfo) => {
+    recorder?.logEvent('session.error', {
+      message: error.message,
+      stack: error.stack,
+      componentStack: info.componentStack,
+      boundary: 'workspace',
+    })
+  }
+
+  return (
+    <WorkspaceErrorBoundary workspaceName={workspaceName} onError={handleError}>
+      {children}
+    </WorkspaceErrorBoundary>
+  )
+}
+
 // ─── WorkspaceRunner ──────────────────────────────────────────────────────────
 // Only mounts once a workspace is confirmed — prevents any workspace module
 // evaluation (db, flows, tokens) before the user has selected one.
@@ -89,7 +121,7 @@ function WorkspaceRunner({ name, onSwitch }: WorkspaceRunnerProps) {
           <DevModeProvider>
             <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
               <FlowLensModeProvider>
-                <WorkspaceErrorBoundary workspaceName={workspaceLabel}>
+                <ConnectedWorkspaceErrorBoundary workspaceName={workspaceLabel}>
                   {canvasMode ? (
                     <FigmaExportView views={ALL_VIEWS} />
                   ) : (
@@ -109,7 +141,7 @@ function WorkspaceRunner({ name, onSwitch }: WorkspaceRunnerProps) {
                       </FlowplanSettingsProvider>
                     </DashboardProvider>
                   )}
-                </WorkspaceErrorBoundary>
+                </ConnectedWorkspaceErrorBoundary>
               </FlowLensModeProvider>
             </div>
           </DevModeProvider>

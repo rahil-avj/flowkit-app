@@ -305,14 +305,14 @@ export function ScreenInfoContent({
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => copyText(derivedFilename)}
-                className="text-ui-2xs font-bold px-1.5 py-0.5 rounded-[4px]"
+                className="text-ui-2xs font-bold px-1.5 py-0.5 rounded-sm"
                 style={{ background: theme.bg.elevated, color: theme.text.secondary }}
               >
                 {copiedText === derivedFilename ? 'Copied ✓' : 'Copy filename'}
               </button>
               <button
                 onClick={() => copyText(derivedPath)}
-                className="text-ui-2xs font-bold px-1.5 py-0.5 rounded-[4px]"
+                className="text-ui-2xs font-bold px-1.5 py-0.5 rounded-sm"
                 style={{ background: theme.bg.elevated, color: theme.text.secondary }}
               >
                 {copiedText === derivedPath ? 'Copied ✓' : 'Copy path'}
@@ -343,7 +343,7 @@ export function ScreenInfoContent({
         {!isPlayNode && (
           <button
             onClick={toggleDevMode}
-            className="flex items-center justify-center gap-1.5 px-2 py-1 rounded-[6px] text-ui-xs font-bold self-start"
+            className="flex items-center justify-center gap-1.5 px-2 py-1 rounded-md text-ui-xs font-bold self-start"
             style={
               editing
                 ? { background: theme.accent.blueDim, color: theme.accent.blue }
@@ -357,7 +357,7 @@ export function ScreenInfoContent({
         {/* ── Access guard (read-only — runtime fn) ──────────────────────── */}
         {hasGuard && (
           <div
-            className="flex items-center gap-2 px-2 py-1.5 rounded-[6px]"
+            className="flex items-center gap-2 px-2 py-1.5 rounded-md"
             style={{
               background: guardAllowed ? theme.accent.greenDim : theme.accent.redDim,
               border: `1px solid ${guardAllowed ? theme.accent.green + '33' : theme.accent.red + '33'}`,
@@ -394,14 +394,14 @@ export function ScreenInfoContent({
               Variant
             </span>
             <div
-              className="flex gap-0.5 p-0.5 rounded-[6px]"
+              className="flex gap-0.5 p-0.5 rounded-md"
               style={{ background: theme.bg.base, border: `1px solid ${theme.bg.border}` }}
             >
               {variants.map(v => (
                 <button
                   key={v.serial}
                   onClick={() => ctx.setVariantForView(cleanViewId, v.serial)}
-                  className="text-ui-2xs font-bold px-2 py-0.5 rounded-[4px] transition-colors duration-120"
+                  className="text-ui-2xs font-bold px-2 py-0.5 rounded-sm transition-colors duration-120"
                   style={{
                     background: activeVariant === v.serial ? theme.bg.elevated : 'transparent',
                     color: activeVariant === v.serial ? theme.text.primary : theme.text.muted,
@@ -435,7 +435,7 @@ export function ScreenInfoContent({
             />
           ) : (
             <span
-              className="text-ui-2xs font-bold px-1.5 py-0.5 rounded-[4px]"
+              className="text-ui-2xs font-bold px-1.5 py-0.5 rounded-sm"
               style={
                 currentIsStandalone
                   ? { background: theme.accent.amberDim, color: theme.accent.amber }
@@ -460,7 +460,7 @@ export function ScreenInfoContent({
               value={currentHasTag}
               onChange={e => patch({ hasTag: e.target.value })}
               placeholder="e.g. WIP, Beta, New"
-              className="w-full px-2 py-1 rounded-[6px] text-ui-xs font-medium outline-none transition-colors"
+              className="w-full px-2 py-1 rounded-md text-ui-xs font-medium outline-none transition-colors"
               style={{
                 background: theme.bg.base,
                 border: `1px solid ${theme.bg.border}`,
@@ -475,7 +475,7 @@ export function ScreenInfoContent({
             />
           ) : (
             <span
-              className="text-ui-xs font-medium px-2 py-0.5 rounded-[4px] self-start"
+              className="text-ui-xs font-medium px-2 py-0.5 rounded-sm self-start"
               style={
                 currentHasTag
                   ? {
@@ -544,7 +544,7 @@ export function ScreenInfoContent({
                   if (tagInput.trim()) addTag(tagInput)
                 }}
                 placeholder={currentTags.length === 0 ? 'Add tag…' : '+'}
-                className="px-1.5 py-0.5 rounded-full text-ui-2xs outline-none min-w-[60px] flex-1"
+                className="px-1.5 py-0.5 rounded-full text-ui-2xs outline-none min-w-15 flex-1"
                 style={{
                   background: theme.bg.base,
                   border: `1px solid ${theme.bg.border}`,
@@ -770,12 +770,22 @@ function FlowDeclaredControls({
 }
 
 export function FeedbackContent({ views }: { views: WireframeView[] }) {
+  const recorder = useSessionRecorderOptional()
+
   return (
     <PanelErrorBoundary
       fallback={
         <div className="flex flex-col flex-1 items-center justify-center text-xs opacity-40 p-4">
           Feedback unavailable — check the console
         </div>
+      }
+      onError={(error, info) =>
+        recorder?.logEvent('session.error', {
+          message: error.message,
+          stack: error.stack,
+          componentStack: info.componentStack,
+          boundary: 'panel:feedback',
+        })
       }
     >
       <div className="flex flex-col flex-1 min-h-0">

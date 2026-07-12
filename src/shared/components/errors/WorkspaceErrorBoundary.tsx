@@ -7,6 +7,7 @@ import { Component } from 'react'
 interface Props {
   children: ReactNode
   workspaceName: string
+  onError?: (error: Error, info: ErrorInfo) => void
 }
 
 interface State {
@@ -32,12 +33,12 @@ function WorkspaceErrorPanel({
   return (
     <div className="flex items-center justify-center bg-theme-base font-[Inter,system-ui,sans-serif] size-full">
       <div
-        className="w-full max-w-[560px] mx-[32px] bg-theme-surface rounded-[12px] overflow-hidden shadow-theme-card"
+        className="w-full max-w-140 mx-8 bg-theme-surface rounded-xl overflow-hidden shadow-theme-card"
         style={{ border: `1px solid ${theme.accent.redDim}` }}
       >
         {/* Header */}
         <div
-          className="flex items-center gap-[10px] px-[20px] py-[14px]"
+          className="flex items-center gap-2.5 px-5 py-3.5"
           style={{
             background: theme.accent.redDim,
             borderBottom: `1px solid ${theme.accent.redDim}`,
@@ -53,12 +54,12 @@ function WorkspaceErrorPanel({
         </div>
 
         {/* Error message */}
-        <div className="px-[20px] py-[16px]">
-          <p className="text-theme-text-secondary text-[10px] font-bold uppercase tracking-[0.08em] mb-[6px]">
+        <div className="px-5 py-4">
+          <p className="text-theme-text-secondary text-[10px] font-bold uppercase tracking-[0.08em] mb-1.5">
             Error
           </p>
           <pre
-            className="text-ui-xs rounded-[6px] px-[12px] py-[10px] whitespace-pre-wrap wrap-break-word m-0 font-['JetBrains_Mono','Fira_Code',monospace]"
+            className="text-ui-xs rounded-md px-3 py-2.5 whitespace-pre-wrap wrap-break-word m-0 font-['JetBrains_Mono','Fira_Code',monospace]"
             style={{
               color: theme.accent.red,
               background: theme.accent.redDim,
@@ -69,11 +70,11 @@ function WorkspaceErrorPanel({
           </pre>
 
           {stack && (
-            <details className="mt-[12px]">
+            <details className="mt-3">
               <summary className="text-theme-text-muted text-[10px] cursor-pointer select-none tracking-[0.04em]">
                 Component stack
               </summary>
-              <pre className="text-theme-text-disabled text-[10px] mt-[6px] whitespace-pre-wrap wrap-break-word font-['JetBrains_Mono','Fira_Code',monospace] max-h-[140px] overflow-auto">
+              <pre className="text-theme-text-disabled text-[10px] mt-1.5 whitespace-pre-wrap wrap-break-word font-['JetBrains_Mono','Fira_Code',monospace] max-h-35 overflow-auto">
                 {stack.trim()}
               </pre>
             </details>
@@ -82,7 +83,7 @@ function WorkspaceErrorPanel({
 
         {/* Actions */}
         <div
-          className="flex gap-[8px] px-[20px] py-[12px]"
+          className="flex gap-2 px-5 py-3"
           style={{ borderTop: `1px solid ${theme.bg.border}` }}
         >
           <Button onClick={onReload} style={{ flex: 1 }} variant="primary">
@@ -115,6 +116,7 @@ export default class WorkspaceErrorBoundary extends Component<Props, State> {
       error,
       info
     )
+    this.props.onError?.(error, info)
   }
 
   handleReload = () => window.location.reload()

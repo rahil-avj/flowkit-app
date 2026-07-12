@@ -28,6 +28,7 @@ function eventCategory(type: string): string {
 }
 
 function eventColor(type: string): string {
+  if (type === 'session.error') return '#ef4444'
   return CATEGORY_COLORS[eventCategory(type)] ?? '#71717a'
 }
 

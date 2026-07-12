@@ -1,4 +1,9 @@
 {
-  "workspaces": [],
-  "active": null
+  "workspaces": [
+    {
+      "name": "temp-1",
+      "label": "Temp 1"
+    }
+  ],
+  "active": "temp-1"
 }

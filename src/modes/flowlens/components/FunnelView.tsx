@@ -34,7 +34,7 @@ export default function FunnelView({ session }: Props) {
           value={screenOrder}
           onChange={e => setScreenOrder(e.target.value)}
           placeholder="ScreenA, ScreenB, ScreenC"
-          className="w-full bg-theme-elevated border border-theme-border rounded-[6px] py-1.5 px-2 text-ui-2xs text-theme-text-primary outline-none"
+          className="w-full bg-theme-elevated border border-theme-border rounded-md py-1.5 px-2 text-ui-2xs text-theme-text-primary outline-none"
         />
         <div className="mt-1.5 flex flex-wrap gap-1">
           {visitedScreens.slice(0, 12).map(s => (
@@ -61,7 +61,7 @@ export default function FunnelView({ session }: Props) {
             <div key={step.screenId}>
               <div className="bg-theme-elevated border border-theme-border rounded-lg p-[8px_12px]">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] text-theme-text-disabled bg-theme-border rounded px-1.25 py-0.25 shrink-0">
+                  <span className="text-[10px] text-theme-text-disabled bg-theme-border rounded px-1.25 py-px shrink-0">
                     {i + 1}
                   </span>
                   <span className="text-ui-xs text-theme-text-primary flex-1 truncate">

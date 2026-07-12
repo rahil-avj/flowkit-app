@@ -170,7 +170,7 @@ export default function TimelineView({ events, snapshots, currentSequenceId, onS
                                 background: FLOWLENS_ACCENT + '20',
                                 color: FLOWLENS_ACCENT,
                               }}
-                              className="text-[9px] py-0.25 px-1 rounded-[3px]"
+                              className="text-[9px] py-px px-1 rounded-[3px]"
                             >
                               snap
                             </span>
@@ -181,7 +181,7 @@ export default function TimelineView({ events, snapshots, currentSequenceId, onS
                         </div>
 
                         {Object.keys(ev.payload).length > 0 && (
-                          <div className="text-[10px] text-theme-text-muted mt-0.25 truncate">
+                          <div className="text-[10px] text-theme-text-muted mt-px truncate">
                             {Object.entries(ev.payload)
                               .slice(0, 3)
                               .map(([k, v]) => `${k}: ${String(v)}`)

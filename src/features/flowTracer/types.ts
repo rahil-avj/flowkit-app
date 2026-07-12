@@ -8,6 +8,7 @@ export type EventType =
   | 'session.resume'
   | 'session.remark'
   | 'session.presentation-mode-toggled'
+  | 'session.error'
   // Flow lifecycle
   | 'flow.entered'
   | 'flow.completed'

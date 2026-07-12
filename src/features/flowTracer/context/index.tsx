@@ -135,6 +135,7 @@ export function SessionRecorderProvider({
   const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const recentFlushRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastTapRef = useRef<{ elementId: string; time: number } | null>(null)
+  const logEventRef = useRef<SessionRecorderValue['logEvent'] | null>(null)
 
   // Crash recovery on mount
   useEffect(() => {
@@ -143,6 +144,40 @@ export function SessionRecorderProvider({
       if (match) setCrashSession(match)
     })
   }, [workspaceId])
+
+  // Global safety net: error boundaries only catch render/lifecycle errors.
+  // Anything thrown in an event handler, timer, or an unhandled promise
+  // rejection is otherwise invisible outside the browser console — capture it
+  // as session data too, when a session is active, so a replay isn't missing
+  // the one moment that mattered most.
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      if (!sessionIdRef.current) return
+      logEventRef.current?.('session.error', {
+        message: event.message,
+        stack: event.error?.stack,
+        source: event.filename,
+        line: event.lineno,
+        column: event.colno,
+        boundary: 'window',
+      })
+    }
+    const handleRejection = (event: PromiseRejectionEvent) => {
+      if (!sessionIdRef.current) return
+      const reason = event.reason
+      logEventRef.current?.('session.error', {
+        message: reason instanceof Error ? reason.message : String(reason),
+        stack: reason instanceof Error ? reason.stack : undefined,
+        boundary: 'unhandledrejection',
+      })
+    }
+    window.addEventListener('error', handleError)
+    window.addEventListener('unhandledrejection', handleRejection)
+    return () => {
+      window.removeEventListener('error', handleError)
+      window.removeEventListener('unhandledrejection', handleRejection)
+    }
+  }, [])
 
   // Elapsed timer — runs while recording, pauses when paused
   useEffect(() => {
@@ -326,6 +361,10 @@ export function SessionRecorderProvider({
     },
     [recState, channels, workspaceId, resetLiveState]
   )
+
+  useEffect(() => {
+    logEventRef.current = logEvent
+  }, [logEvent])
 
   const logCursorSample = useCallback(
     (sample: Omit<CursorSample, 'sessionId' | 'sequenceId'>) => {

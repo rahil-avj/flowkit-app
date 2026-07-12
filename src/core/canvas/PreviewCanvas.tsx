@@ -132,6 +132,7 @@ function DesktopCanvas({ flows, views }: Props) {
   const flowLens = useFlowLensModeOptional() ?? DISABLED_LENS
   const lensOn = flowLens.enabled
   const flowPlayback = useFlowPlaybackOptional()
+  const recorder = useSessionRecorderOptional()
 
   // ── Global overlays ──────────────────────────────────────────────────────────
   const [showGoTo, setShowGoTo] = useState(false)
@@ -587,6 +588,14 @@ function DesktopCanvas({ flows, views }: Props) {
               <div className="absolute inset-0 flex items-center justify-center text-xs opacity-40 pointer-events-none">
                 Replay unavailable — check the console
               </div>
+            }
+            onError={(error, info) =>
+              recorder?.logEvent('session.error', {
+                message: error.message,
+                stack: error.stack,
+                componentStack: info.componentStack,
+                boundary: 'panel:flowlens',
+              })
             }
           >
             <Suspense fallback={<FlowLensPanelSkeleton />}>
