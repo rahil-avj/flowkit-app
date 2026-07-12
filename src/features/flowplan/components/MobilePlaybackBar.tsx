@@ -24,7 +24,7 @@ export default function MobilePlaybackBar({ onStop }: MobilePlaybackBarProps) {
 
   return (
     <div
-      className="fixed top-4 inset-x-4 z-[100] flex items-center justify-between gap-2 px-3 py-2 rounded-full pointer-events-auto"
+      className="fixed top-4 inset-x-4 z-100 flex items-center justify-between gap-2 px-3 py-2 rounded-full pointer-events-auto"
       style={{
         background: 'rgba(17,17,20,0.82)',
         backdropFilter: 'blur(10px)',

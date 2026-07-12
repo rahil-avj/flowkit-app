@@ -50,6 +50,50 @@ export function setAtPath(draft: Record<string, unknown>, dotPath: string, value
   cursor[parts[parts.length - 1]] = value
 }
 
+// ─── Highlight contrast helpers ───────────────────────────────────────────────
+// Shared by desktop Settings and mobile settings so the Debug highlight preview's
+// contrast math and swatch choices can't drift between the two surfaces.
+
+export const HIGHLIGHT_SWATCHES = ['#f59e0b', '#3b82f6', '#22c55e', '#ef4444', '#a855f7', '#ec4899']
+
+// WCAG 2.x relative luminance + contrast ratio, from https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
+export function relativeLuminance(hex: string): number {
+  const n = hex.replace('#', '')
+  const [r, g, b] = [0, 2, 4].map(i => parseInt(n.slice(i, i + 2), 16) / 255)
+  const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+}
+export function contrastRatio(hexA: string, hexB: string): number {
+  const [l1, l2] = [relativeLuminance(hexA), relativeLuminance(hexB)].sort((a, b) => b - a)
+  return (l1 + 0.05) / (l2 + 0.05)
+}
+// Alpha-composites a semi-transparent foreground hex over an opaque backdrop hex,
+// so a partially/fully transparent highlight background is checked against what it
+// will actually render on top of — not treated as if it were fully opaque itself.
+export function compositeOverBackdrop(fgHex: string, alphaPct: number, backdropHex: string): string {
+  const alpha = alphaPct / 100
+  const fg = fgHex.replace('#', '')
+  const bg = backdropHex.replace('#', '')
+  const mix = (i: number) => {
+    const f = parseInt(fg.slice(i, i + 2), 16)
+    const b = parseInt(bg.slice(i, i + 2), 16)
+    return Math.round(f * alpha + b * (1 - alpha))
+      .toString(16)
+      .padStart(2, '0')
+  }
+  return `#${mix(0)}${mix(2)}${mix(4)}`
+}
+// Rounds to 2 decimal places, then trims trailing zeros (1.00 -> "1", 1.50 -> "1.5").
+export function formatRatio(ratio: number): string {
+  return ratio.toFixed(2).replace(/\.?0+$/, '')
+}
+export function contrastRating(ratio: number): { label: string; color: string } {
+  if (ratio >= 7) return { label: 'AAA', color: 'var(--color-theme-green)' }
+  if (ratio >= 4.5) return { label: 'AA', color: 'var(--color-theme-green)' }
+  if (ratio >= 3) return { label: 'AA Large', color: 'var(--color-theme-amber)' }
+  return { label: 'Fail', color: 'var(--color-theme-red)' }
+}
+
 // ─── Copy-path hook ───────────────────────────────────────────────────────────
 
 export function useCopyPath() {

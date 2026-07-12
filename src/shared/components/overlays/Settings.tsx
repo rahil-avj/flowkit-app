@@ -1,6 +1,13 @@
 import type { ColorBlindMode } from '@flowkit/types/index'
 import { useFeedback } from '@flowkit-features/feedback'
-import { useDbHighlightSettings } from '@flowkit-features/flow-debugger'
+import {
+  compositeOverBackdrop,
+  contrastRating,
+  contrastRatio,
+  formatRatio,
+  HIGHLIGHT_SWATCHES,
+  useDbHighlightSettings,
+} from '@flowkit-features/flow-debugger'
 import { type HighlightColor, useFlowplanSettings } from '@flowkit-features/flowplan'
 import { useSessionSettings } from '@flowkit-features/flowTracer'
 import { LS_LEFT_PANEL_W, LS_RIGHT_PANEL_W } from '@flowkit-shared/constants/storageKeys'
@@ -229,46 +236,6 @@ const WRONG_CLICK_SWATCHES: { value: HighlightColor; hex: string }[] = [
   { value: 'purple', hex: '#a855f7' },
   { value: 'yellow', hex: '#eab308' },
 ]
-
-const HIGHLIGHT_SWATCHES = ['#f59e0b', '#3b82f6', '#22c55e', '#ef4444', '#a855f7', '#ec4899']
-
-// WCAG 2.x relative luminance + contrast ratio, from https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
-function relativeLuminance(hex: string): number {
-  const n = hex.replace('#', '')
-  const [r, g, b] = [0, 2, 4].map(i => parseInt(n.slice(i, i + 2), 16) / 255)
-  const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
-  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
-}
-function contrastRatio(hexA: string, hexB: string): number {
-  const [l1, l2] = [relativeLuminance(hexA), relativeLuminance(hexB)].sort((a, b) => b - a)
-  return (l1 + 0.05) / (l2 + 0.05)
-}
-// Alpha-composites a semi-transparent foreground hex over an opaque backdrop hex,
-// so a partially/fully transparent highlight background is checked against what it
-// will actually render on top of — not treated as if it were fully opaque itself.
-function compositeOverBackdrop(fgHex: string, alphaPct: number, backdropHex: string): string {
-  const alpha = alphaPct / 100
-  const fg = fgHex.replace('#', '')
-  const bg = backdropHex.replace('#', '')
-  const mix = (i: number) => {
-    const f = parseInt(fg.slice(i, i + 2), 16)
-    const b = parseInt(bg.slice(i, i + 2), 16)
-    return Math.round(f * alpha + b * (1 - alpha))
-      .toString(16)
-      .padStart(2, '0')
-  }
-  return `#${mix(0)}${mix(2)}${mix(4)}`
-}
-// Rounds to 2 decimal places, then trims trailing zeros (1.00 -> "1", 1.50 -> "1.5").
-function formatRatio(ratio: number): string {
-  return ratio.toFixed(2).replace(/\.?0+$/, '')
-}
-function contrastRating(ratio: number): { label: string; color: string } {
-  if (ratio >= 7) return { label: 'AAA', color: 'var(--color-theme-green)' }
-  if (ratio >= 4.5) return { label: 'AA', color: 'var(--color-theme-green)' }
-  if (ratio >= 3) return { label: 'AA Large', color: 'var(--color-theme-amber)' }
-  return { label: 'Fail', color: 'var(--color-theme-red)' }
-}
 
 function DebugSection() {
   const {

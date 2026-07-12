@@ -17,6 +17,7 @@ import { Z } from '@flowkit-shared/constants/zIndex'
 import {
   Activity, // inspect sub-tabs + feedback top tab
   Briefcase, // settings sub-tabs
+  Bug,
   ChevronLeft,
   Compass,
   Database,
@@ -45,7 +46,7 @@ import MobileFAB, { type MobileTab } from './MobileFAB'
 // ── Sub-tab definitions per top-level tab ─────────────────────────────────────
 
 type RightSubTab = 'info' | 'simulator' | 'flow' | 'db' | 'sessions'
-type SettingsSubTab = 'interface' | 'panel' | 'sessions' | 'workspace'
+type SettingsSubTab = 'interface' | 'panel' | 'sessions' | 'workspace' | 'debug'
 
 interface SubTabDef {
   id: string
@@ -66,6 +67,7 @@ const SETTINGS_SUBTABS: SubTabDef[] = [
   { id: 'panel', icon: <LayoutPanelLeft size={15} />, label: 'Panel' },
   { id: 'sessions', icon: <Video size={15} />, label: 'Sessions' },
   { id: 'workspace', icon: <Briefcase size={15} />, label: 'Workspace' },
+  { id: 'debug', icon: <Bug size={15} />, label: 'Debug' },
 ]
 
 // ── Rail + content shell shared by Left, Right, Settings tabs ─────────────────
@@ -385,6 +387,14 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
 import type { ColorBlindMode } from '@flowkit/types/index'
 import { workspaces } from '@flowkit/workspaces'
 import {
+  compositeOverBackdrop,
+  contrastRating,
+  contrastRatio,
+  formatRatio,
+  HIGHLIGHT_SWATCHES,
+  useDbHighlightSettings,
+} from '@flowkit-features/flow-debugger'
+import {
   LS_AUTO_HIDE_SCROLLBARS,
   LS_LEFT_PANEL_W,
   LS_RIGHT_PANEL_W,
@@ -549,6 +559,10 @@ function MobileSettingsContent({ section, ctx }: MobileSettingsContentProps) {
     )
   }
 
+  if (section === 'debug') {
+    return <MobileDebugSettings />
+  }
+
   // sessions
   return (
     <div>
@@ -580,6 +594,140 @@ function MobileSettingsContent({ section, ctx }: MobileSettingsContentProps) {
           checked={settings.stateChanges}
           onChange={() => saveSettings({ ...settings, stateChanges: !settings.stateChanges })}
         />
+      </SettingRow>
+    </div>
+  )
+}
+
+// Swatch + rainbow-gradient custom color picker, matching the desktop Settings shape.
+function ColorSwatchPicker({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (hex: string) => void
+}) {
+  return (
+    <div className="flex items-center gap-1.5">
+      {HIGHLIGHT_SWATCHES.map(hex => (
+        <button
+          key={hex}
+          onClick={() => onChange(hex)}
+          title={hex}
+          aria-label={hex}
+          className="rounded-full cursor-pointer size-5"
+          style={{
+            background: hex,
+            border:
+              value === hex ? '2px solid var(--color-theme-text-primary)' : '2px solid transparent',
+            outline: value === hex ? `1px solid ${hex}` : 'none',
+            outlineOffset: 1,
+          }}
+        />
+      ))}
+      <span
+        className="relative rounded-full cursor-pointer size-5 overflow-hidden"
+        style={{
+          background:
+            'radial-gradient(circle, #fff 0%, transparent 60%), conic-gradient(from 90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)',
+        }}
+        title="Custom color"
+      >
+        <input
+          type="color"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          aria-label="Custom color"
+          className="absolute inset-0 size-full opacity-0 cursor-pointer border-none bg-transparent p-0"
+        />
+      </span>
+    </div>
+  )
+}
+
+function MobileDebugSettings() {
+  const {
+    highlightBg,
+    setHighlightBg,
+    highlightText,
+    setHighlightText,
+    highlightOpacity,
+    setHighlightOpacity,
+    highlightRadius,
+    setHighlightRadius,
+  } = useDbHighlightSettings()
+  const { theme } = useTheme()
+  // The highlight renders inside DbInspector's <pre>, which sits on bg-theme-elevated —
+  // composite the (possibly transparent) highlight bg over that real backdrop, per theme mode.
+  const effectiveBg = compositeOverBackdrop(highlightBg, highlightOpacity, theme.bg.elevated)
+  const ratio = contrastRatio(effectiveBg, highlightText)
+  const rating = contrastRating(ratio)
+
+  return (
+    <div>
+      <SectionLabel title="Search highlight" />
+      <SettingRow label="Background color" hint="Highlight background color.">
+        <ColorSwatchPicker value={highlightBg} onChange={setHighlightBg} />
+      </SettingRow>
+      <SettingRow label="Text color" hint="Highlight text color.">
+        <ColorSwatchPicker value={highlightText} onChange={setHighlightText} />
+      </SettingRow>
+      <SettingRow label="Background opacity" hint="Transparency of the highlight background.">
+        <div className="flex items-center gap-2">
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={5}
+            value={highlightOpacity}
+            onChange={e => setHighlightOpacity(Number(e.target.value))}
+            className="w-24 accent-theme-blue cursor-pointer"
+          />
+          <span className="text-ui-xs text-theme-text-muted w-9 tabular-nums">
+            {highlightOpacity}%
+          </span>
+        </div>
+      </SettingRow>
+      <SettingRow label="Corner radius" hint="Roundness of the highlight's corners.">
+        <div className="flex items-center gap-2">
+          <input
+            type="range"
+            min={0}
+            max={12}
+            step={1}
+            value={highlightRadius}
+            onChange={e => setHighlightRadius(Number(e.target.value))}
+            className="w-24 accent-theme-blue cursor-pointer"
+          />
+          <span className="text-ui-xs text-theme-text-muted w-9 tabular-nums">
+            {highlightRadius}px
+          </span>
+        </div>
+      </SettingRow>
+      <SettingRow
+        label="Preview"
+        hint="Live preview and contrast, with background opacity composited over the panel."
+      >
+        <div className="flex items-center gap-2">
+          <span
+            className="font-mono text-ui-xs px-1"
+            style={{
+              background: `${highlightBg}${Math.round((highlightOpacity / 100) * 255)
+                .toString(16)
+                .padStart(2, '0')}`,
+              color: highlightText,
+              borderRadius: highlightRadius,
+            }}
+          >
+            match
+          </span>
+          <span className="flex items-center gap-1 text-ui-xs text-theme-text-muted">
+            {formatRatio(ratio)}:1
+            <span className="font-semibold" style={{ color: rating.color }}>
+              {rating.label}
+            </span>
+          </span>
+        </div>
       </SettingRow>
     </div>
   )
