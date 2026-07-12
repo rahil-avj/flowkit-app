@@ -144,12 +144,20 @@ export default function KitSideExplorer({
     writeStorage(STORAGE_LEFT_TAB, tab)
   }, [tab])
 
+  const [search, setSearch] = useState('')
+  const [flowDetailOpen, setFlowDetailOpen] = useState(false)
+  const searchRef = useRef<HTMLInputElement>(null)
+  const focusSearch = useCallback(() => searchRef.current?.focus(), [])
+
   const activateTab = useCallback(
     (t: LeftTab) => {
       if (t === tab && isOpen) {
         onOpenChange(false)
       } else {
-        if (t !== tab) setFilterState({})
+        if (t !== tab) {
+          setFilterState({})
+          setFlowDetailOpen(false)
+        }
         setTab(t)
         onOpenChange(true)
       }
@@ -157,13 +165,12 @@ export default function KitSideExplorer({
     [tab, isOpen, onOpenChange]
   )
 
-  const [search, setSearch] = useState('')
-  const [flowDetailOpen, setFlowDetailOpen] = useState(false)
-  const searchRef = useRef<HTMLInputElement>(null)
-  const focusSearch = useCallback(() => searchRef.current?.focus(), [])
   useSidebarShortcuts({
     tabs: Object.keys(LEFT_TAB_META) as LeftTab[],
-    setTab: t => setTab(t as LeftTab),
+    setTab: t => {
+      if (t !== tab) setFlowDetailOpen(false)
+      setTab(t as LeftTab)
+    },
     focusSearch,
   })
   useNavigationShortcuts({ flows, activeViewId, navigateTo })
@@ -174,6 +181,7 @@ export default function KitSideExplorer({
         if (cmd.type === 'switchTab') {
           const isFullscreen = !!document.fullscreenElement
           if (isFullscreen || bare) return
+          setFlowDetailOpen(false)
           setTab(cmd.tab)
           onOpenChange(true)
         }
@@ -194,7 +202,7 @@ export default function KitSideExplorer({
         toolbar={
           <div
             className="p-2 flex items-center gap-2"
-            style={{ display: flowDetailOpen ? 'none' : undefined }}
+            style={{ display: tab === 'flows' && flowDetailOpen ? 'none' : undefined }}
           >
             <Input
               ref={searchRef}
@@ -320,7 +328,10 @@ export default function KitSideExplorer({
             return (
               <button
                 key={t}
-                onClick={() => setTab(t)}
+                onClick={() => {
+                  if (t !== tab) setFlowDetailOpen(false)
+                  setTab(t)
+                }}
                 title={LEFT_TAB_META[t].label}
                 className={`relative w-full h-11 flex items-center justify-center border-none cursor-pointer transition-colors duration-120 ${active ? 'bg-theme-base text-theme-blue' : 'bg-transparent text-theme-text-muted hover:text-theme-text-secondary'}`}
               >
@@ -350,7 +361,7 @@ export default function KitSideExplorer({
             key={t}
             label={LEFT_TAB_META[t].label}
             icon={LEFT_TAB_META[t].icon}
-            isActive={t === tab}
+            isActive={t === tab && isOpen}
             onClick={() => activateTab(t)}
             activeColor="var(--theme-accent-blue)"
           />

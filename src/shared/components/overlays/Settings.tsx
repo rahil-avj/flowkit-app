@@ -1,9 +1,11 @@
 import type { ColorBlindMode } from '@flowkit/types/index'
 import { useFeedback } from '@flowkit-features/feedback'
+import { useDbHighlightSettings } from '@flowkit-features/flow-debugger'
 import { type HighlightColor, useFlowplanSettings } from '@flowkit-features/flowplan'
 import { useSessionSettings } from '@flowkit-features/flowTracer'
 import { LS_LEFT_PANEL_W, LS_RIGHT_PANEL_W } from '@flowkit-shared/constants/storageKeys'
 import {
+  Bug,
   LayoutPanelLeft,
   MessageSquare,
   Monitor,
@@ -25,7 +27,7 @@ import OverlayShell from './OverlayShell'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SectionId = 'interface' | 'panel' | 'flowplans' | 'feedback' | 'sessions'
+type SectionId = 'interface' | 'panel' | 'flowplans' | 'feedback' | 'sessions' | 'debug'
 
 interface Section {
   id: SectionId
@@ -43,7 +45,7 @@ interface RowProps {
 
 function SettingRow({ label, hint, children }: RowProps) {
   return (
-    <div className="flex items-center justify-between gap-6 py-2.5 border-b border-theme-border">
+    <div className="flex items-center justify-between gap-2 py-2 border-b border-theme-border">
       <div className="flex-1 min-w-0">
         <div className="text-ui-sm text-theme-text-primary font-medium">{label}</div>
         {hint && (
@@ -62,8 +64,8 @@ interface GroupProps {
 
 function SettingGroup({ title, children }: GroupProps) {
   return (
-    <div className="mb-7">
-      <div className="text-ui-2xs font-extrabold tracking-[0.09em] uppercase text-theme-text-disabled mb-1 pb-1.5">
+    <div className="mb-3">
+      <div className="text-ui-2xs font-extrabold tracking-[0.09em] uppercase text-theme-text-disabled mb-2">
         {title}
       </div>
       <div>{children}</div>
@@ -79,7 +81,7 @@ interface SectionHeaderProps {
 
 function SectionHeader({ icon, title, description }: SectionHeaderProps) {
   return (
-    <div className="flex items-start gap-3 mb-6 pb-5 border-b border-theme-border">
+    <div className="flex items-start gap-2 mb-2 pb-2 border-b border-theme-border">
       <div className="rounded-lg shrink-0 flex items-center justify-center bg-theme-elevated border border-theme-border text-theme-text-secondary size-8">
         {icon}
       </div>
@@ -227,6 +229,215 @@ const WRONG_CLICK_SWATCHES: { value: HighlightColor; hex: string }[] = [
   { value: 'purple', hex: '#a855f7' },
   { value: 'yellow', hex: '#eab308' },
 ]
+
+const HIGHLIGHT_SWATCHES = ['#f59e0b', '#3b82f6', '#22c55e', '#ef4444', '#a855f7', '#ec4899']
+
+// WCAG 2.x relative luminance + contrast ratio, from https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
+function relativeLuminance(hex: string): number {
+  const n = hex.replace('#', '')
+  const [r, g, b] = [0, 2, 4].map(i => parseInt(n.slice(i, i + 2), 16) / 255)
+  const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+}
+function contrastRatio(hexA: string, hexB: string): number {
+  const [l1, l2] = [relativeLuminance(hexA), relativeLuminance(hexB)].sort((a, b) => b - a)
+  return (l1 + 0.05) / (l2 + 0.05)
+}
+// Alpha-composites a semi-transparent foreground hex over an opaque backdrop hex,
+// so a partially/fully transparent highlight background is checked against what it
+// will actually render on top of — not treated as if it were fully opaque itself.
+function compositeOverBackdrop(fgHex: string, alphaPct: number, backdropHex: string): string {
+  const alpha = alphaPct / 100
+  const fg = fgHex.replace('#', '')
+  const bg = backdropHex.replace('#', '')
+  const mix = (i: number) => {
+    const f = parseInt(fg.slice(i, i + 2), 16)
+    const b = parseInt(bg.slice(i, i + 2), 16)
+    return Math.round(f * alpha + b * (1 - alpha))
+      .toString(16)
+      .padStart(2, '0')
+  }
+  return `#${mix(0)}${mix(2)}${mix(4)}`
+}
+// Rounds to 2 decimal places, then trims trailing zeros (1.00 -> "1", 1.50 -> "1.5").
+function formatRatio(ratio: number): string {
+  return ratio.toFixed(2).replace(/\.?0+$/, '')
+}
+function contrastRating(ratio: number): { label: string; color: string } {
+  if (ratio >= 7) return { label: 'AAA', color: 'var(--color-theme-green)' }
+  if (ratio >= 4.5) return { label: 'AA', color: 'var(--color-theme-green)' }
+  if (ratio >= 3) return { label: 'AA Large', color: 'var(--color-theme-amber)' }
+  return { label: 'Fail', color: 'var(--color-theme-red)' }
+}
+
+function DebugSection() {
+  const {
+    highlightBg,
+    setHighlightBg,
+    highlightText,
+    setHighlightText,
+    highlightOpacity,
+    setHighlightOpacity,
+    highlightRadius,
+    setHighlightRadius,
+  } = useDbHighlightSettings()
+  const { theme } = useTheme()
+  // The highlight renders inside DbInspector's <pre>, which sits on bg-theme-elevated —
+  // composite the (possibly transparent) highlight bg over that real backdrop, per theme mode.
+  const effectiveBg = compositeOverBackdrop(highlightBg, highlightOpacity, theme.bg.elevated)
+
+  return (
+    <div>
+      <SectionHeader
+        icon={<Bug size={15} />}
+        title="Debug"
+        description="Customize the database inspector's search-match highlight."
+      />
+
+      <SettingGroup title="Search highlight">
+        <SettingRow label="Background color" hint="Highlight background color.">
+          <div className="flex items-center gap-1.5">
+            {HIGHLIGHT_SWATCHES.map(hex => (
+              <button
+                key={hex}
+                onClick={() => setHighlightBg(hex)}
+                title={hex}
+                aria-label={hex}
+                className="rounded-full cursor-pointer size-4.5"
+                style={{
+                  background: hex,
+                  border:
+                    highlightBg === hex
+                      ? '2px solid var(--color-theme-text-primary)'
+                      : '2px solid transparent',
+                  outline: highlightBg === hex ? `1px solid ${hex}` : 'none',
+                  outlineOffset: 1,
+                }}
+              />
+            ))}
+            <span
+              className="relative rounded-full cursor-pointer size-4.5 overflow-hidden"
+              style={{
+                background:
+                  'radial-gradient(circle, #fff 0%, transparent 60%), conic-gradient(from 90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)',
+              }}
+              title="Custom color"
+            >
+              <input
+                type="color"
+                value={highlightBg}
+                onChange={e => setHighlightBg(e.target.value)}
+                aria-label="Custom color"
+                className="absolute inset-0 size-full opacity-0 cursor-pointer border-none bg-transparent p-0"
+              />
+            </span>
+          </div>
+        </SettingRow>
+        <SettingRow label="Text color" hint="Highlight text color.">
+          <div className="flex items-center gap-1.5">
+            {HIGHLIGHT_SWATCHES.map(hex => (
+              <button
+                key={hex}
+                onClick={() => setHighlightText(hex)}
+                title={hex}
+                aria-label={hex}
+                className="rounded-full cursor-pointer size-4.5"
+                style={{
+                  background: hex,
+                  border:
+                    highlightText === hex
+                      ? '2px solid var(--color-theme-text-primary)'
+                      : '2px solid transparent',
+                  outline: highlightText === hex ? `1px solid ${hex}` : 'none',
+                  outlineOffset: 1,
+                }}
+              />
+            ))}
+            <span
+              className="relative rounded-full cursor-pointer size-4.5 overflow-hidden"
+              style={{
+                background:
+                  'radial-gradient(circle, #fff 0%, transparent 60%), conic-gradient(from 90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)',
+              }}
+              title="Custom color"
+            >
+              <input
+                type="color"
+                value={highlightText}
+                onChange={e => setHighlightText(e.target.value)}
+                aria-label="Custom color"
+                className="absolute inset-0 size-full opacity-0 cursor-pointer border-none bg-transparent p-0"
+              />
+            </span>
+          </div>
+        </SettingRow>
+        <SettingRow label="Background opacity" hint="Transparency of the highlight background.">
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={highlightOpacity}
+              onChange={e => setHighlightOpacity(Number(e.target.value))}
+              className="w-30 accent-theme-blue cursor-pointer"
+            />
+            <span className="text-ui-xs text-theme-text-muted w-9 [font-variant-numeric:tabular-nums]">
+              {highlightOpacity}%
+            </span>
+          </div>
+        </SettingRow>
+        <SettingRow label="Corner radius" hint="Roundness of the highlight's corners.">
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min={0}
+              max={12}
+              step={1}
+              value={highlightRadius}
+              onChange={e => setHighlightRadius(Number(e.target.value))}
+              className="w-30 accent-theme-blue cursor-pointer"
+            />
+            <span className="text-ui-xs text-theme-text-muted w-9 [font-variant-numeric:tabular-nums]">
+              {highlightRadius}px
+            </span>
+          </div>
+        </SettingRow>
+        <SettingRow
+          label="Preview"
+          hint="Live preview and contrast, with background opacity composited over the panel."
+        >
+          <div className="flex items-center gap-2">
+            <span
+              className="font-mono text-ui-xs px-1"
+              style={{
+                background: `${highlightBg}${Math.round((highlightOpacity / 100) * 255)
+                  .toString(16)
+                  .padStart(2, '0')}`,
+                color: highlightText,
+                borderRadius: highlightRadius,
+              }}
+            >
+              match
+            </span>
+            {(() => {
+              const ratio = contrastRatio(effectiveBg, highlightText)
+              const rating = contrastRating(ratio)
+              return (
+                <span className="flex items-center gap-1 text-ui-xs text-theme-text-muted">
+                  {formatRatio(ratio)}:1
+                  <span className="font-semibold" style={{ color: rating.color }}>
+                    {rating.label}
+                  </span>
+                </span>
+              )
+            })()}
+          </div>
+        </SettingRow>
+      </SettingGroup>
+    </div>
+  )
+}
 
 function FlowPlansSection() {
   const {
@@ -518,6 +729,7 @@ const SECTIONS: Section[] = [
   { id: 'flowplans', label: 'Flow Plans', icon: <Workflow size={14} /> },
   { id: 'feedback', label: 'Feedback', icon: <MessageSquare size={14} /> },
   { id: 'sessions', label: 'Sessions', icon: <Video size={14} /> },
+  { id: 'debug', label: 'Debug', icon: <Bug size={14} /> },
 ]
 
 function SidebarNav({
@@ -528,12 +740,7 @@ function SidebarNav({
   onSelect: (id: SectionId) => void
 }) {
   return (
-    <nav className="w-42 shrink-0 flex flex-col border-r border-theme-border p-[8px_6px] bg-theme-elevated">
-      <div className="p-[8px_6px_12px] mb-1">
-        <span className="text-ui-2xs font-extrabold tracking-[0.09em] uppercase text-theme-text-disabled">
-          Settings
-        </span>
-      </div>
+    <nav className="w-42 shrink-0 flex flex-col border-r border-theme-border p-2 bg-theme-elevated">
       {SECTIONS.map(s => {
         const isActive = s.id === active
         return (
@@ -575,6 +782,7 @@ export default function Settings({ onClose, ctx, initialSection = 'interface' }:
     flowplans: <FlowPlansSection />,
     feedback: <FeedbackSection ctx={ctx} />,
     sessions: <SessionsSection ctx={ctx} />,
+    debug: <DebugSection />,
   }[active]
 
   return (
@@ -593,7 +801,7 @@ export default function Settings({ onClose, ctx, initialSection = 'interface' }:
       {/* Sidebar + Body */}
       <div className="flex flex-1 overflow-hidden min-h-0">
         <SidebarNav active={active} onSelect={setActive} />
-        <div className="flex-1 overflow-y-auto p-[24px_28px]">{panel}</div>
+        <div className="flex-1 overflow-y-auto py-3 px-4">{panel}</div>
       </div>
     </OverlayShell>
   )

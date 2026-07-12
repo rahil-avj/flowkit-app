@@ -93,7 +93,16 @@ export default function FlowLibrary({
     return (
       <FlowDetail
         summary={selected}
-        onBack={() => setSelectedId(null)}
+        onBack={() => {
+          if (isSelectedPlaying) {
+            playback?.exit()
+            // Same as onStop below — must navigate OFF the `-play` runner view,
+            // otherwise FlowMaster stays mounted with its already-compiled flow
+            // and keeps rendering flowplan hints/captions after exit().
+            navigateTo(activeSourceScreenId ?? firstViewId ?? 'home')
+          }
+          setSelectedId(null)
+        }}
         onPlay={() => navigateTo(`${selected.id}-play`)}
         onStop={() => {
           playback?.exit()
@@ -237,7 +246,7 @@ function FlowCard({ summary, onSelect }: FlowCardProps) {
                 {last.stepsReached}/{last.totalSteps}
               </span>
               {/* Inline progress track */}
-              <div className="flex-1 rounded-full overflow-hidden h-[3px] bg-theme-border">
+              <div className="flex-1 rounded-full overflow-hidden h-0.75 bg-theme-border">
                 {progress !== null && (
                   <div
                     className="h-full rounded-full bg-linear-to-r from-[#6366f1] to-[#818cf8]"
@@ -484,69 +493,58 @@ function StepRow({
   }, [isActive])
 
   return (
-    <div className="flex flex-col">
-      <div ref={ref} className="flex items-start gap-2 py-1">
-        {/* Line-number style counter — only at root depth */}
+    <>
+      {/* Step card */}
+      <div
+        ref={ref}
+        className={`relative mt-3 mb-1 rounded-lg px-2.5 py-2 flex flex-col gap-1 transition-all ${isActive ? '' : 'bg-theme-elevated border border-theme-border'}`}
+        style={
+          isActive
+            ? {
+                background: 'color-mix(in srgb, var(--color-theme-blue) 10%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--color-theme-blue) 45%, transparent)',
+                boxShadow: '0 0 0 2px color-mix(in srgb, var(--color-theme-blue) 12%, transparent)',
+              }
+            : undefined
+        }
+      >
+        {/* Line-number style counter — only at root depth — hangs off the top-left corner */}
         {depth === 0 && (
           <span
-            className="font-mono shrink-0 text-right select-none pt-2 text-[10px] min-w-5 tracking-wider"
-            style={{ color: isActive ? '#6366f1' : 'var(--color-theme-text-disabled, #555)' }}
+            className={`absolute -top-2 -left-1.5 px-1.5 py-px rounded text-[10px] font-mono font-semibold select-none tracking-wider shadow-theme-card ${isActive ? 'text-white bg-theme-blue' : 'text-theme-text-muted bg-theme-elevated border border-theme-border'}`}
           >
             {String(num).padStart(2, '0')}
           </span>
         )}
+        {isActive && (
+          <span className="absolute -top-2 -right-1.5 flex items-center gap-1 px-1.5 py-px rounded text-[10px] font-semibold text-white bg-theme-blue shadow-theme-card">
+            here
+          </span>
+        )}
+        <span className={`font-mono font-semibold text-ui-xs ${isActive ? 'text-theme-blue' : ''}`}>
+          {step.screenId}
+        </span>
+        {step.on && (
+          <span className="font-mono self-start px-1.5 py-0.5 rounded text-[10px] text-theme-text-muted bg-theme-base">
+            tap #{step.on}
+          </span>
+        )}
 
-        {/* Step card */}
-        <div
-          className={`flex-1 rounded-lg px-2.5 py-2 flex flex-col gap-1 transition-all ${isActive ? '' : 'bg-theme-elevated border border-theme-border'}`}
-          style={
-            isActive
-              ? {
-                  background: 'rgba(99,102,241,0.1)',
-                  border: '1px solid rgba(99,102,241,0.45)',
-                  boxShadow: '0 0 0 2px rgba(99,102,241,0.12)',
-                }
-              : undefined
-          }
-        >
-          <div className="flex items-center gap-2">
-            <span
-              className="font-mono font-semibold text-ui-xs"
-              style={{ color: isActive ? '#818cf8' : undefined }}
-            >
-              {step.screenId}
-            </span>
-            {isActive && (
-              <span
-                className="flex items-center gap-1 px-1.5 py-px rounded text-[10px] font-semibold"
-                style={{ background: 'rgba(99,102,241,0.2)', color: '#818cf8' }}
-              >
-                here
-              </span>
-            )}
-            {step.on && (
-              <span className="font-mono px-1.5 py-0.5 rounded text-[10px] text-theme-text-muted bg-theme-base">
-                tap #{step.on}
-              </span>
-            )}
-          </div>
+        {step.actionNote && (
+          <p className="text-ui-xs text-theme-text-secondary leading-[1.45]">{step.actionNote}</p>
+        )}
 
-          {step.actionNote && (
-            <p className="text-ui-xs text-theme-text-secondary leading-[1.45]">{step.actionNote}</p>
-          )}
+        {step.annotation && (
+          <p className="px-2 py-1 rounded-md italic text-ui-2xs text-theme-amber bg-theme-amber-dim leading-[1.45]">
+            {step.annotation}
+          </p>
+        )}
 
-          {step.annotation && (
-            <p className="px-2 py-1 rounded-md italic text-ui-2xs text-theme-amber bg-theme-amber-dim leading-[1.45]">
-              {step.annotation}
-            </p>
-          )}
-
-          {step.db && (
-            <p className="font-mono text-ui-2xs text-theme-green">
-              db: {Object.keys(step.db).join(', ')}
-            </p>
-          )}
-        </div>
+        {step.db && (
+          <p className="font-mono text-ui-2xs text-theme-green">
+            db: {Object.keys(step.db).join(', ')}
+          </p>
+        )}
       </div>
 
       {/* Forks */}
@@ -569,7 +567,7 @@ function StepRow({
           />
         </div>
       ))}
-    </div>
+    </>
   )
 }
 

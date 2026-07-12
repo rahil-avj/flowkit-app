@@ -10,9 +10,9 @@
  */
 
 import EmptyState from '@flowkit-shared/components/ui/EmptyState'
+import IconButton from '@flowkit-shared/components/ui/IconButton'
 import Tooltip from '@flowkit-shared/components/ui/Tooltip'
 import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
-import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import {
   Check,
   ChevronRight,
@@ -26,69 +26,67 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+import { useDbHighlightSettings } from './DbHighlightSettingsContext'
+import { countMatches, nodeMatches, setAtPath, typeOf, useCopyPath } from './dbInspectorHelpers'
 
-function typeOf(val: unknown): 'null' | 'boolean' | 'number' | 'string' | 'array' | 'object' {
-  if (val === null) return 'null'
-  if (Array.isArray(val)) return 'array'
-  return typeof val as 'boolean' | 'number' | 'string' | 'object'
+// ─── Highlighted text ─────────────────────────────────────────────────────────
+
+/** Converts a #rrggbb hex + 0-100 opacity into an rgba() string. */
+function hexToRgba(hex: string, opacityPct: number): string {
+  const clean = hex.replace('#', '')
+  const r = parseInt(clean.slice(0, 2), 16)
+  const g = parseInt(clean.slice(2, 4), 16)
+  const b = parseInt(clean.slice(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, ${opacityPct / 100})`
 }
 
-function nodeMatches(key: string, val: unknown, query: string): boolean {
-  const q = query.toLowerCase()
-  if (key.toLowerCase().includes(q)) return true
-  if (typeof val === 'string' && val.toLowerCase().includes(q)) return true
-  if (typeof val === 'number' && String(val).includes(q)) return true
-  if (typeof val === 'boolean' && String(val).includes(q)) return true
-  if (val !== null && typeof val === 'object') {
-    return Object.entries(val as object).some(([k, v]) => nodeMatches(k, v, query))
-  }
-  return false
-}
+/** Renders `text` with every case-insensitive occurrence of `query` wrapped in a <mark>. */
+function HighlightedText({ text, query }: { text: string; query: string }) {
+  const { highlightBg, highlightText, highlightOpacity, highlightRadius } =
+    useDbHighlightSettings()
 
-/** Walk a dot-path like "user.plan" and set the value on the draft. */
-function setAtPath(draft: Record<string, unknown>, dotPath: string, value: unknown) {
-  const parts = dotPath.split('.')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let cursor: any = draft
-  for (let i = 0; i < parts.length - 1; i++) {
-    cursor = cursor[parts[i]]
-    if (cursor == null) return
-  }
-  cursor[parts[parts.length - 1]] = value
-}
+  if (!query) return <>{text}</>
 
-// ─── Copy hook ────────────────────────────────────────────────────────────────
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const parts = text.split(new RegExp(`(${escaped})`, 'gi'))
 
-function useCopyPath() {
-  const [copiedPath, setCopiedPath] = useState<string | null>(null)
-  const copy = useCallback((path: string) => {
-    navigator.clipboard.writeText(path).catch(() => {})
-    setCopiedPath(path)
-    setTimeout(() => setCopiedPath(null), 1500)
-  }, [])
-  return { copiedPath, copy }
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === query.toLowerCase() ? (
+          <mark
+            key={i}
+            style={{
+              background: hexToRgba(highlightBg, highlightOpacity),
+              color: highlightText,
+              borderRadius: highlightRadius,
+            }}
+          >
+            {part}
+          </mark>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  )
 }
 
 // ─── Type badge ───────────────────────────────────────────────────────────────
 
-function TypeBadge({ val, theme }: { val: unknown; theme: ReturnType<typeof useTheme>['theme'] }) {
-  const { scale } = useTheme()
+function TypeBadge({ val }: { val: unknown }) {
   const t = typeOf(val)
   const configs = {
-    boolean: { label: 'bool', bg: theme.accent.amberDim, color: theme.accent.amber },
-    number: { label: 'num', bg: theme.accent.blueDim, color: theme.accent.blue },
-    string: { label: 'str', bg: theme.accent.greenDim, color: theme.accent.green },
-    null: { label: 'null', bg: theme.bg.hover, color: theme.text.disabled },
-    array: { label: '[ ]', bg: theme.accent.purpleDim, color: theme.accent.purple },
-    object: { label: '{ }', bg: theme.bg.hover, color: theme.text.muted },
+    boolean: { label: 'bool', className: 'bg-theme-amber-dim text-theme-amber' },
+    number: { label: 'num', className: 'bg-theme-blue-dim text-theme-blue' },
+    string: { label: 'str', className: 'bg-theme-green-dim text-theme-green' },
+    null: { label: 'null', className: 'bg-theme-hover text-theme-text-disabled' },
+    array: { label: '[ ]', className: 'bg-theme-purple-dim text-theme-purple' },
+    object: { label: '{ }', className: 'bg-theme-hover text-theme-text-muted' },
   }
-  const { label, bg, color } = configs[t]
+  const { label, className } = configs[t]
   return (
-    <span
-      className="shrink-0 font-black px-1 py-0.5 rounded font-mono"
-      style={{ fontSize: scale.text.xxs, background: bg, color }}
-    >
+    <span className={`shrink-0 font-black px-1 py-0.5 rounded font-mono text-ui-2xs ${className}`}>
       {label}
     </span>
   )
@@ -99,12 +97,10 @@ function TypeBadge({ val, theme }: { val: unknown; theme: ReturnType<typeof useT
 interface InlineEditorProps {
   val: unknown
   dotPath: string // path without "db." prefix, e.g. "user.plan"
-  theme: ReturnType<typeof useTheme>['theme']
   updateDb: (updater: (db: unknown) => void) => void
 }
 
-function InlineEditor({ val, dotPath, theme, updateDb }: InlineEditorProps) {
-  const { scale } = useTheme()
+function InlineEditor({ val, dotPath, updateDb }: InlineEditorProps) {
   const t = typeOf(val)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
@@ -131,13 +127,11 @@ function InlineEditor({ val, dotPath, theme, updateDb }: InlineEditorProps) {
   if (t === 'boolean') {
     return (
       <button
-        className="flex items-center gap-1 px-1.5 py-0.5 rounded font-mono font-semibold transition-colors"
-        style={{
-          fontSize: scale.text.xs,
-          background: val ? theme.accent.amberDim : theme.bg.hover,
-          color: val ? theme.accent.amber : theme.text.muted,
-          border: `1px solid ${val ? theme.accent.amber + '40' : theme.bg.border}`,
-        }}
+        className={`flex items-center gap-1 px-1.5 py-0.5 rounded font-mono font-semibold text-ui-xs border transition-colors ${
+          val
+            ? 'bg-theme-amber-dim text-theme-amber border-theme-amber/25'
+            : 'bg-theme-hover text-theme-text-muted border-theme-border'
+        }`}
         onClick={e => {
           e.stopPropagation()
           updateDb(db => setAtPath(db as Record<string, unknown>, dotPath, !val))
@@ -164,22 +158,13 @@ function InlineEditor({ val, dotPath, theme, updateDb }: InlineEditorProps) {
           }}
           onClick={e => e.stopPropagation()}
           placeholder="set value…"
-          className="font-mono px-1.5 rounded outline-none"
-          style={{
-            fontSize: scale.text.xs,
-            height: 20,
-            width: 100,
-            background: theme.bg.elevated,
-            color: theme.text.primary,
-            border: `1px solid ${theme.accent.blue}`,
-          }}
+          className="font-mono px-1.5 rounded outline-none h-5 w-25 text-ui-xs bg-theme-elevated text-theme-text-primary border border-theme-blue"
         />
       )
     }
     return (
       <span
-        className="font-mono italic cursor-text px-1 rounded"
-        style={{ fontSize: scale.text.xs, color: theme.text.disabled }}
+        className="font-mono italic cursor-text px-1 rounded text-ui-xs text-theme-text-disabled"
         onClick={e => {
           e.stopPropagation()
           setDraft('')
@@ -194,7 +179,7 @@ function InlineEditor({ val, dotPath, theme, updateDb }: InlineEditorProps) {
 
   // String or number — inline text/number input
   const displayVal = t === 'string' ? `"${val as string}"` : String(val)
-  const colorVal = t === 'string' ? theme.accent.green : theme.accent.blue
+  const colorClass = t === 'string' ? 'text-theme-green' : 'text-theme-blue'
 
   if (editing) {
     return (
@@ -209,23 +194,15 @@ function InlineEditor({ val, dotPath, theme, updateDb }: InlineEditorProps) {
           if (e.key === 'Escape') cancel()
         }}
         onClick={e => e.stopPropagation()}
-        className="font-mono px-1.5 rounded outline-none"
-        style={{
-          fontSize: scale.text.xs,
-          height: 20,
-          width: Math.max(60, draft.length * 7 + 16),
-          background: theme.bg.elevated,
-          color: colorVal,
-          border: `1px solid ${theme.accent.blue}`,
-        }}
+        className={`font-mono px-1.5 rounded outline-none h-5 text-ui-xs bg-theme-elevated border border-theme-blue ${colorClass}`}
+        style={{ width: Math.max(60, draft.length * 7 + 16) }}
       />
     )
   }
 
   return (
     <span
-      className="font-mono font-semibold truncate max-w-[160px] cursor-text rounded px-0.5 hover:underline"
-      style={{ fontSize: scale.text.xs, color: colorVal }}
+      className={`font-mono font-semibold truncate max-w-40 cursor-text rounded px-0.5 hover:underline text-ui-xs ${colorClass}`}
       title={`${displayVal} — click to edit`}
       onClick={e => {
         e.stopPropagation()
@@ -248,7 +225,6 @@ interface NodeProps {
   depth: number
   query: string
   initialOpen: boolean
-  theme: ReturnType<typeof useTheme>['theme']
   copy: (path: string) => void
   copiedPath: string | null
   updateDb: (updater: (db: unknown) => void) => void
@@ -262,12 +238,10 @@ function TreeNode({
   depth,
   query,
   initialOpen,
-  theme,
   copy,
   copiedPath,
   updateDb,
 }: NodeProps) {
-  const { scale } = useTheme()
   const t = typeOf(val)
   const isExpandable = t === 'object' || t === 'array'
   const [open, setOpen] = useState(initialOpen)
@@ -282,16 +256,7 @@ function TreeNode({
 
   return (
     <div style={{ paddingLeft: depth === 0 ? 0 : 12 }}>
-      <div
-        className="group flex items-center gap-1.5 py-[3px] px-1.5 rounded-md transition-colors"
-        style={{ minHeight: 24 }}
-        onMouseEnter={e => {
-          e.currentTarget.style.background = theme.bg.hover
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.background = 'transparent'
-        }}
-      >
+      <div className="group flex items-center gap-1.5 py-0.75 px-1.5 rounded-md min-h-6 transition-colors hover:bg-theme-hover">
         {/* Expand chevron */}
         <span
           className="shrink-0 w-3 flex items-center justify-center cursor-pointer"
@@ -300,21 +265,16 @@ function TreeNode({
           {isExpandable ? (
             <ChevronRight
               size={10}
-              style={{
-                color: theme.text.muted,
-                transform: isExpanded ? 'rotate(90deg)' : 'none',
-                transition: 'transform 0.15s',
-              }}
+              className={`text-theme-text-muted transition-transform duration-150 ${isExpanded ? 'rotate-90' : ''}`}
             />
           ) : (
-            <span className="w-[10px]" />
+            <span className="w-2.5" />
           )}
         </span>
 
         {/* Key — click to copy path */}
         <span
-          className="font-mono font-bold shrink-0 cursor-pointer hover:underline"
-          style={{ fontSize: scale.text.xs, color: theme.text.secondary }}
+          className="font-mono font-bold shrink-0 cursor-pointer hover:underline text-ui-xs text-theme-text-secondary"
           onClick={() => copy(bindPath)}
           title={`Copy bind path: ${bindPath}`}
         >
@@ -322,16 +282,14 @@ function TreeNode({
         </span>
 
         {/* Type badge */}
-        <TypeBadge val={val} theme={theme} />
+        <TypeBadge val={val} />
 
         {/* Inline editor for primitives / null */}
-        {!isExpandable && (
-          <InlineEditor val={val} dotPath={dotPath} theme={theme} updateDb={updateDb} />
-        )}
+        {!isExpandable && <InlineEditor val={val} dotPath={dotPath} updateDb={updateDb} />}
 
         {/* Summary for collapsed expandables */}
         {isExpandable && !isExpanded && (
-          <span className="italic" style={{ fontSize: scale.text.xs, color: theme.text.disabled }}>
+          <span className="italic text-ui-xs text-theme-text-disabled">
             {t === 'array'
               ? `${childCount} item${childCount !== 1 ? 's' : ''}`
               : `${childCount} key${childCount !== 1 ? 's' : ''}`}
@@ -340,8 +298,7 @@ function TreeNode({
 
         {/* Copy icon — appears on key hover */}
         <span
-          className="ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-          style={{ color: isCopied ? theme.accent.green : theme.text.muted }}
+          className={`ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer ${isCopied ? 'text-theme-green' : 'text-theme-text-muted'}`}
           onClick={() => copy(bindPath)}
           title={`Copy: ${bindPath}`}
         >
@@ -351,7 +308,7 @@ function TreeNode({
 
       {/* Children */}
       {isExpandable && isExpanded && (
-        <div style={{ borderLeft: `1px solid ${theme.bg.border}`, marginLeft: 7 }}>
+        <div className="border-l border-theme-border ml-1.75">
           {children.map(([k, v]) => (
             <TreeNode
               key={k}
@@ -362,7 +319,6 @@ function TreeNode({
               depth={depth + 1}
               query={query}
               initialOpen={initialOpen}
-              theme={theme}
               copy={copy}
               copiedPath={copiedPath}
               updateDb={updateDb}
@@ -395,89 +351,68 @@ export default function DbInspector({
   setForceExpand,
   onReset,
 }: DbInspectorProps) {
-  const { theme, scale } = useTheme()
   const { updateDb } = useDashboard()
   const { copiedPath, copy } = useCopyPath()
 
   const [query, setQuery] = useState('')
 
   const rootEntries = useMemo(() => Object.entries(db), [db])
+  const rawJson = useMemo(() => JSON.stringify(db, null, 2), [db])
+  const matchCount = useMemo(() => countMatches(rawJson, query), [rawJson, query])
 
   return (
     <div className="flex flex-col gap-0 h-full">
       {/* Search + controls */}
-      <div
-        className="flex items-center gap-1.5 px-2.5 py-1.5"
-        style={{ borderBottom: `1px solid ${theme.bg.border}` }}
-      >
-        <Search size={10} style={{ color: theme.text.muted, flexShrink: 0 }} />
+      <div className="flex items-center gap-1.5 px-2.5 py-1.5 border-b border-theme-border">
+        <Search size={14} className="shrink-0 text-theme-text-muted" />
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="Search…"
-          className="flex-1 bg-transparent outline-none min-w-0"
-          style={{ fontSize: scale.text.xs, color: theme.text.primary }}
+          className="flex-1 bg-transparent outline-none min-w-0 text-ui-xs text-theme-text-primary"
         />
+        {query && (
+          <span className="shrink-0 text-ui-2xs font-semibold text-theme-text-disabled">
+            {matchCount} match{matchCount !== 1 ? 'es' : ''}
+          </span>
+        )}
         {query && (
           <button
             onClick={() => setQuery('')}
-            className="shrink-0"
-            style={{ fontSize: scale.text.xxs, color: theme.text.muted }}
+            className="shrink-0 text-ui-2xs text-theme-text-muted"
           >
             ✕
           </button>
         )}
-        <div
-          className="shrink-0 flex items-center gap-0.5"
-          style={{ borderLeft: `1px solid ${theme.bg.border}`, paddingLeft: 6, marginLeft: 2 }}
-        >
-          <Tooltip content={viewMode === 'styled' ? 'Raw JSON' : 'Tree view'} placement="left">
-            <button
-              onClick={() => setViewMode(viewMode === 'styled' ? 'raw' : 'styled')}
-              className="p-1 rounded transition-colors"
-              style={{ color: viewMode === 'raw' ? theme.accent.blue : theme.text.muted }}
-              onMouseEnter={e => {
-                e.currentTarget.style.color = theme.text.primary
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.color =
-                  viewMode === 'raw' ? theme.accent.blue : theme.text.muted
-              }}
-            >
-              {viewMode === 'styled' ? <Code2 size={11} /> : <Layers size={11} />}
-            </button>
-          </Tooltip>
+        <div className="shrink-0 flex items-center gap-0.5 border-l border-theme-border pl-1.5 ml-0.5">
           {viewMode === 'styled' && (
-            <Tooltip content={forceExpand ? 'Collapse all' : 'Expand all'} placement="left">
-              <button
+            <Tooltip content={forceExpand ? 'Collapse all' : 'Expand all'} placement="bottom">
+              <IconButton
                 onClick={() => setForceExpand(v => !v)}
-                className="p-1 rounded transition-colors"
-                style={{ color: forceExpand ? theme.accent.blue : theme.text.muted }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.color = theme.text.primary
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.color = forceExpand ? theme.accent.blue : theme.text.muted
-                }}
-              >
-                <ChevronsUpDown size={11} />
-              </button>
+                variant="ghost"
+                size="sm"
+                className={forceExpand ? 'text-theme-blue hover:text-theme-blue' : ''}
+                icon={<ChevronsUpDown size={11} />}
+              />
             </Tooltip>
           )}
-          <Tooltip content="Reset database" placement="left">
-            <button
+          <Tooltip content="Reset database" placement="bottom">
+            <IconButton
               onClick={onReset}
-              className="p-1 rounded transition-colors"
-              style={{ color: theme.text.muted }}
-              onMouseEnter={e => {
-                e.currentTarget.style.color = theme.accent.red
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.color = theme.text.muted
-              }}
-            >
-              <RefreshCw size={11} />
-            </button>
+              variant="ghost"
+              size="sm"
+              className="hover:text-theme-red"
+              icon={<RefreshCw size={11} />}
+            />
+          </Tooltip>
+                    <Tooltip content={viewMode === 'styled' ? 'Raw JSON' : 'Tree view'} placement="bottom">
+            <IconButton
+              onClick={() => setViewMode(viewMode === 'styled' ? 'raw' : 'styled')}
+              variant="ghost"
+              size="sm"
+              className={viewMode === 'raw' ? 'text-theme-blue hover:text-theme-blue' : ''}
+              icon={viewMode === 'styled' ? <Code2 size={11} /> : <Layers size={11} />}
+            />
           </Tooltip>
         </div>
       </div>
@@ -485,11 +420,8 @@ export default function DbInspector({
       {/* Body */}
       <div className="overflow-y-auto h-full">
         {viewMode === 'raw' ? (
-          <pre
-            className="p-3 font-mono leading-relaxed select-all whitespace-pre-wrap"
-            style={{ fontSize: scale.text.xs, color: theme.text.secondary, margin: 0 }}
-          >
-            {JSON.stringify(db, null, 2)}
+          <pre className="p-3 m-0 font-mono leading-relaxed select-text whitespace-pre-wrap text-ui-xs text-theme-text-secondary">
+            <HighlightedText text={rawJson} query={query} />
           </pre>
         ) : (
           <div key={String(forceExpand)} className="p-2 flex flex-col gap-0.5">
@@ -510,7 +442,6 @@ export default function DbInspector({
                 depth={0}
                 query={query}
                 initialOpen={forceExpand}
-                theme={theme}
                 copy={copy}
                 copiedPath={copiedPath}
                 updateDb={updateDb}
@@ -522,15 +453,7 @@ export default function DbInspector({
 
       {/* Footer hint */}
       {viewMode === 'styled' && (
-        <div
-          className="px-3 py-1.5 flex gap-3"
-          style={{
-            fontSize: scale.text.xxs,
-            color: theme.text.disabled,
-            borderTop: `1px solid ${theme.bg.border}`,
-            background: theme.bg.elevated,
-          }}
-        >
+        <div className="px-3 py-1.5 flex gap-3 text-ui-2xs text-theme-text-disabled border-t border-theme-border bg-theme-elevated">
           <span>Click key → copy path</span>
           <span>Click value → edit</span>
           <span>Bool → toggle</span>
