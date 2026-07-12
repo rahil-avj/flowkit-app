@@ -299,12 +299,14 @@ coverage: {
 
 ## Task 4 — Add a Playwright smoke suite (or drop the dep)
 
+> **RESOLVED — drop path taken.** `playwright` has been removed from `package.json`'s devDependencies. There is still **zero** end-to-end/component test coverage — that gap is unaddressed, only the stale-dependency half of this task is closed. Re-open this task (adopt path, steps below) if E2E coverage becomes a priority; the steps are unaffected by the dep removal since they start from a fresh `npm i -D @playwright/test`.
+
 |              |                                 |
 | ------------ | ------------------------------- |
 | **Severity** | 🟡 High · Testing               |
 | **Files**    | `playwright.config.ts` · `e2e/` |
 | **Effort**   | Medium (~4–6 hrs)               |
-| **Decision** | Adopt (recommended) or drop     |
+| **Decision** | Adopt (recommended) or drop — **dropped** |
 
 ### Why
 

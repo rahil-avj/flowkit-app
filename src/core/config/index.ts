@@ -3,11 +3,17 @@
 export type {
   AnnotationTag,
   AnnotationTagColor,
+  DotPathPatch,
   FlowkitConfig,
   FlowkitProjectConfig,
   FlowplanDef,
+  FlowplanRef,
   FlowplanStepEntry,
   FlowScreenProps,
+  FlowStep,
+  Fork,
   SimulatorControl,
+  SimulatorControlType,
+  StepSimulatorOverride,
 } from '../../types/index'
 export { defineConfig, defineFlow, tag } from './defineConfig'

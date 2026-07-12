@@ -1,4 +1,4 @@
-import type { FlowNode, FlowScreenProps, WireframeView } from '@flowkit/types/index'
+import type { FlowNode, WireframeView } from '@flowkit/types/index'
 import { workspaces } from '@flowkit/workspaces'
 import { useFeedback } from '@flowkit-features/feedback/context/FeedbackContext'
 import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
@@ -13,11 +13,7 @@ import type { ActionCtx } from '@flowkit-shared/components/overlays/appActions'
 import HelpModal from '@flowkit-shared/components/overlays/HelpModal'
 import Settings from '@flowkit-shared/components/overlays/Settings'
 import Tooltip from '@flowkit-shared/components/ui/Tooltip'
-import {
-  LS_AUTO_HIDE_SCROLLBARS,
-  LS_INTERACTIVE_SCREENS_PREVIEW,
-  LS_SESSIONS_ENABLED,
-} from '@flowkit-shared/constants/storageKeys'
+import { LS_AUTO_HIDE_SCROLLBARS, LS_SESSIONS_ENABLED } from '@flowkit-shared/constants/storageKeys'
 import { useActiveWorkspace } from '@flowkit-shared/contexts/ActiveWorkspaceContext'
 import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
 import { useDevMode } from '@flowkit-shared/contexts/DevModeContext'
@@ -155,23 +151,6 @@ function DesktopCanvas({ flows, views }: Props) {
     })
   }, [])
 
-  // ── Interactive Screens-tab preview ──────────────────────────────────────────
-  // Off by default — the Screens tab is a static structural preview outside
-  // flowplan playback (no flow/navigation context exists there). When enabled,
-  // onAction() is wired to navigateTo() so screens using the direct-id
-  // navigation convention (onAction?.('some-view-id')) work; onNext/onBack stay
-  // inert since there's no sequential screen order outside a flow.
-  const [interactiveScreensPreview, setInteractiveScreensPreview] = useState(
-    () => localStorage.getItem(LS_INTERACTIVE_SCREENS_PREVIEW) === 'true'
-  )
-  const toggleInteractiveScreensPreview = useCallback(() => {
-    setInteractiveScreensPreview(v => {
-      const next = !v
-      localStorage.setItem(LS_INTERACTIVE_SCREENS_PREVIEW, String(next))
-      return next
-    })
-  }, [])
-
   // ── Sessions feature ─────────────────────────────────────────────────────────
   const [showSessionsFeature, setShowSessionsFeature] = useState(
     () => localStorage.getItem(LS_SESSIONS_ENABLED) === 'true'
@@ -217,8 +196,6 @@ function DesktopCanvas({ flows, views }: Props) {
       openImportModal,
       toggleAutoHideScrollbars,
       autoHideScrollbars,
-      toggleInteractiveScreensPreview,
-      interactiveScreensPreview,
       showSessionsFeature,
       toggleSessionsFeature,
       autoRecordOnPlay,
@@ -242,8 +219,6 @@ function DesktopCanvas({ flows, views }: Props) {
       openImportModal,
       toggleAutoHideScrollbars,
       autoHideScrollbars,
-      toggleInteractiveScreensPreview,
-      interactiveScreensPreview,
       showSessionsFeature,
       toggleSessionsFeature,
       autoRecordOnPlay,
@@ -565,8 +540,6 @@ function DesktopCanvas({ flows, views }: Props) {
         kitTheme={workspaceConfig.kit ?? 'apple'}
         showSessionsFeature={showSessionsFeature}
         isPanelDragging={isPanelDragging}
-        interactiveScreensPreview={interactiveScreensPreview}
-        navigateTo={navigateTo}
       />
 
       {/* ── Left panel ── */}
@@ -688,8 +661,6 @@ interface CanvasContentProps {
   kitTheme: string
   showSessionsFeature: boolean
   isPanelDragging: boolean
-  interactiveScreensPreview: boolean
-  navigateTo: (id: string) => void
 }
 
 function CanvasContent({
@@ -712,8 +683,6 @@ function CanvasContent({
   totalCommentCount,
   openFeedbackTab,
   autoHideScrollbars,
-  interactiveScreensPreview,
-  navigateTo,
   breakKeepFit,
   kitTheme,
   showSessionsFeature,
@@ -834,22 +803,11 @@ function CanvasContent({
                 .join(' ')}
             >
               {ActiveComponent ? (
-                // Static Screens-tab preview — outside flowplan playback there's no
-                // sequential screen order or interaction-rule map, so onNext/onBack
-                // stay inert. When Interactive Screens Preview is on (Settings →
-                // Interface), onAction is wired to navigateTo() for the direct-id
-                // navigation convention (onAction?.('some-view-id')).
-                <ActiveComponent
-                  {...(interactiveScreensPreview
-                    ? ({
-                        db,
-                        isFlow: false,
-                        onAction: (actionName: string) => navigateTo(actionName),
-                        onNext: () => {},
-                        onBack: () => {},
-                      } satisfies FlowScreenProps)
-                    : { db })}
-                />
+                // Screens tab is a static structural preview outside flowplan
+                // playback — screens that also want Screens-tab interactivity
+                // should call useDashboard().navigateTo(), guarded on the isFlow
+                // prop FlowMaster injects during playback (see FLOWMASTER.md).
+                <ActiveComponent db={db} />
               ) : (
                 <div className="flex-1 flex items-center justify-center h-full bg-theme-elevated text-theme-text-disabled text-ui-sm font-sans">
                   No view selected

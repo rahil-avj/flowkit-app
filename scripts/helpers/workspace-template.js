@@ -16,6 +16,18 @@
 // scripts/tests/scaffold-consistency.test.js checks screen/flow counts match,
 // not exact ids (naming conventions already differ: this file omits
 // scaffold.js's -screen/-flow id suffixes).
+//
+// NOTE on onAction?.('id') below only working during flow playback: FlowMaster
+// injects onAction/onNext/onBack into a screen only while it's rendered inside
+// an active flowplan (see FlowScreenProps' own JSDoc in src/types/index.ts —
+// "automatically injected... by FlowMaster"). These demo screens are correctly
+// inert when viewed standalone (e.g. flat mode's Screens-tab-equivalent
+// preview) — that's not a bug. A screen author wanting the same interactivity
+// outside a flow should call useDashboard() directly instead (repo mode's own
+// convention) and wire onClick={() => navigateTo(id)} — that path has no
+// dependency on FlowMaster or any flowplan. Don't conflate "these demo buttons
+// don't respond outside a flow" with "navigation is broken" — the two
+// navigation conventions are independent, and this demo only shows one.
 import fs from 'fs'
 import path from 'path'
 import { WORKSPACE_CONFIG_FILENAME } from './config-filenames.js'

@@ -129,10 +129,25 @@ For **both** `flowkit/package.json` and `packages/create-flowkit-app/package.jso
 
 ## Phase 7 — Publish (irreversible past this line)
 
-**Nothing in this phase was run or attempted.** All gates are now clear: npm login (Phase 0), LICENSE
-(Phase 6), and — as of 2026-07-10 — `flowkit/package.json`'s `"private": true` failsafe has been
-removed and `create-flowkit-workspace` has passed the same Phase 4/5 verification as the other two
-packages. Versions/dist-tag are decided (Phase 1) — commands below reflect that.
+**Nothing in this phase (against the real, unscoped package names) has been run or attempted.**
+All gates are now clear: npm login (Phase 0), LICENSE (Phase 6), and — as of 2026-07-10 —
+`flowkit/package.json`'s `"private": true` failsafe has been removed and `create-flowkit-workspace`
+has passed the same Phase 4/5 verification as the other two packages. Versions/dist-tag are decided
+(Phase 1) — commands below reflect that.
+
+> **2026-07-11 scoped canary rehearsal — confirmed live on the registry.** A full dry run of this
+> phase's mechanics was done under the scoped names `@rahil316/flowkit`, `@rahil316/create-flowkit-app`,
+> `@rahil316/create-flowkit-workspace`, first published at `0.0.0-canary.0`. This is an ongoing
+> pre-release channel, not a one-time snapshot — the counter in `scripts/dev/.canary-version.json`
+> advances on every rehearsal publish (already at `n=3`/registry `canary.2` by 2026-07-12). Don't
+> hardcode a specific canary version anywhere — check `npm view @rahil316/flowkit dist-tags` for the
+> current one. Re-confirmed live via that command on 2026-07-12 — all three packages still resolve.
+> This exercised real `npm publish`/`npm create`/`npm install` against the actual registry for the
+> first time (previously only `file:`/`--local-dev` installs had been tested). It does **not**
+> check off any item below — those are scoped to the real unscoped names (`flowkit`,
+> `create-flowkit-app`, `create-flowkit-workspace`), which remain unpublished and still require this
+> checklist's actual Phase 7 to be run for real, on its own dedicated publish branch (see
+> [[project_repo_role]] — this checkout is a dev/test copy, not the publish artifact).
 
 - [ ] Final `npm whoami` check
 - [ ] `cd` to `flowkit` package root, `npm publish --tag beta` (publishes `0.0.1-beta.0`)

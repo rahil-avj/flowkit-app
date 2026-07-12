@@ -65,7 +65,7 @@ The few hardest rules are inlined into the memory file so they're loaded before 
 
 | Rule                                                                                       | Why                                                                                                                                                                                                                                          |
 | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Never `navigateTo` from `useDashboard()` in a screen                                       | Navigation must go through `useFlowNav()` or id-wiring, or FlowMaster's guards, animations, and the recorded `flow.transition` won't fire.                                                                                                   |
+| Never call `useDashboard()`'s `navigateTo` unguarded during flow playback                  | Use `useFlowNav()` (or id-wiring) inside a flow so FlowMaster's guards, animations, and recorded `flow.transition` fire. `useDashboard().navigateTo`, guarded on the `isFlow` prop FlowMaster injects, is the correct way to make a screen *also* navigable standalone from the Screens tab — see "Navigation" below. |
 | Never hand-write flow/screen files from scratch                                            | Copy an existing screen's boilerplate — the structure and exports must be consistent.                                                                                                                                                        |
 | Never edit platform source (`src/` in repo mode, `node_modules/flowkit/` in consumer mode) | That's the shared platform engine, not workspace content.                                                                                                                                                                                    |
 | Never hardcode hex colors                                                                  | Use `lib/design-system/tokens.css` vars or `useTheme()` tokens so kit/theme switching works.                                                                                                                                                 |
@@ -153,6 +153,21 @@ const submit = async () => {
   if (await ok()) navigateTo('confirmation')
 }
 ```
+
+`useFlowNav()` throws if the screen has no `FlowMaster` ancestor — flow playback only.
+
+### Make a screen also navigable from the Screens tab (no flow active)
+
+```ts
+export default function HomeScreen({ isFlow }: FlowScreenProps) {
+  const { navigateTo } = useDashboard()
+  return <button onClick={() => !isFlow && navigateTo('detail')}>Open</button>
+}
+```
+
+The `isFlow` guard is required — without it the click also fires during flow
+playback and desyncs `DashboardContext`'s view history from `FlowEngine`'s own
+step index.
 
 ### Read / mutate data
 

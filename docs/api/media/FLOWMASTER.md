@@ -171,7 +171,7 @@ export const screenMeta = {
 
 > Prefer element `id` + flowplan `on:` over `onAction`/`onNext`/`onBack` for simple taps — it keeps screens free of routing logic.
 
-> **Screens tab vs. Flows tab:** `onAction`/`onNext`/`onBack` are only wired up during flowplan playback (Flows tab / FlowMaster). Viewing a screen directly from the **Screens tab** is a static preview by default — those callbacks are `undefined` there, so `onClick={() => onNext?.()}`-style handlers no-op silently. Enable **Settings → Interface → "Interactive Screens preview"** to make `onAction` work from the Screens tab too (resolves the action name as a target screen id via `navigateTo`). `onNext`/`onBack` remain inert even with the setting on — there's no sequential screen order outside a flow.
+> **Screens tab vs. Flows tab:** `onAction`/`onNext`/`onBack` are only wired up during flowplan playback (Flows tab / FlowMaster) — those callbacks are `undefined` when a screen is viewed standalone from the **Screens tab**, so `onClick={() => onNext?.()}`-style handlers no-op silently there. That's by design, not a bug. If a screen should also be freely clickable from the Screens tab, wire navigation a different way: `const { navigateTo } = useDashboard()`, guarded on the `isFlow` prop FlowMaster injects — `onClick={() => !isFlow && navigateTo(id)}` (see "Navigate from screen logic" below). The guard is required; without it the click also fires during flow playback and desyncs `DashboardContext`'s view history from `FlowEngine`'s own step index.
 
 ### `screenMeta` fields
 
@@ -224,7 +224,9 @@ const submit = async () => {
 
 Targets: a screen id, `"next"`, `"back"`, or `"complete"`.
 
-> **Never** destructure `navigateTo` from `useDashboard()` — guards, animations, and session replay won't fire.
+> **During flow playback**, use `useFlowNav()`, not `useDashboard()`'s `navigateTo` — guards, animations, and session replay only fire through FlowMaster's `commitNavigation`. `useFlowNav()` itself throws if called from a screen with no `FlowMaster` ancestor (i.e. previewed standalone from the Screens tab), so it isn't a drop-in replacement there.
+>
+> A screen that should **also** be freely clickable from the Screens tab (no flow active) can call `const { navigateTo } = useDashboard()` directly, guarded on the `isFlow` prop FlowMaster injects: `onClick={() => !isFlow && navigateTo(id)}`. The guard matters — without it, the same click also fires during flow playback and desyncs `DashboardContext`'s view history from `FlowEngine`'s own step index. See `scripts/helpers/scaffold.js`'s demo screens for the pattern.
 
 ---
 

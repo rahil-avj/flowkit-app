@@ -39,8 +39,6 @@ export interface ActionCtx {
   openImportModal: () => void
   toggleAutoHideScrollbars: () => void
   autoHideScrollbars: boolean
-  toggleInteractiveScreensPreview: () => void
-  interactiveScreensPreview: boolean
   // Sessions feature
   showSessionsFeature: boolean
   toggleSessionsFeature: () => void

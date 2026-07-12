@@ -103,25 +103,31 @@ export function directives(ctx) {
   }
 
   const navGroup = {
-    group: 'Navigation (the contract that keeps guards/animations firing)',
+    group: 'Navigation (two independent conventions — know which one you need)',
     rules: [
       {
         kind: 'to',
-        task: 'navigate from screen logic (state/async)',
+        task: 'navigate from screen logic during flow playback (state/async)',
         action: '`const { navigateTo, goNext, goBack } = useFlowNav()`',
       },
       {
         kind: 'to',
-        task: 'wire tap interactions declaratively',
+        task: 'wire tap interactions declaratively during flow playback',
         action: 'add an `interactions` map in the flowplan step for the screen',
       },
       {
         kind: 'never',
-        text: "destructure `navigateTo` from `useDashboard()` — guards, animations, and session replay won't fire; use `useFlowNav()` instead",
+        text: "call `useFlowNav()` unconditionally in a screen meant to also work standalone — it throws when there's no FlowMaster ancestor (i.e. viewed from the Screens tab, no flow active)",
+      },
+      {
+        kind: 'to',
+        task: 'make a screen freely navigable from the Screens tab (no flow active) as well as during flow playback',
+        action:
+          '`const { navigateTo } = useDashboard()`, guarded with `isFlow` (a prop FlowMaster injects only during playback): `onClick={() => !isFlow && navigateTo(id)}`. Without the guard, the click also fires during flow playback and desyncs DashboardContext\'s view history from FlowEngine\'s own step index — see scripts/helpers/scaffold.js\'s NOTE comment for the full mechanism.',
       },
       {
         kind: 'never',
-        text: 'put onClick navigation handlers on screen elements — use `useFlowNav()` or flowplan interaction wiring',
+        text: "destructure `navigateTo` from `useDashboard()` and call it unguarded inside a screen that also relies on FlowMaster's guards/animations/session-replay during playback — guard on `isFlow` per the rule above, or use `useFlowNav()` if the screen is flow-only",
       },
     ],
   }
@@ -284,9 +290,9 @@ export function platformSurfaces(ctx) {
     },
     {
       area: 'Data',
-      api: '`useDashboard()` → `db`, `updateDb(fn)`, `resetDb()`',
+      api: '`useDashboard()` → `db`, `updateDb(fn)`, `resetDb()`, `navigateTo(id)`',
       from: '`@flowkit-shared/contexts/DashboardContext`',
-      note: 'screens use db/updateDb only — NOT navigateTo',
+      note: "db/updateDb/resetDb always safe; navigateTo() only for standalone Screens-tab navigation, guarded on `isFlow` (see Navigation group above) — during flow playback use useFlowNav() instead",
       doc: 'FLOWKIT.md',
     },
     {

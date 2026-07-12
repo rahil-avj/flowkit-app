@@ -382,7 +382,7 @@ import('playwright').then(async ({ chromium }) => {
 "
 ```
 
-Playwright must be run from _inside this repo_ (`node <script>.mjs` from the repo root, not from a scratch/tmp directory) for its ESM `import 'playwright'` to resolve — Node's module resolution walks up from the script's own location, not `cwd`.
+**`playwright` was removed from `package.json`'s devDependencies** — the `import('playwright')` snippet above no longer resolves as-is. Either `npm install --no-save playwright` temporarily for a one-off verification session, or use the repo's actual dev-facing `playwright` devDependency if it still exists at the time you read this (check `package.json` before assuming). Previously: Playwright had to be run from _inside this repo_ (`node <script>.mjs` from the repo root, not from a scratch/tmp directory) for its ESM `import 'playwright'` to resolve — Node's module resolution walks up from the script's own location, not `cwd` — that constraint still applies whenever it is installed.
 
 `node_modules/flowkit` in a scaffolded test project is a **symlink straight back to this repo** (for a `file:` dependency) — meaning you can add temporary `console.log` debug probes directly into real `src/` files, reload, and inspect them via Playwright's console capture, then revert. This is how the `db.user.name` prop-threading bug (section 7) was actually traced — a debug probe in `DashboardContext.tsx` confirmed the data layer was correct, ruling that out, before probing `FlowMaster.tsx` and finally `PreviewCanvas.tsx` to find the actual gap.
 

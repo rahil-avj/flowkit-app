@@ -398,11 +398,18 @@ export interface FlowConfig {
 }
 
 // ─── Screen Props ─────────────────────────────────────────────────────────────
-//
-// Props automatically injected into every screen component by FlowMaster.
-// These exist as an escape hatch for screens that need programmatic
-// triggers (form submits, async callbacks, custom gesture libraries, etc.).
 
+/**
+ * Props automatically injected into every screen component by FlowMaster
+ * during flowplan playback. All fields are `undefined` when a screen is
+ * previewed standalone (e.g. the Screens tab, outside any flow) — use the
+ * `isFlow` field to detect which case you're in.
+ *
+ * These exist as an escape hatch for screens that need programmatic
+ * triggers (form submits, async callbacks, custom gesture libraries, etc.);
+ * simple taps should prefer an element `id` + a matching flowplan step
+ * instead of destructuring these props.
+ */
 export interface FlowScreenProps<
   TState extends Record<string, unknown> = Record<string, unknown>,
   TDb extends Record<string, unknown> = Record<string, unknown>,
@@ -693,6 +700,11 @@ export interface WorkspaceHierarchyNode {
 /** Badge color options for an {@link AnnotationTag} — maps to theme.accent.* tokens. */
 export type AnnotationTagColor = 'blue' | 'green' | 'red' | 'amber' | 'purple'
 
+/**
+ * An ephemeral review marker shown as a badge in the Screens tab sidebar.
+ * Declared in a workspace's `flows/_tags.ts` via the {@link tag} helper and
+ * scoped to specific screens and/or flows.
+ */
 export interface AnnotationTag {
   /** Display label shown as the badge text. */
   label: string

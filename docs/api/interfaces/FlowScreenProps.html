@@ -10,6 +10,16 @@
 <ul class="tsd-breadcrumb" aria-label="Breadcrumb">
 <li><a href="" aria-current="page">FlowScreenProps</a></li></ul>
 <h1>Interface FlowScreenProps&lt;TState, TDb&gt;</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>Props automatically injected into every screen component by FlowMaster
+during flowplan playback. All fields are <code>undefined</code> when a screen is
+previewed standalone (e.g. the Screens tab, outside any flow) — use the
+<code>isFlow</code> field to detect which case you're in.</p>
+<p>These exist as an escape hatch for screens that need programmatic
+triggers (form submits, async callbacks, custom gesture libraries, etc.);
+simple taps should prefer an element <code>id</code> + a matching flowplan step
+instead of destructuring these props.</p>
+</div></section>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">FlowScreenProps</span><span class="tsd-signature-symbol">&lt;</span><br/>    <a class="tsd-signature-type tsd-kind-type-parameter" href="#tstate">TState</a> <span class="tsd-signature-keyword">extends</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">=</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">,</span><br/>    <a class="tsd-signature-type tsd-kind-type-parameter" href="#tdb">TDb</a> <span class="tsd-signature-keyword">extends</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">=</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#db">db</a><span class="tsd-signature-symbol">?:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#tdb">TDb</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#flowstate">flowState</a><span class="tsd-signature-symbol">?:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#tstate">TState</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#isflow">isFlow</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#onaction">onAction</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">actionName</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">payload</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#onback">onBack</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#onnext">onNext</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div>
 <section class="tsd-panel">
 <h4>Type Parameters</h4>
@@ -17,7 +27,7 @@
 <li><span id="tstate"><span class="tsd-kind-type-parameter">TState</span> <span class="tsd-signature-keyword">extends</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span> = <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></span></li>
 <li><span id="tdb"><span class="tsd-kind-type-parameter">TDb</span> <span class="tsd-signature-keyword">extends</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span> = <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></span></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/rahil-avj/flowkit-app/blob/a4b8b916593be433b3ac170ed9803117a0cc54c9/src/types/index.ts#L406">types/index.ts:406</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/rahil-avj/flowkit-app/blob/d6cdc6d494f82d333c6830652a9ed2d812f6260b/src/types/index.ts#L413">types/index.ts:413</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -43,21 +53,21 @@ Use optional chaining: db?.user?.name
 (db is undefined when the screen is previewed outside a flow)</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/rahil-avj/flowkit-app/blob/a4b8b916593be433b3ac170ed9803117a0cc54c9/src/types/index.ts#L431">types/index.ts:431</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/rahil-avj/flowkit-app/blob/d6cdc6d494f82d333c6830652a9ed2d812f6260b/src/types/index.ts#L438">types/index.ts:438</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="flowstate"><code class="tsd-tag">Optional</code><span>flow<wbr/>State</span><a href="#flowstate" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">flowState</span><span class="tsd-signature-symbol">?:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#tstate">TState</a></div>
 <div class="tsd-comment tsd-typography"><p>The current flow-local sandbox state. Read-only — mutate via ctx.set() in interactions.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/rahil-avj/flowkit-app/blob/a4b8b916593be433b3ac170ed9803117a0cc54c9/src/types/index.ts#L425">types/index.ts:425</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/rahil-avj/flowkit-app/blob/d6cdc6d494f82d333c6830652a9ed2d812f6260b/src/types/index.ts#L432">types/index.ts:432</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="isflow"><code class="tsd-tag">Optional</code><span>is<wbr/>Flow</span><a href="#isflow" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">isFlow</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span></div>
 <div class="tsd-comment tsd-typography"><p>True when this screen is rendered inside FlowMaster (vs. standalone preview).</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/rahil-avj/flowkit-app/blob/a4b8b916593be433b3ac170ed9803117a0cc54c9/src/types/index.ts#L423">types/index.ts:423</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/rahil-avj/flowkit-app/blob/d6cdc6d494f82d333c6830652a9ed2d812f6260b/src/types/index.ts#L430">types/index.ts:430</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="onaction"><code class="tsd-tag">Optional</code><span>on<wbr/>Action</span><a href="#onaction" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">onAction</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">actionName</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">payload</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></div>
@@ -67,21 +77,21 @@ or be &quot;next&quot; / &quot;back&quot; for sequential navigation.</p>
 <p>Example: onAction?.(&quot;submit&quot;, { email: &quot;...&quot; })</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/rahil-avj/flowkit-app/blob/a4b8b916593be433b3ac170ed9803117a0cc54c9/src/types/index.ts#L417">types/index.ts:417</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/rahil-avj/flowkit-app/blob/d6cdc6d494f82d333c6830652a9ed2d812f6260b/src/types/index.ts#L424">types/index.ts:424</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="onback"><code class="tsd-tag">Optional</code><span>on<wbr/>Back</span><a href="#onback" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">onBack</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></div>
 <div class="tsd-comment tsd-typography"><p>Go back to the previous screen.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/rahil-avj/flowkit-app/blob/a4b8b916593be433b3ac170ed9803117a0cc54c9/src/types/index.ts#L421">types/index.ts:421</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/rahil-avj/flowkit-app/blob/d6cdc6d494f82d333c6830652a9ed2d812f6260b/src/types/index.ts#L428">types/index.ts:428</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="onnext"><code class="tsd-tag">Optional</code><span>on<wbr/>Next</span><a href="#onnext" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">onNext</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></div>
 <div class="tsd-comment tsd-typography"><p>Advance to the next screen (sequential fallback).</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/rahil-avj/flowkit-app/blob/a4b8b916593be433b3ac170ed9803117a0cc54c9/src/types/index.ts#L419">types/index.ts:419</a></li></ul></aside></section></section></details></div>
+<li>Defined in <a href="https://github.com/rahil-avj/flowkit-app/blob/d6cdc6d494f82d333c6830652a9ed2d812f6260b/src/types/index.ts#L426">types/index.ts:426</a></li></ul></aside></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">

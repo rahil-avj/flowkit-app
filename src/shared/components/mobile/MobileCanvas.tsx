@@ -149,18 +149,6 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       }),
     []
   )
-  const [interactiveScreensPreview, setInteractiveScreensPreview] = useState(
-    () => localStorage.getItem(LS_INTERACTIVE_SCREENS_PREVIEW) === 'true'
-  )
-  const toggleInteractiveScreensPreview = useCallback(
-    () =>
-      setInteractiveScreensPreview(v => {
-        const n = !v
-        localStorage.setItem(LS_INTERACTIVE_SCREENS_PREVIEW, String(n))
-        return n
-      }),
-    []
-  )
   const [showSessionsFeature, setShowSessionsFeature] = useState(
     () => localStorage.getItem(LS_SESSIONS_ENABLED) === 'true'
   )
@@ -235,8 +223,6 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       openImportModal: () => { },
       toggleAutoHideScrollbars,
       autoHideScrollbars,
-      toggleInteractiveScreensPreview,
-      interactiveScreensPreview,
       showSessionsFeature,
       toggleSessionsFeature,
       autoRecordOnPlay,
@@ -256,8 +242,6 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       cloudSyncSlot,
       toggleAutoHideScrollbars,
       autoHideScrollbars,
-      toggleInteractiveScreensPreview,
-      interactiveScreensPreview,
       showSessionsFeature,
       toggleSessionsFeature,
       autoRecordOnPlay,
@@ -294,17 +278,7 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
 
       {/* Screen content */}
       <div className="absolute inset-0 flex flex-col" style={{ filter: combinedFilter }}>
-        {ActiveComponent &&
-          (interactiveScreensPreview ? (
-            <ActiveComponent
-              isFlow={false}
-              onAction={(actionName: string) => navigateTo(actionName)}
-              onNext={() => {}}
-              onBack={() => {}}
-            />
-          ) : (
-            <ActiveComponent />
-          ))}
+        {ActiveComponent && <ActiveComponent />}
       </div>
 
       {/* Flowplan playback bar — mobile has no side-panel Play/Stop button
@@ -412,7 +386,6 @@ import type { ColorBlindMode } from '@flowkit/types/index'
 import { workspaces } from '@flowkit/workspaces'
 import {
   LS_AUTO_HIDE_SCROLLBARS,
-  LS_INTERACTIVE_SCREENS_PREVIEW,
   LS_LEFT_PANEL_W,
   LS_RIGHT_PANEL_W,
   LS_SESSIONS_ENABLED,
@@ -484,13 +457,6 @@ function MobileSettingsContent({ section, ctx }: MobileSettingsContentProps) {
             size="sm"
             checked={ctx.autoHideScrollbars}
             onChange={ctx.toggleAutoHideScrollbars}
-          />
-        </SettingRow>
-        <SettingRow label="Interactive Screens preview">
-          <Toggle
-            size="sm"
-            checked={ctx.interactiveScreensPreview}
-            onChange={ctx.toggleInteractiveScreensPreview}
           />
         </SettingRow>
         <SectionLabel title="Accessibility" />

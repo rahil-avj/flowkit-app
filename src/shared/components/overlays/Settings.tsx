@@ -129,16 +129,6 @@ function InterfaceSection({ ctx }: InterfaceSectionProps) {
             onChange={ctx.toggleAutoHideScrollbars}
           />
         </SettingRow>
-        <SettingRow
-          label="Interactive Screens preview"
-          hint="Let onAction buttons navigate when previewing a screen from the Screens tab, without entering Flows playback. onNext/onBack stay inert — there's no sequential order outside a flow."
-        >
-          <Toggle
-            size="sm"
-            checked={ctx.interactiveScreensPreview}
-            onChange={ctx.toggleInteractiveScreensPreview}
-          />
-        </SettingRow>
       </SettingGroup>
 
       <SettingGroup title="Accessibility">
