@@ -1,5 +1,5 @@
-import { DashboardProvider } from '@platform/shared/contexts/DashboardContext'
-import type { DevicePreset, WireframeView } from '@platform/types/index'
+import type { DevicePreset, WireframeView } from '@flowkit/types/index'
+import { DashboardProvider } from '@flowkit-shared/contexts/DashboardContext'
 
 import type { GroupBy, LabelField } from './FigmaExportSidebar'
 

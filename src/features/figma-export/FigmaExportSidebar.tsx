@@ -1,8 +1,8 @@
-import { DEVICE_PRESETS } from '@platform/shared/components/devices'
-import SegmentedControl from '@platform/shared/components/ui/SegmentedControl'
-import Select from '@platform/shared/components/ui/Select'
-import Toggle from '@platform/shared/components/ui/Toggle'
-import type { DevicePreset } from '@platform/types/index'
+import type { DevicePreset } from '@flowkit/types/index'
+import { DEVICE_PRESETS } from '@flowkit-shared/components/devices'
+import SegmentedControl from '@flowkit-shared/components/ui/SegmentedControl'
+import Select from '@flowkit-shared/components/ui/Select'
+import Toggle from '@flowkit-shared/components/ui/Toggle'
 import { ChevronDown, Search, X } from 'lucide-react'
 import { useState } from 'react'
 

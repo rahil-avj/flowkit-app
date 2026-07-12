@@ -1,4 +1,4 @@
-import type { DevicePreset } from '@platform/types/index'
+import type { DevicePreset } from '@flowkit/types/index'
 
 // Generic small Android — represents budget/mid-range 5" class devices
 const device: DevicePreset = {

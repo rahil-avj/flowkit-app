@@ -1,7 +1,7 @@
-import { ControlAccordion } from '@platform/features/simulator/controls'
-import SegmentedControl from '@platform/shared/components/ui/SegmentedControl'
-import { useSimulator } from '@platform/shared/contexts/DashboardContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
+import { ControlAccordion } from '@flowkit-features/simulator/controls'
+import SegmentedControl from '@flowkit-shared/components/ui/SegmentedControl'
+import { useSimulator } from '@flowkit-shared/contexts/DashboardContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import { Gauge, PlaneTakeoff, Wifi, WifiOff, Zap } from 'lucide-react'
 
 export default function DeviceSettings() {

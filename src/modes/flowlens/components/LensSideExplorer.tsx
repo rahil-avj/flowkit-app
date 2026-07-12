@@ -1,13 +1,13 @@
-import PanelBody from '@platform/core/layout/PanelBody'
-import Sidebar from '@platform/core/layout/Sidebar'
-import SidebarButton from '@platform/core/layout/SidebarButton'
-import { useFlowLensSidebarShortcuts } from '@platform/core/shortcuts/useKeyboardShortcuts'
-import EmptyState from '@platform/shared/components/ui/EmptyState'
+import PanelBody from '@flowkit-core/layout/PanelBody'
+import Sidebar from '@flowkit-core/layout/Sidebar'
+import SidebarButton from '@flowkit-core/layout/SidebarButton'
+import { useFlowLensSidebarShortcuts } from '@flowkit-core/shortcuts/useKeyboardShortcuts'
+import EmptyState from '@flowkit-shared/components/ui/EmptyState'
 import FilterPanel, {
   type FilterGroup,
   type FilterState,
-} from '@platform/shared/components/ui/FilterPanel'
-import Input from '@platform/shared/components/ui/Input'
+} from '@flowkit-shared/components/ui/FilterPanel'
+import Input from '@flowkit-shared/components/ui/Input'
 import { Activity, Archive, CircleDot, Clock, FolderGit2, Search, Upload, X } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 
@@ -180,7 +180,7 @@ export default function LensSideExplorer({
             <button
               onClick={() => fileInputRef.current?.click()}
               title="Import session JSON"
-              className="flex items-center gap-1 text-ui-2xs font-semibold text-theme-text-muted bg-transparent border border-theme-border rounded-[6px] py-[3px] px-2 cursor-pointer hover:text-theme-text-secondary transition-colors shrink-0"
+              className="flex items-center gap-1 text-ui-2xs font-semibold text-theme-text-muted bg-transparent border border-theme-border rounded-md py-0.75 px-2 cursor-pointer hover:text-theme-text-secondary transition-colors shrink-0"
             >
               <Upload size={11} />
             </button>
@@ -317,7 +317,7 @@ function SessionRow({
           {meta.name}
         </span>
         {entry.source === 'library' && entry.studyId && (
-          <span className="text-ui-2xs text-theme-text-disabled shrink-0 truncate max-w-[80px]">
+          <span className="text-ui-2xs text-theme-text-disabled shrink-0 truncate max-w-20">
             {entry.studyId}
           </span>
         )}
@@ -332,7 +332,7 @@ function SessionRow({
           </button>
         )}
       </div>
-      <div className="flex items-center gap-[10px] flex-wrap text-[10.5px] text-theme-text-muted">
+      <div className="flex items-center gap-2.5 flex-wrap text-[10.5px] text-theme-text-muted">
         <span className="flex items-center gap-0.5">
           <Clock size={10} /> {fmtDate(meta.startTime)}
         </span>

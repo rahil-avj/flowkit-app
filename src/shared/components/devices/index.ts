@@ -1,4 +1,4 @@
-import type { DevicePreset } from '@platform/types/index'
+import type { DevicePreset } from '@flowkit/types/index'
 
 import fullHD from './desktops/full-hd'
 import macBookPro14 from './desktops/macbook-pro-14'

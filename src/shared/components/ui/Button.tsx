@@ -1,4 +1,4 @@
-import { cn } from '@kit/lib/utils'
+import { cn } from '@flowkit-kit/lib/utils'
 import React from 'react'
 
 import Spinner from './Spinner'

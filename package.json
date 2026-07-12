@@ -1,45 +1,67 @@
 {
   "name": "flowkit",
-  "private": true,
-  "version": "1.0.0",
+  "version": "0.0.1-beta.0",
   "description": "Browser-based UI prototyping platform for multi-screen, flow-based interactive previews.",
+  "license": "MIT",
+  "author": "Rahil Kothari <Rahilkothari5@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rahil-avj/flowkit-app.git"
+  },
+  "keywords": [
+    "flowkit",
+    "prototyping",
+    "ui-prototyping",
+    "flow",
+    "wireframe",
+    "react",
+    "vite",
+    "design-tool"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "type": "module",
   "bin": {
-    "flowkit": "./scripts/flowkit.js"
+    "flowkit": "scripts/flowkit.js"
   },
   "files": [
     "scripts/",
     "src/",
-    "dist/",
-    "packages/",
+    "dist/lib/",
+    "dist/types/",
     "docs/",
-    "index.html",
+    "./index.html",
     "!scripts/tests/",
-    "!scripts/deploy/",
-    "!scripts/build/format.mjs"
+    "!scripts/builders/format.mjs",
+    "!scripts/dev/"
   ],
   "exports": {
     ".": {
       "types": "./dist/types/core/config/index.d.ts",
       "import": "./dist/lib/index.js"
     },
-    "./vite": "./scripts/vite-plugin.js"
+    "./vite": {
+      "types": "./scripts/helpers/vite-plugin.d.ts",
+      "import": "./scripts/helpers/vite-plugin.js"
+    }
   },
   "scripts": {
     "dev": "vite",
     "prebuild": "node scripts/flowkit.js plan:check",
     "build": "tsc -b && vite build",
-    "build:standalone": "tsc -b && vite build && node scripts/build/inline.js",
+    "build:standalone": "tsc -b && vite build && node scripts/builders/inline.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "build:lib": "tsc -p tsconfig.build.json && vite build --config vite.lib.config.ts",
+    "docs:api": "typedoc",
     "preview": "vite preview",
-    "format": "node scripts/build/format.mjs",
+    "format": "node scripts/builders/format.mjs",
     "format:check": "prettier --check .",
-    "test:workspace": "node --test --test-concurrency=1 scripts/tests/workspace-registry.test.js scripts/tests/workspace-cli.test.js scripts/tests/flow-cli.test.js scripts/tests/stub-fallback.test.js scripts/tests/manifest-consistency.test.js scripts/tests/scaffold-consistency.test.js",
+    "test:workspace": "node --test --test-concurrency=1 scripts/tests/workspace-registry.test.js scripts/tests/workspace-cli.test.js scripts/tests/stub-fallback.test.js scripts/tests/scaffold-consistency.test.js",
     "setup-hooks": "husky"
   },
   "peerDependencies": {
@@ -96,12 +118,12 @@
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.8",
-    "playwright": "^1.60.0",
     "postcss": "^8.5.15",
     "prettier": "^3.8.4",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "tailwindcss": "^4.3.0",
+    "typedoc": "^0.28.20",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12",

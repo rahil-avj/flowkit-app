@@ -82,7 +82,7 @@ export function markdownSummaryBlob(sessions: SessionExport[]): Blob {
     if (s.meta.tags.length) lines.push(`- **Tags:** ${s.meta.tags.join(', ')}`)
     if (s.meta.remarks.length) {
       lines.push('- **Remarks:**')
-      s.meta.remarks.forEach(r => lines.push(`  - ${r}`))
+      s.meta.remarks.forEach(r => lines.push(`  - ${r.text}`))
     }
     lines.push('')
 

@@ -9,10 +9,10 @@
  *   - Two view modes: Styled (colour-coded by type) and Raw (JSON)
  */
 
-import EmptyState from '@platform/shared/components/ui/EmptyState'
-import Tooltip from '@platform/shared/components/ui/Tooltip'
-import { useDashboard } from '@platform/shared/contexts/DashboardContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
+import EmptyState from '@flowkit-shared/components/ui/EmptyState'
+import Tooltip from '@flowkit-shared/components/ui/Tooltip'
+import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import {
   Check,
   ChevronRight,

@@ -132,13 +132,7 @@ export interface FlowNode {
 // "slide-right" = new screen enters from the left (back navigation).
 
 export type TransitionAnimation =
-  | 'none'
-  | 'fade'
-  | 'slide-left'
-  | 'slide-right'
-  | 'slide-up'
-  | 'slide-down'
-  | 'scale'
+  'none' | 'fade' | 'slide-left' | 'slide-right' | 'slide-up' | 'slide-down' | 'scale'
 
 // ─── Interaction System ───────────────────────────────────────────────────────
 //
@@ -404,11 +398,18 @@ export interface FlowConfig {
 }
 
 // ─── Screen Props ─────────────────────────────────────────────────────────────
-//
-// Props automatically injected into every screen component by FlowMaster.
-// These exist as an escape hatch for screens that need programmatic
-// triggers (form submits, async callbacks, custom gesture libraries, etc.).
 
+/**
+ * Props automatically injected into every screen component by FlowMaster
+ * during flowplan playback. All fields are `undefined` when a screen is
+ * previewed standalone (e.g. the Screens tab, outside any flow) — use the
+ * `isFlow` field to detect which case you're in.
+ *
+ * These exist as an escape hatch for screens that need programmatic
+ * triggers (form submits, async callbacks, custom gesture libraries, etc.);
+ * simple taps should prefer an element `id` + a matching flowplan step
+ * instead of destructuring these props.
+ */
 export interface FlowScreenProps<
   TState extends Record<string, unknown> = Record<string, unknown>,
   TDb extends Record<string, unknown> = Record<string, unknown>,
@@ -492,7 +493,7 @@ export interface FeedbackComment {
 // existing FlowMaster/useFlowEngine — the engine is never modified.
 //
 // Authoring lives in: workspaces/<ws>/projects/<proj>/[modules/<mod>/]flowplans/<Name>.ts
-// authored with defineFlow({ ... }) from @platform/core/config.
+// authored with defineFlow({ ... }) from @flowkit-core/config.
 
 /**
  * A dot-path patch applied onto the flow's db copy.
@@ -612,13 +613,19 @@ export interface FlowplanDef {
   db?: Record<string, unknown> | string
   /** Flow-level simulator controls shown during playback. */
   simulator?: { controls: SimulatorControl[] }
+  /**
+   * Screen id the device's home button/reset-to-first should target while this
+   * flowplan is playing. Falls back to the workspace's `startScreen` (or the
+   * first declared screen) when unset.
+   */
+  homeScreen?: string
   /** Ordered steps (or refs to other Flowplans). */
   steps: FlowplanStepEntry[]
 }
 
 // ─── Workspace Config & Hierarchy (Phase 1) ────────────────────────────────────
 
-/** Per-project options in flowkit.config.ts. All optional. */
+/** Per-project options in workspace.ts. All optional. */
 export interface FlowkitProjectConfig {
   /** Display name (defaults to folder name). */
   label?: string
@@ -656,6 +663,23 @@ export interface FlowkitConfig {
   screenOrder?: Record<string, string[]>
   /** Nested-layout: per-project config (use when the workspace has a projects/ folder). */
   projects?: Record<string, FlowkitProjectConfig>
+  /**
+   * Screen id to load by default (cold load, canvas "home" button, reset-to-first)
+   * when no flowplan is active. Falls back to the first declared screen when unset.
+   */
+  startScreen?: string
+  /**
+   * Default device shell/mockup shown on load. Must match a `DevicePreset.label`
+   * from `src/shared/components/devices` (e.g. "iPhone 16 Pro"). Falls back to the
+   * platform default (first entry in `DEVICE_PRESETS`) when unset or unrecognized.
+   */
+  defaultDevice?: string
+  /**
+   * Default orientation on load. Ignored if the resolved device preset does not
+   * support landscape (`DevicePreset.supportsLandscape`). Falls back to "portrait"
+   * when unset.
+   */
+  defaultOrientation?: 'portrait' | 'landscape'
 }
 
 /**
@@ -673,8 +697,14 @@ export interface WorkspaceHierarchyNode {
 
 // ─── Annotation Tags ─────────────────────────────────────────────────────────
 
+/** Badge color options for an {@link AnnotationTag} — maps to theme.accent.* tokens. */
 export type AnnotationTagColor = 'blue' | 'green' | 'red' | 'amber' | 'purple'
 
+/**
+ * An ephemeral review marker shown as a badge in the Screens tab sidebar.
+ * Declared in a workspace's `flows/_tags.ts` via the {@link tag} helper and
+ * scoped to specific screens and/or flows.
+ */
 export interface AnnotationTag {
   /** Display label shown as the badge text. */
   label: string

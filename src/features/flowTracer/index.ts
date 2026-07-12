@@ -1,5 +1,5 @@
 // Public API for the flowTracer feature.
-// Import from '@features/flowTracer' — never reach inside components/.
+// Import from '@flowkit-features/flowTracer' — never reach inside components/.
 export { buildSessionExport } from './buildSessionExport'
 export {
   DEFAULT_SESSION_SETTINGS,

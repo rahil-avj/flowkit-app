@@ -1,4 +1,4 @@
-import type { WireframeView } from '@platform/types/index'
+import type { WireframeView } from '@flowkit/types/index'
 import { useEffect, useMemo, useState } from 'react'
 
 import { exportMarkdownSummary, exportMetricsCsv } from '../../exportUtils'

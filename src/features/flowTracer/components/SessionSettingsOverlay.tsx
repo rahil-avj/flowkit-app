@@ -1,5 +1,5 @@
-import OverlayShell from '@platform/shared/components/overlays/OverlayShell'
-import Select from '@platform/shared/components/ui/Select'
+import OverlayShell from '@flowkit-shared/components/overlays/OverlayShell'
+import Select from '@flowkit-shared/components/ui/Select'
 import { Lock, X } from 'lucide-react'
 import { useState } from 'react'
 
@@ -59,7 +59,7 @@ export default function SessionSettingsOverlay({
       </div>
 
       {/* Body */}
-      <div className="overflow-y-auto p-3.5 flex flex-col gap-[18px] flex-1">
+      <div className="overflow-y-auto p-3.5 flex flex-col gap-4.5 flex-1">
         {/* Name template */}
         <div className="flex flex-col gap-1.5">
           <span className="text-ui-xs text-theme-text-muted font-bold tracking-[0.06em] uppercase">

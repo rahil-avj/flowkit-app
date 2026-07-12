@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 const MOBILE_BREAKPOINT = 768
 
 function isMobileWidth() {
-  return window.innerWidth < MOBILE_BREAKPOINT
+  return Math.min(window.innerWidth, window.innerHeight) < MOBILE_BREAKPOINT
 }
 
 export function useIsMobile(): boolean {

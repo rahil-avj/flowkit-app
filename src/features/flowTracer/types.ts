@@ -13,7 +13,7 @@ export type EventType =
   | 'flow.completed'
   | 'flow.exited-early'
   | 'flow.blocked'
-  | 'flow.transition' // a navigation resolved — carries action + any warnings/errors
+  | 'flow.transition' // navigation resolved WITH A PROBLEM (blocked or resolver threw/warned) — never fires on a clean nav
   // Screen
   | 'screen.visited'
   | 'screen.dwell-end'
@@ -78,6 +78,11 @@ export interface CursorSample {
 
 // ─── Session metadata ─────────────────────────────────────────────────────────
 
+export interface SessionRemark {
+  text: string
+  timestamp: number
+}
+
 export interface SessionMeta {
   id: string
   name: string
@@ -87,7 +92,7 @@ export interface SessionMeta {
   tags: string[]
   eventCount: number
   cursorSampleCount: number
-  remarks: string[]
+  remarks: SessionRemark[]
   qualityScore: number
   isTestMode: boolean
   capturedScreenW: number

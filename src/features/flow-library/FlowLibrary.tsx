@@ -1,11 +1,20 @@
-import Button from '@platform/shared/components/ui/Button'
-import SharedEmptyState from '@platform/shared/components/ui/EmptyState'
-import Tag from '@platform/shared/components/ui/Tag'
-import { useNavigation } from '@platform/shared/contexts/DashboardContext'
-import { useFlowPlaybackOptional } from '@platform/shared/contexts/FlowPlaybackContext'
-import { useExplorerCommands } from '@platform/shared/utils/explorerCommands'
-import { type FlowplanDef, type FlowStep, type Fork, isFlowplanRef } from '@platform/types/index'
-import { CheckCircle2, ChevronLeft, Clock, GitFork, Layers, Play, Search } from 'lucide-react'
+import { type FlowplanDef, type FlowStep, type Fork, isFlowplanRef } from '@flowkit/types/index'
+import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
+import Button from '@flowkit-shared/components/ui/Button'
+import SharedEmptyState from '@flowkit-shared/components/ui/EmptyState'
+import Tag from '@flowkit-shared/components/ui/Tag'
+import { useNavigation } from '@flowkit-shared/contexts/DashboardContext'
+import { useExplorerCommands } from '@flowkit-shared/utils/explorerCommands'
+import {
+  CheckCircle2,
+  ChevronLeft,
+  Clock,
+  GitFork,
+  Layers,
+  Play,
+  Search,
+  Square,
+} from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import FlowCanvas from './FlowCanvas'
@@ -29,8 +38,9 @@ export default function FlowLibrary({
   activeTags: activeTagsProp,
   onDetailChange,
 }: Props) {
-  const { navigateTo } = useNavigation()
+  const { navigateTo, firstViewId } = useNavigation()
   const { summaries } = useFlowLibrary()
+  const playback = useFlowPlaybackOptional()
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
@@ -74,11 +84,25 @@ export default function FlowLibrary({
   }, [filtered, screenFilter])
 
   if (selected) {
+    const isSelectedPlaying =
+      playback?.isGating && playback.activeFlowplan?.__flowplan.flowplanId === selected.id
+    const activeSourceScreenId = isSelectedPlaying
+      ? (playback?.activeFlowplan?.__flowplan.steps[playback.currentStepIndex]?.sourceScreenId ??
+        null)
+      : null
     return (
       <FlowDetail
         summary={selected}
         onBack={() => setSelectedId(null)}
         onPlay={() => navigateTo(`${selected.id}-play`)}
+        onStop={() => {
+          playback?.exit()
+          // Land on the GENERIC (non-flowplan) version of whatever screen was
+          // active — not home, not back to this list. Known trade-off: the db
+          // resets to the workspace default on exit(), so a screen authored
+          // assuming accumulated flowplan db state may render sparsely here.
+          navigateTo(activeSourceScreenId ?? firstViewId ?? 'home')
+        }}
       />
     )
   }
@@ -245,8 +269,9 @@ interface FlowDetailProps {
   summary: FlowSummary
   onBack: () => void
   onPlay: () => void
+  onStop: () => void
 }
-function FlowDetail({ summary, onBack, onPlay }: FlowDetailProps) {
+function FlowDetail({ summary, onBack, onPlay, onStop }: FlowDetailProps) {
   const [view, setView] = useState<'steps' | 'canvas'>('steps')
   const playback = useFlowPlaybackOptional()
 
@@ -290,15 +315,27 @@ function FlowDetail({ summary, onBack, onPlay }: FlowDetailProps) {
           </span>
         )}
 
-        <Button
-          size="sm"
-          variant="accent"
-          icon={<Play size={11} />}
-          onClick={onPlay}
-          className="ml-auto"
-        >
-          Play
-        </Button>
+        {isPlaying ? (
+          <Button
+            size="sm"
+            variant="danger"
+            icon={<Square size={11} />}
+            onClick={onStop}
+            className="ml-auto"
+          >
+            Stop
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            variant="accent"
+            icon={<Play size={11} />}
+            onClick={onPlay}
+            className="ml-auto"
+          >
+            Play
+          </Button>
+        )}
       </div>
 
       {/* Title block */}

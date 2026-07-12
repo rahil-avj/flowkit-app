@@ -1,6 +1,6 @@
-import Input from '@platform/shared/components/ui/Input'
-import { useDashboard } from '@platform/shared/contexts/DashboardContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
+import Input from '@flowkit-shared/components/ui/Input'
+import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 
 import { getNestedValue, updateNestedDbValue } from './helpers'
 

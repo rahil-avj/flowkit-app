@@ -1,15 +1,15 @@
-import { useFeedback } from '@platform/features/feedback/context/FeedbackContext'
-import ExportModal from '@platform/shared/components/ui/ExportModal'
-import ImportModal from '@platform/shared/components/ui/ImportModal'
-import { useNavigation } from '@platform/shared/contexts/DashboardContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
-import type { WireframeView } from '@platform/types/index'
+import type { WireframeView } from '@flowkit/types/index'
+import { useFeedback } from '@flowkit-features/feedback/context/FeedbackContext'
+import { useNavigation } from '@flowkit-shared/contexts/DashboardContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import { Plus, SlidersHorizontal } from 'lucide-react'
 import React, { useCallback, useEffect } from 'react'
 
 import AddCommentForm from './components/AddCommentForm'
 import CommentsWall from './components/CommentsWall'
+import ExportModal from './components/ExportModal'
 import FilterPanel from './components/FilterPanel'
+import ImportModal from './components/ImportModal'
 import { FeedbackTabContext, FeedbackTabProvider, useFeedbackTabContext } from './context'
 
 function FeedbackTabContent() {
@@ -161,15 +161,20 @@ function FeedbackTabContent() {
           setReviewerName={setExportReviewerName}
           includeScreenshots={exportIncludeScreenshots}
           setIncludeScreenshots={setExportIncludeScreenshots}
-          cloudKey={cloudKey}
-          setCloudKey={setCloudKey}
-          providedKey={providedKey}
-          exportStatus={exportStatus}
-          exportError={exportError}
-          exportShareUrl={exportShareUrl}
-          cloudExportEnabled={cloudExportEnabled}
-          onExport={handleExport}
           onDownload={handleLocalExport}
+          cloudSlot={
+            cloudExportEnabled
+              ? {
+                  cloudKey,
+                  setCloudKey,
+                  providedKey,
+                  exportStatus,
+                  exportError,
+                  exportShareUrl,
+                  onPushToCloud: handleExport,
+                }
+              : undefined
+          }
         />
 
         <ImportModal
@@ -187,10 +192,15 @@ function FeedbackTabContent() {
           importedTotalAfter={importedTotalAfter}
           onImportFile={handleImportFile}
           onImportText={handleImportText}
-          importReadKey={importReadKey}
-          setImportReadKey={setImportReadKey}
-          onImportFromCloud={handleImportFromCloud}
-          cloudExportEnabled={cloudExportEnabled}
+          cloudSlot={
+            cloudExportEnabled
+              ? {
+                  importReadKey,
+                  setImportReadKey,
+                  onImportFromCloud: handleImportFromCloud,
+                }
+              : undefined
+          }
         />
 
         <div

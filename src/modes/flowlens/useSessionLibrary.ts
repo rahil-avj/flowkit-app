@@ -1,7 +1,7 @@
-import { buildSessionExport } from '@platform/features/flowTracer/buildSessionExport'
-import { useSessionRecorderOptional } from '@platform/features/flowTracer/context'
-import { SessionDb } from '@platform/features/flowTracer/sessionDb'
-import type { SessionExport, SessionMeta } from '@platform/features/flowTracer/types'
+import { buildSessionExport } from '@flowkit-features/flowTracer/buildSessionExport'
+import { useSessionRecorderOptional } from '@flowkit-features/flowTracer/context'
+import { SessionDb } from '@flowkit-features/flowTracer/sessionDb'
+import type { SessionExport, SessionMeta } from '@flowkit-features/flowTracer/types'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 export type SessionSource = 'library' | 'recorded'

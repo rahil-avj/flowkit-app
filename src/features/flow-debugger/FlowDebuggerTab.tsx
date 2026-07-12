@@ -1,6 +1,6 @@
-import EmptyState from '@platform/shared/components/ui/EmptyState'
-import { useDashboard } from '@platform/shared/contexts/DashboardContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
+import EmptyState from '@flowkit-shared/components/ui/EmptyState'
+import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import { AlertOctagon, Cpu, GitBranch, Route, Zap } from 'lucide-react'
 import React from 'react'
 

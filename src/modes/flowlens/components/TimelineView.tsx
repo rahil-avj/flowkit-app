@@ -1,4 +1,4 @@
-import type { SessionEvent, SessionSnapshot } from '@platform/features/flowTracer/types'
+import type { SessionEvent, SessionSnapshot } from '@flowkit-features/flowTracer/types'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { FLOWLENS_ACCENT } from '../flowLensTheme'

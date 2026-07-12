@@ -4,6 +4,8 @@ import PreviewCanvas from './core/canvas/PreviewCanvas'
 import { useAppShortcuts } from './core/shortcuts/useKeyboardShortcuts'
 import { FeedbackProvider } from './features/feedback/context/FeedbackContext'
 import { FigmaExportView } from './features/figma-export'
+import { FlowplanSettingsProvider } from './features/flowplan/FlowplanSettingsContext'
+import { FlowPlaybackProvider } from './features/flowplan/FlowPlaybackContext'
 import { SessionRecorderProvider } from './features/flowTracer/context'
 import Forbidden from './shared/components/errors/Forbidden'
 import Maintenance from './shared/components/errors/Maintenance'
@@ -16,7 +18,6 @@ import { ActiveWorkspaceContext } from './shared/contexts/ActiveWorkspaceContext
 import { DashboardProvider } from './shared/contexts/DashboardContext'
 import { DevModeProvider } from './shared/contexts/DevModeContext'
 import { FlowLensModeProvider } from './shared/contexts/FlowLensModeContext'
-import { FlowPlaybackProvider } from './shared/contexts/FlowPlaybackContext'
 import { ThemeProvider } from './shared/contexts/ThemeContext'
 import { useWorkspaceHierarchy } from './shared/utils/useWorkspaceHierarchy'
 import { listWorkspaceNames, loadWorkspaceTokens } from './shared/utils/workspaceModules'
@@ -93,15 +94,19 @@ function WorkspaceRunner({ name, onSwitch }: WorkspaceRunnerProps) {
                     <FigmaExportView views={ALL_VIEWS} />
                   ) : (
                     <DashboardProvider
-                      firstViewId={ALL_VIEWS[0]?.id ?? 'home'}
+                      firstViewId={hierarchy.startScreenId ?? ALL_VIEWS[0]?.id ?? 'home'}
+                      initialDeviceLabel={hierarchy.defaultDeviceLabel}
+                      initialOrientation={hierarchy.defaultOrientation}
                       workspaceConfig={workspaceConfig}
                       onSwitchWorkspace={onSwitch}
                     >
-                      <FlowPlaybackProvider>
-                        <FeedbackProvider>
-                          <PreviewCanvas flows={FLOWS} views={ALL_VIEWS} />
-                        </FeedbackProvider>
-                      </FlowPlaybackProvider>
+                      <FlowplanSettingsProvider>
+                        <FlowPlaybackProvider>
+                          <FeedbackProvider>
+                            <PreviewCanvas flows={FLOWS} views={ALL_VIEWS} />
+                          </FeedbackProvider>
+                        </FlowPlaybackProvider>
+                      </FlowplanSettingsProvider>
                     </DashboardProvider>
                   )}
                 </WorkspaceErrorBoundary>

@@ -29,17 +29,18 @@ FlowLens has two parts:
 - **FlowTracer** — runs inside the prototype and records every screen visit, tap, navigation, dwell, and frustration signal in real time.
 - **FlowLens Mode** — a separate analytics layer you switch into to replay sessions, inspect heatmaps, funnels, and reports.
 
-Enable FlowLens in dev:
+FlowLens is included by default in this repo (`npm run dev` / `npm run build` — no
+env var needed). Availability is **presence-based**: it's included whenever
+`src/modes/flowlens/index.ts` exists on disk, and stripped entirely (via Rollup dead
+code elimination) if that folder is removed. There is no `VITE_ENABLE_FLOWLENS`
+env-var gate — a doc/comment previously suggested one existed; it did not actually
+control anything and has been removed.
 
-```bash
-VITE_ENABLE_FLOWLENS=true npm run dev
-```
-
-Enable it in a production build:
-
-```bash
-VITE_ENABLE_FLOWLENS=true npm run build
-```
+To exclude FlowLens from a build, delete or rename `src/modes/flowlens/` before
+`npm run build`. `flowkit export` (standalone HTML export, works in every mode)
+always includes FlowLens if the folder is present — there's currently no
+export-time flag to exclude it separately from a regular build; remove the
+folder first if you need a FlowLens-free standalone export.
 
 Open the app, then click the **FlowLens** toggle (top-right of the canvas bar) to enter analytics mode.
 
@@ -105,7 +106,7 @@ A **study** is a named folder that groups sessions from one testing round. Every
 
 Sessions are scoped to the active workspace automatically (`meta.workspaceId`).
 
-**Test mode** — enable the **Test mode** toggle before recording to mark the session as `isTestMode: true`. Test sessions are excluded from all analytics and reports by default.
+**Settings** — Click the **Settings** icon (⚙) before starting to configure recording options: session name template, cursor tracking sample rate, and which event channels to record (Interactions and Navigation are always on; you can toggle Effects, State changes, Simulator changes, Panel activity, etc.).
 
 ---
 
@@ -131,14 +132,15 @@ Click a row to select it for review. In dev mode, each row has a **save icon** (
 
 ### Right panel tabs
 
-| Tab      | What it shows                        |
-| -------- | ------------------------------------ |
-| Overview | Quality score breakdown, key metrics |
-| Timeline | Scrubba event timeline               |
-| Heatmap  | Cursor density per screen            |
-| Screens  | Per-screen dwell and frustration     |
+| Tab      | What it shows                                          |
+| -------- | ------------------------------------------------------ |
+| Overview | Quality breakdown, key metrics, most visited screens   |
+| Timeline | Event timeline scrubber                                |
+| Paths    | Navigation paths — top screens by visit count          |
+| Funnel   | Flow completion rates                                  |
+| Heatmap  | Cursor density on the current screen                   |
 
-Use the **playback bar** at the bottom to scrub or auto-play the session.
+Click **View all** in any tab to open a full-screen overlay with more detail. Use the **playback bar** at the bottom to scrub or auto-play the session.
 
 ---
 
@@ -147,7 +149,7 @@ Use the **playback bar** at the bottom to scrub or auto-play the session.
 ### Option A — Browser (dev only)
 
 1. Go to the **Recorded** tab.
-2. Hover a session row → click the **Archive icon** (📁).
+2. Hover a session row → click the **Archive icon** (from lucide).
 3. The session POSTs to `/__flowlens/save-session` (Vite dev middleware).
 4. File is written to `workspaces/<ws>/lib/flowLens/sessions/<active-study>/`.
 5. Vite HMR picks it up → the session appears in the **Library** tab within seconds.

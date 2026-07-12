@@ -15,6 +15,7 @@ import {
   spawnCLI,
   WORKSPACES_DIR,
 } from './helpers.js'
+import { WORKSPACE_CONFIG_FILENAME } from '../helpers/config-filenames.js'
 
 const WS_ONE = 'twsone'
 const WS_TWO = 'twstwo'
@@ -50,7 +51,7 @@ describe('Suite B — Workspace CLI lifecycle', () => {
     const base = path.join(ROOT, 'workspaces', WS_ONE)
     const expected = [
       path.join(base, 'index.ts'),
-      path.join(base, 'flowkit.config.ts'),
+      path.join(base, WORKSPACE_CONFIG_FILENAME),
       path.join(base, 'lib/data/db.ts'),
       path.join(base, 'lib/data/simulator.tsx'),
       path.join(base, 'lib/design-system/tokens.css'),
@@ -91,7 +92,7 @@ describe('Suite B — Workspace CLI lifecycle', () => {
   it('B6 — Scaffold TypeScript files pass ESLint', () => {
     const targets = [
       `workspaces/${WS_ONE}/index.ts`,
-      `workspaces/${WS_ONE}/flowkit.config.ts`,
+      `workspaces/${WS_ONE}/${WORKSPACE_CONFIG_FILENAME}`,
       `workspaces/${WS_ONE}/lib/data/db.ts`,
     ]
     for (const t of targets) {
@@ -128,30 +129,10 @@ describe('Suite B — Workspace CLI lifecycle', () => {
     assert.equal(count, 1, 'duplicate entry found in registry')
   })
 
-  it('B11 — Switch workspace (`sw`) → prints deprecation message, exits 0', async () => {
-    const result = await spawnCLI([`-sw:${WS_TWO}`])
-    assert.equal(result.code, 0, `sw should exit 0, stderr: ${result.stderr}`)
-    assert.ok(
-      result.stdout.includes('no longer needed') || result.stdout.includes('browser'),
-      'sw should print deprecation message'
-    )
-  })
-
-  it('B12 — Switch workspace (`sw`) → registry active is unchanged (browser owns selection)', () => {
-    // sw no longer mutates workspaces.json active — workspace selection is in the browser
-    const reg = parseRegistry()
-    assert.ok(typeof reg.active === 'string' || reg.active === null, 'active field exists')
-  })
-
-  it('B13 — Switch to non-existent workspace → exits 0 with deprecation message', async () => {
-    const result = await spawnCLI(['-sw:doesnotexist'])
-    assert.equal(result.code, 0, 'sw always exits 0 now (deprecated)')
-  })
-
   it('B14 — Delete workspace folder directly → syncWorkspaceRegistry removes entry', async () => {
     const dir = path.join(WORKSPACES_DIR, WS_ONE)
     if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true })
-    const { syncWorkspaceRegistry } = await import(path.join(ROOT, 'scripts/lib/registry.js'))
+    const { syncWorkspaceRegistry } = await import(path.join(ROOT, 'scripts/helpers/registry.js'))
     syncWorkspaceRegistry()
     const reg = parseRegistry()
     assert.ok(!reg.names.includes(WS_ONE), `${WS_ONE} should be removed after folder deleted`)
@@ -186,7 +167,7 @@ describe('Suite B — Workspace CLI lifecycle', () => {
         await spawnCLI([`-rw:${name}`], name)
       }
     }
-    const { syncWorkspaceRegistry } = await import(path.join(ROOT, 'scripts/lib/registry.js'))
+    const { syncWorkspaceRegistry } = await import(path.join(ROOT, 'scripts/helpers/registry.js'))
     syncWorkspaceRegistry()
     const final = parseRegistry()
     assert.ok(!final.names.includes(WS_ONE), `${WS_ONE} should be removed`)

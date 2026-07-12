@@ -1,4 +1,4 @@
-import type { ScreenMetaPatchEntry } from '@features/script-patch'
+import type { ScreenMetaPatchEntry } from '@flowkit-features/script-patch'
 import type { ReactNode } from 'react'
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 
@@ -21,8 +21,8 @@ if (import.meta.hot && !import.meta.hot.data.DevModeContext) {
 }
 const DevModeContext =
   (import.meta.hot?.data.DevModeContext as
-    | ReturnType<typeof createContext<DevModeCtx | null>>
-    | undefined) ?? createContext<DevModeCtx | null>(null)
+    ReturnType<typeof createContext<DevModeCtx | null>> | undefined) ??
+  createContext<DevModeCtx | null>(null)
 
 export function DevModeProvider({ children }: { children: ReactNode }) {
   const [devMode, setDevMode] = useState(false)

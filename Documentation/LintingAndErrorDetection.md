@@ -143,7 +143,7 @@ Workspace code intentionally gets a lenient pass — no strict checks, JS allowe
 - **Coverage:** not configured
 - **Setup files:** none
 
-Tests are scoped to pure-logic scripts only (`applyDotPathPatch`, `compileFlowplan`, keyboard shortcuts, canvas reducer, etc.). There are no component tests or browser-environment tests. `jsdom` and `playwright` are listed as devDependencies but no test config uses them currently.
+Tests are scoped to pure-logic scripts only (`applyDotPathPatch`, `compileFlowplan`, keyboard shortcuts, canvas reducer, etc.). There are no component tests or browser-environment tests. `jsdom` is listed as a devDependency but no test config uses it currently. (`playwright` was previously also unused-but-installed here — it has since been removed from `package.json`.)
 
 ---
 
@@ -175,14 +175,14 @@ One `@ts-ignore` in the entire codebase (suppressing a TS error on an HMR import
 
 These suppress the exhaustive-deps warning on `useEffect` and `useCallback` calls where the author intentionally omits deps that would cause infinite loops or unintended re-runs.
 
-| File                                           | Count |
-| ---------------------------------------------- | ----- |
-| `src/core/layout/FlowEngine.ts`                | 6     |
-| `src/core/layout/FlowMaster.tsx`               | 3     |
-| `src/core/canvas/PreviewCanvas.tsx`            | 2     |
-| `src/core/layout/KitSideExplorer.tsx`          | 1     |
-| `src/core/layout/hooks/usePanelDrag.ts`        | 1     |
-| `src/features/feedback/panel.tsx`              | 1     |
+| File                                        | Count |
+| ------------------------------------------- | ----- |
+| `src/core/layout/FlowEngine.ts`             | 6     |
+| `src/core/layout/FlowMaster.tsx`            | 3     |
+| `src/core/canvas/PreviewCanvas.tsx`         | 2     |
+| `src/core/layout/KitSideExplorer.tsx`       | 1     |
+| `src/core/layout/hooks/usePanelDrag.ts`     | 1     |
+| `src/features/feedback/panel.tsx`           | 1     |
 | `src/shared/utils/useWorkspaceHierarchy.ts` | 1     |
 
 **`react-hooks/set-state-in-effect`** — 5 occurrences
@@ -221,7 +221,7 @@ These suppress the exhaustive-deps warning on `useEffect` and `useCallback` call
 | `noUnusedLocals` / `noUnusedParameters` off in app | Medium   | Dead code in `src/` is not caught by tsc. ESLint's `no-unused-vars` partially covers this but only for vars, not parameters.                                          |
 | Architecture boundary rule is `warn` not `error`   | Medium   | Layer violations don't fail CI; they only appear in editor/lint output.                                                                                               |
 | No coverage config in Vitest                       | Low      | No minimum coverage threshold; coverage not measured.                                                                                                                 |
-| No component/DOM tests                             | Low      | `jsdom` and `playwright` devDependencies exist but are unused in the test config.                                                                                     |
+| No component/DOM tests                             | Low      | `jsdom` devDependency exists but is unused in the test config. (`playwright` was previously also installed-but-unused here; it has since been removed.)                |
 | `react-hooks/exhaustive-deps` suppressed 13×       | Low      | Mostly intentional (stable refs, mount-once effects), but each is a potential stale-closure bug if the surrounding code changes.                                      |
 | `no-explicit-any` suppressed 17×                   | Low      | Concentrated in `DashboardContext` (generic db type) and `compileFlowplan` (dynamic step evaluation). Both have structural reasons but could be typed more precisely. |
 | Single file-level `eslint-disable`                 | Low      | `useJsonBinKeyValidation.ts` disables `set-state-in-effect` for the whole file — any new code added to that file is silently exempt.                                  |

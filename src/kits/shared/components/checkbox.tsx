@@ -1,4 +1,4 @@
-import { cn } from '@kit/lib/utils'
+import { cn } from '@flowkit-kit/lib/utils'
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox'
 import { Check } from 'lucide-react'
 import * as React from 'react'

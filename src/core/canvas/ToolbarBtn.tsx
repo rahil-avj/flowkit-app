@@ -1,5 +1,5 @@
-import Tooltip from '@platform/shared/components/ui/Tooltip'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
+import Tooltip from '@flowkit-shared/components/ui/Tooltip'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import { useMemo, useState } from 'react'
 
 // ─── ToolbarTooltipContent ────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ export function ToolbarTooltipContent({
           {label}
         </span>
         {shortcut && (
-          <span className="text-[10px] font-semibold text-theme-text-disabled bg-theme-hover border border-theme-border rounded px-1.25 py-0.25 tracking-wide whitespace-nowrap">
+          <span className="text-[10px] font-semibold text-theme-text-disabled bg-theme-hover border border-theme-border rounded px-1.25 py-px tracking-wide whitespace-nowrap">
             {shortcut}
           </span>
         )}

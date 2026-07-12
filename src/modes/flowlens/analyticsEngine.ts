@@ -3,8 +3,8 @@ import {
   type FlowMetrics,
   type ScreenMetrics,
   type SessionMetrics,
-} from '@platform/features/flowTracer/sessionMetrics'
-import type { SessionEvent, SessionExport, SessionMeta } from '@platform/features/flowTracer/types'
+} from '@flowkit-features/flowTracer/sessionMetrics'
+import type { SessionEvent, SessionExport, SessionMeta } from '@flowkit-features/flowTracer/types'
 
 // Re-export for backward compat of other files within this module.
 export type { FlowMetrics, ScreenMetrics, SessionMetrics }

@@ -1,28 +1,25 @@
-import { useFeedback } from '@platform/features/feedback/context/FeedbackContext'
-import { useSessionSettings } from '@platform/features/flowTracer/components/useSessionSettings'
-import { useSessionRecorderOptional } from '@platform/features/flowTracer/context'
-import { GoToOverlay } from '@platform/features/go-to-overlay'
-import DeviceMockup from '@platform/shared/components/devices/DeviceMockup'
-import PanelErrorBoundary from '@platform/shared/components/errors/PanelErrorBoundary'
-import MobileCanvas from '@platform/shared/components/mobile/MobileCanvas'
-import ActionCenter from '@platform/shared/components/overlays/ActionCenter'
-import type { ActionCtx } from '@platform/shared/components/overlays/appActions'
-import HelpModal from '@platform/shared/components/overlays/HelpModal'
-import Settings from '@platform/shared/components/overlays/Settings'
-import Tooltip from '@platform/shared/components/ui/Tooltip'
-import {
-  LS_AUTO_HIDE_SCROLLBARS,
-  LS_SESSIONS_ENABLED,
-} from '@platform/shared/constants/storageKeys'
-import { useActiveWorkspace } from '@platform/shared/contexts/ActiveWorkspaceContext'
-import { useDashboard } from '@platform/shared/contexts/DashboardContext'
-import { useDevMode } from '@platform/shared/contexts/DevModeContext'
-import { useFlowLensModeOptional } from '@platform/shared/contexts/FlowLensModeContext'
-import { useFlowPlaybackOptional } from '@platform/shared/contexts/FlowPlaybackContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
-import { useIsMobile } from '@platform/shared/utils/useIsMobile'
-import type { FlowNode, WireframeView } from '@platform/types/index'
-import { workspaces } from '@platform/workspaces'
+import type { FlowNode, WireframeView } from '@flowkit/types/index'
+import { workspaces } from '@flowkit/workspaces'
+import { useFeedback } from '@flowkit-features/feedback/context/FeedbackContext'
+import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
+import { useSessionSettings } from '@flowkit-features/flowTracer/components/useSessionSettings'
+import { useSessionRecorderOptional } from '@flowkit-features/flowTracer/context'
+import { GoToOverlay } from '@flowkit-features/go-to-overlay'
+import DeviceMockup from '@flowkit-shared/components/devices/DeviceMockup'
+import PanelErrorBoundary from '@flowkit-shared/components/errors/PanelErrorBoundary'
+import MobileCanvas from '@flowkit-shared/components/mobile/MobileCanvas'
+import ActionCenter from '@flowkit-shared/components/overlays/ActionCenter'
+import type { ActionCtx } from '@flowkit-shared/components/overlays/appActions'
+import HelpModal from '@flowkit-shared/components/overlays/HelpModal'
+import Settings from '@flowkit-shared/components/overlays/Settings'
+import Tooltip from '@flowkit-shared/components/ui/Tooltip'
+import { LS_AUTO_HIDE_SCROLLBARS, LS_SESSIONS_ENABLED } from '@flowkit-shared/constants/storageKeys'
+import { useActiveWorkspace } from '@flowkit-shared/contexts/ActiveWorkspaceContext'
+import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
+import { useDevMode } from '@flowkit-shared/contexts/DevModeContext'
+import { useFlowLensModeOptional } from '@flowkit-shared/contexts/FlowLensModeContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
+import { useIsMobile } from '@flowkit-shared/utils/useIsMobile'
 import {
   ChevronDown,
   Hand,
@@ -72,15 +69,15 @@ const DISABLED_LENS = {
   available: false,
   enabled: false,
   pendingSessionId: null,
-  enter: () => {},
-  exit: () => {},
+  enter: () => { },
+  exit: () => { },
   consumePendingSessionId: () => null,
 } as const
 
 // FlowLens mode — presence-based. flowlensLoader comes from import.meta.glob in
 // FlowLensModeContext; when src/modes/flowlens/ is absent the glob is empty,
 // loader is undefined, and Rollup DCEs the entire flowlens chunk.
-import { flowlensLoader } from '@platform/shared/contexts/FlowLensModeContext'
+import { flowlensLoader } from '@flowkit-shared/contexts/FlowLensModeContext'
 interface FlowLensModeProps {
   views: unknown[]
   effectiveLeftW: number
@@ -126,8 +123,7 @@ function DesktopCanvas({ flows, views }: Props) {
     totalCommentCount,
     openFeedbackTab,
     openCommentForm,
-    cloudExportEnabled,
-    toggleCloudExport,
+    cloudSyncSlot,
     openExportModal,
     openImportModal,
   } = useFeedback()
@@ -185,8 +181,8 @@ function DesktopCanvas({ flows, views }: Props) {
   const actionCtx = useMemo<ActionCtx>(
     () => ({
       navigateTo,
-      setActiveTab: () => {},
-      setIsOpen: () => {},
+      setActiveTab: () => { },
+      setIsOpen: () => { },
       toggleTheme,
       toggleOrientation,
       resetToFirst,
@@ -194,8 +190,7 @@ function DesktopCanvas({ flows, views }: Props) {
       openGoTo,
       openHelp,
       toggleDevMode,
-      toggleCloudExport,
-      cloudExportEnabled,
+      cloudSyncSlot,
       openFeedbackTab,
       openExportModal,
       openImportModal,
@@ -218,8 +213,7 @@ function DesktopCanvas({ flows, views }: Props) {
       openGoTo,
       openHelp,
       toggleDevMode,
-      toggleCloudExport,
-      cloudExportEnabled,
+      cloudSyncSlot,
       openFeedbackTab,
       openExportModal,
       openImportModal,
@@ -635,7 +629,7 @@ function DesktopCanvas({ flows, views }: Props) {
 
 function FlowLensPanelSkeleton() {
   return (
-    <div className="absolute left-0 w-[280px] bg-theme-surface border-r border-theme-border pointer-events-auto inset-y-0">
+    <div className="absolute left-0 w-70 bg-theme-surface border-r border-theme-border pointer-events-auto inset-y-0">
       <div className="p-4 text-theme-text-disabled text-ui-xs">Loading FlowLens…</div>
     </div>
   )
@@ -716,15 +710,6 @@ function CanvasContent({
     setFlowAutoPlayLoop,
   } = useDashboard()
 
-  // ── On-mount scroll center ───────────────────────────────────────────────────
-  useLayoutEffect(() => {
-    const el = canvasRef.current
-    if (!el || el.clientWidth === 0 || el.clientHeight === 0) return
-    el.scrollLeft = (CANVAS_W - el.clientWidth) / 2
-    el.scrollTop = (CANVAS_H - el.clientHeight) / 2
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // Once only — reducer's scrollIntent effect handles subsequent centers.
-
   // ── Scrollbar fade ────────────────────────────────────────────────────────────
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(
@@ -757,7 +742,7 @@ function CanvasContent({
     breakKeepFit
   )
   const canvasClass = `canvas-scroll${autoHideScrollbars ? '' : ' scrollbars-always'}${keepFit ? ' keep-fit' : ''}`
-  const deviderV = <div className="w-0.25 h-6 my-0.5 bg-theme-border" />
+  const deviderV = <div className="w-px h-6 my-0.5 bg-theme-border" />
 
   return (
     // Spans all 3 grid columns, z-index:0 — panels float above at z-index:2
@@ -818,10 +803,10 @@ function CanvasContent({
                 .join(' ')}
             >
               {ActiveComponent ? (
-                // Static Screens-tab preview — outside flowplan playback there's no
-                // navigation/flow context, so only db is meaningful here. Screens
-                // authored against FlowScreenProps (the flat-mode convention) would
-                // otherwise see db as undefined until entering playback via FlowMaster.
+                // Screens tab is a static structural preview outside flowplan
+                // playback — screens that also want Screens-tab interactivity
+                // should call useDashboard().navigateTo(), guarded on the isFlow
+                // prop FlowMaster injects during playback (see FLOWMASTER.md).
                 <ActiveComponent db={db} />
               ) : (
                 <div className="flex-1 flex items-center justify-center h-full bg-theme-elevated text-theme-text-disabled text-ui-sm font-sans">
@@ -891,15 +876,15 @@ function CanvasContent({
             tooltip={
               showHandTooltip
                 ? {
-                    label: 'Hand tool active',
-                    shortcut: 'H',
-                    hint: 'Click again to exit · interact mode on',
-                  }
+                  label: 'Hand tool active',
+                  shortcut: 'H',
+                  hint: 'Click again to exit · interact mode on',
+                }
                 : {
-                    label: 'Hand tool',
-                    shortcut: 'H',
-                    hint: 'Drag to pan · hold Space for quick access',
-                  }
+                  label: 'Hand tool',
+                  shortcut: 'H',
+                  hint: 'Drag to pan · hold Space for quick access',
+                }
             }
             active={handMode}
             tint={showHandTooltip ? 'warning' : 'default'}
@@ -1235,7 +1220,7 @@ function WorkspaceBar({ panelOpen }: { panelOpen: boolean }) {
                   {activeWorkspace}
                 </span>
               </div>
-              <span className="px-1.5 py-0.5 rounded-[4px] text-ui-2xs font-bold bg-theme-blue-dim text-theme-blue shrink-0">
+              <span className="px-1.5 py-0.5 rounded-sm text-ui-2xs font-bold bg-theme-blue-dim text-theme-blue shrink-0">
                 active
               </span>
             </div>

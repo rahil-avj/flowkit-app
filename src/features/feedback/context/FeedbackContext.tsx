@@ -1,46 +1,8 @@
-import {
-  LS_CLOUD_EXPORT_ENABLED as CLOUD_EXPORT_STORAGE_KEY,
-  LS_FEEDBACK,
-  LS_LAST_REVIEWER,
-} from '@platform/shared/constants/storageKeys'
-import { FeedbackComment, FeedbackTag } from '@platform/types/index'
+import { FeedbackComment, FeedbackTag } from '@flowkit/types/index'
+import { LS_FEEDBACK, LS_LAST_REVIEWER } from '@flowkit-shared/constants/storageKeys'
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 
-// ── Project-level JSONBin config ─────────────────────────────────────────────
-// Set providedKey to pre-fill the cloud key for all users of this build.
-// Leave as "" to require the user to enter their own key.
-// Set collectionName to route all pushes into a named JSONBin collection.
-// Leave as "" to push bins without a collection.
-
-export const JSONBIN_CONFIG = {
-  providedKey: '',
-  collectionName: 'Wireframes Feedback',
-} as const
-// ─────────────────────────────────────────────────────────────────────────────
-
-async function pushToJsonBin(filename: string, content: string, key: string): Promise<string> {
-  const isMaster = key.startsWith('$2a$')
-  const res = await fetch('https://api.jsonbin.io/v3/b', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      [isMaster ? 'X-Master-Key' : 'X-Access-Key']: key,
-      'X-Bin-Name': filename,
-      ...(isMaster ? { 'X-Bin-Private': 'true' } : {}),
-      ...(JSONBIN_CONFIG.collectionName
-        ? { 'X-Collection-Name': JSONBIN_CONFIG.collectionName }
-        : {}),
-    },
-    body: content,
-  })
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.message || `JSONBin error ${res.status}`)
-  }
-  const data = await res.json()
-  const binId = data.metadata?.id as string
-  return `https://api.jsonbin.io/v3/b/${binId}/latest`
-}
+import { buildCloudSyncSlot, type CloudSyncSlot,useCloudSync } from '../cloud-sync'
 
 const STORAGE_KEY = LS_FEEDBACK
 const REVIEWER_STORAGE_KEY = LS_LAST_REVIEWER
@@ -136,9 +98,8 @@ interface FeedbackContextValue {
     reviewerName: string,
     format: 'md' | 'json' | 'both',
     includeScreenshots: boolean,
-    cloudKey?: string,
-    forceLocal?: boolean
-  ) => Promise<{ shareUrl?: string }>
+    options?: { download?: boolean }
+  ) => Promise<{ json?: string }>
   importComments: (file: File) => Promise<void>
   importCommentsFromText: (
     text: string
@@ -153,8 +114,15 @@ interface FeedbackContextValue {
   setOpenImportModal: (cb: () => void) => void
   lastReviewerName: string
   setLastReviewerName: (name: string) => void
+  cloudSyncSlot?: CloudSyncSlot
   cloudExportEnabled: boolean
-  toggleCloudExport: () => void
+  cloudKey: string
+  setCloudKey: (key: string) => void
+  providedKey: string
+  importReadKey: string
+  setImportReadKey: (key: string) => void
+  pushJson: (filename: string, json: string) => Promise<{ shareUrl: string }>
+  pullFromBin: (binUrl: string) => Promise<string>
 }
 
 if (import.meta.hot && !import.meta.hot.data.FeedbackContext) {
@@ -162,8 +130,8 @@ if (import.meta.hot && !import.meta.hot.data.FeedbackContext) {
 }
 const FeedbackContext =
   (import.meta.hot?.data.FeedbackContext as
-    | ReturnType<typeof createContext<FeedbackContextValue | undefined>>
-    | undefined) ?? createContext<FeedbackContextValue | undefined>(undefined)
+    ReturnType<typeof createContext<FeedbackContextValue | undefined>> | undefined) ??
+  createContext<FeedbackContextValue | undefined>(undefined)
 
 export function useFeedback() {
   const context = useContext(FeedbackContext)
@@ -187,16 +155,8 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
     if (typeof window === 'undefined') return ''
     return localStorage.getItem(REVIEWER_STORAGE_KEY) || ''
   })
-  const [cloudExportEnabled, setCloudExportEnabled] = useState(
-    () => localStorage.getItem(CLOUD_EXPORT_STORAGE_KEY) === 'true'
-  )
-  const toggleCloudExport = () => {
-    setCloudExportEnabled(prev => {
-      const next = !prev
-      localStorage.setItem(CLOUD_EXPORT_STORAGE_KEY, String(next))
-      return next
-    })
-  }
+  const cloudSync = useCloudSync()
+  const cloudSyncSlot = buildCloudSyncSlot(cloudSync)
   const openFeedbackTabRef = useRef<(() => void) | null>(null)
   const openCommentFormRef = useRef<(() => void) | null>(null)
   const openExportModalRef = useRef<(() => void) | null>(null)
@@ -385,13 +345,17 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
     return { reviewer, comments }
   }
 
+  // No cloud vocabulary here — this function only knows how to produce content
+  // and (optionally) trigger a browser download. Cloud push is the caller's
+  // responsibility (see context/index.tsx's handleExport), which calls this with
+  // { download: false } and hands the returned json to cloud-sync's pushJson.
   const exportAndDownload = async (
     reviewerName: string,
     format: 'md' | 'json' | 'both' = 'both',
     includeScreenshots = true,
-    cloudKey?: string,
-    forceLocal = false
-  ): Promise<{ shareUrl?: string }> => {
+    options?: { download?: boolean }
+  ): Promise<{ json?: string }> => {
+    const download = options?.download ?? true
     const dateStr = new Date().toISOString().split('T')[0]
     const filename = `wireframe-feedback-${dateStr}`
 
@@ -420,14 +384,14 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
       URL.revokeObjectURL(url)
     }
 
-    // MD downloads locally only when not doing a cloud upload
-    if ((format === 'md' || format === 'both') && (!cloudExportEnabled || forceLocal)) {
+    if ((format === 'md' || format === 'both') && download) {
       const md = exportMarkdown(reviewerName, hydratedComments, includeScreenshots)
       triggerDownload(md, 'text/markdown;charset=utf-8', 'md')
     }
 
+    let json: string | undefined
     if (format === 'json' || format === 'both') {
-      const json = JSON.stringify(
+      json = JSON.stringify(
         {
           exported: new Date().toISOString(),
           reviewer: reviewerName,
@@ -446,21 +410,16 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
         2
       )
 
-      if (cloudExportEnabled && !forceLocal) {
-        if (!cloudKey) throw new Error('No API key provided.')
-        const shareUrl = await pushToJsonBin(filename, json, cloudKey)
-        return { shareUrl }
-      }
-
-      // Local download fallback
-      if (format === 'both') {
-        setTimeout(() => triggerDownload(json, 'application/json;charset=utf-8', 'json'), 100)
-      } else {
-        triggerDownload(json, 'application/json;charset=utf-8', 'json')
+      if (download) {
+        if (format === 'both') {
+          setTimeout(() => triggerDownload(json!, 'application/json;charset=utf-8', 'json'), 100)
+        } else {
+          triggerDownload(json, 'application/json;charset=utf-8', 'json')
+        }
       }
     }
 
-    return {}
+    return { json }
   }
 
   const importCommentsFromText = async (
@@ -563,8 +522,15 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
         setOpenImportModal,
         lastReviewerName,
         setLastReviewerName,
-        cloudExportEnabled,
-        toggleCloudExport,
+        cloudSyncSlot,
+        cloudExportEnabled: cloudSync.cloudExportEnabled,
+        cloudKey: cloudSync.cloudKey,
+        setCloudKey: cloudSync.setCloudKey,
+        providedKey: cloudSync.providedKey,
+        importReadKey: cloudSync.importReadKey,
+        setImportReadKey: cloudSync.setImportReadKey,
+        pushJson: cloudSync.pushJson,
+        pullFromBin: cloudSync.pullFromBin,
       }}
     >
       {children}

@@ -1,7 +1,7 @@
-import type { SessionExport } from '@platform/features/flowTracer/types'
-import { DEVICE_PRESETS } from '@platform/shared/components/devices'
-import { useDashboard } from '@platform/shared/contexts/DashboardContext'
-import type { ColorBlindMode, ConnectionMode, NetworkSpeed } from '@platform/types/index'
+import type { ColorBlindMode, ConnectionMode, NetworkSpeed } from '@flowkit/types/index'
+import type { SessionExport } from '@flowkit-features/flowTracer/types'
+import { DEVICE_PRESETS } from '@flowkit-shared/components/devices'
+import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 
 import { replayFromSnapshot } from '../replayState'

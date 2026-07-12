@@ -1,6 +1,6 @@
-import { buildSessionExport } from '@platform/features/flowTracer/buildSessionExport'
-import type { SessionExport, SessionMeta } from '@platform/features/flowTracer/types'
-import OverlayShell from '@platform/shared/components/overlays/OverlayShell'
+import { buildSessionExport } from '@flowkit-features/flowTracer/buildSessionExport'
+import type { SessionExport, SessionMeta } from '@flowkit-features/flowTracer/types'
+import OverlayShell from '@flowkit-shared/components/overlays/OverlayShell'
 import { CheckCircle, Download, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 

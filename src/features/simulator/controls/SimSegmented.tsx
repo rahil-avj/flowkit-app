@@ -1,6 +1,6 @@
-import SegmentedControl from '@platform/shared/components/ui/SegmentedControl'
-import { useDashboard } from '@platform/shared/contexts/DashboardContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
+import SegmentedControl from '@flowkit-shared/components/ui/SegmentedControl'
+import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 
 import { getNestedValue, updateNestedDbValue } from './helpers'
 

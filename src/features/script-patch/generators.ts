@@ -103,7 +103,7 @@ export function generateFlowOrderPatch(
 ): PatchScript {
   const script = `node << 'FLOWKIT_FLOW_ORDER'
 const fs = require('fs');
-const configPath = 'workspaces/${ws}/flowkit.config.ts';
+const configPath = 'workspaces/${ws}/workspace.ts';
 let src = fs.readFileSync(configPath, 'utf8');
 const projectFlowMap = ${JSON.stringify(projectFlowMap, null, 2)};
 
@@ -119,7 +119,7 @@ Object.entries(projectFlowMap).forEach(([project, flows]) => {
     src = replaced;
   } else {
     // Insert the projects block if absent — append before closing brace of defineConfig arg.
-    console.warn('Could not auto-patch ' + project + '. Edit flowkit.config.ts manually:');
+    console.warn('Could not auto-patch ' + project + '. Edit workspace.ts manually:');
     console.warn('  ' + project + ': { flows: ' + flowsStr + ' }');
   }
 });
@@ -128,26 +128,4 @@ console.log('Flow order updated in ' + configPath);
 FLOWKIT_FLOW_ORDER`
 
   return { label: 'Copy flow order script', script }
-}
-
-// ─── Env Flag Patch ───────────────────────────────────────────────────────────
-
-export function generateEnvFlagPatch(flag: string, value: string): PatchScript {
-  const script = `node << 'FLOWKIT_ENV'
-const fs = require('fs');
-const path = '.env.local';
-let content = '';
-try { content = fs.readFileSync(path, 'utf8'); } catch { /* file may not exist yet */ }
-const line = '${flag}=${value}';
-const regex = new RegExp('^${flag}=.*', 'm');
-if (regex.test(content)) {
-  content = content.replace(regex, line);
-} else {
-  content = content.trimEnd() + (content ? '\\n' : '') + line + '\\n';
-}
-fs.writeFileSync(path, content, 'utf8');
-console.log('Set ' + '${flag}' + '=' + '${value}' + ' in .env.local');
-FLOWKIT_ENV`
-
-  return { label: `Copy env flag script (${flag})`, script }
 }

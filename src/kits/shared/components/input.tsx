@@ -1,4 +1,4 @@
-import { cn } from '@kit/lib/utils'
+import { cn } from '@flowkit-kit/lib/utils'
 import * as React from 'react'
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(

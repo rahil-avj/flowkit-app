@@ -1,9 +1,9 @@
+import type { ColorBlindMode, ConnectionMode, NetworkSpeed } from '@flowkit/types/index'
 import type {
   SessionEvent,
   SessionExport,
   SessionSnapshot,
-} from '@platform/features/flowTracer/types'
-import type { ColorBlindMode, ConnectionMode, NetworkSpeed } from '@platform/types/index'
+} from '@flowkit-features/flowTracer/types'
 
 export interface ReplayState {
   activeScreenId: string

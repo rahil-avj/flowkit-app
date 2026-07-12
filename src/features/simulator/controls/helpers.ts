@@ -1,5 +1,5 @@
-import type { DashboardContextValue } from '@platform/shared/contexts/DashboardContext'
-import type { FlowDebugInfo } from '@platform/shared/contexts/DashboardContext'
+import type { DashboardContextValue } from '@flowkit-shared/contexts/DashboardContext'
+import type { FlowDebugInfo } from '@flowkit-shared/contexts/DashboardContext'
 
 export type Ctx = DashboardContextValue
 

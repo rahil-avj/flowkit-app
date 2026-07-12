@@ -1,4 +1,3 @@
-import { DEVICE_PRESETS } from '@platform/shared/components/devices'
 import type {
   AutoPlayConfig,
   ColorBlindMode,
@@ -6,9 +5,10 @@ import type {
   DashboardState,
   DevicePreset,
   NetworkSpeed,
-} from '@platform/types/index'
-import type { WorkspaceConfig } from '@platform/workspaces'
-import { getWorkspaceDb } from '@shared/utils/workspaceModules'
+} from '@flowkit/types/index'
+import type { WorkspaceConfig } from '@flowkit/workspaces'
+import { DEVICE_PRESETS } from '@flowkit-shared/components/devices'
+import { getWorkspaceDb } from '@flowkit-shared/utils/workspaceModules'
 import type { ReactNode } from 'react'
 import {
   createContext,
@@ -79,6 +79,9 @@ export interface DashboardContextValue extends DashboardState {
 
   firstViewId: string
   workspaceConfig: WorkspaceConfig
+  /** Active flowplan's declared home screen (FlowplanDef.homeScreen), or null when unset/no flow active. */
+  activeFlowHomeScreen: string | null
+  setActiveFlowHomeScreen: (screenId: string | null) => void
   activeFlowDebugInfo: FlowDebugInfo | null
   setActiveFlowDebugInfo: (info: FlowDebugInfo | null) => void
   flowAutoPlayOverride: Partial<AutoPlayConfig> | null
@@ -114,17 +117,23 @@ if (import.meta.hot && !import.meta.hot.data.DashboardContext) {
 }
 const DashboardContext =
   (import.meta.hot?.data.DashboardContext as
-    | ReturnType<typeof createContext<DashboardContextValue | null>>
-    | undefined) ?? createContext<DashboardContextValue | null>(null)
+    ReturnType<typeof createContext<DashboardContextValue | null>> | undefined) ??
+  createContext<DashboardContextValue | null>(null)
 
 export function DashboardProvider({
   children,
   firstViewId,
+  initialDeviceLabel,
+  initialOrientation,
   workspaceConfig,
   onSwitchWorkspace,
 }: {
   children: ReactNode
   firstViewId: string
+  /** Author-set default device preset label (workspace.ts `defaultDevice`). Falls back to DEVICE_PRESETS[0]. */
+  initialDeviceLabel?: string
+  /** Author-set default orientation (workspace.ts `defaultOrientation`). Falls back to "portrait". */
+  initialOrientation?: Orientation
   workspaceConfig?: WorkspaceConfig
   onSwitchWorkspace?: (name?: string) => void
 }) {
@@ -134,8 +143,10 @@ export function DashboardProvider({
   const setVariantForView = useCallback((viewId: string, serial: string) => {
     setActiveVariantByView(prev => ({ ...prev, [viewId]: serial }))
   }, [])
-  const [devicePreset, setDevicePresetState] = useState<DevicePreset>(DEVICE_PRESETS[0])
-  const [orientation, setOrientation] = useState<Orientation>('portrait')
+  const [devicePreset, setDevicePresetState] = useState<DevicePreset>(
+    () => DEVICE_PRESETS.find(p => p.label === initialDeviceLabel) ?? DEVICE_PRESETS[0]
+  )
+  const [orientation, setOrientation] = useState<Orientation>(initialOrientation ?? 'portrait')
 
   const [connectionMode, setConnectionModeState] = useState<ConnectionMode>('wifi')
   const [networkSpeed, setNetworkSpeedState] = useState<NetworkSpeed>('strong')
@@ -145,6 +156,7 @@ export function DashboardProvider({
 
   // FlowMaster states
   const [activeFlowDebugInfo, setActiveFlowDebugInfo] = useState<FlowDebugInfo | null>(null)
+  const [activeFlowHomeScreen, setActiveFlowHomeScreen] = useState<string | null>(null)
   const [flowAutoPlayOverride, setFlowAutoPlayOverride] = useState<Partial<AutoPlayConfig> | null>(
     null
   )
@@ -251,14 +263,19 @@ export function DashboardProvider({
     setHistory(h => (h.length > 1 ? h.slice(0, -1) : h))
   }, [])
 
+  const activeFlowHomeScreenRef = useRef(activeFlowHomeScreen)
+  useLayoutEffect(() => {
+    activeFlowHomeScreenRef.current = activeFlowHomeScreen
+  })
+
   const goHome = useCallback(() => {
     setActiveFlowDebugInfo(null)
-    setHistory([firstViewId])
+    setHistory([activeFlowHomeScreenRef.current ?? firstViewId])
   }, [firstViewId])
 
   const resetToFirst = useCallback(() => {
     setActiveFlowDebugInfo(null)
-    setHistory([firstViewId])
+    setHistory([activeFlowHomeScreenRef.current ?? firstViewId])
   }, [firstViewId])
 
   const setDevicePreset = useCallback(
@@ -355,6 +372,8 @@ export function DashboardProvider({
       setSimulatorEnabled,
       firstViewId,
       workspaceConfig: workspaceConfig ?? {},
+      activeFlowHomeScreen,
+      setActiveFlowHomeScreen,
       activeFlowDebugInfo,
       setActiveFlowDebugInfo,
       flowAutoPlayOverride,
@@ -401,6 +420,7 @@ export function DashboardProvider({
       setSimulatorEnabled,
       firstViewId,
       workspaceConfig,
+      activeFlowHomeScreen,
       activeFlowDebugInfo,
       setActiveFlowDebugInfo,
       flowAutoPlayOverride,

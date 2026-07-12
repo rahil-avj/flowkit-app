@@ -45,7 +45,7 @@ export default function AnalyticsOverlay({
         {headerAction}
         <button
           onClick={onClose}
-          className="bg-theme-elevated border border-theme-border rounded-[6px] text-theme-text-secondary cursor-pointer py-1.5 px-2.5 flex items-center gap-1.5 text-ui-xs"
+          className="bg-theme-elevated border border-theme-border rounded-md text-theme-text-secondary cursor-pointer py-1.5 px-2.5 flex items-center gap-1.5 text-ui-xs"
         >
           <X size={13} /> Close
         </button>

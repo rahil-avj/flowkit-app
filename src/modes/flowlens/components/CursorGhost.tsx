@@ -1,4 +1,4 @@
-import type { SessionExport } from '@platform/features/flowTracer/types'
+import type { SessionExport } from '@flowkit-features/flowTracer/types'
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 

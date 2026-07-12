@@ -13,7 +13,7 @@ export interface FlowRunRecord {
   completed: boolean
 }
 
-import { LS_RUN_HISTORY_PREFIX as KEY_PREFIX } from '@platform/shared/constants/storageKeys'
+import { LS_RUN_HISTORY_PREFIX as KEY_PREFIX } from '@flowkit-shared/constants/storageKeys'
 
 export function readLastRun(flowId: string): FlowRunRecord | null {
   try {

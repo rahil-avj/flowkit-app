@@ -1,6 +1,5 @@
 export { default as CopyScriptButton } from './CopyScriptButton'
 export {
-  generateEnvFlagPatch,
   generateFlowOrderPatch,
   generateScreenMetaPatch,
   generateWorkspaceOrderPatch,

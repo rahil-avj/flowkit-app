@@ -1,5 +1,5 @@
-import { useDashboard } from '@platform/shared/contexts/DashboardContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
+import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 
 import type { Ctx } from './helpers'
 import { getNestedValue, shouldShowControl } from './helpers'

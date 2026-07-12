@@ -1,4 +1,4 @@
-import type { CursorSample } from '@platform/features/flowTracer/types'
+import type { CursorSample } from '@flowkit-features/flowTracer/types'
 import { useEffect, useRef } from 'react'
 
 interface Props {

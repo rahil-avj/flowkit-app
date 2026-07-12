@@ -1,5 +1,5 @@
-import type { SessionExport } from '@platform/features/flowTracer/types'
-import type { WireframeView } from '@platform/types/index'
+import type { WireframeView } from '@flowkit/types/index'
+import type { SessionExport } from '@flowkit-features/flowTracer/types'
 import { useMemo } from 'react'
 
 import { buildPathGraph, computeSessionMetrics } from '../analyticsEngine'

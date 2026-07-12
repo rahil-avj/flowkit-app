@@ -1,4 +1,4 @@
-import { applyDotPathPatch } from '@shared/utils/applyDotPathPatch'
+import { applyDotPathPatch } from '@flowkit-shared/utils/applyDotPathPatch'
 import { describe, expect, it } from 'vitest'
 
 describe('applyDotPathPatch', () => {

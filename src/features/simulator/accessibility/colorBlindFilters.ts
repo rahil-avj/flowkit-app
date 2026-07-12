@@ -1,4 +1,4 @@
-import type { ColorBlindMode } from '@platform/types/index'
+import type { ColorBlindMode } from '@flowkit/types/index'
 
 export const COLOR_BLIND_FILTERS: Record<ColorBlindMode, string> = {
   none: '',

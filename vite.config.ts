@@ -4,8 +4,8 @@ import fs from 'fs'
 import path from 'path'
 import { defineConfig, Plugin } from 'vite'
 
-import { handleSaveSession } from './scripts/lib/flowlens-session.js'
-import { flowkit } from './scripts/vite-plugin.js'
+import { handleSaveSession } from './scripts/helpers/flowlens-session.js'
+import { flowkit } from './scripts/helpers/vite-plugin.js'
 
 // Read active workspace from src/workspaces.json so -sw changes take effect on next dev restart.
 // Returns null when no workspaces exist on disk (all were deleted).
@@ -43,7 +43,7 @@ function reconcileWorkspacesPlugin(): Plugin {
         // Delegate write-back to the registry module — it owns the template and tsconfig patch.
         // Spawned as a child process to cross the ESM boundary cleanly.
         execSync(
-          `node --input-type=module --eval "import { syncWorkspaceRegistry } from './scripts/lib/registry.js'; syncWorkspaceRegistry();"`,
+          `node --input-type=module --eval "import { syncWorkspaceRegistry } from './scripts/helpers/registry.js'; syncWorkspaceRegistry();"`,
           { cwd: __dirname, stdio: 'pipe' }
         )
 
@@ -121,9 +121,18 @@ export default defineConfig({
     flowLensSaveSessionPlugin(),
     ...(activeWsDir ? [flowkit({ workspaceRoot: activeWsDir })] : []),
   ],
+  server: {
+    // Allows tunneling localhost to a phone (localtunnel / cloudflared quick tunnels)
+    // without sharing a network. Scoped to these two tunnel domains, not a wildcard host bypass.
+    allowedHosts: ['.loca.lt', '.trycloudflare.com'],
+  },
   resolve: {
     alias: {
-      '@platform': path.resolve(__dirname, './src'),
+      // Broad src/-wide alias, renamed from @platform. Note the bare (no @)
+      // 'flowkit' alias below is a different, narrower thing — an internal
+      // self-reference mirroring the published package name, not related to
+      // this rename — the two deliberately coexist.
+      '@flowkit': path.resolve(__dirname, './src'),
       // @workspace resolves to the active workspace so screen files can import
       // @workspace/components/*, @workspace/design-system/tokens.css etc.
       // Db/simulator are loaded via import.meta.glob in workspaceModules.ts
@@ -135,10 +144,10 @@ export default defineConfig({
           : path.resolve(__dirname, './src/workspace-stub')
       })(),
       flowkit: path.resolve(__dirname, './src/core/config/index.ts'),
-      '@kit': path.resolve(__dirname, './src/kits/shared'),
-      '@core': path.resolve(__dirname, './src/core'),
-      '@features': path.resolve(__dirname, './src/features'),
-      '@shared': path.resolve(__dirname, './src/shared'),
+      '@flowkit-kit': path.resolve(__dirname, './src/kits/shared'),
+      '@flowkit-core': path.resolve(__dirname, './src/core'),
+      '@flowkit-features': path.resolve(__dirname, './src/features'),
+      '@flowkit-shared': path.resolve(__dirname, './src/shared'),
       '@flowlens': path.resolve(__dirname, './src/modes/flowlens'),
     },
   },
@@ -151,7 +160,9 @@ export default defineConfig({
       },
     },
   },
-  // FlowLens is now a lazily-loaded MODE inside the main app (gated by
-  // VITE_ENABLE_FLOWLENS), not a separate entry point. The single index.html
-  // entry is the default, so no rollupOptions.input override is needed.
+  // FlowLens is now a lazily-loaded MODE inside the main app (presence-gated —
+  // see src/shared/contexts/FlowLensModeContext.tsx's import.meta.glob on
+  // src/modes/flowlens/index.ts; delete/rename that folder to strip it, no env
+  // var involved), not a separate entry point. The single index.html entry is
+  // the default, so no rollupOptions.input override is needed.
 })

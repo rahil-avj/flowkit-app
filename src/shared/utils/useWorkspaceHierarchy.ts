@@ -15,14 +15,6 @@
  * resolves them at build time). All globs live here, inline.
  */
 
-import {
-  type CompiledFlowplan,
-  compileFlowplan,
-  type ResolvedScreen,
-  type ScreenResolver,
-} from '@platform/features/flow-library/compileFlowplan'
-import { useFlowPlaybackOptional } from '@platform/shared/contexts/FlowPlaybackContext'
-import { getWorkspaceConfig } from '@platform/shared/utils/workspaceModules'
 import type {
   AnnotationTag,
   FlowkitConfig,
@@ -31,7 +23,16 @@ import type {
   ScreenMeta,
   WireframeView,
   WorkspaceHierarchyNode,
-} from '@platform/types/index'
+} from '@flowkit/types/index'
+import {
+  type CompiledFlowplan,
+  compileFlowplan,
+  type ResolvedScreen,
+  type ScreenResolver,
+} from '@flowkit-features/flowplan/compileFlowplan'
+import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
+import { DEVICE_PRESETS } from '@flowkit-shared/components/devices'
+import { getWorkspaceConfig } from '@flowkit-shared/utils/workspaceModules'
 import React, { useEffect, useMemo, useState } from 'react'
 
 // ─── Mode detection ───────────────────────────────────────────────────────────
@@ -180,6 +181,39 @@ export interface WorkspaceHierarchyResult {
   hasHierarchy: boolean
   /** screenId → active annotation tags (expiresAt filtered). */
   tagsByScreen: Map<string, AnnotationTag[]>
+  /** Author-set default screen id from workspace.ts (`startScreen`), if any. */
+  startScreenId?: string
+  /** Author-set default device preset label from workspace.ts (`defaultDevice`), if valid. */
+  defaultDeviceLabel?: string
+  /** Author-set default orientation from workspace.ts (`defaultOrientation`), if any. */
+  defaultOrientation?: 'portrait' | 'landscape'
+}
+
+/** Resolves the author-set startScreen/defaultDevice/defaultOrientation config fields
+ *  against real screens/device presets. Shared by both the flat and nested builders. */
+function resolveConfigDefaults(
+  config: FlowkitConfig,
+  screensById: Map<string, unknown>
+): {
+  startScreenId?: string
+  defaultDeviceLabel?: string
+  defaultOrientation?: 'portrait' | 'landscape'
+} {
+  const startScreenId =
+    config.startScreen && screensById.has(config.startScreen) ? config.startScreen : undefined
+
+  const resolvedDevicePreset = config.defaultDevice
+    ? DEVICE_PRESETS.find(p => p.label === config.defaultDevice)
+    : undefined
+  const defaultDeviceLabel = resolvedDevicePreset?.label
+  const defaultOrientation: 'portrait' | 'landscape' | undefined =
+    config.defaultOrientation === 'landscape' && (resolvedDevicePreset?.supportsLandscape ?? true)
+      ? 'landscape'
+      : config.defaultOrientation === 'portrait'
+        ? 'portrait'
+        : undefined
+
+  return { startScreenId, defaultDeviceLabel, defaultOrientation }
 }
 
 // ─── Flat mode builder (uses virtual modules, no path parsing needed) ───────────
@@ -255,7 +289,15 @@ function buildFlatHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   // 6. Tree
   const tree = buildTree([...screensById.values()], config, activeWorkspace)
 
-  return { flows, views, tree, registry, hasHierarchy, tagsByScreen: new Map() }
+  return {
+    flows,
+    views,
+    tree,
+    registry,
+    hasHierarchy,
+    tagsByScreen: new Map(),
+    ...resolveConfigDefaults(config, screensById),
+  }
 }
 
 // ─── Builder (pure given the globs) ─────────────────────────────────────────────
@@ -391,7 +433,15 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   // 7. Tree: project → flow → screen.
   const tree = buildTree([...screensById.values()], config, activeWorkspace)
 
-  return { flows, views, tree, registry, hasHierarchy, tagsByScreen: new Map() }
+  return {
+    flows,
+    views,
+    tree,
+    registry,
+    hasHierarchy,
+    tagsByScreen: new Map(),
+    ...resolveConfigDefaults(config, screensById),
+  }
 }
 
 function buildTree(
@@ -488,7 +538,7 @@ function makeFlowplanRunner(
     }, [compilationError])
 
     React.useEffect(() => {
-      import('@platform/core/layout/FlowMaster')
+      import('@flowkit-core/layout/FlowMaster')
         .then(m => setComp(() => m.default as React.ComponentType<{ flow: CompiledFlowplan }>))
         .catch(err => setError(String(err)))
     }, [])

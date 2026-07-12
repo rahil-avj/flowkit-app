@@ -4,7 +4,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   resolve: {
     alias: {
-      '@platform': path.resolve(__dirname, 'src'),
+      '@flowkit': path.resolve(__dirname, 'src'),
     },
   },
   build: {

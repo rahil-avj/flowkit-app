@@ -3,12 +3,12 @@
 // ── FlowKit virtual module types ──────────────────────────────────────────────
 
 declare module 'virtual:flowkit/config' {
-  import type { FlowkitConfig } from '@platform/types/index'
+  import type { FlowkitConfig } from '@flowkit/types/index'
   export const config: FlowkitConfig
 }
 
 declare module 'virtual:flowkit/screens' {
-  import type { ScreenMeta } from '@platform/types/index'
+  import type { ScreenMeta } from '@flowkit/types/index'
   import type React from 'react'
   /** Lazy screen loaders keyed by "flow/screenId" */
   export const screens: Record<
@@ -29,12 +29,12 @@ declare module 'virtual:flowkit/screens' {
 }
 
 declare module 'virtual:flowkit/flowplans' {
-  import type { FlowplanDef } from '@platform/types/index'
+  import type { FlowplanDef } from '@flowkit/types/index'
   export const flowplans: FlowplanDef[]
 }
 
 declare module 'virtual:flowkit/workspace' {
-  import type { AnnotationTag } from '@platform/types/index'
+  import type { AnnotationTag } from '@flowkit/types/index'
   import type React from 'react'
 
   export const workspaceName: string

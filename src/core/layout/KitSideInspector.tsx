@@ -1,21 +1,23 @@
+import type { WireframeView } from '@flowkit/types/index'
 import {
   FeedbackPanel,
   FeedbackTabProvider,
   useFeedback,
   useFeedbackTabContext,
-} from '@platform/features/feedback'
+} from '@flowkit-features/feedback'
 import {
   DbInspector,
   type DbViewMode,
   type DebugSubTab,
   FlowDebuggerContent,
-} from '@platform/features/flow-debugger'
+} from '@flowkit-features/flow-debugger'
+import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
 import {
   SessionsPanel,
   useSavedSessionCount,
   useSessionRecorderOptional,
-} from '@platform/features/flowTracer'
-import { CopyScriptButton, generateScreenMetaPatch } from '@platform/features/script-patch'
+} from '@flowkit-features/flowTracer'
+import { CopyScriptButton, generateScreenMetaPatch } from '@flowkit-features/script-patch'
 import {
   AccessibilitySettings,
   ColorBlindSVGDefs,
@@ -24,21 +26,19 @@ import {
   SimControl,
   type SimSubTab,
   SimToggle,
-} from '@platform/features/simulator'
-import PanelErrorBoundary from '@platform/shared/components/errors/PanelErrorBoundary'
-import Button from '@platform/shared/components/ui/Button'
-import PanelNoteField from '@platform/shared/components/ui/PanelNoteField'
-import SegmentedControl from '@platform/shared/components/ui/SegmentedControl'
-import Toggle from '@platform/shared/components/ui/Toggle'
-import Tooltip from '@platform/shared/components/ui/Tooltip'
-import { LS_SESSIONS_ENABLED } from '@platform/shared/constants/storageKeys'
-import { useActiveWorkspace } from '@platform/shared/contexts/ActiveWorkspaceContext'
-import { useDashboard } from '@platform/shared/contexts/DashboardContext'
-import { useDevMode } from '@platform/shared/contexts/DevModeContext'
-import { useFlowPlaybackOptional } from '@platform/shared/contexts/FlowPlaybackContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
-import type { WireframeView } from '@platform/types/index'
-import { getWorkspaceSimulator } from '@shared/utils/workspaceModules'
+} from '@flowkit-features/simulator'
+import PanelErrorBoundary from '@flowkit-shared/components/errors/PanelErrorBoundary'
+import Button from '@flowkit-shared/components/ui/Button'
+import PanelNoteField from '@flowkit-shared/components/ui/PanelNoteField'
+import SegmentedControl from '@flowkit-shared/components/ui/SegmentedControl'
+import Toggle from '@flowkit-shared/components/ui/Toggle'
+import Tooltip from '@flowkit-shared/components/ui/Tooltip'
+import { LS_SESSIONS_ENABLED } from '@flowkit-shared/constants/storageKeys'
+import { useActiveWorkspace } from '@flowkit-shared/contexts/ActiveWorkspaceContext'
+import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
+import { useDevMode } from '@flowkit-shared/contexts/DevModeContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
+import { getWorkspaceSimulator } from '@flowkit-shared/utils/workspaceModules'
 import { FileCode, FileDown, StickyNote, Trash2 } from 'lucide-react'
 import {
   type ComponentType,
@@ -58,8 +58,8 @@ import PanelBody from './PanelBody'
 import Sidebar from './Sidebar'
 import SidebarButton from './SidebarButton'
 
-export { COLOR_BLIND_FILTERS } from '@platform/features/simulator/accessibility/colorBlindFilters'
-export { ColorBlindSVGDefs } from '@platform/features/simulator/accessibility/ColorBlindSVGDefs'
+export { COLOR_BLIND_FILTERS } from '@flowkit-features/simulator/accessibility/colorBlindFilters'
+export { ColorBlindSVGDefs } from '@flowkit-features/simulator/accessibility/ColorBlindSVGDefs'
 
 // ─── Persistence ──────────────────────────────────────────────────────────────
 
@@ -195,12 +195,19 @@ function AutoPlayAccordion() {
 
 // ─── Named content exports (for MobileCanvas bottom sheets) ──────────────────
 
-export function ScreenInfoContent({ views }: { views: WireframeView[] }) {
+export function ScreenInfoContent({
+  views,
+  touch = false,
+}: {
+  views: WireframeView[]
+  /** Renders explicit copy-filename/copy-path buttons with inline feedback instead of the hover tooltip (mobile has no hover). */
+  touch?: boolean
+}) {
   const activeWorkspace = useActiveWorkspace()
   const ctx = useDashboard()
   const { theme, scale } = useTheme()
   const { activeViewId } = ctx
-  const { devMode, pendingEdits, setEdit, clearEdits } = useDevMode()
+  const { devMode, toggleDevMode, pendingEdits, setEdit, clearEdits } = useDevMode()
   const isPlayNode = activeViewId.endsWith('-play')
   const activeView =
     views.find(v => v.id === activeViewId.replace('-play', '')) ??
@@ -232,6 +239,13 @@ export function ScreenInfoContent({ views }: { views: WireframeView[] }) {
   const currentDevNotes = pendingEdit?.devNotes ?? meta?.devNotes ?? ''
 
   // ── helpers ────────────────────────────────────────────────────────────────
+  function copyText(text: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedText(text)
+      setTimeout(() => setCopiedText(null), 1500)
+    })
+  }
+
   function handleCopy(e: React.MouseEvent) {
     const text = e.shiftKey ? derivedPath : derivedFilename
     navigator.clipboard.writeText(text).then(() => {
@@ -280,21 +294,65 @@ export function ScreenInfoContent({ views }: { views: WireframeView[] }) {
     <>
       <div className="overflow-y-auto p-3 flex flex-col gap-3 text-xs font-semibold leading-relaxed h-full">
         {/* ── Filename ───────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-1.5 px-1">
-          <Tooltip
-            content={copiedText ? `Copied: ${copiedText}` : 'Copy filename · Shift+click for path'}
-            placement="top"
-            wrap={!!copiedText}
-          >
-            <span
-              onClick={handleCopy}
-              className="flex items-center gap-1.5 text-ui-md font-bold tracking-tight flex-1 min-w-0 cursor-pointer text-theme-green"
+        {touch ? (
+          <div className="flex flex-col gap-1 px-1">
+            <div className="flex items-center gap-1.5">
+              <FileCode size={14} className="shrink-0 text-theme-green" />
+              <span className="truncate text-ui-md font-bold tracking-tight text-theme-green flex-1 min-w-0">
+                {derivedFilename}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => copyText(derivedFilename)}
+                className="text-ui-2xs font-bold px-1.5 py-0.5 rounded-[4px]"
+                style={{ background: theme.bg.elevated, color: theme.text.secondary }}
+              >
+                {copiedText === derivedFilename ? 'Copied ✓' : 'Copy filename'}
+              </button>
+              <button
+                onClick={() => copyText(derivedPath)}
+                className="text-ui-2xs font-bold px-1.5 py-0.5 rounded-[4px]"
+                style={{ background: theme.bg.elevated, color: theme.text.secondary }}
+              >
+                {copiedText === derivedPath ? 'Copied ✓' : 'Copy path'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 px-1">
+            <Tooltip
+              content={
+                copiedText ? `Copied: ${copiedText}` : 'Copy filename · Shift+click for path'
+              }
+              placement="top"
+              wrap={!!copiedText}
             >
-              <FileCode size={14} className="shrink-0" />
-              <span className="truncate">{derivedFilename}</span>
-            </span>
-          </Tooltip>
-        </div>
+              <span
+                onClick={handleCopy}
+                className="flex items-center gap-1.5 text-ui-md font-bold tracking-tight flex-1 min-w-0 cursor-pointer text-theme-green"
+              >
+                <FileCode size={14} className="shrink-0" />
+                <span className="truncate">{derivedFilename}</span>
+              </span>
+            </Tooltip>
+          </div>
+        )}
+
+        {/* ── Edit mode toggle ─────────────────────────────────────────────── */}
+        {!isPlayNode && (
+          <button
+            onClick={toggleDevMode}
+            className="flex items-center justify-center gap-1.5 px-2 py-1 rounded-[6px] text-ui-xs font-bold self-start"
+            style={
+              editing
+                ? { background: theme.accent.blueDim, color: theme.accent.blue }
+                : { background: theme.bg.elevated, color: theme.text.secondary }
+            }
+          >
+            {editing ? 'Editing on' : 'Edit metadata'}
+          </button>
+        )}
 
         {/* ── Access guard (read-only — runtime fn) ──────────────────────── */}
         {hasGuard && (
@@ -685,7 +743,7 @@ export function SimulatorContent({
 function FlowDeclaredControls({
   controls,
 }: {
-  controls: import('@platform/types/index').SimulatorControl[]
+  controls: import('@flowkit/types/index').SimulatorControl[]
 }) {
   if (controls.length === 0) {
     return (
@@ -941,7 +999,7 @@ function KitSideInspectorInner({
             <SidebarButton
               label={TAB_META[t].label}
               icon={TAB_META[t].icon}
-              isActive={t === activeTab && isOpen}
+              isActive={t === activeTab}
               badge={
                 t === 'feedback'
                   ? totalCommentCount || undefined

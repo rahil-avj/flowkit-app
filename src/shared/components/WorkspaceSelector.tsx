@@ -1,6 +1,6 @@
-import { workspaces } from '@platform/workspaces'
-import { storeWorkspace } from '@platform/workspaces'
-import { listWorkspaceNames } from '@shared/utils/workspaceModules'
+import { workspaces } from '@flowkit/workspaces'
+import { storeWorkspace } from '@flowkit/workspaces'
+import { listWorkspaceNames } from '@flowkit-shared/utils/workspaceModules'
 
 import NoWorkspace from './errors/NoWorkspace'
 

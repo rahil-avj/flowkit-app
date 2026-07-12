@@ -9,8 +9,8 @@ import {
   ZOOM_STEP,
 } from './canvasConfig'
 
-export { LS_KEEP_FIT } from '@platform/shared/constants/storageKeys'
-import { LS_KEEP_FIT } from '@platform/shared/constants/storageKeys'
+export { LS_KEEP_FIT } from '@flowkit-shared/constants/storageKeys'
+import { LS_KEEP_FIT } from '@flowkit-shared/constants/storageKeys'
 
 export interface CanvasState {
   // Last-measured visible canvas dimensions (excludes panels).

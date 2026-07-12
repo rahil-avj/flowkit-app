@@ -7,7 +7,7 @@ import {
   WORKSPACES_JSON,
   PLATFORM_WORKSPACES_FILE as WORKSPACES_FILE,
   readWorkspacesJson,
-} from '../lib/config.js'
+} from '../helpers/paths.js'
 
 const TSCONFIG_FILE = path.join(ROOT, 'tsconfig.app.json')
 

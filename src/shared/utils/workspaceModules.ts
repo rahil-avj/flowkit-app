@@ -1,4 +1,4 @@
-import type { FlowkitConfig } from '@platform/types/index'
+import type { FlowkitConfig } from '@flowkit/types/index'
 import type React from 'react'
 
 // ─── Mode detection ───────────────────────────────────────────────────────────
@@ -11,7 +11,12 @@ const isSingle = import.meta.env.VITE_SINGLE_WORKSPACE === 'true'
 // In repo mode the plugin still generates these from the active workspace dir,
 // so the imports are always resolvable regardless of mode.
 import { config as _virtualConfig } from 'virtual:flowkit/config'
-import { db as _virtualDb, loadSimulator as _virtualSim, loadTokens as _virtualTokens, workspaceName as _virtualWsName } from 'virtual:flowkit/workspace'
+import {
+  db as _virtualDb,
+  loadSimulator as _virtualSim,
+  loadTokens as _virtualTokens,
+  workspaceName as _virtualWsName,
+} from 'virtual:flowkit/workspace'
 
 // ─── Repo mode: glob maps (empty in flat mode — no workspaces/ dir present) ──
 
@@ -39,7 +44,7 @@ const tokenModulesOld = import.meta.glob('/workspaces/*/design-system/tokens.css
   import: 'default',
 }) as Record<string, () => Promise<string>>
 
-const configModules = import.meta.glob('/workspaces/*/flowkit.config.ts', {
+const configModules = import.meta.glob('/workspaces/*/workspace.ts', {
   eager: true,
 }) as Record<string, { default: FlowkitConfig }>
 
@@ -89,7 +94,7 @@ export function listWorkspaceNames(): string[] {
 
 export function getWorkspaceConfig(name: string): FlowkitConfig {
   if (isSingle) return _virtualConfig
-  const mod = configModules[`/workspaces/${name}/flowkit.config.ts`]
+  const mod = configModules[`/workspaces/${name}/workspace.ts`]
   return mod?.default ?? {}
 }
 

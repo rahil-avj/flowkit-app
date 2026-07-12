@@ -1,4 +1,4 @@
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
 import { Check, Copy } from 'lucide-react'
 import { useCallback, useState } from 'react'
 

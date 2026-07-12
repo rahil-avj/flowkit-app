@@ -1,13 +1,12 @@
 import {
   CopyScriptButton,
-  generateEnvFlagPatch,
   generateFlowOrderPatch,
   generateWorkspaceOrderPatch,
-} from '@platform/features/script-patch'
-import { useActiveWorkspace } from '@platform/shared/contexts/ActiveWorkspaceContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
-import { useWorkspaceHierarchy } from '@platform/shared/utils/useWorkspaceHierarchy'
-import { getWorkspaceConfig } from '@platform/shared/utils/workspaceModules'
+} from '@flowkit-features/script-patch'
+import { useActiveWorkspace } from '@flowkit-shared/contexts/ActiveWorkspaceContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
+import { useWorkspaceHierarchy } from '@flowkit-shared/utils/useWorkspaceHierarchy'
+import { getWorkspaceConfig } from '@flowkit-shared/utils/workspaceModules'
 import { ChevronDown } from 'lucide-react'
 import type React from 'react'
 import { useState } from 'react'
@@ -150,18 +149,6 @@ export function ManageContent() {
             )
           })
         )}
-      </Accordion>
-
-      {/* ── Section 3: Sessions ───────────────────────────────────────────── */}
-      <Accordion label="Sessions & Env Flags">
-        <p style={{ fontSize: scale.text.xxs, color: theme.text.muted }}>
-          Enable FlowLens session recording in <code className="font-mono">.env.local</code>:
-        </p>
-        <CopyScriptButton
-          patch={generateEnvFlagPatch('VITE_ENABLE_FLOWLENS', 'true')}
-          size="sm"
-          label="Enable FlowLens mode"
-        />
       </Accordion>
     </div>
   )

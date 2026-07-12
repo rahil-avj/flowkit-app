@@ -1,18 +1,19 @@
-import KitSideExplorer from '@platform/core/layout/KitSideExplorer'
-import { COLOR_BLIND_FILTERS, ColorBlindSVGDefs } from '@platform/core/layout/KitSideInspector'
+import type { FlowNode, WireframeView } from '@flowkit/types/index'
+import KitSideExplorer from '@flowkit-core/layout/KitSideExplorer'
+import { COLOR_BLIND_FILTERS, ColorBlindSVGDefs } from '@flowkit-core/layout/KitSideInspector'
 import {
   DbContent,
   FeedbackContent,
   ScreenInfoContent,
   SessionsContent,
   SimulatorContent,
-} from '@platform/core/layout/KitSideInspector'
-import { useFeedback } from '@platform/features/feedback/context/FeedbackContext'
-import { FlowDebuggerContent } from '@platform/features/flow-debugger'
-import { useSessionSettings } from '@platform/features/flowTracer/components/useSessionSettings'
-import { GoToOverlayContent } from '@platform/features/go-to-overlay'
-import { Z } from '@platform/shared/constants/zIndex'
-import type { FlowNode, WireframeView } from '@platform/types/index'
+} from '@flowkit-core/layout/KitSideInspector'
+import { useFeedback } from '@flowkit-features/feedback/context/FeedbackContext'
+import { FlowDebuggerContent } from '@flowkit-features/flow-debugger'
+import { MobilePlaybackBar, useFlowPlaybackOptional } from '@flowkit-features/flowplan'
+import { useSessionSettings } from '@flowkit-features/flowTracer/components/useSessionSettings'
+import { GoToOverlayContent } from '@flowkit-features/go-to-overlay'
+import { Z } from '@flowkit-shared/constants/zIndex'
 import {
   Activity, // inspect sub-tabs + feedback top tab
   Briefcase, // settings sub-tabs
@@ -81,7 +82,7 @@ function RailShell({ tabs, activeId, onSelect, children, badgeMap = {} }: RailSh
   return (
     <div className="flex flex-1 min-h-0 overflow-hidden">
       {/* Icon rail — desktop SidebarButton style */}
-      <div className="w-[44px] shrink-0 flex flex-col border-r border-theme-border bg-theme-elevated">
+      <div className="w-11 shrink-0 flex flex-col border-r border-theme-border bg-theme-elevated">
         {tabs.map(t => {
           const active = t.id === activeId
           const badge = badgeMap[t.id] ?? 0
@@ -97,7 +98,7 @@ function RailShell({ tabs, activeId, onSelect, children, badgeMap = {} }: RailSh
                 <span className="absolute right-0 w-0.5 rounded-l bg-theme-blue inset-y-2" />
               )}
               {badge > 0 && (
-                <span className="absolute top-1.5 right-1.5 bg-theme-red text-white text-[8px] font-extrabold min-w-[13px] h-[13px] rounded-full flex items-center justify-center px-0.5">
+                <span className="absolute top-1.5 right-1.5 bg-theme-red text-white text-[8px] font-extrabold min-w-3.25 h-3.25 rounded-full flex items-center justify-center px-0.5">
                   {badge > 9 ? '9+' : badge}
                 </span>
               )}
@@ -131,9 +132,10 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
     toggleOrientation,
     resetToFirst,
     resetDb,
+    firstViewId,
   } = useDashboard()
-  const { totalCommentCount, setOpenFeedbackTab, cloudExportEnabled, toggleCloudExport } =
-    useFeedback()
+  const playback = useFlowPlaybackOptional()
+  const { totalCommentCount, setOpenFeedbackTab, cloudSyncSlot } = useFeedback()
 
   const [autoHideScrollbars, setAutoHideScrollbars] = useState(
     () => localStorage.getItem(LS_AUTO_HIDE_SCROLLBARS) === 'true'
@@ -189,19 +191,17 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
   const screenLabel = activeView?.label ?? activeViewId
   const kitTheme = workspaceConfig.kit ?? 'apple'
 
-  const colorFilter =
-    colorBlindMode !== 'none' ? `url(#${COLOR_BLIND_FILTERS[colorBlindMode]})` : undefined
+  const colorFilter = colorBlindMode !== 'none' ? COLOR_BLIND_FILTERS[colorBlindMode] : undefined
   const blurFilter = blurryVision > 0 ? `blur(${blurryVision * 2}px)` : undefined
   const combinedFilter = [colorFilter, blurFilter].filter(Boolean).join(' ') || undefined
 
   const ActiveComponent = activeView?.component as
-    | React.ComponentType<Record<string, unknown>>
-    | undefined
+    React.ComponentType<Record<string, unknown>> | undefined
 
   const actionCtx = useMemo<ActionCtx>(
     () => ({
       navigateTo,
-      setActiveTab: () => {},
+      setActiveTab: () => { },
       setIsOpen: open => {
         if (!open) closeSheet()
       },
@@ -209,19 +209,18 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       toggleOrientation,
       resetToFirst,
       resetDb,
-      openGoTo: () => {},
-      openHelp: () => {},
+      openGoTo: () => { },
+      openHelp: () => { },
       openSettings: () => {
         setActiveTab('settings')
       },
       toggleDevMode,
-      toggleCloudExport,
-      cloudExportEnabled,
+      cloudSyncSlot,
       openFeedbackTab: () => {
         setActiveTab('feedback')
       },
-      openExportModal: () => {},
-      openImportModal: () => {},
+      openExportModal: () => { },
+      openImportModal: () => { },
       toggleAutoHideScrollbars,
       autoHideScrollbars,
       showSessionsFeature,
@@ -229,7 +228,7 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       autoRecordOnPlay,
       toggleAutoRecordOnPlay,
       flowLensAvailable: false,
-      enterFlowLens: () => {},
+      enterFlowLens: () => { },
     }),
     [
       navigateTo,
@@ -240,8 +239,7 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       resetToFirst,
       resetDb,
       toggleDevMode,
-      toggleCloudExport,
-      cloudExportEnabled,
+      cloudSyncSlot,
       toggleAutoHideScrollbars,
       autoHideScrollbars,
       showSessionsFeature,
@@ -282,6 +280,19 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       <div className="absolute inset-0 flex flex-col" style={{ filter: combinedFilter }}>
         {ActiveComponent && <ActiveComponent />}
       </div>
+
+      {/* Flowplan playback bar — mobile has no side-panel Play/Stop button
+          (see desktop's FlowLibrary.tsx), so this sticky top bar is the mobile
+          Stop control. Only renders while a flowplan is actively gating. */}
+      <MobilePlaybackBar
+        onStop={() => {
+          if (!playback?.isGating) return
+          const sourceScreenId =
+            playback.activeFlowplan?.__flowplan.steps[playback.currentStepIndex]?.sourceScreenId
+          playback.exit()
+          navigateTo(sourceScreenId ?? firstViewId ?? 'home')
+        }}
+      />
 
       {/* Bottom-left — back button + screen label (thumb zone, same row as FAB) */}
       <div
@@ -342,8 +353,8 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
             activeId={rightSub}
             onSelect={id => setRightSub(id as RightSubTab)}
           >
-            {rightSub === 'info' && <ScreenInfoContent views={views} />}
-            {rightSub === 'simulator' && <SimulatorContent hideDevice />}
+            {rightSub === 'info' && <ScreenInfoContent views={views} touch />}
+            {rightSub === 'simulator' && <SimulatorContent />}
             {rightSub === 'flow' && <FlowDebuggerContent />}
             {rightSub === 'db' && <DbContent />}
             {rightSub === 'sessions' && showSessionsFeature && <SessionsContent />}
@@ -371,14 +382,14 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
 // ── Mobile settings content ───────────────────────────────────────────────────
 // Thin shim — renders the relevant Settings section inline without the overlay shell.
 
+import type { ColorBlindMode } from '@flowkit/types/index'
+import { workspaces } from '@flowkit/workspaces'
 import {
   LS_AUTO_HIDE_SCROLLBARS,
   LS_LEFT_PANEL_W,
   LS_RIGHT_PANEL_W,
   LS_SESSIONS_ENABLED,
-} from '@platform/shared/constants/storageKeys'
-import type { ColorBlindMode } from '@platform/types/index'
-import { workspaces } from '@platform/workspaces'
+} from '@flowkit-shared/constants/storageKeys'
 
 import { useActiveWorkspace } from '../../contexts/ActiveWorkspaceContext'
 import { useDashboard as _useDashboard, useSimulator } from '../../contexts/DashboardContext'
@@ -400,7 +411,7 @@ function SettingRow({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 px-4 py-[10px] border-b border-theme-border">
+    <div className="flex items-center justify-between gap-4 px-4 py-2.5 border-b border-theme-border">
       <div className="flex-1 min-w-0">
         <div className="text-ui-sm font-medium text-theme-text-primary">{label}</div>
         {hint && (
@@ -496,7 +507,7 @@ function MobileSettingsContent({ section, ctx }: MobileSettingsContentProps) {
               localStorage.removeItem(LS_LEFT_PANEL_W)
               localStorage.removeItem(LS_RIGHT_PANEL_W)
             }}
-            className="text-ui-xs font-semibold py-1 px-[10px] rounded-md border border-theme-border bg-theme-elevated text-theme-text-secondary cursor-pointer"
+            className="text-ui-xs font-semibold py-1 px-2.5 rounded-md border border-theme-border bg-theme-elevated text-theme-text-secondary cursor-pointer"
           >
             Reset
           </button>

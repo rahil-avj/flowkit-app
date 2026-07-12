@@ -1,4 +1,4 @@
-import { LS_SESSION_SETTINGS as STORAGE_KEY } from '@platform/shared/constants/storageKeys'
+import { LS_SESSION_SETTINGS as STORAGE_KEY } from '@flowkit-shared/constants/storageKeys'
 import { useCallback, useState } from 'react'
 const SETTINGS_VERSION = 1
 

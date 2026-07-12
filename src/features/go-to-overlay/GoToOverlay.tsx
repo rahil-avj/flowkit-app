@@ -1,7 +1,7 @@
-import type { PaletteItem } from '@platform/features/command-palette'
-import { CommandPalette } from '@platform/features/command-palette'
-import { dispatchExplorerCommand } from '@platform/shared/utils/explorerCommands'
-import type { FlowNode } from '@platform/types/index'
+import type { FlowNode } from '@flowkit/types/index'
+import type { PaletteItem } from '@flowkit-features/command-palette'
+import { CommandPalette } from '@flowkit-features/command-palette'
+import { dispatchExplorerCommand } from '@flowkit-shared/utils/explorerCommands'
 import { Search } from 'lucide-react'
 import { useCallback, useState } from 'react'
 

@@ -4,7 +4,7 @@ import type {
   ConnectionMode,
   DevicePreset,
   NetworkSpeed,
-} from '@platform/types/index'
+} from '@flowkit/types/index'
 import { createContext, useContext } from 'react'
 
 export interface SimulatorContextValue {
@@ -40,8 +40,8 @@ if (import.meta.hot && !import.meta.hot.data.SimulatorContext) {
 }
 export const SimulatorContext =
   (import.meta.hot?.data.SimulatorContext as
-    | ReturnType<typeof createContext<SimulatorContextValue | null>>
-    | undefined) ?? createContext<SimulatorContextValue | null>(null)
+    ReturnType<typeof createContext<SimulatorContextValue | null>> | undefined) ??
+  createContext<SimulatorContextValue | null>(null)
 
 export function useSimulator() {
   const ctx = useContext(SimulatorContext)

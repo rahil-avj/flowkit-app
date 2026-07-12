@@ -1,6 +1,6 @@
-import { DEBUG_SUB_TABS, type DebugSubTab } from '@platform/features/flow-debugger/debugSubTabs'
-import { SIM_SUB_TABS, type SimSubTab } from '@platform/features/simulator/simSubTabs'
-import type { FlowNode } from '@platform/types/index'
+import type { FlowNode } from '@flowkit/types/index'
+import { DEBUG_SUB_TABS, type DebugSubTab } from '@flowkit-features/flow-debugger/debugSubTabs'
+import { SIM_SUB_TABS, type SimSubTab } from '@flowkit-features/simulator/simSubTabs'
 import { type Dispatch, type SetStateAction, useEffect, useMemo } from 'react'
 
 import { type InspectorTab } from '../layout/inspectorTabs'

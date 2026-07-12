@@ -1,5 +1,5 @@
-import type { CursorSample } from '@platform/features/flowTracer/types'
-import type { WireframeView } from '@platform/types/index'
+import type { WireframeView } from '@flowkit/types/index'
+import type { CursorSample } from '@flowkit-features/flowTracer/types'
 import { Eye, EyeOff, Flame } from 'lucide-react'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 

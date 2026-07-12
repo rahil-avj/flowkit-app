@@ -1,6 +1,6 @@
-import type { SessionMeta } from '@platform/features/flowTracer/types'
-import { IconButton } from '@platform/shared/components/ui'
-import { FLOWLENS_ACCENT } from '@platform/shared/contexts/FlowLensModeContext'
+import type { SessionMeta } from '@flowkit-features/flowTracer/types'
+import { IconButton } from '@flowkit-shared/components/ui'
+import { FLOWLENS_ACCENT } from '@flowkit-shared/contexts/FlowLensModeContext'
 import { Download, ScanEye, Trash2 } from 'lucide-react'
 import React from 'react'
 

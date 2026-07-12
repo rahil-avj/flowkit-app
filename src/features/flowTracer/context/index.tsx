@@ -1,4 +1,4 @@
-import { SessionRecorderCtx } from '@shared/contexts/SessionRecorderContext'
+import { SessionRecorderCtx } from '@flowkit-shared/contexts/SessionRecorderContext'
 import {
   createContext,
   type MutableRefObject,
@@ -18,6 +18,7 @@ import type {
   EventType,
   SessionEvent,
   SessionMeta,
+  SessionRemark,
   SessionSnapshot,
 } from '../types'
 import { DEFAULT_CHANNELS } from '../types'
@@ -43,7 +44,7 @@ interface SessionRecorderValue {
   currentScreenId: string | null
 
   // Lifecycle
-  startRecording: (name?: string, tags?: string[]) => void
+  startRecording: (name?: string, tags?: string[], testMode?: boolean) => void
   pauseRecording: () => void
   resumeRecording: () => void
   stopRecording: (opts?: StopOpts) => Promise<SessionMeta | null>
@@ -89,8 +90,8 @@ if (import.meta.hot && !import.meta.hot.data.SessionRecorderCtx) {
 }
 const Ctx =
   (import.meta.hot?.data.SessionRecorderCtx as
-    | ReturnType<typeof createContext<SessionRecorderValue | null>>
-    | undefined) ?? createContext<SessionRecorderValue | null>(null)
+    ReturnType<typeof createContext<SessionRecorderValue | null>> | undefined) ??
+  createContext<SessionRecorderValue | null>(null)
 const INACTIVITY_MS = 5 * 60 * 1000
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
@@ -125,7 +126,7 @@ export function SessionRecorderProvider({
   const eventCountRef = useRef(0)
   const sessionNameRef = useRef<string>('Untitled session')
   const sessionTagsRef = useRef<string[]>([])
-  const remarksRef = useRef<string[]>([])
+  const remarksRef = useRef<SessionRemark[]>([])
   const flowEntryCountRef = useRef(0)
   const screenCountRef = useRef(0)
   const startTimeRef = useRef<number>(0)
@@ -177,6 +178,14 @@ export function SessionRecorderProvider({
   const nextSeq = () => ++sequenceRef.current
 
   const resetLiveState = useCallback(() => {
+    if (recentFlushRef.current) {
+      clearTimeout(recentFlushRef.current)
+      recentFlushRef.current = null
+    }
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current)
+      inactivityTimerRef.current = null
+    }
     recentEventsRef.current = []
     setRecentEvents([])
     setElapsedMs(0)
@@ -291,7 +300,9 @@ export function SessionRecorderProvider({
         screenCountRef.current += 1
         setCurrentScreenId((payload.screenId as string) ?? (payload.viewId as string) ?? null)
       }
-      if (type === 'session.remark') remarksRef.current.push((payload.text as string) ?? '')
+      if (type === 'session.remark') {
+        remarksRef.current.push({ text: (payload.text as string) ?? '', timestamp: Date.now() })
+      }
 
       const event: SessionEvent = {
         id: crypto.randomUUID(),
@@ -500,9 +511,13 @@ export function SessionRecorderProvider({
       ? Math.max(0, Math.round(events[events.length - 1].timestamp - events[0].timestamp))
       : 0
     const qualityScore = computeQuality({ flowEntryCount, screenCount, durationMs: span })
-    const remarks = events
+    const firstTs = events[0]?.timestamp ?? 0
+    const remarks: SessionRemark[] = events
       .filter(e => e.type === 'session.remark')
-      .map(e => (e.payload.text as string) ?? '')
+      .map(e => ({
+        text: (e.payload.text as string) ?? '',
+        timestamp: crashSession.startTime + (e.timestamp - firstTs),
+      }))
     await SessionDb.saveMeta({
       ...crashSession,
       endTime: crashSession.startTime + span,

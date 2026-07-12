@@ -12,7 +12,7 @@ CLI). Those describe the platform; this describes how to operate it.
 
 Every workspace ships a generated, layered file set so an agent can start building without
 reading the codebase. All of it is rendered from a **single source of truth**
-(`scripts/lib/agentSpec.js`) by `scripts/lib/agent.js`, so it never drifts from the platform.
+(`scripts/platform/agent-spec.js`) by `scripts/platform/agent-sync.js`, so it never drifts from the platform.
 
 | Layer     | File                                                    | Role                                                                                                               |
 | --------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
@@ -79,7 +79,7 @@ Workspaces use the **flat flowplan format**: `flows/<flow>/<screen>/<Screen>.tsx
 
 The canonical way to do each common thing. (The INDEX routes here; the reference docs have full detail.)
 
-### Add a screen (flat flowplan format — nClarity)
+### Add a screen (flat flowplan format)
 
 1. Create the screen folder and component:
 
@@ -154,7 +154,7 @@ updateDb(d => {
 })
 ```
 
-Seed data lives in `data/db.ts`. → FLOWKIT.md (Mock database)
+Seed data lives in `lib/data/db.ts`. → FLOWKIT.md (Mock database)
 
 ### Gate access (entry guards)
 
@@ -170,7 +170,7 @@ Tailwind for static values; `style={{}}` only for dynamic/computed values; color
 
 ### Add a reviewer toggle
 
-Edit `data/simulator.tsx` (a default-exported JSX component):
+Edit `lib/data/simulator.tsx` (a default-exported JSX component):
 
 ```tsx
 <ControlAccordion label="Auth" defaultOpen>
@@ -217,13 +217,15 @@ The agent files are generated, not hand-maintained. When the platform changes, r
 flowkit agent:sync                 # active workspace, keep its agent
 flowkit agent:sync:<ws>            # a specific workspace
 flowkit agent:sync --agent:cursor  # switch agent target (removes the old memory file)
-flowkit agent:check                # warn (and exit non-zero) if files are stale vs the spec
 ```
 
 - `agent:sync` re-emits `INDEX.md`, `rules.md`, `platform.md`, and the memory file. It **never**
   touches `project.md`.
-- `agent:check` runs warn-only inside `flowkit export` pre-flight, so a stale workspace is surfaced.
-- To change platform facts, edit **`scripts/lib/agentSpec.js`** (the single source), bump
+- There is no separate staleness-check command (`agent:check` doesn't exist, and `flowkit export`'s
+  pre-flight checks — TypeScript, ESLint, FlowPlan validation — don't cover agent-file staleness
+  either, as of this writing). Re-run `agent:sync` yourself after any change to
+  `scripts/platform/agent-spec.js`.
+- To change platform facts, edit **`scripts/platform/agent-spec.js`** (the single source), bump
   `AGENT_SPEC_VERSION`, then `agent:sync` every workspace. Never hand-edit a generated `.agent/*` file.
 
 ### Supported agent targets

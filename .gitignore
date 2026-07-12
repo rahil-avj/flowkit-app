@@ -3,7 +3,10 @@ dist
 handoff/
 .DS_Store
 .agents
-.claude
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/agent-dx-study/
 .vite
 *.tsbuildinfo
 .env.local
@@ -13,9 +16,14 @@ dist-standalone/
 *.zip
 *-handoff-*/
 scripts/.flowkit-state.json
+.vscode
+workspaces
 
 # FlowLens generated reports (per-workspace, gitignored)
 workspaces/*/lib/flowLens/reports/
+
+# Canary scope-toggle transient state (scripts/dev/scope-toggle.js)
+scripts/dev/.pre-canary-snapshot.json
 
 # Temporary CLI artifacts
 .flowkit-backup.json
@@ -23,3 +31,14 @@ flowkit-dump-*/
 flowlens-report-*.json
 sessions-brief-*.md
 test
+testspace
+
+# TrackerTim is its own nested git repo, not part of flowkit-app's history
+trackerTim
+
+# Agent-DX study scaffolds (scripts/dev/agent-dx-study-setup.js) — the scaffold itself
+# (node_modules and all) is disposable, but its transcript/metadata are the study's
+# primary data and should be tracked. See .claude/skills/agent-dx-study/SKILL.md.
+temp-test*/*
+!temp-test*/.study-transcript.md
+!temp-test*/.study-meta.json

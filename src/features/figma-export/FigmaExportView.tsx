@@ -1,6 +1,6 @@
-import { DEVICE_PRESETS } from '@platform/shared/components/devices'
-import { Z } from '@platform/shared/constants/zIndex'
-import type { DevicePreset, WireframeView } from '@platform/types/index'
+import type { DevicePreset, WireframeView } from '@flowkit/types/index'
+import { DEVICE_PRESETS } from '@flowkit-shared/components/devices'
+import { Z } from '@flowkit-shared/constants/zIndex'
 import { PanelLeft } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 

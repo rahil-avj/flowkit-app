@@ -1,10 +1,10 @@
-import { useFeedback } from '@features/feedback'
-import Tooltip from '@platform/shared/components/ui/Tooltip'
-import { useActiveWorkspace } from '@platform/shared/contexts/ActiveWorkspaceContext'
-import { useNavigation } from '@platform/shared/contexts/DashboardContext'
-import { useTheme } from '@platform/shared/contexts/ThemeContext'
-import { useWorkspaceHierarchy } from '@platform/shared/utils/useWorkspaceHierarchy'
-import type { AnnotationTag, WireframeView, WorkspaceHierarchyNode } from '@platform/types/index'
+import type { AnnotationTag, WireframeView, WorkspaceHierarchyNode } from '@flowkit/types/index'
+import { useFeedback } from '@flowkit-features/feedback'
+import Tooltip from '@flowkit-shared/components/ui/Tooltip'
+import { useActiveWorkspace } from '@flowkit-shared/contexts/ActiveWorkspaceContext'
+import { useNavigation } from '@flowkit-shared/contexts/DashboardContext'
+import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
+import { useWorkspaceHierarchy } from '@flowkit-shared/utils/useWorkspaceHierarchy'
 import { ChevronDown, GitBranch, Layers, MessageSquare, Search, Smartphone } from 'lucide-react'
 // ── Annotation tag icon map ───────────────────────────────────────────────────
 import {
@@ -44,7 +44,7 @@ interface Props {
   activeTags?: Set<string>
 }
 
-import { LS_HIERARCHY_EXPANDED as LS_EXPANDED } from '@platform/shared/constants/storageKeys'
+import { LS_HIERARCHY_EXPANDED as LS_EXPANDED } from '@flowkit-shared/constants/storageKeys'
 
 export default function ScreensHierarchy({
   onFindInLibrary,
