@@ -44,7 +44,21 @@ function collectAllScreenIds(wsDir) {
 /** Runs flowplan-domain rules for one workspace. Appends findings to `report`. */
 export async function checkFlowplans(wsDir, report) {
   const files = listFlowplanFiles(wsDir)
-  if (files.length === 0) return
+  if (files.length === 0) {
+    // A flowplans/ dir that exists but is empty is suspicious enough to fail the
+    // prebuild gate rather than silently pass — mirrors plan:check's old behavior
+    // (the naive string-check command this rule module supersedes).
+    if (fs.existsSync(path.join(wsDir, 'flowplans'))) {
+      report.add({
+        ruleId: 'flowplan/empty-workspace',
+        severity: 'error',
+        file: 'flowplans/',
+        message: 'flowplans/ directory exists but contains no .ts/.js plans.',
+        fix: 'flowkit create:flowplan --name:<id>',
+      })
+    }
+    return
+  }
 
   const knownScreenIds = collectAllScreenIds(wsDir)
 

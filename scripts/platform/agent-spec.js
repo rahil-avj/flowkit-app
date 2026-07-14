@@ -340,7 +340,10 @@ export function platformSurfaces(ctx) {
 export function cliRows(_ctx) {
   return [
     { cmd: 'flowkit plan:ls', what: 'list all flowplans in the workspace' },
-    { cmd: 'flowkit plan:check', what: 'validate flowplan files (static lint)' },
+    {
+      cmd: 'flowkit check / flowkit check:<domain>',
+      what: 'validate authored content — screens/config/components/db/flowplans',
+    },
     { cmd: 'flowkit project:ls', what: 'list projects and their flowplan counts' },
     { cmd: 'flowkit status', what: 'workspace health: projects, flowplans, sessions, feedback' },
     {

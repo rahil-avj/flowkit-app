@@ -83,7 +83,7 @@ export function cleanupWorkspace(name) {
 }
 
 // Test workspace names used across suites — cleaned up on process exit as a safety net
-const TEST_WS_NAMES = ['twsone', 'twstwo', 'twsync']
+const TEST_WS_NAMES = ['twsone', 'twstwo', 'twsync', 'twscheck']
 
 let _registrySnapshot = null
 

@@ -57,7 +57,11 @@ ${b('Projects:')}
 
 ${b('FlowPlans:')}
   ${c('plan:ls')} / ${c('fp:ls')}             List flowplans  ${d('[--project:<slug>]')}
-  ${c('plan:check')} / ${c('fp:check')}       Validate flowplans (static lint)
+
+${b('Check (domain-specific linter for authored content):')}
+  ${c('check')}                            Run all 5 domain checkers, combined report
+  ${c('check:screens')} / ${c('check:config')} / ${c('check:components')} / ${c('check:db')} / ${c('check:flowplans')}
+                                       Run just one domain  ${d('[--json]')}
 
 ${b('Sessions (FlowTracer / FlowLens library):')}
   ${d('Note: this section uses space-separated flags (--flag value), not the --flag:value colon')}

@@ -21,7 +21,7 @@ import {
   cmdStudyActive,
 } from './sessions/index.js'
 import { cmdAgentSync } from './agent-sync.js'
-import { cmdPlanLs, cmdPlanCheck, cmdProjectLs } from './plans.js'
+import { cmdPlanLs, cmdProjectLs } from './plans.js'
 import { cmdFeedbackImport, cmdFeedbackDump, cmdFeedbackLs } from './feedback.js'
 import { cmdHelp } from './help.js'
 import { cmdVersion } from './version.js'
@@ -190,10 +190,9 @@ export async function route(argv) {
     const sub = subColon === -1 ? p.val : p.val.slice(0, subColon)
     const nameVal = subColon === -1 ? '' : p.val.slice(subColon + 1)
     if (sub === 'ls' || sub === 'list') cmdPlanLs(nameVal, rest)
-    else if (sub === 'check') cmdPlanCheck(nameVal, rest)
     else {
       console.error(r(`✗ Unknown plan command: plan:${p.val}`))
-      console.log(d('  Try: plan:ls · plan:check'))
+      console.log(d('  Try: plan:ls  ·  for validation, use: flowkit check:flowplans'))
       process.exit(1)
     }
 

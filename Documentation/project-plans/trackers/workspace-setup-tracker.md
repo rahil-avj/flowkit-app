@@ -37,7 +37,7 @@ All under `flowkit arch <cmd>`:
 
 #### CLI — planned additions
 
-- `plan:ls`, `plan:check` — Flowplan discovery and validation (no separate spec doc exists; see `trackers/flowkit-tracker.md` § Feature management system for the closest related design)
+- `plan:ls`, `check:flowplans` — Flowplan discovery and validation (no separate spec doc exists; see `trackers/flowkit-tracker.md` § Feature management system for the closest related design)
 - Long-form aliases for all commands (`new-workspace`, `remove-flow`, etc.) — spec § A
 - `isTTY` guard in `selectFromList` for VS Code / non-TTY terminals — spec § D
 - Array-literal syntax for `order flows [auth, onboarding, home]` — spec § E

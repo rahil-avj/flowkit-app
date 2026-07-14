@@ -1,8 +1,9 @@
-// Platform command: read-only flowplan/project discovery and validation (plan:ls, plan:check, project:ls).
+// Platform command: read-only flowplan/project discovery (plan:ls, project:ls). Flowplan
+// validation lives in scripts/checks/flowplans.js — see `flowkit check:flowplans`.
 import fs from 'fs'
 import path from 'path'
 import { workspacePath } from '../helpers/paths.js'
-import { g, r, b, d } from '../helpers/colors.js'
+import { b, d } from '../helpers/colors.js'
 import { resolveWorkspaceLoose as resolveWorkspace } from '../helpers/workspace-resolve.js'
 
 function findProjectsDir(ws) {
@@ -79,62 +80,6 @@ export function cmdPlanLs(val, args) {
   console.log(d(' ────────────────────────────────────────────'))
   console.log(d(`  ${plans.length} plan${plans.length !== 1 ? 's' : ''}`))
   console.log('')
-}
-
-// ─── plan:check ───────────────────────────────────────────────────────────────
-
-export function cmdPlanCheck(val, args) {
-  const ws = resolveWorkspace(val)
-  const projectFlag = (args.find(a => a.startsWith('--project:')) || '').slice('--project:'.length)
-  const plans = ws ? listFlowplans(ws, projectFlag || null) : []
-
-  console.log('')
-  console.log(b(` plan:check — ${ws || '(no workspace)'}`))
-  console.log(d(' ────────────────────────────────────────────'))
-
-  if (plans.length === 0) {
-    const flatDir = path.join(workspacePath(ws), 'flowplans')
-    if (fs.existsSync(flatDir)) {
-      // Workspace has a flowplans/ dir but it's empty — that's suspicious, exit non-zero
-      console.log(r('  ✗ flowplans/ directory exists but contains no .ts/.js plans'))
-      console.log('')
-      process.exit(1)
-    }
-    console.log(d('  No flowplans to check.'))
-    console.log('')
-    return
-  }
-
-  let errors = 0
-  for (const { file, fullPath } of plans) {
-    const src = (() => {
-      try {
-        return fs.readFileSync(fullPath, 'utf8')
-      } catch {
-        return null
-      }
-    })()
-    if (!src) {
-      console.log('  ' + r('✗ ') + file + d('  — unreadable'))
-      errors++
-      continue
-    }
-    const issues = []
-    if (!src.includes('id:')) issues.push('missing id:')
-    if (!src.includes('name:')) issues.push('missing name:')
-    if (!src.includes('steps:')) issues.push('missing steps:')
-    if (issues.length === 0) {
-      console.log('  ' + g('✓ ') + file)
-    } else {
-      console.log('  ' + r('✗ ') + file + d('  — ' + issues.join(', ')))
-      errors++
-    }
-  }
-
-  console.log(d(' ────────────────────────────────────────────'))
-  console.log(errors ? r(`  ${errors} error${errors !== 1 ? 's' : ''}`) : g('  all clean'))
-  console.log('')
-  if (errors > 0) process.exit(1)
 }
 
 // ─── project:ls ───────────────────────────────────────────────────────────────

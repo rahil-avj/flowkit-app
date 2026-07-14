@@ -510,7 +510,7 @@ For how an agent actually _works_ a workspace — the cold-start sequence, task 
 ```bash
 flowkit nw:<name>                    # Create workspace
 flowkit plan:ls                      # List all flowplans
-flowkit plan:check                   # Validate flowplans — also runs as prebuild gate
+flowkit check:flowplans              # Validate flowplans — also runs as prebuild gate
 flowkit status                       # Workspace health: flows, screens, flowplans, sessions
 flowkit export                       # Export as standalone HTML viewer
 flowkit handoff                      # Build developer handoff zip
@@ -523,7 +523,7 @@ Workspace switching is done via the browser UI.
 ```bash
 npm create flowkit-app@latest my-app     # or: npm create flowkit-workspace@latest my-project
 cd my-app
-flowkit plan:check
+flowkit check:flowplans
 flowkit status
 npm run dev / npm run build               # export/handoff are repo-mode only
 ```

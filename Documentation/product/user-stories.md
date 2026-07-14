@@ -33,7 +33,7 @@ FlowKit is a browser-based UI prototyping platform built around three values:
 > Owns the engine. Works in `production` with full access to `src/`, `scripts/lib/`, tests, lint, and docs. Responsible for the stability and evolution of the platform that everyone else depends on.
 
 - As a platform developer, I want full lint, type-check, and test tooling so I can maintain quality and catch regressions before they reach workspace authors or agents.
-- As a platform developer, I want CLI validation commands (`plan:check`, `agent:check`, `kit:check`) so I can verify platform integrity without manually inspecting files.
+- As a platform developer, I want CLI validation commands (`check`/`check:<domain>`, `agent:check`, `kit:check`) so I can verify platform integrity without manually inspecting files.
 - As a platform developer, I want a version tagging workflow so I can record every iteration and recover any previous state of the platform when something breaks.
 - As a platform developer, I want a strip script that generates the `deployment` branch from `production` automatically so I never manually maintain two diverging codebases.
 - As a platform developer, I want the `deployment` branch to lock `src/` and `scripts/lib/` so workspace authors and agents cannot accidentally mutate the platform — keeping the engine stable and the workspace surface clean.

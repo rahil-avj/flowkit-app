@@ -50,7 +50,7 @@ Flowplans live at `workspaces/<name>/flowplans/`. Add a new `.ts` file there and
 
 Outside this repo, FlowKit ships as installable packages rather than a checkout:
 
-**Single-workspace project** — scaffold via `create-flowkit-app`. Your project root *is* the one workspace: `flowkit.config.ts`, `flows/`, `flowplans/`, `lib/` sit directly at root, and `flowkit` is a `devDependency` in `node_modules/`.
+**Single-workspace project** — scaffold via `create-flowkit-app`. Your project root _is_ the one workspace: `flowkit.config.ts`, `flows/`, `flowplans/`, `lib/` sit directly at root, and `flowkit` is a `devDependency` in `node_modules/`.
 
 ```bash
 npm create flowkit-app@latest my-app
@@ -133,21 +133,21 @@ The flowplan compiler (`compileFlowplan.ts`) converts this at runtime into a `Fl
 
 ## CLI reference
 
-| Command                                  | Description                                                        |
-| ----------------------------------------- | ------------------------------------------------------------------- |
-| `flowkit nw:<name>`                      | Create workspace (repo mode only)                                  |
-| `flowkit rw:<name>`                      | Remove workspace (repo mode only)                                  |
-| `flowkit watch:<name>`                   | Watch workspace for file changes (repo mode only)                  |
-| `flowkit status`                         | Workspace health snapshot                                          |
-| `flowkit export`                         | Export as standalone HTML viewer (no FlowLens)                     |
-| `flowkit export:full`                    | Export as standalone HTML viewer (FlowLens included)                |
-| `flowkit handoff`                        | Build developer handoff zip                                        |
-| `flowkit plan:check`                     | Validate all flowplans (runs automatically on build)                |
-| `flowkit sessions:brief`                 | Agent analytics brief from committed sessions                      |
-| `flowkit convert:multi`                  | Convert a flat consumer project to multi-workspace mode            |
-| `flowkit convert:flat`                   | Collapse a multi-workspace consumer project back to flat           |
-| `flowkit create/remove/rename:workspace` | Add/remove/rename a workspace (multi-workspace consumer mode only) |
-| `flowkit help`                           | Full help                                                           |
+| Command                                    | Description                                                                                                        |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `flowkit nw:<name>`                        | Create workspace (repo mode only)                                                                                  |
+| `flowkit rw:<name>`                        | Remove workspace (repo mode only)                                                                                  |
+| `flowkit watch:<name>`                     | Watch workspace for file changes (repo mode only)                                                                  |
+| `flowkit status`                           | Workspace health snapshot                                                                                          |
+| `flowkit export`                           | Export as standalone HTML viewer (no FlowLens)                                                                     |
+| `flowkit export:full`                      | Export as standalone HTML viewer (FlowLens included)                                                               |
+| `flowkit handoff`                          | Build developer handoff zip                                                                                        |
+| `flowkit check` / `flowkit check:<domain>` | Validate authored content — screens/config/components/db/flowplans (`check:flowplans` runs automatically on build) |
+| `flowkit sessions:brief`                   | Agent analytics brief from committed sessions                                                                      |
+| `flowkit convert:multi`                    | Convert a flat consumer project to multi-workspace mode                                                            |
+| `flowkit convert:flat`                     | Collapse a multi-workspace consumer project back to flat                                                           |
+| `flowkit create/remove/rename:workspace`   | Add/remove/rename a workspace (multi-workspace consumer mode only)                                                 |
+| `flowkit help`                             | Full help                                                                                                          |
 
 Full reference: [docs/CLI.md](docs/CLI.md)
 
@@ -264,13 +264,13 @@ src/
 
 ## Code quality
 
-| Check      | Command                      | Gate                                                                               |
-| ---------- | ---------------------------- | ---------------------------------------------------------------------------------- |
-| TypeScript | `npm run build`              | Blocks build — strict mode + unused locals/params                                  |
-| ESLint     | `npm run lint`               | 7 plugins: TS, React hooks, import sort, Tailwind, architecture boundaries (error) |
-| Prettier   | `npm run format:check`       | Auto-applied to staged files on commit                                             |
-| Tests      | `npm test`                   | Vitest — pure logic suites                                                         |
-| Coverage   | `npm run test:coverage`      | Thresholds: statements 91%, branches 86%, functions 95%, lines 93%                 |
+| Check      | Command                 | Gate                                                                               |
+| ---------- | ----------------------- | ---------------------------------------------------------------------------------- |
+| TypeScript | `npm run build`         | Blocks build — strict mode + unused locals/params                                  |
+| ESLint     | `npm run lint`          | 7 plugins: TS, React hooks, import sort, Tailwind, architecture boundaries (error) |
+| Prettier   | `npm run format:check`  | Auto-applied to staged files on commit                                             |
+| Tests      | `npm test`              | Vitest — pure logic suites                                                         |
+| Coverage   | `npm run test:coverage` | Thresholds: statements 91%, branches 86%, functions 95%, lines 93%                 |
 
 Architecture layer boundaries (`shared → core → features → modes → app`) are enforced as ESLint **errors** via `eslint-plugin-boundaries`. Cross-layer imports fail lint.
 

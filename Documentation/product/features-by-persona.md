@@ -130,13 +130,13 @@
 
 | Feature                                      | Description                                                                               |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Flowplan validation (`flowkit plan:check`)   | Validates all flowplan definitions; gates `npm run build`                                 |
+| Flowplan validation (`flowkit check:flowplans`) | Validates all flowplan definitions; gates `npm run build`                              |
 | Agent spec sync (`flowkit agent:sync/check`) | Syncs and validates agent specification files                                             |
 | Kit coverage check (`flowkit kit:check`)     | Verifies all themes cover all kit components                                              |
 | Layer boundary enforcement                   | `eslint-plugin-boundaries` enforces `shared → core → features → modes → App` import order |
 | TypeScript strict mode                       | Full type safety across `src/` and `scripts/lib/`                                         |
 | Test suite                                   | Vitest unit + CLI integration tests covering `scripts/` modules                           |
 | Pre-commit hooks                             | Husky + lint-staged: ESLint fix + Prettier on staged files                                |
-| Prebuild gate                                | `plan:check` runs automatically before every build; exits non-zero on blocking issues     |
+| Prebuild gate                                | `check:flowplans` runs automatically before every build; exits non-zero on blocking issues |
 | HMR safety                                   | All React contexts guard identity with `import.meta.hot.data` pattern                     |
 | Workspace rollback                           | `flowkit nw` scaffolding rolls back atomically on failure                                 |

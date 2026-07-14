@@ -177,8 +177,8 @@ export const screenMeta = {
 
 | Field          | Type                  | Purpose                                                                         |
 | -------------- | --------------------- | ------------------------------------------------------------------------------- |
-| `id`           | `string`              | Screen identifier (optional; auto-derived from file name if omitted)           |
-| `label`        | `string`              | Display name (optional; defaults to derived from component name)               |
+| `id`           | `string`              | Screen identifier (optional; auto-derived from file name if omitted)            |
+| `label`        | `string`              | Display name (optional; defaults to derived from component name)                |
 | `desc`         | `string`              | Short description shown in the sidebar                                          |
 | `devNotes`     | `string`              | Developer notes (not shown in sidebar)                                          |
 | `tags`         | `string[]`            | Filtering tags. Conventions: `role:`, `type:`, `state:`, `platform:`, `status:` |
@@ -186,8 +186,8 @@ export const screenMeta = {
 | `isStandalone` | `boolean`             | Entry-point screen — not reached via back-nav                                   |
 | `canEnter`     | `({ db }) => boolean` | Allow guard — sidebar shows lock icon when `false`                              |
 | `canNotEnter`  | `({ db }) => boolean` | Block guard — sidebar shows lock icon when `true`                               |
-| `variantLabel` | `string`              | Human-readable label for A/B variants (only for `.variant.<serial>.tsx` files) |
-| `variantOrder` | `number`              | Sort position for A/B variants (lower = earlier; default = Infinity)           |
+| `variantLabel` | `string`              | Human-readable label for A/B variants (only for `.variant.<serial>.tsx` files)  |
+| `variantOrder` | `number`              | Sort position for A/B variants (lower = earlier; default = Infinity)            |
 
 ---
 
@@ -259,7 +259,7 @@ Cursor positions are sampled (rAF, throttled) when the `cursorTracking` channel 
 
 ```bash
 flowkit plan:ls            # list all flowplans
-flowkit plan:check         # static lint — validates id/name/steps; also runs as prebuild gate
+flowkit check:flowplans    # validates flowplan structure/step references; also runs as prebuild gate
 flowkit status             # workspace health: flows, screens, flowplans, sessions
 ```
 

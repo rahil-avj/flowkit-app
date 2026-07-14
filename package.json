@@ -48,7 +48,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/flowkit.js plan:check",
+    "prebuild": "node scripts/flowkit.js check:flowplans",
     "build": "tsc -b && vite build",
     "build:standalone": "tsc -b && vite build && node scripts/builders/inline.js",
     "lint": "eslint .",
@@ -61,13 +61,14 @@
     "preview": "vite preview",
     "format": "node scripts/builders/format.mjs",
     "format:check": "prettier --check .",
-    "test:workspace": "node --test --test-concurrency=1 scripts/tests/workspace-registry.test.js scripts/tests/workspace-cli.test.js scripts/tests/stub-fallback.test.js scripts/tests/scaffold-consistency.test.js"
+    "test:workspace": "node --test --test-concurrency=1 scripts/tests/workspace-registry.test.js scripts/tests/workspace-cli.test.js scripts/tests/stub-fallback.test.js scripts/tests/scaffold-consistency.test.js scripts/tests/checks-rules.test.js scripts/tests/check-cli.test.js"
   },
   "peerDependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "dependencies": {
+    "@typescript-eslint/parser": "^8.62.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "esbuild": "^0.28.1",

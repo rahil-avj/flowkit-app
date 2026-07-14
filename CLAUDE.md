@@ -23,11 +23,20 @@ Browser-based UI prototyping platform (React 19 + Vite 8 + Tailwind v4) for mult
 │   ├── authoring-support/    domain-specific mutation logic used only by authoring/ commands (never dispatched itself)
 │   │   ├── config-patch.js   surgical read/modify/write helpers for workspace.ts (flowExists, screenExists, listScreens, addFlow, etc.)
 │   │   └── agent-state.js    .flowkit/ per-workspace state files (component registry)
+│   ├── checks/                self-contained `flowkit check`/`check:<domain>` feature — rules + reporter + dispatcher, all in one directory
+│   │   ├── index.js          dispatchCheck() — CLI-facing entry point, imported directly by flowkit.js
+│   │   ├── reporter.js       createReport()/printReport()/printReportJson() — shared Finding shape + output formatting
+│   │   ├── ts-parse.js       AST-walk helpers (@typescript-eslint/parser) shared by screens.js/db.js
+│   │   ├── screens.js        check:screens — default export shape, screenMeta presence/shape, id/directory match
+│   │   ├── config.js         check:config — workspace.ts flows[]/screenOrder vs. flows/ on disk; also the shared esbuild-based TS module reader flowplans.js reuses
+│   │   ├── components.js     check:components — .flowkit/components.json registry vs. disk, barrel export consistency
+│   │   ├── db.js             check:db — lib/data/db.ts|js has at least one export
+│   │   └── flowplans.js      check:flowplans — parseable, id/filename match, non-empty steps[], step screenIds exist, step guidance; wired into npm run prebuild
 │   ├── platform/             commands about the CLI/tool's own lifecycle and built-in subsystems
 │   │   ├── router.js         CLI dispatcher — single dispatch table for all subcommands
 │   │   ├── workspace.js      nw/rw/watch commands; scaffold rollback on failure — repo mode only
 │   │   ├── workspace-flat.js convert:multi/convert:flat + create/remove/rename:workspace — flat/multi consumer mode only
-│   │   ├── plans.js          plan:ls / plan:check (read-only validation) / project:ls
+│   │   ├── plans.js          plan:ls (read-only discovery) / project:ls — flowplan validation lives in checks/
 │   │   ├── feedback.js       feedback:import/dump/ls
 │   │   ├── sessions/         sessions:* + lens:report + sessions:study:* — split across crud/analytics/validate/sample/study
 │   │   ├── agent-sync.js     agent:sync — generates CLAUDE.md / AGENTS.md / .cursor rules
@@ -287,7 +296,7 @@ npm run dev
 
 **Build**
 
-- `npm run build` — tsc + vite build (runs `plan:check` prebuild gate automatically)
+- `npm run build` — tsc + vite build (runs `flowkit check:flowplans` prebuild gate automatically)
 - `npm run build:standalone` — plain `tsc -b && vite build` (default `vite.config.ts`) + `inline.js` post-process; NOT the real standalone export path
 - `flowkit export` — the actual standalone HTML export; a single guided flow in every mode (prompts for workspace only when 2+ exist, always prompts for an export profile unless `--profile:<name>` is given). Repo mode runs `npx vite build --config vite.config.standalone.ts` (requires `FLOWKIT_WORKSPACE` env var, uses `vite-plugin-singlefile`, outputs to `dist-standalone/` by default) via `scripts/builders/export.js` + `run-export.js`
 - `npm run build:lib` — builds the publishable `flowkit` npm package (`tsc -p tsconfig.build.json && vite build --config vite.lib.config.ts`) — see Package/Publish Mode below
@@ -317,10 +326,11 @@ npm run dev
 - `flowkit handoff` — developer handoff zip
 - `flowkit sessions:ls/import/export/check/stats/sample/rm/brief/purge` — session management
 - `flowkit lens:report` — export FlowLens analytics JSON
-- `flowkit plan:ls/check` — flowplan discovery and validation (short alias `fp:*`)
+- `flowkit plan:ls` — flowplan discovery (short alias `fp:ls`); validation is `flowkit check:flowplans` (see below)
+- `flowkit check` / `flowkit check:<domain>` — domain-specific linter for authored content (screens/config/components/db/flowplans); `--json` flag; `check:flowplans` is the prebuild gate; works in every mode
 - `flowkit project:ls` — list projects (short alias `pj:ls`)
 - `flowkit feedback:ls/import/dump` — feedback management
-- `flowkit agent:sync/check` — agent spec sync
+- `flowkit agent:sync` — agent spec sync
 - `flowkit create/remove/list/rename/move/add/screen/flowplan/components/promote:flow` — lower-level scaffolding sub-verbs used internally by `nw`/other commands (router.js) — prefer the higher-level commands above unless you need fine-grained control. Work correctly in repo, flat, and multi-workspace consumer mode; accept `--workspace:<name>` to target a non-default workspace in multi-workspace mode (default: the first entry, by key order, in `flowkit.workspaces`)
 - `flowkit convert:multi [--name:<id>]` — convert a flat-mode consumer project to multi-workspace mode — **flat/multi consumer mode only**
 - `flowkit convert:flat [--from:<id>] [--all]` — collapse a multi-workspace consumer project back to flat mode — **flat/multi consumer mode only**
@@ -429,7 +439,7 @@ See [Documentation/PACKAGE-ARCHITECTURE.md](Documentation/PACKAGE-ARCHITECTURE.m
 
 - **`applyDotPathPatch.ts`** — dot-path setter has no `__proto__`/`constructor` guard; prototype pollution possible on untrusted input ⚠️
 - **vitest scope** — `vitest.config.ts` only includes `scripts/tests/**/*.test.ts` (4 files as of this writing: `applyDotPathPatch`, `canvasReducer`, `compileFlowplan`, `useKeyboardShortcuts`), but those files import and test `src/` modules directly — despite the directory name, this is where `src/` unit coverage lives. Coverage thresholds (91/86/95/93 stmts/branches/funcs/lines) apply only to what those 4 files exercise; most `src/` logic (UI components, contexts, most of `core/`) has no coverage ⚠️. Separately, `npm run test:workspace` runs 4 `.test.js` CLI integration files (`scaffold-consistency`, `stub-fallback`, `workspace-cli`, `workspace-registry`) — these are plain Node tests, not part of the vitest run above.
-- **`prebuild` gate** — `npm run build` always runs `flowkit plan:check`; exits non-zero on blocking plan issues
+- **`prebuild` gate** — `npm run build` always runs `flowkit check:flowplans`; exits non-zero on blocking plan issues
 - **`@workspace` alias** — resolves to the active workspace at build/dev start; switching workspace requires dev server restart
 - **Two independent screen-navigation conventions — don't conflate them.** (1) `useDashboard().navigateTo(id)`, called directly by the screen, guarded on the `isFlow` prop FlowMaster injects (`onClick={() => !isFlow && navigateTo(id)}`) — works everywhere, Screens tab or Flow, no FlowMaster/flowplan dependency; this is what real, freely-explorable screens (e.g. a login/home screen with a tab bar) use, and what `scripts/helpers/scaffold.js`'s demo screens now do. The `isFlow` guard matters: without it, the click also fires during flow playback and desyncs `DashboardContext`'s view history from `FlowEngine`'s own step index. (2) `FlowScreenProps`'s `onAction`/`onNext`/`onBack` (`src/types/index.ts`) — injected only by `FlowMaster` during active flowplan playback (see its own JSDoc: "automatically injected... by FlowMaster"); `FlowMaster.tsx`'s `handleContainerClick` also does DOM-`id`-based event delegation for the older/scaffold convention (button `id` matches a flowplan step's `on` field, no `onClick` needed on the button at all). Both halves of (2) are **correctly, by-design inert** outside flow playback — not a bug. `scripts/helpers/workspace-template.js`'s demo screens (flat/multi-workspace scaffolder) only demonstrate convention (2) — see its NOTE comment. The **"Interactive Screens Preview" setting that used to gate a third, settings-based variant of convention (1)/(2) has been removed** — screens needing Screens-tab interactivity now wire it directly per the pattern above, unconditionally, no setting required.
 
@@ -505,18 +515,18 @@ All 7 aliases are declared in `vite.config.ts` and mirrored in `tsconfig.app.jso
 
 ## Key Dependencies
 
-| Package                                  | Purpose                                               |
-| ---------------------------------------- | ----------------------------------------------------- |
-| `react@19` / `react-dom@19`              | UI runtime                                            |
-| `vite@8` + `@vitejs/plugin-react`        | Dev server + build                                    |
-| `tailwindcss@4` + `@tailwindcss/postcss` | Utility CSS (CSS-only config)                         |
-| `@radix-ui/*`                            | Headless primitives (accordion, dialog, select, etc.) |
-| `class-variance-authority`               | Component variant system                              |
-| `clsx` + `tailwind-merge` → `cn()`       | Class merging utility                                 |
-| `lucide-react`                           | Icon library                                          |
-| `vite-plugin-singlefile`                 | Standalone HTML export                                |
-| `eslint-plugin-boundaries`               | Layer import enforcement                              |
-| `typedoc`                                 | Generates `docs/api/` from `src/core/config/index.ts`'s public API (`npm run docs:api`) |
+| Package                                  | Purpose                                                                                 |
+| ---------------------------------------- | --------------------------------------------------------------------------------------- |
+| `react@19` / `react-dom@19`              | UI runtime                                                                              |
+| `vite@8` + `@vitejs/plugin-react`        | Dev server + build                                                                      |
+| `tailwindcss@4` + `@tailwindcss/postcss` | Utility CSS (CSS-only config)                                                           |
+| `@radix-ui/*`                            | Headless primitives (accordion, dialog, select, etc.)                                   |
+| `class-variance-authority`               | Component variant system                                                                |
+| `clsx` + `tailwind-merge` → `cn()`       | Class merging utility                                                                   |
+| `lucide-react`                           | Icon library                                                                            |
+| `vite-plugin-singlefile`                 | Standalone HTML export                                                                  |
+| `eslint-plugin-boundaries`               | Layer import enforcement                                                                |
+| `typedoc`                                | Generates `docs/api/` from `src/core/config/index.ts`'s public API (`npm run docs:api`) |
 
 ---
 
