@@ -19,7 +19,7 @@ import fs from 'fs'
 import { glob } from 'fs/promises'
 import os from 'os'
 import path from 'path'
-import { fileURLToPath } from 'url'
+import { fileURLToPath, pathToFileURL } from 'url'
 
 import { handleSaveSession } from './flowlens-session.js'
 import { WORKSPACE_CONFIG_FILENAME } from './config-filenames.js'
@@ -67,7 +67,7 @@ async function readFlowkitConfig(cwd) {
     external: ['react', 'react-dom'],
     logLevel: 'silent',
   })
-  const fileUrl = `file://${outfile}?t=${Date.now()}`
+  const fileUrl = `${pathToFileURL(outfile).href}?t=${Date.now()}`
   const mod = await import(fileUrl)
   return mod.default ?? mod
 }

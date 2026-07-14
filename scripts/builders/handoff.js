@@ -1,7 +1,6 @@
 // Builder: packages a workspace into a developer handoff zip.
 import fs from 'fs'
 import path from 'path'
-import { execSync } from 'child_process'
 import { ROOT, workspacePath, requireRepoMode, listWorkspaceDirs } from '../helpers/paths.js'
 import { g, r, b, d, c } from '../helpers/colors.js'
 import { selectFromList } from '../helpers/prompt.js'
@@ -93,7 +92,7 @@ export async function cmdHandoff(val) {
   console.log(g('✓') + ' .env.example written')
 
   // Zip and clean up the temp dir
-  execSync(`zip -r "${zipPath}" .`, { cwd: outDir, stdio: 'pipe' })
+  await zipDirectory(outDir, zipPath)
   fs.rmSync(outDir, { recursive: true })
 
   const kb = (fs.statSync(zipPath).size / 1024).toFixed(1)
@@ -103,6 +102,37 @@ export async function cmdHandoff(val) {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+// Uses the optional `archiver` package (pure JS, cross-platform) rather than
+// shelling out to a system `zip` binary, which isn't reliably on PATH on
+// Windows. Not a hard dependency of flowkit itself — installed on demand so
+// non-Windows users who never run `handoff` don't carry the extra weight.
+async function zipDirectory(srcDir, zipPath) {
+  let ZipArchive
+  try {
+    // v8 dropped the old archiver('zip', opts) factory function in favor of
+    // named class exports — this targets the current (v8+) API.
+    ;({ ZipArchive } = await import('archiver'))
+  } catch {
+    // Clean up the already-copied outDir — otherwise a re-run leaves an
+    // orphaned handoff/<name>-handoff-<date>/ directory behind on every retry
+    // until the user installs archiver.
+    fs.rmSync(srcDir, { recursive: true, force: true })
+    console.error(r('✗ The "archiver" package is required to build the handoff zip.'))
+    console.error(d('  Install it and re-run: npm install --save-dev archiver'))
+    process.exit(1)
+  }
+
+  await new Promise((resolvePromise, reject) => {
+    const output = fs.createWriteStream(zipPath)
+    const archive = new ZipArchive({ zlib: { level: 9 } })
+    output.on('close', resolvePromise)
+    archive.on('error', reject)
+    archive.pipe(output)
+    archive.directory(srcDir, false)
+    archive.finalize()
+  })
+}
 
 function copyEntry(src, dest) {
   if (fs.statSync(src).isDirectory()) {

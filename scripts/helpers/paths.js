@@ -260,3 +260,34 @@ export function writeState(patch) {
   const current = readState()
   fs.writeFileSync(STATE_FILE, JSON.stringify({ ...current, ...patch }, null, 2))
 }
+
+/**
+ * Detects whether a workspace's authored content is TS or plain JS, by
+ * inspecting what's actually on disk under flows/ — not every mode tracks a
+ * `language` field the same way (repo mode's src/workspaces.json does; flat/
+ * multi-workspace mode's package.json flowkit.workspaces does not), so
+ * detection-by-file-extension is the one signal available in every mode.
+ * Defaults to 'ts' when the workspace is empty/ambiguous, matching every
+ * existing scaffold's own default.
+ */
+export function detectWorkspaceLanguage(wsDir) {
+  const flowsDir = path.join(wsDir, 'flows')
+  if (!fs.existsSync(flowsDir)) return 'ts'
+
+  const walk = dir => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name)
+      if (entry.isDirectory()) {
+        const found = walk(full)
+        if (found) return found
+      } else if (entry.name.endsWith('.jsx') || entry.name.endsWith('.js')) {
+        return 'js'
+      } else if (entry.name.endsWith('.tsx') || entry.name.endsWith('.ts')) {
+        return 'ts'
+      }
+    }
+    return null
+  }
+
+  return walk(flowsDir) ?? 'ts'
+}

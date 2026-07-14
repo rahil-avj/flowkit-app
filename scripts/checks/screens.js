@@ -22,10 +22,12 @@ export function checkScreens(wsDir, report) {
       const screenDir = path.join(flowDir, screenId)
       if (!fs.statSync(screenDir).isDirectory()) continue
 
-      const tsxFiles = fs.readdirSync(screenDir).filter(f => f.endsWith('.tsx'))
-      if (tsxFiles.length === 0) continue // not a screen dir (e.g. stray subfolder) — nothing to check
+      const screenFiles = fs
+        .readdirSync(screenDir)
+        .filter(f => f.endsWith('.tsx') || f.endsWith('.jsx'))
+      if (screenFiles.length === 0) continue // not a screen dir (e.g. stray subfolder) — nothing to check
 
-      for (const fileName of tsxFiles) {
+      for (const fileName of screenFiles) {
         const filePath = path.join(screenDir, fileName)
         const relPath = path.relative(wsDir, filePath)
         const body = parseTopLevel(filePath)

@@ -5,7 +5,7 @@ import { readFileSync, existsSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 
 // Snapshot all tracked file contents before formatting
 const trackedFiles = execSync('git ls-files', { cwd: root })

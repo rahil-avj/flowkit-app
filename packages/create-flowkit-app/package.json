@@ -23,7 +23,8 @@
   },
   "files": [
     "index.js",
-    "templates/"
+    "templates/",
+    "README.md"
   ],
   "engines": {
     "node": ">=20"

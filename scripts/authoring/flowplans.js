@@ -28,7 +28,7 @@ function flowplanPath(wsDir, id) {
 function parseFlowplan(filePath) {
   if (!fs.existsSync(filePath)) return null
   let src = fs.readFileSync(filePath, 'utf8')
-  src = src.replace(/^import\s+.*\n/m, '')
+  src = src.replace(/^import\s+.*\n/gm, '')
   src = src.replace(/export\s+default\s+defineFlow\s*\(/, 'return (')
   try {
     return new Function(src)()

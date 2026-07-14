@@ -34,7 +34,7 @@ Browser-based UI prototyping platform (React 19 + Vite 8 + Tailwind v4) for mult
 │   │   ├── agent-spec.js     single-source-of-truth spec data rendered by agent-sync.js
 │   │   ├── status.js         status command
 │   │   ├── help.js           help command
-│   │   └── install.js        one-time setup — registers the flowkit shell alias (manual/agent-invoked)
+│   │   └── install.js        prints shell alias setup instructions; users paste manually (manual/agent-invoked)
 │   ├── helpers/               domain-agnostic support machinery, never a direct CLI command
 │   │   ├── paths.js          root/mode resolution, workspace path safety, repo/flat/multi-workspace-mode-aware resolution
 │   │   ├── flowkit-manifest.js  reads/writes consumer package.json's flowkit.mode/flowkit.workspaces (object keyed by name, `{ path }`)

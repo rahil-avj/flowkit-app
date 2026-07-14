@@ -14,8 +14,9 @@ import { parseTopLevel } from './ts-parse.js'
 
 /** Runs db-domain rules for one workspace. Appends findings to `report`. */
 export function checkDb(wsDir, report) {
-  const dbPath = path.join(wsDir, 'lib', 'data', 'db.ts')
-  if (!fs.existsSync(dbPath)) return // no db.ts is valid — not every workspace needs mock data
+  const dbCandidates = ['db.ts', 'db.js'].map(f => path.join(wsDir, 'lib', 'data', f))
+  const dbPath = dbCandidates.find(p => fs.existsSync(p))
+  if (!dbPath) return // no db file is valid — not every workspace needs mock data
 
   const relPath = path.relative(wsDir, dbPath)
   const body = parseTopLevel(dbPath)
@@ -29,7 +30,7 @@ export function checkDb(wsDir, report) {
       ruleId: 'db/no-exports',
       severity: 'error',
       file: relPath,
-      message: 'lib/data/db.ts has no exports — nothing will load into the platform db object.',
+      message: `${relPath} has no exports — nothing will load into the platform db object.`,
       fix: `Add at least one named export, e.g. export const user = { ... }`,
     })
   }

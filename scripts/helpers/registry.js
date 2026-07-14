@@ -15,7 +15,12 @@ function readConfigDescription(name) {
   try {
     const configPath = path.join(workspacePath(name), WORKSPACE_CONFIG_FILENAME)
     const src = fs.readFileSync(configPath, 'utf8')
-    const m = src.match(/workspace\s*:\s*\{[^}]*description\s*:\s*['"`]([^'"`]+)['"`]/)
+    // Allows an escaped quote (\") inside the description without ending the
+    // match early — a plain [^'"`]+ class stops at the first quote character.
+    const m =
+      src.match(/workspace\s*:\s*\{[^}]*description\s*:\s*'((?:\\'|[^'])*)'/) ||
+      src.match(/workspace\s*:\s*\{[^}]*description\s*:\s*"((?:\\"|[^"])*)"/) ||
+      src.match(/workspace\s*:\s*\{[^}]*description\s*:\s*`((?:\\`|[^`])*)`/)
     return m ? m[1] : null
   } catch {
     return null

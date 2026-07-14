@@ -7,6 +7,7 @@
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import { pathToFileURL } from 'url'
 import esbuild from 'esbuild'
 import { WORKSPACE_CONFIG_FILENAME } from '../helpers/config-filenames.js'
 
@@ -43,7 +44,7 @@ async function readTsModule(filePath) {
   } catch {
     return null // genuine syntax error — tsc/eslint's job to report, not this rule's
   }
-  const fileUrl = `file://${outfile}?t=${Date.now()}`
+  const fileUrl = `${pathToFileURL(outfile).href}?t=${Date.now()}`
   const mod = await import(fileUrl)
   return mod.default ?? mod
 }

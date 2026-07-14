@@ -3,7 +3,11 @@ import fs from 'fs'
 import path from 'path'
 import { parseStringFlag } from '../helpers/args.js'
 import { resolveWorkspace } from '../helpers/workspace-resolve.js'
-import { workspacePath, assertScopedWorkspaceDir } from '../helpers/paths.js'
+import {
+  workspacePath,
+  assertScopedWorkspaceDir,
+  detectWorkspaceLanguage,
+} from '../helpers/paths.js'
 import { assertWithinWorkspace, ValidationError } from '../helpers/validate.js'
 import { g, r, b, d, c } from '../helpers/colors.js'
 import {
@@ -16,7 +20,7 @@ import {
 
 const PASCAL_RE = /^[A-Z][A-Za-z0-9]+$/
 
-function componentTemplate(name, desc, compPath) {
+function componentTemplate(name, desc, compPath, isJs) {
   // Force the comment onto one line — a newline in --desc would otherwise
   // break out of the `//` comment and inject raw code into the file below it.
   const singleLineDesc = desc ? desc.replace(/[\r\n]+/g, ' ').trim() : ''
@@ -25,14 +29,18 @@ function componentTemplate(name, desc, compPath) {
   // barrel export exists now or later (barrels re-export the default as a
   // named binding, but this file's own self-documentation shouldn't assume
   // barrel state that's decided elsewhere and can change independently).
-  return `${descLine}// Usage: import ${name} from '@workspace/${compPath}/${name}'
-
-interface Props {
+  const propsBlock = isJs
+    ? ''
+    : `interface Props {
   className?: string
   children?: React.ReactNode
 }
 
-export default function ${name}({ className = '', children }: Props) {
+`
+  const propsType = isJs ? '' : ': Props'
+  return `${descLine}// Usage: import ${name} from '@workspace/${compPath}/${name}'
+
+${propsBlock}export default function ${name}({ className = '', children }${propsType}) {
   return (
     <div className={className}>
       {children}
@@ -42,15 +50,21 @@ export default function ${name}({ className = '', children }: Props) {
 `
 }
 
-/** Find the nearest index.ts barrel relative to a component path. */
+const BARREL_NAMES = ['index.ts', 'index.js']
+
+/** Find the nearest index.ts/index.js barrel relative to a component path. */
 export function findBarrel(wsDir, compRelPath) {
   // compRelPath: e.g. 'lib/components/ui'
-  const barrelPath = path.join(wsDir, compRelPath, 'index.ts')
-  if (fs.existsSync(barrelPath)) return barrelPath
+  for (const barrelName of BARREL_NAMES) {
+    const barrelPath = path.join(wsDir, compRelPath, barrelName)
+    if (fs.existsSync(barrelPath)) return barrelPath
+  }
 
   // Try parent
-  const parentBarrel = path.join(wsDir, path.dirname(compRelPath), 'index.ts')
-  if (fs.existsSync(parentBarrel)) return parentBarrel
+  for (const barrelName of BARREL_NAMES) {
+    const parentBarrel = path.join(wsDir, path.dirname(compRelPath), barrelName)
+    if (fs.existsSync(parentBarrel)) return parentBarrel
+  }
 
   return null
 }
@@ -114,33 +128,41 @@ export async function cmdCreateComponent(_val, args = []) {
     process.exit(1)
   }
 
+  const isJs = detectWorkspaceLanguage(wsDir) === 'js'
+  const ext = isJs ? 'jsx' : 'tsx'
   const compDir = path.join(wsDir, compPath)
-  const compFile = path.join(compDir, `${name}.tsx`)
+  const compFile = path.join(compDir, `${name}.${ext}`)
 
   if (fs.existsSync(compFile)) {
-    console.error(r(`✗ File already exists: ${compPath}/${name}.tsx`))
+    console.error(r(`✗ File already exists: ${compPath}/${name}.${ext}`))
     process.exit(1)
   }
 
   try {
     fs.mkdirSync(compDir, { recursive: true })
-    fs.writeFileSync(compFile, componentTemplate(name, desc, compPath))
+    fs.writeFileSync(compFile, componentTemplate(name, desc, compPath, isJs))
 
     const barrelPath = findBarrel(wsDir, compPath)
     let barrelUpdated = false
     if (barrelPath) {
-      const barrelRel = path.relative(path.dirname(barrelPath), compFile).replace(/\.tsx$/, '')
+      const barrelRel = path
+        .relative(path.dirname(barrelPath), compFile)
+        .replace(/\.(tsx|jsx)$/, '')
       barrelUpdated = appendExportToBarrel(barrelPath, name, barrelRel)
     }
 
     registerComponent(wsDir, { name, path: compPath, desc })
 
-    console.log(g(`✓ Component:  ${compPath}/${name}.tsx`))
+    console.log(g(`✓ Component:  ${compPath}/${name}.${ext}`))
     if (barrelUpdated && barrelPath) {
       const barrelRel = path.relative(wsDir, barrelPath)
       console.log(g(`✓ Exported:   ${barrelRel} → export { default as ${name} }`))
     } else if (!barrelPath) {
-      console.log(d(`  No index.ts found — add export manually or run: flowkit add:export`))
+      console.log(
+        d(
+          `  No index.${ext === 'jsx' ? 'js' : 'ts'} found — add export manually or run: flowkit add:export`
+        )
+      )
     }
     console.log(g(`✓ Registered: .flowkit/components.json`))
     console.log('')
@@ -189,7 +211,10 @@ export async function cmdRemoveComponent(_val, args = []) {
     throw e
   }
 
-  const compFile = path.join(wsDir, resolvedPath, `${name}.tsx`)
+  const compExt = ['tsx', 'jsx'].find(e =>
+    fs.existsSync(path.join(wsDir, resolvedPath, `${name}.${e}`))
+  )
+  const compFile = path.join(wsDir, resolvedPath, `${name}.${compExt ?? 'tsx'}`)
   if (fs.existsSync(compFile)) fs.unlinkSync(compFile)
 
   const barrelPath = findBarrel(wsDir, resolvedPath)
@@ -197,7 +222,7 @@ export async function cmdRemoveComponent(_val, args = []) {
 
   unregisterComponent(wsDir, name, resolvedPath)
 
-  console.log(g(`✓ Removed:       ${resolvedPath}/${name}.tsx`))
+  console.log(g(`✓ Removed:       ${resolvedPath}/${name}.${compExt ?? 'tsx'}`))
   if (barrelPath) console.log(g(`✓ Export removed: ${path.relative(wsDir, barrelPath)}`))
   console.log(g(`✓ Unregistered:  .flowkit/components.json`))
 }
@@ -215,12 +240,14 @@ export async function cmdComponentsFind(_val, args = []) {
 
   const entry = findComponent(wsDir, name)
   if (entry) {
-    const fileExists = fs.existsSync(path.join(wsDir, entry.path, `${name}.tsx`))
+    const foundExt = ['tsx', 'jsx'].find(e =>
+      fs.existsSync(path.join(wsDir, entry.path, `${name}.${e}`))
+    )
     console.log(g(`✓ Found: ${name}`))
-    console.log(`  Path:       ${entry.path}/${name}.tsx`)
+    console.log(`  Path:       ${entry.path}/${name}.${foundExt ?? 'tsx'}`)
     console.log(`  Desc:       ${entry.desc || d('(no description)')}`)
     console.log(
-      `  Registered: ${fileExists ? g('yes') : r('yes (but file missing — run components:scan)')}`
+      `  Registered: ${foundExt ? g('yes') : r('yes (but file missing — run components:scan)')}`
     )
     return
   }
@@ -232,7 +259,8 @@ export async function cmdComponentsFind(_val, args = []) {
     const walk = dir => {
       for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
         if (entry.isDirectory()) walk(path.join(dir, entry.name))
-        else if (entry.name === `${name}.tsx`) found.push(path.join(dir, entry.name))
+        else if (entry.name === `${name}.tsx` || entry.name === `${name}.jsx`)
+          found.push(path.join(dir, entry.name))
       }
     }
     walk(libDir)
@@ -270,7 +298,9 @@ export async function cmdComponentsLs(_val, args = []) {
   }
 
   for (const e of entries) {
-    const fileOk = fs.existsSync(path.join(wsDir, e.path, `${e.name}.tsx`))
+    const fileOk =
+      fs.existsSync(path.join(wsDir, e.path, `${e.name}.tsx`)) ||
+      fs.existsSync(path.join(wsDir, e.path, `${e.name}.jsx`))
     const status = fileOk ? g('✓') : r('✗')
     console.log(`  ${status} ${c(e.name).padEnd(32)} ${d(e.path)}`)
     if (e.desc) console.log(`     ${d(e.desc)}`)
@@ -294,8 +324,11 @@ export async function cmdComponentsScan(_val, args = []) {
   const walk = dir => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       if (entry.isDirectory()) walk(path.join(dir, entry.name))
-      else if (entry.name.endsWith('.tsx') && !entry.name.startsWith('index')) {
-        const name = entry.name.replace('.tsx', '')
+      else if (
+        (entry.name.endsWith('.tsx') || entry.name.endsWith('.jsx')) &&
+        !entry.name.startsWith('index')
+      ) {
+        const name = entry.name.replace(/\.(tsx|jsx)$/, '')
         if (/^[A-Z]/.test(name)) {
           found.push({ name, path: path.relative(wsDir, dir) })
         }
@@ -357,7 +390,10 @@ export async function cmdAddExport(_val, args = []) {
   // Validate source file exists relative to the barrel
   const barrelDir = path.dirname(barrelPath)
   const srcFile = path.join(barrelDir, `${name}.tsx`)
-  if (!fs.existsSync(srcFile) && !fs.existsSync(srcFile.replace('.tsx', '.ts'))) {
+  const srcExists = ['tsx', 'jsx', 'ts'].some(ext =>
+    fs.existsSync(path.join(barrelDir, `${name}.${ext}`))
+  )
+  if (!srcExists) {
     console.error(r(`✗ Source file not found: ${path.relative(wsDir, srcFile)}`))
     console.error(
       d(

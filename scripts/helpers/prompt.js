@@ -22,6 +22,16 @@ export function selectFromList(items, _onSelect) {
 
   return new Promise(resolve => {
     let idx = 0
+    let cursorRestored = false
+    const restoreCursor = () => {
+      if (cursorRestored) return
+      cursorRestored = true
+      process.stdout.write('\x1b[?25h')
+    }
+    // Belt-and-suspenders: covers uncaught exceptions elsewhere in the process
+    // and external signals (SIGTERM) that bypass the '\x03' branch in onData
+    // below, so the terminal cursor is never left hidden after this process exits.
+    process.once('exit', restoreCursor)
 
     const render = () => {
       process.stdout.write('\x1b[?25l')
@@ -50,10 +60,10 @@ export function selectFromList(items, _onSelect) {
         process.stdin.pause()
         process.stdin.removeListener('data', onData)
         process.stdout.write(`\x1b[${items.length}B`)
-        process.stdout.write('\x1b[?25h')
+        restoreCursor()
         resolve(items[idx])
       } else if (key === '\x03') {
-        process.stdout.write('\x1b[?25h')
+        restoreCursor()
         process.exit()
       }
     }

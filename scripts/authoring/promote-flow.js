@@ -64,12 +64,16 @@ export async function cmdPromoteFlow(_val, args = []) {
 
   // ── Locate the fork object by its label, then the balanced steps:[ … ] array ──
 
-  const labelMarker = `label: "${forkLabel}"`
-  const labelIdx = src.indexOf(labelMarker)
-  if (labelIdx === -1) {
+  // Tolerate single, double, or backtick quotes and flexible spacing around
+  // the colon — hand-authored flowplans aren't guaranteed to use one style.
+  const escapedLabel = forkLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const labelRe = new RegExp(`label\\s*:\\s*['"\`]${escapedLabel}['"\`]`)
+  const labelMatch = src.match(labelRe)
+  if (!labelMatch) {
     console.error(r(`✗ No fork with label: "${forkLabel}" found in ${fileArg}`))
     process.exit(1)
   }
+  const labelIdx = labelMatch.index
 
   const stepsKwIdx = src.indexOf('steps:', labelIdx)
   if (stepsKwIdx === -1) {
@@ -82,10 +86,39 @@ export async function cmdPromoteFlow(_val, args = []) {
     process.exit(1)
   }
 
+  // Bracket-depth scan, skipping over string/template literals and comments
+  // so a `[`/`]` character quoted inside a step's text (e.g. an actionNote
+  // like "Tap [Continue]") doesn't throw off the balance count.
   let depth = 0
   let end = -1
+  let quote = null // active string/template delimiter, or null
   for (let i = openBracket; i < src.length; i++) {
     const ch = src[i]
+    const next = src[i + 1]
+
+    if (quote) {
+      if (ch === '\\')
+        i++ // skip escaped char inside the string
+      else if (ch === quote) quote = null
+      continue
+    }
+
+    if (ch === "'" || ch === '"' || ch === '`') {
+      quote = ch
+      continue
+    }
+    if (ch === '/' && next === '/') {
+      i = src.indexOf('\n', i)
+      if (i === -1) break
+      continue
+    }
+    if (ch === '/' && next === '*') {
+      const close = src.indexOf('*/', i + 2)
+      if (close === -1) break
+      i = close + 1
+      continue
+    }
+
     if (ch === '[') depth++
     else if (ch === ']') {
       depth--
