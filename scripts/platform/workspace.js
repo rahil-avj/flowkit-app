@@ -44,7 +44,7 @@ export async function cmdNewWorkspace(val) {
     'flowkit nw',
     'To create a new FlowKit project, run:\n    npm create flowkit-app@latest <project-name>'
   )
-  let wsName = val
+  let wsName = (val || '').trim()
   if (!wsName) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
     wsName = (await prompt(rl, c('? ') + 'Workspace name (e.g. my-app-ios): ')).trim()
@@ -55,7 +55,7 @@ export async function cmdNewWorkspace(val) {
     process.exit(1)
   }
   try {
-    assertKebab(wsName, 'Workspace name')
+    wsName = assertKebab(wsName, 'Workspace name')
   } catch (e) {
     if (e instanceof ValidationError) {
       console.error(r(`✗ ${e.message}`))
@@ -149,6 +149,7 @@ export async function cmdNewWorkspace(val) {
 
   const allKitSlugs = [...sharedKits, ...standaloneKits]
   const kitOptions = [
+    'none — plain tokens, no kit theme',
     ...sharedKits.map(k => `${k} — shared kit`),
     ...standaloneKits.map(k => {
       let label = k
@@ -162,7 +163,6 @@ export async function cmdNewWorkspace(val) {
       }
       return `${k} — standalone  (${label})`
     }),
-    'none — plain tokens, no kit theme',
   ]
 
   let selectedKit = 'none'

@@ -9,7 +9,7 @@ import {
   resolveTypeImport,
   detectWorkspaceLanguage,
 } from '../helpers/paths.js'
-import { asJsStringLiteral } from '../helpers/validate.js'
+import { asJsStringLiteral, assertKebab } from '../helpers/validate.js'
 import { g, r, b, d, c } from '../helpers/colors.js'
 import {
   readWorkspaceConfig,
@@ -21,12 +21,6 @@ import {
   listScreens,
 } from '../authoring-support/config-patch.js'
 import { WORKSPACE_CONFIG_FILENAME } from '../helpers/config-filenames.js'
-
-const KEBAB_RE = /^[a-z][a-z0-9-]*$/
-
-function kebabValidate(id, label = 'name') {
-  if (!KEBAB_RE.test(id)) throw new Error(`${label} '${id}' must be kebab-case (e.g. sign-in)`)
-}
 
 /** kebab-case → PascalCase: 'sign-in' → 'SignIn' */
 function toPascal(kebab) {
@@ -96,17 +90,9 @@ export async function cmdCreateScreen(_val, args = []) {
     process.exit(1)
   }
 
-  flowId = flowId.trim()
-  screenId = screenId.trim()
-
   try {
-    kebabValidate(flowId, 'flow')
-  } catch (e) {
-    console.error(r(`✗ ${e.message}`))
-    process.exit(1)
-  }
-  try {
-    kebabValidate(screenId, 'screen name')
+    flowId = assertKebab(flowId, 'flow')
+    screenId = assertKebab(screenId, 'screen name')
   } catch (e) {
     console.error(r(`✗ ${e.message}`))
     process.exit(1)
@@ -156,16 +142,16 @@ export async function cmdRemoveScreen(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
-  const flowId = parseStringFlag(args, 'flow')
-  const screenId = parseStringFlag(args, 'name')
+  let flowId = parseStringFlag(args, 'flow')
+  let screenId = parseStringFlag(args, 'name')
 
   if (!flowId || !screenId) {
     console.error(r('✗ --flow:<flow-id> and --name:<screen-id> are required'))
     process.exit(1)
   }
   try {
-    kebabValidate(flowId, 'flow')
-    kebabValidate(screenId, 'screen name')
+    flowId = assertKebab(flowId, 'flow')
+    screenId = assertKebab(screenId, 'screen name')
   } catch (e) {
     console.error(r(`✗ ${e.message}`))
     process.exit(1)
@@ -190,9 +176,9 @@ export async function cmdRenameScreen(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
-  const flowId = parseStringFlag(args, 'flow')
-  const oldId = parseStringFlag(args, 'name')
-  const newId = parseStringFlag(args, 'to')
+  let flowId = parseStringFlag(args, 'flow')
+  let oldId = parseStringFlag(args, 'name')
+  let newId = parseStringFlag(args, 'to')
 
   if (!flowId || !oldId || !newId) {
     console.error(r('✗ --flow:<id> --name:<old-id> --to:<new-id> are required'))
@@ -200,9 +186,9 @@ export async function cmdRenameScreen(_val, args = []) {
   }
 
   try {
-    kebabValidate(flowId, 'flow')
-    kebabValidate(oldId, 'name')
-    kebabValidate(newId, 'new name')
+    flowId = assertKebab(flowId, 'flow')
+    oldId = assertKebab(oldId, 'name')
+    newId = assertKebab(newId, 'new name')
   } catch (e) {
     console.error(r(`✗ ${e.message}`))
     process.exit(1)
@@ -277,18 +263,18 @@ export async function cmdMoveScreen(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
-  const screenId = parseStringFlag(args, 'name')
-  const fromFlow = parseStringFlag(args, 'from-flow')
-  const toFlow = parseStringFlag(args, 'to-flow')
+  let screenId = parseStringFlag(args, 'name')
+  let fromFlow = parseStringFlag(args, 'from-flow')
+  let toFlow = parseStringFlag(args, 'to-flow')
 
   if (!screenId || !fromFlow || !toFlow) {
     console.error(r('✗ --name:<screen-id> --from-flow:<id> --to-flow:<id> are required'))
     process.exit(1)
   }
   try {
-    kebabValidate(screenId, 'name')
-    kebabValidate(fromFlow, 'from-flow')
-    kebabValidate(toFlow, 'to-flow')
+    screenId = assertKebab(screenId, 'name')
+    fromFlow = assertKebab(fromFlow, 'from-flow')
+    toFlow = assertKebab(toFlow, 'to-flow')
   } catch (e) {
     console.error(r(`✗ ${e.message}`))
     process.exit(1)

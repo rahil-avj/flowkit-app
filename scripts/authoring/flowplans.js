@@ -4,14 +4,9 @@ import path from 'path'
 import { parseStringFlag } from '../helpers/args.js'
 import { resolveWorkspace } from '../helpers/workspace-resolve.js'
 import { workspacePath, resolveDefineImport, assertScopedWorkspaceDir } from '../helpers/paths.js'
+import { assertKebab } from '../helpers/validate.js'
 import { g, r, b, d, c } from '../helpers/colors.js'
 import { readWorkspaceConfig } from '../authoring-support/config-patch.js'
-
-const KEBAB_RE = /^[a-z][a-z0-9-]*$/
-
-function kebabValidate(id, label = 'name') {
-  if (!KEBAB_RE.test(id)) throw new Error(`${label} '${id}' must be kebab-case`)
-}
 
 function toDisplayName(kebab) {
   return kebab
@@ -83,9 +78,8 @@ export async function cmdCreateFlowplan(_val, args = []) {
     process.exit(1)
   }
 
-  id = id.trim()
   try {
-    kebabValidate(id)
+    id = assertKebab(id, 'name')
   } catch (e) {
     console.error(r(`✗ ${e.message}`))
     process.exit(1)

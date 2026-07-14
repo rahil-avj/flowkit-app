@@ -39,7 +39,7 @@ import { WORKSPACE_CONFIG_FILENAME } from '../helpers/config-filenames.js'
  */
 function validateWorkspaceName(name, label) {
   try {
-    assertKebab(name, label)
+    return assertKebab(name, label)
   } catch (e) {
     if (e instanceof ValidationError) {
       console.error(r(`✗ ${e.message}`))
@@ -150,8 +150,10 @@ export async function cmdConvertMulti(_val, args = []) {
     process.exit(1)
   }
 
-  const name = parseStringFlag(args, 'name') || 'workspace-1'
-  validateWorkspaceName(name, 'Workspace name')
+  const name = validateWorkspaceName(
+    parseStringFlag(args, 'name') || 'workspace-1',
+    'Workspace name'
+  )
   const targetDir = path.join(cwd, name)
   assertScopedConsumerWorkspaceDir(targetDir, name, cwd)
 
@@ -205,8 +207,7 @@ async function resolveNewWorkspaceName(args) {
     console.error(r('✗ Workspace name required.'))
     process.exit(1)
   }
-  validateWorkspaceName(name, 'Workspace name')
-  return name
+  return validateWorkspaceName(name, 'Workspace name')
 }
 
 export async function cmdAddWorkspace(_val, args = []) {
@@ -322,13 +323,13 @@ export async function cmdRenameWorkspace(_val, args = []) {
 
   const positional = args.filter(a => !a.startsWith('--'))
   const oldName = parseStringFlag(args, 'from') || positional[0]
-  const newName = parseStringFlag(args, 'to') || positional[1]
+  let newName = parseStringFlag(args, 'to') || positional[1]
 
   if (!oldName || !newName) {
     console.error(r('✗ Usage: flowkit rename:workspace <old> <new>'))
     process.exit(1)
   }
-  validateWorkspaceName(newName, 'New workspace name')
+  newName = validateWorkspaceName(newName, 'New workspace name')
 
   const manifest = readFlowkitManifest(cwd)
   if (!manifest.workspaceNames.includes(oldName)) {

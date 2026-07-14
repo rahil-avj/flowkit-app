@@ -4,6 +4,7 @@ import path from 'path'
 import { parseStringFlag } from '../helpers/args.js'
 import { resolveWorkspace } from '../helpers/workspace-resolve.js'
 import { workspacePath, assertScopedWorkspaceDir } from '../helpers/paths.js'
+import { assertKebab } from '../helpers/validate.js'
 import { g, r, b, d } from '../helpers/colors.js'
 import {
   addFlow,
@@ -13,12 +14,6 @@ import {
 } from '../authoring-support/config-patch.js'
 import { prompt, selectFromList } from '../helpers/prompt.js'
 import { WORKSPACE_CONFIG_FILENAME } from '../helpers/config-filenames.js'
-
-const KEBAB_RE = /^[a-z][a-z0-9-]*$/
-
-function kebabValidate(id, label = 'name') {
-  if (!KEBAB_RE.test(id)) throw new Error(`${label} '${id}' must be kebab-case (e.g. user-auth)`)
-}
 
 export async function cmdCreateFlow(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
@@ -39,9 +34,8 @@ export async function cmdCreateFlow(_val, args = []) {
     }
   }
 
-  flowId = flowId.trim()
   try {
-    kebabValidate(flowId)
+    flowId = assertKebab(flowId, 'name')
   } catch (e) {
     console.error(r(`✗ ${e.message}`))
     process.exit(1)
@@ -75,7 +69,7 @@ export async function cmdRemoveFlow(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
-  const flowId = parseStringFlag(args, 'name')
+  let flowId = parseStringFlag(args, 'name')
   const force = args.includes('--force')
 
   if (!flowId) {
@@ -83,7 +77,7 @@ export async function cmdRemoveFlow(_val, args = []) {
     process.exit(1)
   }
   try {
-    kebabValidate(flowId)
+    flowId = assertKebab(flowId, 'name')
   } catch (e) {
     console.error(r(`✗ ${e.message}`))
     process.exit(1)

@@ -141,9 +141,9 @@ export async function cmdPromoteFlow(_val, args = []) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
-  const newId = newIdArg || `${slug}-flow`
+  let newId = newIdArg || `${slug}-flow`
   try {
-    assertKebab(newId, '--as')
+    newId = assertKebab(newId, '--as')
   } catch (e) {
     if (e instanceof ValidationError) {
       console.error(r(`✗ ${e.message}`))

@@ -61,7 +61,7 @@
     "preview": "vite preview",
     "format": "node scripts/builders/format.mjs",
     "format:check": "prettier --check .",
-    "test:workspace": "node --test --test-concurrency=1 scripts/tests/workspace-registry.test.js scripts/tests/workspace-cli.test.js scripts/tests/stub-fallback.test.js scripts/tests/scaffold-consistency.test.js scripts/tests/checks-rules.test.js scripts/tests/check-cli.test.js"
+    "test:workspace": "node --test --test-concurrency=1 scripts/tests/workspace-registry.test.js scripts/tests/workspace-cli.test.js scripts/tests/stub-fallback.test.js scripts/tests/scaffold-consistency.test.js scripts/tests/checks-rules.test.js scripts/tests/check-cli.test.js scripts/tests/kebab-normalize.test.js"
   },
   "peerDependencies": {
     "react": "^19.0.0",

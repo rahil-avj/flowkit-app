@@ -11,17 +11,39 @@
 // module is the one shared chokepoint every such flag should go through instead
 // of each command re-deriving its own regex or skipping validation entirely.
 import path from 'path'
+import { toKebab } from './strings.js'
+import { d } from './colors.js'
 
 export class ValidationError extends Error {}
 
 const KEBAB_RE = /^[a-z][a-z0-9-]*$/
 const PASCAL_RE = /^[A-Z][A-Za-z0-9]+$/
 
+/**
+ * Validates a user-supplied identifier is kebab-case, forgiving common
+ * near-misses (extra whitespace, mixed case, underscores, stray punctuation)
+ * by normalizing via toKebab() first rather than hard-rejecting them. Only
+ * throws if the normalized result is still invalid (e.g. empty, or starts
+ * with a digit) — that's a genuinely unusable name, not a typo to correct.
+ *
+ * Always returns the value to use going forward — callers must reassign
+ * their variable to the return value (`id = assertKebab(id)`), since the
+ * normalized form may differ from what was typed. A one-line notice is
+ * printed when the change is structural (case folded, underscore/space
+ * turned into a hyphen, punctuation stripped) so it's never silent — but a
+ * plain leading/trailing whitespace trim stays quiet, matching how trimming
+ * already behaves invisibly everywhere else in this CLI.
+ */
 export function assertKebab(value, label = 'name') {
-  if (!value || !KEBAB_RE.test(value)) {
+  const trimmed = (value ?? '').trim()
+  const normalized = toKebab(value)
+  if (!KEBAB_RE.test(normalized)) {
     throw new ValidationError(`${label} '${value}' must be kebab-case (e.g. sign-in)`)
   }
-  return value
+  if (normalized !== trimmed) {
+    console.log(d(`  i using '${normalized}' (normalized from '${value}')`))
+  }
+  return normalized
 }
 
 export function assertPascal(value, label = 'name') {

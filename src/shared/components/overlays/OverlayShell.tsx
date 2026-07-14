@@ -36,7 +36,7 @@ export default function OverlayShell({ onClose, width = 560, height, children }:
       <div
         role="dialog"
         aria-modal="true"
-        className="relative max-w-[90vw] flex flex-col bg-theme-surface border border-theme-border rounded-[12px] shadow-[0_24px_64px_rgba(0,0,0,0.4)] overflow-hidden"
+        className="relative max-w-[90vw] flex flex-col bg-theme-surface border border-theme-border rounded-xl shadow-[0_24px_64px_rgba(0,0,0,0.4)] overflow-hidden"
         style={{
           width,
           height: height ?? undefined,

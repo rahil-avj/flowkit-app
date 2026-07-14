@@ -3,6 +3,10 @@
     {
       "name": "test-1",
       "label": "Test 1"
+    },
+    {
+      "name": "test-2",
+      "label": "Test 2"
     }
   ],
   "active": "test-1"
