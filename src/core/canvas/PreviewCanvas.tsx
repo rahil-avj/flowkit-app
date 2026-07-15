@@ -804,8 +804,9 @@ function CanvasContent({
               {ActiveComponent ? (
                 // Screens tab is a static structural preview outside flowplan
                 // playback — screens that also want Screens-tab interactivity
-                // should call useDashboard().navigateTo(), guarded on the isFlow
-                // prop FlowMaster injects during playback (see FLOWMASTER.md).
+                // should call useAppNav() (@flowkit-shared/utils) for navigateTo;
+                // it's flow-aware automatically, no isFlow guard needed (see
+                // FLOWMASTER.md).
                 <ActiveComponent db={db} />
               ) : (
                 <div className="flex-1 flex items-center justify-center h-full bg-theme-elevated text-theme-text-disabled text-ui-sm font-sans">

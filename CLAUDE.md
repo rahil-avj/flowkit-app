@@ -220,27 +220,27 @@ is a future task, not currently implemented.
 
 ## Canvas Keyboard Shortcuts
 
-| Shortcut              | Action                                          |
-| --------------------- | ------------------------------------------------ |
-| `Cmd =` / `Cmd -`     | Zoom in / out                                   |
-| `Cmd 0`               | Reset to 100% zoom                              |
-| `Cmd Shift 0`         | Toggle keep-fit                                 |
-| `0`                   | Toggle keep-fit                                 |
-| `F`                   | Toggle fullscreen                                |
-| `\`                   | Toggle orientation                              |
+| Shortcut              | Action                                                  |
+| --------------------- | ------------------------------------------------------- |
+| `Cmd =` / `Cmd -`     | Zoom in / out                                           |
+| `Cmd 0`               | Reset to 100% zoom                                      |
+| `Cmd Shift 0`         | Toggle keep-fit                                         |
+| `0`                   | Toggle keep-fit                                         |
+| `F`                   | Toggle fullscreen                                       |
+| `\`                   | Toggle orientation                                      |
 | `R`                   | Restart flowplan (if gating) else reset to first screen |
-| `Escape`              | Exit fullscreen                                 |
-| `←` / `→`             | Navigate screens                                |
-| `Shift ←` / `Shift →` | Navigate flows                                  |
-| `Shift 1–9`           | Switch right panel tabs                         |
-| `Shift ,` / `Shift .` | Prev / next sub-tab of active right panel tab   |
-| `Alt 1–N`             | Jump to left-panel tab by position              |
-| `Shift F`             | Focus screen search                             |
-| `Shift S`             | Toggle Screens ↔ Flow Map                       |
-| `Shift G`             | Go-To overlay                                   |
-| `Cmd /`               | Action Center                                   |
-| `Cmd Shift /`         | Help                                             |
-| `Cmd Alt Shift P`     | Toggle canvas ↔ preview mode                    |
+| `Escape`              | Exit fullscreen                                         |
+| `←` / `→`             | Navigate screens                                        |
+| `Shift ←` / `Shift →` | Navigate flows                                          |
+| `Shift 1–9`           | Switch right panel tabs                                 |
+| `Shift ,` / `Shift .` | Prev / next sub-tab of active right panel tab           |
+| `Alt 1–N`             | Jump to left-panel tab by position                      |
+| `Shift F`             | Focus screen search                                     |
+| `Shift S`             | Toggle Screens ↔ Flow Map                               |
+| `Shift G`             | Go-To overlay                                           |
+| `Cmd /`               | Action Center                                           |
+| `Cmd Shift /`         | Help                                                    |
+| `Cmd Alt Shift P`     | Toggle canvas ↔ preview mode                            |
 
 > Source of truth: `src/core/shortcuts/useKeyboardShortcuts.ts`. There is no dedicated "enter flowplan playback" key — playback starts from the UI.
 
@@ -309,7 +309,7 @@ See [Documentation/PACKAGE-ARCHITECTURE.md](Documentation/PACKAGE-ARCHITECTURE.m
 - **vitest scope** — `vitest.config.ts` only includes `scripts/tests/**/*.test.ts` (4 files as of this writing: `applyDotPathPatch`, `canvasReducer`, `compileFlowplan`, `useKeyboardShortcuts`), but those files import and test `src/` modules directly — despite the directory name, this is where `src/` unit coverage lives. Coverage thresholds (91/86/95/93 stmts/branches/funcs/lines) apply only to what those 4 files exercise; most `src/` logic (UI components, contexts, most of `core/`) has no coverage ⚠️. Separately, `npm run test:workspace` runs 7 `.test.js` CLI integration files (`scaffold-consistency`, `stub-fallback`, `workspace-cli`, `workspace-registry`, `checks-rules`, `check-cli`, `kebab-normalize`) — these are plain Node tests, not part of the vitest run above.
 - **`prebuild` gate** — `npm run build` always runs `flowkit check:flowplans`; exits non-zero on blocking plan issues
 - **`@workspace` alias** — resolves to the active workspace at build/dev start; switching workspace requires dev server restart
-- **Two independent screen-navigation conventions — don't conflate them.** (1) `useDashboard().navigateTo(id)`, called directly by the screen, guarded on the `isFlow` prop FlowMaster injects (`onClick={() => !isFlow && navigateTo(id)}`) — works everywhere, Screens tab or Flow, no FlowMaster/flowplan dependency; this is what real, freely-explorable screens (e.g. a login/home screen with a tab bar) use, and what `scripts/helpers/scaffold.js`'s demo screens now do. The `isFlow` guard matters: without it, the click also fires during flow playback and desyncs `DashboardContext`'s view history from `FlowEngine`'s own step index. (2) `FlowScreenProps`'s `onAction`/`onNext`/`onBack` (`src/types/index.ts`) — injected only by `FlowMaster` during active flowplan playback (see its own JSDoc: "automatically injected... by FlowMaster"); `FlowMaster.tsx`'s `handleContainerClick` also does DOM-`id`-based event delegation for the older/scaffold convention (button `id` matches a flowplan step's `on` field, no `onClick` needed on the button at all). Both halves of (2) are **correctly, by-design inert** outside flow playback — not a bug. `scripts/helpers/workspace-template.js`'s demo screens (flat/multi-workspace scaffolder) only demonstrate convention (2) — see its NOTE comment. The **"Interactive Screens Preview" setting that used to gate a third, settings-based variant of convention (1)/(2) has been removed** — screens needing Screens-tab interactivity now wire it directly per the pattern above, unconditionally, no setting required. This is a discipline convention enforced by author care, not by the CLI/linter — `flowkit check:screens` does not currently catch an unguarded `navigateTo()` call.
+- **Two independent screen-navigation conventions — don't conflate them.** (1) Direct navigation by screen id — **use `useAppNav()` from `@flowkit-shared/utils`**: `const { navigateTo } = useAppNav(); onClick={() => navigateTo(id)}` works everywhere (Screens tab or Flow) with **no `isFlow` guard needed** — the hook reads `FlowNavCtx` (non-throwing, unlike `useFlowNav()`) and picks FlowMaster's flow-aware `navigateTo` when rendered inside a flow, `DashboardContext`'s otherwise, so calling it unconditionally can never desync `DashboardContext`'s view history from `FlowEngine`'s step index. `scripts/helpers/scaffold.js`'s demo screens use this. A screen may instead call `useDashboard().navigateTo(id)` directly, manually guarded with `onClick={() => !isFlow && navigateTo(id)}` — this works but requires writing and maintaining the guard by hand; forgetting it doesn't throw, it silently desyncs state, which is exactly the footgun `useAppNav()` removes. (2) `FlowScreenProps`'s `onAction`/`onNext`/`onBack` (`src/types/index.ts`) — injected only by `FlowMaster` during active flowplan playback (see its own JSDoc: "automatically injected... by FlowMaster"); `FlowMaster.tsx`'s `handleContainerClick` also does DOM-`id`-based event delegation for the scaffold convention (button `id` matches a flowplan step's `on` field, no `onClick` needed on the button at all). Both halves of (2) are **correctly, by-design inert** outside flow playback — not a bug, and **entirely independent of `useAppNav()`** (off-script tap detection, the "Show Hints" glow, and `useFlowplanElementCheck`'s authoring diagnostic all depend on `on` being a real DOM id, which `useAppNav()` does not touch). `scripts/helpers/workspace-template.js`'s demo screens (flat/multi-workspace scaffolder) only demonstrate convention (2) — see its NOTE comment. Which pattern a screen uses for convention (1) is an authoring choice, not enforced by the CLI/linter — `flowkit check:screens` does not catch an unguarded raw `useDashboard().navigateTo()` call; `useAppNav()` makes that check unnecessary for any screen that uses it.
 - **`npm run build` (`tsc -b` step) — fixed 2026-07-15.** Root cause: `tsconfig.workspace.json` type-checks `src/` files transitively (workspace screens import `@flowkit-shared/contexts`, which chains into `src/shared/utils/workspaceModules.ts`) but its `include` (`["workspaces", "src/workspace-stub"]`) never pulled in `src/vite-env.d.ts` — so that project never saw the ambient `virtual:flowkit/config`/`virtual:flowkit/workspace` module declarations, even though `tsconfig.app.json`'s separate, wider-`include` project resolved them fine in isolation. Fix: added `"src/vite-env.d.ts"` to `tsconfig.workspace.json`'s `include`. Verified: `tsc -b` and `npm run build` both succeed clean against this checkout's existing `test-1`/`test-2` workspaces.
 - **`flowkit add:step`/`remove:step` now refuse to rewrite a flowplan containing `forks`** (fixed 2026-07-15) instead of silently corrupting it — `rewriteSteps()` in `scripts/authoring/flowplans.js` checks for `forks` on any step before rewriting and throws with a pointer to hand-editing or `promote:flow`. Previously: `formatStep()` has no serialization path for `forks`, and the non-greedy `steps: [...]` regex only matches to the first `]`, so either would have dropped fork data or written a malformed array with no warning. Regression coverage: `scripts/tests/flowplan-steps-cli.test.js` (Suite F, wired into `npm run test:workspace`).
 

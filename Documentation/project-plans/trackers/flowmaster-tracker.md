@@ -78,7 +78,7 @@ FlowMaster is the flow execution engine. Its job is to take an authored flow def
 
 - **The runtime never reads authoring formats.** Compilation is a one-way boundary (Principle 3).
 - **Screens never import routing logic.** Navigation is wired in `_playFlow.ts` or the flowplan — never in screen component code.
-- **`useFlowNav()` not `navigateTo` from `useDashboard()`.** Direct `useDashboard().navigateTo` in a screen bypasses FlowMaster guards, animations, and the recorded `flow.transition` event.
+- **`useFlowNav()` (flow-only screens) or `useAppNav()` (screens also navigable from the Screens tab) — not `navigateTo` from `useDashboard()` directly.** Direct `useDashboard().navigateTo` in a screen bypasses FlowMaster guards, animations, and the recorded `flow.transition` event. `useAppNav()` (`@flowkit-shared/utils`) routes through FlowMaster's `navigateTo` automatically when the screen is rendered inside a flow, so it's safe to call unconditionally in a screen meant to work both standalone and in-flow.
 - **`ANIM_DURATION = 280ms` is not replicated in UI components.** It is injected dynamically by FlowMaster only.
 
 ---

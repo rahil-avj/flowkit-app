@@ -102,6 +102,22 @@ export default function WelcomeScreen({ onNext, onBack, db }: FlowScreenProps) {
 export const screenMeta = { id: 'welcome', label: 'Welcome' }
 ```
 
+`FlowScreenProps` is one of two navigation conventions and only populated during active flowplan
+playback. For a screen that should also be freely explorable in the Screens tab (no flow active),
+navigate by screen id via `useAppNav()` instead — no `isFlow` prop, no manual guard needed:
+
+```tsx
+import { useAppNav } from '@flowkit-shared/utils' // repo mode; 'flowkit' in a scaffolded project
+
+export default function WelcomeScreen() {
+  const { navigateTo } = useAppNav()
+  return <button onClick={() => navigateTo('setup-screen')}>Get Started</button>
+}
+```
+
+`useAppNav()` calls the correct navigation function automatically whether the screen is standalone
+or inside a flow — safe to call unconditionally, unlike wiring `useDashboard().navigateTo()` by hand.
+
 ---
 
 ## Flow config
@@ -139,7 +155,7 @@ The flowplan compiler (`compileFlowplan.ts`) converts this at runtime into a `Fl
 | `flowkit rw:<name>`                        | Remove workspace (repo mode only)                                                                                  |
 | `flowkit watch:flows`                      | Watch workspace for file changes (repo mode only)                                                                  |
 | `flowkit status`                           | Workspace health snapshot                                                                                          |
-| `flowkit export`                           | Export as standalone HTML viewer (guided flow; always ships full codebase)                                        |
+| `flowkit export`                           | Export as standalone HTML viewer (guided flow; always ships full codebase)                                         |
 | `flowkit handoff`                          | Build developer handoff zip                                                                                        |
 | `flowkit check` / `flowkit check:<domain>` | Validate authored content — screens/config/components/db/flowplans (`check:flowplans` runs automatically on build) |
 | `flowkit sessions:brief`                   | Agent analytics brief from committed sessions                                                                      |

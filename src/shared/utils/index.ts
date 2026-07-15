@@ -1,6 +1,8 @@
 export { applyDotPathPatch } from './applyDotPathPatch'
 export type { ExplorerCommand } from './explorerCommands'
 export { dispatchExplorerCommand, useExplorerCommands } from './explorerCommands'
+export type { AppNav } from './useAppNav'
+export { useAppNav } from './useAppNav'
 export { useFlowNav } from './useFlowNav'
 export { useIsMobile } from './useIsMobile'
 export { useSwipeGesture } from './useSwipeGesture'

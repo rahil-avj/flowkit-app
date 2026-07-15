@@ -123,11 +123,11 @@ export function directives(ctx) {
         kind: 'to',
         task: 'make a screen freely navigable from the Screens tab (no flow active) as well as during flow playback',
         action:
-          "`const { navigateTo } = useDashboard()`, guarded with `isFlow` (a prop FlowMaster injects only during playback): `onClick={() => !isFlow && navigateTo(id)}`. Without the guard, the click also fires during flow playback and desyncs DashboardContext's view history from FlowEngine's own step index — see scripts/helpers/scaffold.js's NOTE comment for the full mechanism.",
+          "`const { navigateTo } = useAppNav()` (from `@flowkit-shared/utils`), then call it unconditionally: `onClick={() => navigateTo(id)}`. `useAppNav()` picks FlowMaster's flow-aware navigateTo when the screen is rendered inside a flow, or DashboardContext's otherwise — no `isFlow` check needed in the screen's own code. See scripts/helpers/scaffold.js's demo screens for the pattern.",
       },
       {
         kind: 'never',
-        text: "destructure `navigateTo` from `useDashboard()` and call it unguarded inside a screen that also relies on FlowMaster's guards/animations/session-replay during playback — guard on `isFlow` per the rule above, or use `useFlowNav()` if the screen is flow-only",
+        text: "destructure `navigateTo` from `useDashboard()` directly and call it inside a screen that also relies on FlowMaster's guards/animations/session-replay during playback — use `useAppNav()` for a screen that needs to work both standalone and in-flow, or `useFlowNav()` if the screen is flow-only",
       },
     ],
   }
@@ -283,7 +283,7 @@ export function platformSurfaces(ctx) {
       area: 'Data',
       api: '`useDashboard()` → `db`, `updateDb(fn)`, `resetDb()`, `navigateTo(id)`',
       from: '`@flowkit-shared/contexts/DashboardContext`',
-      note: 'db/updateDb/resetDb always safe; navigateTo() only for standalone Screens-tab navigation, guarded on `isFlow` (see Navigation group above) — during flow playback use useFlowNav() instead',
+      note: 'db/updateDb/resetDb always safe; for navigateTo() prefer `useAppNav()` (see Navigation group above) — it works standalone and during flow playback with no `isFlow` check needed; use useFlowNav() instead for flow-only screens',
       doc: 'FLOWKIT.md',
     },
     {

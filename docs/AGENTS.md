@@ -63,13 +63,13 @@ The few hardest rules are inlined into the memory file so they're loaded before 
 
 ## The non-negotiables (why they exist)
 
-| Rule                                                                                       | Why                                                                                                                                                                                                                                                                                                                   |
-| ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Never call `useDashboard()`'s `navigateTo` unguarded during flow playback                  | Use `useFlowNav()` (or id-wiring) inside a flow so FlowMaster's guards, animations, and recorded `flow.transition` fire. `useDashboard().navigateTo`, guarded on the `isFlow` prop FlowMaster injects, is the correct way to make a screen _also_ navigable standalone from the Screens tab — see "Navigation" below. |
-| Never hand-write flow/screen files from scratch                                            | Copy an existing screen's boilerplate — the structure and exports must be consistent.                                                                                                                                                                                                                                 |
-| Never edit platform source (`src/` in repo mode, `node_modules/flowkit/` in consumer mode) | That's the shared platform engine, not workspace content.                                                                                                                                                                                                                                                             |
-| Never hardcode hex colors                                                                  | Use `lib/design-system/tokens.css` vars or `useTheme()` tokens so kit/theme switching works.                                                                                                                                                                                                                          |
-| Always use the right import for the mode you're in                                         | Repo mode: `@flowkit/`/`@workspace/` aliases (renamed from `@platform` 2026-07-12). Consumer mode: import directly from `'flowkit'` — the `@flowkit*`/`@workspace` aliases only exist inside this monorepo, not in a scaffolded project. Relative `../../` paths break across the workspace boundary in either mode.  |
+| Rule                                                                                                                                             | Why                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Never call `useDashboard()`'s `navigateTo` directly inside a screen that relies on FlowMaster's guards/animations/recording during flow playback | Use `useFlowNav()` (or id-wiring) inside a flow-only screen so FlowMaster's guards, animations, and recorded `flow.transition` fire. `useAppNav()` (`@flowkit-shared/utils`) is the correct way to make a screen navigable both standalone from the Screens tab and during flow playback — see "Navigation" below.   |
+| Never hand-write flow/screen files from scratch                                                                                                  | Copy an existing screen's boilerplate — the structure and exports must be consistent.                                                                                                                                                                                                                                |
+| Never edit platform source (`src/` in repo mode, `node_modules/flowkit/` in consumer mode)                                                       | That's the shared platform engine, not workspace content.                                                                                                                                                                                                                                                            |
+| Never hardcode hex colors                                                                                                                        | Use `lib/design-system/tokens.css` vars or `useTheme()` tokens so kit/theme switching works.                                                                                                                                                                                                                         |
+| Always use the right import for the mode you're in                                                                                               | Repo mode: `@flowkit/`/`@workspace/` aliases (renamed from `@platform` 2026-07-12). Consumer mode: import directly from `'flowkit'` — the `@flowkit*`/`@workspace` aliases only exist inside this monorepo, not in a scaffolded project. Relative `../../` paths break across the workspace boundary in either mode. |
 
 ---
 
@@ -159,15 +159,17 @@ const submit = async () => {
 ### Make a screen also navigable from the Screens tab (no flow active)
 
 ```ts
-export default function HomeScreen({ isFlow }: FlowScreenProps) {
-  const { navigateTo } = useDashboard()
-  return <button onClick={() => !isFlow && navigateTo('detail')}>Open</button>
+import { useAppNav } from '@flowkit-shared/utils'
+
+export default function HomeScreen() {
+  const { navigateTo } = useAppNav()
+  return <button onClick={() => navigateTo('detail')}>Open</button>
 }
 ```
 
-The `isFlow` guard is required — without it the click also fires during flow
-playback and desyncs `DashboardContext`'s view history from `FlowEngine`'s own
-step index.
+`useAppNav()` reads whichever navigation context actually applies — FlowMaster's flow-aware
+`navigateTo` when this screen is rendered inside a flow, `DashboardContext`'s otherwise — so calling
+it unconditionally is correct in both places. No `isFlow` prop, no guard.
 
 ### Read / mutate data
 
