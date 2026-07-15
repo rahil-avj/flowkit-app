@@ -2,7 +2,7 @@
 
 FlowMaster is Flowkit's flow engine — a proper state machine giving you conditional branching, isolated per-flow state, global mock database access, and a live debugger panel, all driven by flowplan files.
 
-**This doc covers all three deployment modes** (repo, flat, and multi-workspace consumer). Examples use repo-mode imports (`@platform/core/config`). In consumer mode (flat/multi-workspace), import `defineFlow` from `'flowkit'` instead — the API is identical. See [CLI.md](CLI.md#import-aliases) for details.
+**This doc covers all three deployment modes** (repo, flat, and multi-workspace consumer). Examples use repo-mode imports (`@flowkit-core/config`). In consumer mode (flat/multi-workspace), import `defineFlow` from `'flowkit'` instead — the API is identical. See [CLI.md](CLI.md#import-aliases) for details.
 
 ---
 
@@ -43,7 +43,7 @@ Screens are discovered at runtime by `useWorkspaceHierarchy()` via Vite glob —
 ## Flowplan — full config reference
 
 ```ts
-import { defineFlow } from '@platform/core/config'
+import { defineFlow } from '@flowkit-core/config'
 
 export default defineFlow({
   id: 'checkout',
@@ -133,7 +133,7 @@ export default defineFlow({
 Screens render UI and give elements ids. Navigation is wired in the flowplan — screens never import routing logic.
 
 ```tsx
-import type { FlowScreenProps } from '@platform/types'
+import type { FlowScreenProps } from '@flowkit/types'
 
 interface MyDb {
   auth: { isLoggedIn: boolean }
@@ -212,7 +212,7 @@ Screen-level guards are surfaced in the sidebar as a lock icon.
 For state-driven or async navigation (after a form submit, API call, etc.) use `useFlowNav()`:
 
 ```ts
-import { useFlowNav } from '@shared/utils/useFlowNav'
+import { useFlowNav } from '@flowkit-shared/utils'
 
 const { navigateTo, goNext, goBack } = useFlowNav()
 

@@ -24,6 +24,8 @@ function isPlainObject(v: unknown): v is Obj {
   return typeof v === 'object' && v !== null && !Array.isArray(v)
 }
 
+const UNSAFE_KEYS = new Set(['__proto__', 'prototype', 'constructor'])
+
 /** Structured deep clone with a JSON fallback (db values are JSON-serializable). */
 function clone<T>(v: T): T {
   // structuredClone is available in all supported runtimes; JSON fallback keeps
@@ -40,6 +42,7 @@ function deepMerge(base: unknown, patch: unknown): unknown {
   if (isPlainObject(base) && isPlainObject(patch)) {
     const out: Obj = { ...base }
     for (const key of Object.keys(patch)) {
+      if (UNSAFE_KEYS.has(key)) continue
       out[key] = deepMerge(base[key], patch[key])
     }
     return out
@@ -51,6 +54,9 @@ function deepMerge(base: unknown, patch: unknown): unknown {
 /** Set `value` at a dot-path on `target` (mutates target), creating intermediates. */
 function setAtPath(target: Obj, dotPath: string, value: unknown): void {
   const parts = dotPath.split('.')
+  if (parts.some(key => UNSAFE_KEYS.has(key))) {
+    throw new Error(`applyDotPathPatch: unsafe key in path "${dotPath}"`)
+  }
   let cursor: Obj = target
   for (let i = 0; i < parts.length - 1; i++) {
     const key = parts[i]

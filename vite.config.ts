@@ -128,10 +128,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      // Broad src/-wide alias, renamed from @platform. Note the bare (no @)
-      // 'flowkit' alias below is a different, narrower thing — an internal
-      // self-reference mirroring the published package name, not related to
-      // this rename — the two deliberately coexist.
+      // Broad src/-wide alias. Note the bare (no @) 'flowkit' alias below is a
+      // different, narrower thing — an internal self-reference mirroring the
+      // published package name — the two deliberately coexist.
       '@flowkit': path.resolve(__dirname, './src'),
       // @workspace resolves to the active workspace so screen files can import
       // @workspace/components/*, @workspace/design-system/tokens.css etc.

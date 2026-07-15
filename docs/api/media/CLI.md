@@ -392,17 +392,37 @@ flowkit fp:ls
 
 Lists all flowplans in the workspace. Shows: name, file path.
 
-### `plan:check` / `fp:check` — Validate flowplans
+---
+
+## Check
 
 ```bash
-flowkit plan:check
-flowkit fp:check
+flowkit check
+flowkit check:<domain>
 ```
 
-Static lint — validates that each flowplan file exports a valid object with `id`, `name`, and `steps[]`. Does not run the compiler. Exit code 0 = clean, 1 = errors.
+Domain-specific linter for authored content — validates flowkit's own structural conventions (screen export shape, flowplan step references, workspace config consistency, component registry/barrel exports, mock db exports) that generic tools like `tsc`/`eslint` can't see. Works in every mode (repo, flat, multi-workspace).
 
-- Exits 1 if the `flowplans/` directory exists but contains no plan files (prevents a silent green gate)
-- This command is wired into `npm run prebuild` — a broken or missing plan blocks the production build
+`flowkit check` with no domain runs all 5 domains against one workspace and prints one combined report. `flowkit check:<domain>` runs just that domain:
+
+| Domain     | Command            | Checks                                                                                       |
+| ---------- | ------------------ | -------------------------------------------------------------------------------------------- |
+| Screens    | `check:screens`    | Default export shape, `screenMeta` presence/shape, id/directory match                        |
+| Config     | `check:config`     | `workspace.ts`'s `flows[]`/`screenOrder` consistency against `flows/` on disk                |
+| Components | `check:components` | `.flowkit/components.json` registry vs. files on disk, barrel export consistency             |
+| DB         | `check:db`         | `lib/data/db.ts`/`db.js` has at least one export                                             |
+| FlowPlans  | `check:flowplans`  | Parseable, `id` matches filename, non-empty `steps[]`, step `screenId`s exist, step guidance |
+
+Target a non-active workspace: `flowkit check:screens:<workspace-name>` for a single domain (workspace as the second colon segment, same convention as `sessions:ls:<ws>`), or `flowkit check --workspace:<workspace-name>` for the all-domains form.
+
+Flags:
+
+- `--json` — machine-readable output (`{ workspace, errors, warnings, results }`) instead of the human-readable report
+- `--workspace:<name>` — target a non-active workspace when running all domains (`check` with no domain)
+
+Exit code 0 if clean or only warnings, 1 if any error-severity finding. `check:flowplans` is wired into `npm run prebuild` — a broken or missing flowplan blocks the production build (including an empty-but-existing `flowplans/` directory, which is treated as suspicious rather than silently passing).
+
+Findings include a `ruleId` (e.g. `screen/missing-meta`, `flowplan/invalid-screen`), `severity` (`error`/`warning`), the offending `file`, a `message`, and where possible a `fix` (manual instructions) or `clifix` (an exact CLI command to run).
 
 ---
 
@@ -982,10 +1002,20 @@ Commands grouped by item type. Click the heading to jump to the full section.
 
 ### [FlowPlans](#flowplans)
 
-| Command      | Alias      | Description                      |
-| ------------ | ---------- | -------------------------------- |
-| `plan:ls`    | `fp:ls`    | List flowplans                   |
-| `plan:check` | `fp:check` | Validate flowplans (static lint) |
+| Command   | Alias   | Description    |
+| --------- | ------- | -------------- |
+| `plan:ls` | `fp:ls` | List flowplans |
+
+### [Check](#check)
+
+| Command            | Description                                |
+| ------------------ | ------------------------------------------ |
+| `check`            | Run all 5 domain checkers, combined report |
+| `check:screens`    | Screen export shape / `screenMeta`         |
+| `check:config`     | Workspace config vs. `flows/` on disk      |
+| `check:components` | Component registry / barrel exports        |
+| `check:db`         | Mock db exports                            |
+| `check:flowplans`  | FlowPlan structure / step references       |
 
 ### [Authoring](#authoring)
 

@@ -46,7 +46,7 @@ Flowplans live at `workspaces/<name>/flowplans/`. Add a new `.ts` file there and
 
 ## Using FlowKit in your own project
 
-> Not yet published to npm as of 2026-07-10. The commands below describe the intended flow once published.
+> Not yet published under the real package names (`flowkit`, `create-flowkit-app`, `create-flowkit-workspace`) — the commands below describe the intended flow once that happens. A scoped canary rehearsal is live today under `@rahil316/*`; see [temp-docs/npm-checklist.md](temp-docs/npm-checklist.md) for real, working install commands in the meantime.
 
 Outside this repo, FlowKit ships as installable packages rather than a checkout:
 
@@ -80,11 +80,11 @@ The rest of the CLI reference below (authoring commands, sessions, export/handof
 
 ## Writing a screen
 
-Screens are plain React components. Props are injected automatically — no context imports needed. Import path differs by mode: `@platform/types` inside this repo's own `workspaces/<name>/`, `'flowkit'` in a project scaffolded by `create-flowkit-app`/`create-flowkit-workspace`.
+Screens are plain React components. Props are injected automatically — no context imports needed. Import path differs by mode: `@flowkit/types` inside this repo's own `workspaces/<name>/`, `'flowkit'` in a project scaffolded by `create-flowkit-app`/`create-flowkit-workspace`.
 
 ```tsx
 // this repo (repo mode)
-import type { FlowScreenProps } from '@platform/types'
+import type { FlowScreenProps } from '@flowkit/types'
 
 // scaffolded consumer project (flat/multi-workspace mode)
 import type { FlowScreenProps } from 'flowkit'
@@ -110,7 +110,7 @@ Flows are defined as **flowplans** under `workspaces/<name>/flowplans/` (repo mo
 
 ```ts
 // this repo (repo mode)
-import { defineFlow } from '@platform/core/config'
+import { defineFlow } from '@flowkit-core/config'
 
 // scaffolded consumer project (flat/multi-workspace mode)
 import { defineFlow } from 'flowkit'
@@ -137,10 +137,9 @@ The flowplan compiler (`compileFlowplan.ts`) converts this at runtime into a `Fl
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
 | `flowkit nw:<name>`                        | Create workspace (repo mode only)                                                                                  |
 | `flowkit rw:<name>`                        | Remove workspace (repo mode only)                                                                                  |
-| `flowkit watch:<name>`                     | Watch workspace for file changes (repo mode only)                                                                  |
+| `flowkit watch:flows`                      | Watch workspace for file changes (repo mode only)                                                                  |
 | `flowkit status`                           | Workspace health snapshot                                                                                          |
-| `flowkit export`                           | Export as standalone HTML viewer (no FlowLens)                                                                     |
-| `flowkit export:full`                      | Export as standalone HTML viewer (FlowLens included)                                                               |
+| `flowkit export`                           | Export as standalone HTML viewer (guided flow; always ships full codebase)                                        |
 | `flowkit handoff`                          | Build developer handoff zip                                                                                        |
 | `flowkit check` / `flowkit check:<domain>` | Validate authored content — screens/config/components/db/flowplans (`check:flowplans` runs automatically on build) |
 | `flowkit sessions:brief`                   | Agent analytics brief from committed sessions                                                                      |
@@ -184,8 +183,7 @@ Sessions auto-prune when the library exceeds 200 entries (oldest first).
 **Stakeholder review** — export as a single self-contained HTML file. Anyone can open it in a browser, no install required:
 
 ```bash
-flowkit export           # without FlowLens replay
-flowkit export:full      # with FlowLens replay + analytics included
+flowkit export            # guided flow; always ships full codebase incl. FlowLens
 # → dist-standalone/index.html
 ```
 

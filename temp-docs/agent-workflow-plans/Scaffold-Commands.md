@@ -1,5 +1,27 @@
 # Plan: Scaffold Commands — create:screen, create:flow, create:flowplan, create:component
 
+> **Status note (2026-07-15): this plan already shipped, but under different paths/APIs than described below.**
+> Real implementation lives in `scripts/authoring/{flows,screens,flowplans,components}.js` +
+> `scripts/authoring-support/config-patch.js` (not `scripts/cli/agent/*.js` + `scripts/lib/*.js` —
+> those paths predate the `scripts/platform/` / `scripts/authoring/` / `scripts/helpers/` reorg).
+> Known divergences worth knowing before reading further as if it were current behavior:
+> - The workspace config file is `workspace.ts` (`WORKSPACE_CONFIG_FILENAME`), not `flowkit.config.ts`.
+> - `defineConfig`/`defineFlow` import from `@flowkit-core/config` (repo mode) or `'flowkit'` (consumer
+>   mode) via `resolveDefineImport()`/`resolveTypeImport()` in `scripts/helpers/paths.js` — not the
+>   hardcoded `@platform/core/config` shown in this doc's templates.
+> - Screen files land at `flows/<flow>/<screen-id>/<PascalName>Screen.tsx` (one directory per screen,
+>   `Screen`-suffixed filename) — matches what this doc describes, but the screen template itself
+>   imports `useDashboard` from `@flowkit-shared/contexts` and `ScreenMeta`/`FlowScreenProps` from
+>   `@flowkit/types`, not `@platform/shared/contexts`/`@platform/types`.
+> - `add:step`/`remove:step` now refuse (exit 1, file untouched) on a flowplan containing `forks` —
+>   the non-greedy regex rewrite this doc describes can't safely serialize nested fork structures.
+>   See CLAUDE.md's Known Gotchas for the fix (2026-07-15) and `scripts/tests/flowplan-steps-cli.test.js`.
+> - Router dispatch lives in `scripts/platform/router.js`, not `scripts/cli/router.js`.
+>
+> The `flowkit-author` skill (`.claude/skills/flowkit-author/SKILL.md`) is the source-verified
+> reference for exact current flags/paths/types — check there or the real source before relying on
+> anything below as fact. This plan is kept as historical design context, not current documentation.
+
 ## Context
 
 FlowKit prototype authors (human and agent) need reliable, instructional scaffolds for the four most common authoring actions. Without these, authors either create files manually (wrong structure, missing exports, missed config registration) or waste time studying existing files to infer patterns.

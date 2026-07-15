@@ -63,19 +63,19 @@ The few hardest rules are inlined into the memory file so they're loaded before 
 
 ## The non-negotiables (why they exist)
 
-| Rule                                                                                       | Why                                                                                                                                                                                                                                          |
-| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Never call `useDashboard()`'s `navigateTo` unguarded during flow playback                  | Use `useFlowNav()` (or id-wiring) inside a flow so FlowMaster's guards, animations, and recorded `flow.transition` fire. `useDashboard().navigateTo`, guarded on the `isFlow` prop FlowMaster injects, is the correct way to make a screen *also* navigable standalone from the Screens tab — see "Navigation" below. |
-| Never hand-write flow/screen files from scratch                                            | Copy an existing screen's boilerplate — the structure and exports must be consistent.                                                                                                                                                        |
-| Never edit platform source (`src/` in repo mode, `node_modules/flowkit/` in consumer mode) | That's the shared platform engine, not workspace content.                                                                                                                                                                                    |
-| Never hardcode hex colors                                                                  | Use `lib/design-system/tokens.css` vars or `useTheme()` tokens so kit/theme switching works.                                                                                                                                                 |
-| Always use the right import for the mode you're in                                         | Repo mode: `@flowkit/`/`@workspace/` aliases (renamed from `@platform` 2026-07-12). Consumer mode: import directly from `'flowkit'` — the `@flowkit*`/`@workspace` aliases only exist inside this monorepo, not in a scaffolded project. Relative `../../` paths break across the workspace boundary in either mode. |
+| Rule                                                                                       | Why                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Never call `useDashboard()`'s `navigateTo` unguarded during flow playback                  | Use `useFlowNav()` (or id-wiring) inside a flow so FlowMaster's guards, animations, and recorded `flow.transition` fire. `useDashboard().navigateTo`, guarded on the `isFlow` prop FlowMaster injects, is the correct way to make a screen _also_ navigable standalone from the Screens tab — see "Navigation" below. |
+| Never hand-write flow/screen files from scratch                                            | Copy an existing screen's boilerplate — the structure and exports must be consistent.                                                                                                                                                                                                                                 |
+| Never edit platform source (`src/` in repo mode, `node_modules/flowkit/` in consumer mode) | That's the shared platform engine, not workspace content.                                                                                                                                                                                                                                                             |
+| Never hardcode hex colors                                                                  | Use `lib/design-system/tokens.css` vars or `useTheme()` tokens so kit/theme switching works.                                                                                                                                                                                                                          |
+| Always use the right import for the mode you're in                                         | Repo mode: `@flowkit/`/`@workspace/` aliases (renamed from `@platform` 2026-07-12). Consumer mode: import directly from `'flowkit'` — the `@flowkit*`/`@workspace` aliases only exist inside this monorepo, not in a scaffolded project. Relative `../../` paths break across the workspace boundary in either mode.  |
 
 ---
 
 ## Workspace format
 
-Workspaces use the **flat flowplan format**: `flows/<flow>/<screen>/<Screen>.tsx` + `flowplans/*.ts`. There is no `_playFlow.ts`, no `router.tsx`, no `projects/` directory (unless you've deliberately opted into the nested-layout `projects` field in `workspace.ts` — see FLOWKIT.md).
+Workspaces use the **flat flowplan format**: `flows/<flow>/<screen>/<Screen>.tsx` + `flowplans/*.ts`. There is no `_playFlow.ts`, no `router.tsx`, no `projects/` directory (unless you've deliberately opted into the nested-layout `projects` field in `workspace.ts` — see CLI.md).
 
 ---
 
@@ -125,7 +125,7 @@ Or use the CLI, which handles both steps and works in all three modes: `flowkit 
 
 ### Add a flowplan
 
-Drop a `.ts` file into `flowplans/` using `defineFlow()`, or run `flowkit create:flowplan --name:<flow-id>`. Run `flowkit plan:ls` to confirm it's discovered, `flowkit plan:check` to validate.
+Drop a `.ts` file into `flowplans/` using `defineFlow()`, or run `flowkit create:flowplan --name:<flow-id>`. Run `flowkit plan:ls` to confirm it's discovered, `flowkit check:flowplans` to validate.
 
 ### Add a flowplan step with a conditional fork
 
@@ -227,11 +227,12 @@ flowkit lr                           # alias for lens:report
 
 ```bash
 flowkit status          # flows, screens, flowplans, sessions, feedback, agent
-flowkit plan:check      # validate all flowplans (static lint) — exits 1 on error
+flowkit check           # validate all authored content (screens/config/components/db/flowplans) — exits 1 on error
+flowkit check:<domain>  # validate just one domain — screens/config/components/db/flowplans
 flowkit plan:ls         # list all flowplans with file paths
 ```
 
-All three work in every mode — confirmed live in a scaffolded flat-mode project.
+All four work in every mode (repo, flat, multi-workspace).
 
 ---
 

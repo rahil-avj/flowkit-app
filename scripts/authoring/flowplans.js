@@ -42,8 +42,26 @@ function formatStep(step) {
   return `    { ${parts.join(', ')} },`
 }
 
-/** Replace the steps: [...] block in a flowplan source with regenerated steps. */
+/**
+ * Replace the steps: [...] block in a flowplan source with regenerated steps.
+ *
+ * formatStep() only serializes screenId/on/actionNote/decisionNote/annotation —
+ * it has no serialization path for a step's `forks`, and the non-greedy regex
+ * below only matches up to the first `]`, not the true end of a nested-bracket
+ * steps array. Silently proceeding on a flowplan with forks would either drop
+ * the fork data or write out a truncated/malformed array. Refuse instead —
+ * `promote:flow` is the one command that correctly bracket-scans nested
+ * structures, so route the author there or ask them to hand-edit.
+ */
 function rewriteSteps(filePath, steps) {
+  const forkedIndex = steps.findIndex(s => Array.isArray(s.forks) && s.forks.length > 0)
+  if (forkedIndex !== -1) {
+    throw new Error(
+      `Step [${forkedIndex}] has forks — add:step/remove:step can't safely rewrite a flowplan ` +
+        `with forks (only simple, non-nested step arrays are supported). Hand-edit ` +
+        `${path.basename(filePath)} directly, or use "flowkit promote:flow" to extract the fork first.`
+    )
+  }
   let src = fs.readFileSync(filePath, 'utf8')
   const stepsContent = steps.length > 0 ? '\n' + steps.map(formatStep).join('\n') + '\n  ' : ''
   // Non-greedy match — works for simple step arrays (no fork nesting)
@@ -182,7 +200,12 @@ export async function cmdAddStep(_val, args = []) {
   } else {
     steps.push(step)
   }
-  rewriteSteps(fpPath, steps)
+  try {
+    rewriteSteps(fpPath, steps)
+  } catch (e) {
+    console.error(r(`✗ ${e.message}`))
+    process.exit(1)
+  }
 
   console.log(g(`✓ Step added to flowplans/${fpId}.ts`))
   console.log(
@@ -224,7 +247,12 @@ export async function cmdRemoveStep(_val, args = []) {
   }
 
   const removed = steps.splice(idx, 1)[0]
-  rewriteSteps(fpPath, steps)
+  try {
+    rewriteSteps(fpPath, steps)
+  } catch (e) {
+    console.error(r(`✗ ${e.message}`))
+    process.exit(1)
+  }
 
   console.log(g(`✓ Removed step [${idx}]: screenId '${removed.screenId}'`))
   if (steps.length > 0) {

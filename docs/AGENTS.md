@@ -75,7 +75,7 @@ The few hardest rules are inlined into the memory file so they're loaded before 
 
 ## Workspace format
 
-Workspaces use the **flat flowplan format**: `flows/<flow>/<screen>/<Screen>.tsx` + `flowplans/*.ts`. There is no `_playFlow.ts`, no `router.tsx`, no `projects/` directory (unless you've deliberately opted into the nested-layout `projects` field in `workspace.ts` — see FLOWKIT.md).
+Workspaces use the **flat flowplan format**: `flows/<flow>/<screen>/<Screen>.tsx` + `flowplans/*.ts`. There is no `_playFlow.ts`, no `router.tsx`, no `projects/` directory (unless you've deliberately opted into the nested-layout `projects` field in `workspace.ts` — see CLI.md).
 
 ---
 

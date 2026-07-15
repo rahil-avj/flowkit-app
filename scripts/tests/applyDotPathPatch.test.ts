@@ -99,4 +99,26 @@ describe('applyDotPathPatch', () => {
     expect(next).toEqual({ a: 1 })
     expect(next).not.toBe(db)
   })
+
+  it('AP5. rejects a dot-path targeting __proto__ instead of polluting Object.prototype', () => {
+    const db = {}
+    expect(() => applyDotPathPatch(db, { '__proto__.polluted': true })).toThrow()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(({} as any).polluted).toBeUndefined()
+  })
+
+  it('AP6. rejects dot-paths targeting constructor/prototype at any nesting depth', () => {
+    expect(() => applyDotPathPatch({}, { 'a.constructor.polluted': true })).toThrow()
+    expect(() => applyDotPathPatch({}, { 'a.prototype.polluted': true })).toThrow()
+  })
+
+  it('AP7. drops a nested __proto__ key passed as an object patch value instead of polluting', () => {
+    const db = { user: {} }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const patch = { user: JSON.parse('{"__proto__": {"polluted": true}}') } as any
+    const next = applyDotPathPatch(db, patch)
+    expect(next.user.polluted).toBeUndefined()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(({} as any).polluted).toBeUndefined()
+  })
 })

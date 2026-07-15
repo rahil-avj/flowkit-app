@@ -8,5 +8,5 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false
   },
-  "include": ["workspaces", "src/workspace-stub"]
+  "include": ["workspaces", "src/workspace-stub", "src/vite-env.d.ts"]
 }
