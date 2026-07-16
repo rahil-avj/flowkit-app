@@ -314,9 +314,9 @@ This project is in **flat mode** — the project root is the one implicit worksp
 \`workspaces/\` folder. If you need more than one independent workspace (separate
 flows/screens/lib per app or client), convert to multi-workspace mode:
 
-- \`flowkit convert:multi\` — split this project into multiple sibling workspace folders
-- After converting: \`flowkit create:workspace <name>\` / \`remove:workspace <name>\` /
-  \`rename:workspace <old> <new>\` manage workspaces; \`flowkit convert:flat\` collapses back
+- \`npx flowkit convert:multi\` — split this project into multiple sibling workspace folders
+- After converting: \`npx flowkit create:workspace <name>\` / \`remove:workspace <name>\` /
+  \`rename:workspace <old> <new>\` manage workspaces; \`npx flowkit convert:flat\` collapses back
 
 ## CLI Commands
 
@@ -324,9 +324,9 @@ See \`docs/CLI.md\` for the full command reference.
 
 Common commands:
 \`\`\`
-flowkit status          # health snapshot
-flowkit sessions:ls     # list recorded sessions
-flowkit export          # build standalone HTML viewer
+npx flowkit status          # health snapshot
+npx flowkit sessions:ls     # list recorded sessions
+npx flowkit export          # build standalone HTML viewer
 \`\`\`
 
 ## Rules
@@ -334,7 +334,9 @@ flowkit export          # build standalone HTML viewer
 - Do **not** edit \`node_modules/flowkit/\` — that is the platform engine.
 - Add screens under \`flows/<flow-name>/<screen-id>/\`
 - Add flowplan steps in \`flowplans/<flow-name>.ts\`
-- All CLI operations go through \`flowkit <command>\`
+- All CLI operations go through \`flowkit <command>\` — invoke it as \`npx flowkit <command>\`
+  unless you've confirmed (\`which flowkit\`) it was installed globally during setup; don't
+  assume a bare \`flowkit\` resolves.
 
 ## First session — onboarding
 
@@ -418,6 +420,11 @@ npm run build    # production build
 
 See \`docs/CLI.md\` for the full \`flowkit\` CLI command reference, and \`CLAUDE.md\`
 if you're working with an AI coding agent on this project.
+
+## Running CLI commands
+
+If you chose to install flowkit globally during setup, \`flowkit <command>\` works
+bare (e.g. \`flowkit export\`). Otherwise, run it through npx: \`npx flowkit export\`.
 `
   )
 }
@@ -433,6 +440,39 @@ function copyDocsFromFlowkit(targetDir) {
     return true
   }
   return false
+}
+
+// ── Optional global install ─────────────────────────────────────────────────
+// Bare `flowkit <command>` only resolves in a shell when something puts it on
+// PATH. A local devDependency alone doesn't do that (only `npm run <script>`
+// or `npx flowkit` reach node_modules/.bin) — the only way to get a literal
+// bare `flowkit` is a global install, which mutates state outside this
+// project and is shared across every project on the machine. Never do that
+// without asking; never assume yes in non-interactive/CI contexts.
+async function offerGlobalInstall() {
+  if (!process.stdin.isTTY) {
+    console.log(d('  Skipping global install prompt (non-interactive).'))
+    return false
+  }
+  const globalSpec = WANTS_LOCAL_DEV ? FLOWKIT_DEP : 'flowkit'
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+  const answer = await prompt(
+    rl,
+    c('? ') +
+      `Install flowkit globally so you can run bare \`flowkit <command>\` here? (y/N) `
+  )
+  rl.close()
+  if (!/^y(es)?$/i.test(answer.trim())) return false
+
+  try {
+    console.log(d(`  Installing flowkit globally (npm install -g ${globalSpec})...`))
+    execSync(`npm install -g ${globalSpec}`, { stdio: 'inherit' })
+    console.log(`  ${g('✓')} flowkit installed globally — \`flowkit <command>\` now works bare.`)
+    return true
+  } catch (err) {
+    console.error(r(`  ✗ Global install failed: ${err.message}`))
+    return false
+  }
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -509,10 +549,24 @@ async function main() {
     }
 
     console.log('')
+    const gotGlobal = await offerGlobalInstall()
+
+    console.log('')
     console.log(`  ${g('✓')} Done! Get started:`)
     console.log('')
     console.log(`    ${c(`cd ${projectName}`)}`)
     console.log(`    ${c('npm run dev')}`)
+    console.log('')
+    if (gotGlobal) {
+      console.log(`  ${d('flowkit is installed globally — run any command bare, e.g.:')}`)
+      console.log(`    ${c('flowkit export')}`)
+    } else {
+      console.log(`  ${d('flowkit was installed locally only. Run CLI commands via npx, e.g.:')}`)
+      console.log(`    ${c('npx flowkit export')}`)
+      console.log(
+        d('  (AI agents working in this project: use `npx flowkit <command>`, not a bare `flowkit`.)')
+      )
+    }
     console.log('')
   } catch (err) {
     console.error(r(`\n  ✗ Failed: ${err.message}`))
