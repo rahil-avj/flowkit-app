@@ -11,8 +11,8 @@ import { FlowPlaybackProvider } from './features/flowplan/FlowPlaybackContext'
 import { SessionRecorderProvider, useSessionRecorderOptional } from './features/flowTracer/context'
 import Forbidden from './shared/components/errors/Forbidden'
 import Maintenance from './shared/components/errors/Maintenance'
+import NoScreens from './shared/components/errors/NoScreens'
 import NotFound from './shared/components/errors/NotFound'
-import NoWorkspace from './shared/components/errors/NoWorkspace'
 import ServerError from './shared/components/errors/ServerError'
 import WorkspaceErrorBoundary from './shared/components/errors/WorkspaceErrorBoundary'
 import WorkspaceSelector from './shared/components/WorkspaceSelector'
@@ -108,7 +108,7 @@ function WorkspaceRunner({ name, onSwitch }: WorkspaceRunnerProps) {
   if (!ALL_VIEWS || ALL_VIEWS.length === 0) {
     return (
       <ThemeProvider>
-        <NoWorkspace onAction={() => window.location.reload()} />
+        <NoScreens workspaceName={name} onAction={() => window.location.reload()} />
       </ThemeProvider>
     )
   }
