@@ -295,18 +295,68 @@ function writeTsConfig(dir) {
 // monorepo (see the standalone-prompt-helpers comment above and this
 // package's package.json).
 
-function writeClaude(dir) {
+function writeAgentsMd(dir) {
   fs.writeFileSync(
-    path.join(dir, 'CLAUDE.md'),
+    path.join(dir, 'AGENTS.md'),
     `# ${projectName}
 
-A FlowKit author project. Your work lives in:
+A [FlowKit](https://github.com/rahil-avj/flowkit-app) author project — this repo is
+**content only** (screens, flowplans, mock data). The platform engine lives in
+\`node_modules/flowkit/\` and is not yours to edit. FlowKit exists to let you build and
+demo realistic multi-screen product flows — with working navigation, mock data, and a
+reviewer-facing simulator — without standing up a backend or a router by hand.
 
-- \`flows/\` — Screen components, organized by flow then screen name
-- \`flowplans/\` — Playback scripts (sequences of screens with interaction definitions)
-- \`lib/\` — Shared data, components, and utilities for this project
+This file is intentionally short. It tells you where to look and the rules that don't
+show up from reading the code. For anything deeper, \`docs/\` in this project ships the
+full reference — see the table below.
 
-No UI kit is pre-installed — \`lib/design-system/tokens.css\` starts empty. See "First session" below.
+## Where to look
+
+| Need                                          | Go to                |
+| ---------------------------------------------- | -------------------- |
+| Full CLI command reference (every flag)        | \`docs/CLI.md\`        |
+| Platform architecture, mock DB, kits, theming  | \`docs/FLOWKIT.md\`    |
+| Flow engine / playback / flowplan anatomy      | \`docs/FLOWMASTER.md\` |
+| Recorded sessions & analytics (FlowLens)       | \`docs/FLOWLENS.md\`   |
+| Agent workflow recipes (this file, expanded)   | \`docs/AGENTS.md\`     |
+
+Read the relevant doc **before** attempting a task you haven't done in this project yet
+(adding a fork, wiring a simulator control, converting workspace modes, etc.) rather than
+guessing from adjacent code.
+
+## Project layout
+
+- \`flows/<flow>/<screen-id>/<ScreenName>.tsx\` — one component per screen, default-exports
+  the screen and a named \`screenMeta\` (\`{ id, label, desc? }\`, optional
+  \`canEnter\`/\`canNotEnter\`: \`({ db }) => boolean\`). Receives \`FlowScreenProps\` from
+  \`'flowkit'\` — \`onAction?\`, \`onNext?\`, \`onBack?\`, \`isFlow?\`, \`flowState?\`, and a
+  **read-only** \`db?\`. **All of these are \`undefined\` when the screen is previewed
+  standalone** (outside an active flow) — always optional-chain (\`db?.user?.name\`), never
+  assume they're present.
+- \`flowplans/<flow>.ts\` — playback scripts authored with \`defineFlow()\` from \`'flowkit'\`:
+  an ordered \`steps[]\` of \`{ screenId, on?, actionNote? }\` (\`on\` matches a DOM element id
+  in the screen, wired via event delegation — no \`onClick\` needed on that element), or a
+  richer \`interactions\` map keyed by element id (\`{ trigger, goTo, do?, animation?, delay? }\`).
+  Conditional forks (\`forks[]\`) and db mutation both live here, not in the screen component
+  — see \`docs/CLI.md\` for the full shape.
+- \`lib/data/db.ts\` — the mock database: plain named exports, the initial state only. A
+  screen never mutates it directly — mutation happens via \`ctx.updateDb(db => { ... })\`
+  inside a flowplan's \`interactions[id].do\`, never as a module-level singleton edit.
+- \`lib/design-system/tokens.css\` — CSS custom properties for theming. Starts **empty** (no
+  UI kit pre-installed) even though scaffolded demo screens already reference \`theme-*\`
+  Tailwind classes — this is expected pre-kit state, not a bug. Resolve it in your first
+  session (see below), not by inventing token values ad hoc.
+- \`${WORKSPACE_CONFIG_FILENAME}\` — the manifest (\`defineConfig()\` from \`'flowkit'\`): flow/screen
+  ordering, \`startScreen\`, \`defaultDevice\`/\`defaultOrientation\`. Check this first when a flow
+  or screen seems "missing" from the UI — it's usually an ordering/registration issue here,
+  not a bug in the screen itself.
+
+The Vite plugin (\`flowkit/vite\`) generates virtual modules
+(\`virtual:flowkit/config|screens|flowplans|workspace\`) from \`${WORKSPACE_CONFIG_FILENAME}\` plus
+filesystem globs over \`flows/\`/\`flowplans/\` — this is what makes screens discoverable
+without a hand-written router. \`INEFFECTIVE_DYNAMIC_IMPORT\` build warnings are expected and
+suppressed deliberately in \`vite.config.ts\` (screens are both statically listed for
+type-checking and dynamically imported for code-splitting).
 
 ## Workspaces
 
@@ -318,58 +368,90 @@ flows/screens/lib per app or client), convert to multi-workspace mode:
 - After converting: \`npx flowkit create:workspace <name>\` / \`remove:workspace <name>\` /
   \`rename:workspace <old> <new>\` manage workspaces; \`npx flowkit convert:flat\` collapses back
 
-## CLI Commands
+## CLI commands
 
-See \`docs/CLI.md\` for the full command reference.
+All CLI operations go through \`flowkit <command>\`. Invoke it as \`npx flowkit <command>\`
+unless you've confirmed (\`which flowkit\`) it was installed globally during setup — don't
+assume a bare \`flowkit\` resolves. Run \`npx flowkit -h\` (or \`npx flowkit help\`) first — it's
+the live, always-current command list for this project's exact mode. \`docs/CLI.md\` has the
+fuller written reference.
 
-Common commands:
 \`\`\`
-npx flowkit status          # health snapshot
-npx flowkit sessions:ls     # list recorded sessions
-npx flowkit export          # build standalone HTML viewer
+npx flowkit status                              # flow/screen/flowplan/session health snapshot
+npx flowkit check                               # validate all authored content, exits 1 on error
+npx flowkit create:screen --flow:<id> --name:<screen-id>
+npx flowkit add:step --flowplan:<id> --screen:<screen-id> [--on:<element-id>]
+npx flowkit sessions:ls                         # list recorded sessions
+npx flowkit export                              # build standalone HTML viewer → dist/
 \`\`\`
+
+Two CLI behaviors worth knowing before you rely on them:
+- \`add:step\` rewrites a flowplan's \`steps: [...]\` via a non-greedy regex — re-check the
+  file by hand after running it on a flowplan whose steps include \`forks[].steps[...]\`.
+- \`remove:step\` silently removes index 0 if \`--index\` is omitted — no error, no prompt.
+  Always pass \`--index\` explicitly.
 
 ## Rules
 
-- Do **not** edit \`node_modules/flowkit/\` — that is the platform engine.
-- Add screens under \`flows/<flow-name>/<screen-id>/\`
-- Add flowplan steps in \`flowplans/<flow-name>.ts\`
-- All CLI operations go through \`flowkit <command>\` — invoke it as \`npx flowkit <command>\`
-  unless you've confirmed (\`which flowkit\`) it was installed globally during setup; don't
-  assume a bare \`flowkit\` resolves.
+Grammar: **NEVER** \`x\` = a hard stop, doing \`x\` breaks the platform. **ALWAYS** \`y\` = the
+default behavior, no exceptions. **TO** \`<task>\` **→** \`<action>\` = the one right way to do
+a common task — check here before improvising.
 
-## First session — onboarding
+- **NEVER** edit \`node_modules/flowkit/\` — that's the platform engine, not workspace content.
+- **NEVER** mutate \`db\` from inside a screen component — there is no mutate function on
+  \`FlowScreenProps\`; \`db\` there is read-only. Mutation only happens via \`ctx.updateDb()\`
+  inside a flowplan's \`interactions[id].do\`.
+- **NEVER** hand-write a new flow/screen file from scratch — copy an existing screen's
+  boilerplate (or use \`flowkit create:screen\`) so exports stay consistent with what the
+  Vite plugin expects.
+- **NEVER** hardcode hex colors — use \`lib/design-system/tokens.css\` vars.
+- **NEVER** assume a bare \`flowkit\` binary resolves — prefer \`npx flowkit\` unless you've
+  confirmed (\`which flowkit\`) a global link.
+- **ALWAYS** optional-chain \`db\`/\`onAction\`/\`onNext\`/\`onBack\`/\`flowState\` in a screen —
+  every one of them is \`undefined\` when that screen is previewed standalone, not just
+  during flow playback.
+- **ALWAYS** use Tailwind utility classes for static styling; reach for \`style={{}}\` only
+  for runtime-computed values.
+- **ALWAYS** route structural changes (new screen, new flowplan step, workspace conversion)
+  through the \`flowkit\` CLI rather than hand-editing generated wiring.
+- **TO** add a screen **→** \`flowkit create:screen --flow:<id> --name:<screen-id>\`, then
+  \`flowkit add:step --flowplan:<id> --screen:<screen-id>\` to wire it into playback.
+- **TO** wire a tap interaction **→** give the element a plain DOM \`id\` and add a matching
+  \`{ screenId, on: '<id>' }\` step in the flowplan (no \`onClick\` needed) — or, for
+  conditional/db-mutating logic, add an \`interactions['<id>']\` entry with \`goTo\`/\`do\` in
+  the flowplan instead.
+- **TO** navigate imperatively from inside a screen (async/state-driven, not a tap) **→**
+  call the injected \`onAction?.('name')\` / \`onNext?.()\` / \`onBack?.()\` — these only fire
+  during flow playback (\`isFlow\` is true); they're safely no-ops (undefined) otherwise.
+- **TO** gate access to a screen **→** export \`canEnter\`/\`canNotEnter\` on \`screenMeta\`:
+  \`({ db }) => boolean\`.
+- **TO** add a reviewer-facing toggle **→** add a \`SimulatorControl\` object
+  (\`{ label, path, type, ... }\`) to the flowplan's \`simulator.controls\` array — this is
+  plain data, not a JSX component.
+- **TO** check workspace health **→** \`npx flowkit status\` / \`npx flowkit check\`.
+- **TO** find anything not listed here **→** \`npx flowkit -h\`, then \`docs/CLI.md\`.
 
-If this is the first time you (the agent) are opening this project, introduce
-yourself as **Flowaid** — the FlowKit-native assistant for this project, not a
-generic coding agent — and run this short interview before writing any code.
-Keep it conversational, one or two questions at a time, not a form dump.
+## First session
 
-1. **Name.** Ask what to call them. Use their name for the rest of the
-   session — this is a collaboration, not a prompt terminal.
-2. **Experience level.** Are they a developer, a designer who codes a little,
-   or non-technical (founder/PM/etc. testing an idea)? This sets how much you
-   explain vs. just do. Don't ask it clinically — something like "so I pitch
-   this right: are you more comfortable in the code, or would you rather I
-   just handle that side?"
-3. **What they're building.** A quick prototype for a pitch/demo, a client
-   deliverable, a personal project, something else? Shapes how much you
-   optimize for speed vs. polish.
-4. **Working style.** Do they want you to check in before changes, or move
-   fast and explain after the fact? Set your autonomy level for the rest of
-   the session based on the answer — don't re-ask this every time.
-5. **Look and feel.** There's no pre-installed component kit or design
-   system — ask in plain language what they're going for ("clean and
-   minimal", "playful", "enterprise/dashboard-y", or a reference link/screenshot
-   if they have one). Based on the answer, YOU decide and set up the actual
-   approach (e.g. plain Tailwind utility classes, shadcn/ui components, some
-   other library) — don't make them pick a library by name unless they bring
-   it up themselves.
+If this is the first time you're opening this project, run a short interview before
+writing any code. Keep it conversational, one or two questions at a time, not a form dump:
+
+1. **Name.** Ask what to call them, and use it for the rest of the session.
+2. **Experience level.** Developer, a designer who codes a little, or non-technical
+   (founder/PM testing an idea)? This sets how much you explain vs. just do.
+3. **What they're building.** A quick prototype for a pitch/demo, a client deliverable,
+   a personal project, something else? Shapes speed vs. polish.
+4. **Working style.** Check in before changes, or move fast and explain after the fact?
+   Set your autonomy level for the session from the answer — don't re-ask later.
+5. **Look and feel.** No component kit is pre-installed — ask in plain language what
+   they're going for ("clean and minimal", "playful", "enterprise/dashboard-y", or a
+   reference link/screenshot). Based on the answer, decide the approach yourself (plain
+   Tailwind, shadcn/ui, another library) — don't make them pick a library by name unless
+   they bring it up first.
 
 Once you have these answers, act on them immediately — set up
-\`lib/design-system/tokens.css\` and whatever component approach fits, then
-get to the actual flows/screens. Don't re-run this interview later in the
-project; refer back to what you learned instead.
+\`lib/design-system/tokens.css\` and whatever component approach fits, then get to the
+actual flows/screens. Don't re-run this interview later; refer back to what you learned.
 `
   )
 }
@@ -418,7 +500,7 @@ npm run build    # production build
 - \`lib/\` — shared data, components, and utilities
 - \`${WORKSPACE_CONFIG_FILENAME}\` — flow and screen registration
 
-See \`docs/CLI.md\` for the full \`flowkit\` CLI command reference, and \`CLAUDE.md\`
+See \`docs/CLI.md\` for the full \`flowkit\` CLI command reference, and \`AGENTS.md\`
 if you're working with an AI coding agent on this project.
 
 ## Running CLI commands
@@ -498,7 +580,7 @@ async function main() {
     writeViteConfig(targetDir)
     if (language === 'ts') writeTsConfig(targetDir)
     writePostcssConfig(targetDir)
-    writeClaude(targetDir)
+    writeAgentsMd(targetDir)
     writeGitignore(targetDir)
     writeReadme(targetDir, projectName)
 
