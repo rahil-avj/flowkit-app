@@ -7,6 +7,7 @@ import type {
   SimulatorControl,
 } from '@flowkit/types/index'
 import { isFlowplanRef } from '@flowkit/types/index'
+import { get } from '@flowkit-shared/utils/dbHelpers'
 
 // ── compileFlowplan ─────────────────────────────────────────────────────────────
 //
@@ -235,19 +236,9 @@ function firstCompiledScreenId(
 function forkMatches(fork: Fork, db: Record<string, any>): boolean {
   if (!fork.db || Object.keys(fork.db).length === 0) return true
   for (const path of Object.keys(fork.db)) {
-    if (readDotPath(db, path) !== fork.db[path]) return false
+    if (get(db, path) !== fork.db[path]) return false
   }
   return true
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function readDotPath(obj: Record<string, any>, path: string): unknown {
-  return path.split('.').reduce<unknown>((acc, part) => {
-    if (acc && typeof acc === 'object') {
-      return (acc as Record<string, unknown>)[part]
-    }
-    return undefined
-  }, obj)
 }
 
 /**

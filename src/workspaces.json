@@ -1,13 +1,9 @@
 {
   "workspaces": [
     {
-      "name": "test-1",
-      "label": "Test 1"
-    },
-    {
-      "name": "test-2",
-      "label": "Test 2"
+      "name": "game-zone",
+      "label": "Game Zone"
     }
   ],
-  "active": "test-1"
+  "active": "game-zone"
 }

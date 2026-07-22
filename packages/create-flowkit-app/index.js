@@ -540,11 +540,10 @@ async function offerGlobalInstall() {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
   const answer = await prompt(
     rl,
-    c('? ') +
-      `Install flowkit globally so you can run bare \`flowkit <command>\` here? (y/N) `
+    c('? ') + `Install flowkit globally so you can run bare \`flowkit <command>\` here? (Y/n) `
   )
   rl.close()
-  if (!/^y(es)?$/i.test(answer.trim())) return false
+  if (/^n(o)?$/i.test(answer.trim())) return false
 
   try {
     console.log(d(`  Installing flowkit globally (npm install -g ${globalSpec})...`))
@@ -646,7 +645,9 @@ async function main() {
       console.log(`  ${d('flowkit was installed locally only. Run CLI commands via npx, e.g.:')}`)
       console.log(`    ${c('npx flowkit export')}`)
       console.log(
-        d('  (AI agents working in this project: use `npx flowkit <command>`, not a bare `flowkit`.)')
+        d(
+          '  (AI agents working in this project: use `npx flowkit <command>`, not a bare `flowkit`.)'
+        )
       )
     }
     console.log('')

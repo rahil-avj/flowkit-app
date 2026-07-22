@@ -2,14 +2,7 @@ import Button from '@flowkit-shared/components/ui/Button'
 import Checkbox from '@flowkit-shared/components/ui/Checkbox'
 import Modal from '@flowkit-shared/components/ui/Modal'
 import { useTheme } from '@flowkit-shared/contexts/ThemeContext'
-import {
-  AlertCircle,
-  Check,
-  CheckCircle2,
-  Copy,
-  Database,
-  FileText,
-} from 'lucide-react'
+import { AlertCircle, Check, CheckCircle2, Copy, Database, FileText } from 'lucide-react'
 import { useRef, useState } from 'react'
 
 import { CloudExportControls, CloudExportStatusHint, CloudKeyStepModal } from '../cloud-sync'

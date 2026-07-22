@@ -5,6 +5,13 @@ import { getWorkspaceLogo } from '@flowkit-shared/utils/workspaceModules'
 import { ChevronDown } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
+// Flat/multi-workspace consumer mode (VITE_SINGLE_WORKSPACE) has no repo-mode
+// `workspaces.json` fixtures — `@flowkit/workspaces` there resolves to this
+// monorepo's own dev fixtures shipped inside the installed `flowkit` package
+// (src/ ships unfiltered per package.json's files[]), not the consumer's real
+// workspace. Never list/switch to those in single-workspace mode.
+const isSingle = import.meta.env.VITE_SINGLE_WORKSPACE === 'true'
+
 // Deterministic color per workspace name — stable across renders and sessions.
 const AVATAR_COLORS = [
   '#6366F1',
@@ -76,8 +83,13 @@ export interface WorkspaceSwitcherBarProps {
 export default function WorkspaceSwitcherBar({ panelOpen }: WorkspaceSwitcherBarProps) {
   const activeWorkspace = useActiveWorkspace()
   const { switchWorkspace } = useDashboard()
-  const current = workspaces.find(w => w.name === activeWorkspace) ?? workspaces[0] ?? null
-  const others = workspaces.filter(w => w.name !== activeWorkspace)
+  // Single-workspace consumer mode: there is exactly one workspace (this
+  // project itself) and nothing to switch to — never read the repo-mode
+  // `workspaces` fixture list here (see import comment above).
+  const current = isSingle
+    ? { name: activeWorkspace, label: activeWorkspace }
+    : (workspaces.find(w => w.name === activeWorkspace) ?? workspaces[0] ?? null)
+  const others = isSingle ? [] : workspaces.filter(w => w.name !== activeWorkspace)
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const [dropdownPos, setDropdownPos] = useState<{
@@ -88,6 +100,7 @@ export default function WorkspaceSwitcherBar({ panelOpen }: WorkspaceSwitcherBar
   if (!current) return null
 
   const handleOpen = () => {
+    if (isSingle) return
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect()
       setDropdownPos({ top: rect.top, left: rect.left, width: Math.max(rect.width, 200) })
@@ -100,9 +113,14 @@ export default function WorkspaceSwitcherBar({ panelOpen }: WorkspaceSwitcherBar
       <button
         ref={triggerRef}
         onClick={handleOpen}
-        className={`flex-1 h-full flex items-center transition-colors hover:bg-white/3 min-w-0 ${panelOpen ? 'gap-3 px-2' : 'justify-center px-0'}`}
+        disabled={isSingle}
+        className={`flex-1 h-full flex items-center transition-colors min-w-0 ${isSingle ? 'cursor-default' : 'hover:bg-white/3'} ${panelOpen ? 'gap-3 px-2' : 'justify-center px-0'}`}
       >
-        <WorkspaceAvatar name={activeWorkspace} label={current.label ?? activeWorkspace} size={28} />
+        <WorkspaceAvatar
+          name={activeWorkspace}
+          label={current.label ?? activeWorkspace}
+          size={28}
+        />
         {panelOpen && (
           <>
             <div className="flex flex-col items-start min-w-0 flex-1">
@@ -113,10 +131,12 @@ export default function WorkspaceSwitcherBar({ panelOpen }: WorkspaceSwitcherBar
                 {activeWorkspace}
               </span>
             </div>
-            <ChevronDown
-              size={12}
-              className={`shrink-0 transition-transform mr-1 text-theme-text-disabled ${open ? 'rotate-0' : 'rotate-180'}`}
-            />
+            {!isSingle && (
+              <ChevronDown
+                size={12}
+                className={`shrink-0 transition-transform mr-1 text-theme-text-disabled ${open ? 'rotate-0' : 'rotate-180'}`}
+              />
+            )}
           </>
         )}
       </button>

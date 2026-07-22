@@ -717,10 +717,7 @@ export function SimulatorContent({
         ) : (
           <>
             {isPlayNode && <AutoPlayAccordion />}
-            <SimControl
-              label="Enable Simulator"
-              bind="simulatorEnabled"
-            />
+            <SimControl label="Enable Simulator" bind="simulatorEnabled" />
             <div
               className="flex flex-col gap-2 transition-opacity duration-200"
               style={{

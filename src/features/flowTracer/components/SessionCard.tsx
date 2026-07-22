@@ -121,9 +121,7 @@ export default function SessionCard({
         )}
       </div>
 
-      <div
-        className={`flex items-center gap-2.5 flex-wrap ${selectMode ? 'pl-5.25' : 'pl-3.75'}`}
-      >
+      <div className={`flex items-center gap-2.5 flex-wrap ${selectMode ? 'pl-5.25' : 'pl-3.75'}`}>
         <span className="text-ui-xs text-theme-text-muted">{formatDate(session.startTime)}</span>
         {duration !== null && (
           <span className="text-ui-xs text-theme-text-muted">{formatDuration(duration)}</span>

@@ -1,6 +1,7 @@
 import type { Theme } from '@flowkit/theme'
 import Input from '@flowkit-shared/components/ui/Input'
 import Toggle from '@flowkit-shared/components/ui/Toggle'
+import { update } from '@flowkit-shared/utils/dbHelpers'
 import { ChevronDown, Plus, Trash2 } from 'lucide-react'
 import type React from 'react'
 import { useState } from 'react'
@@ -24,62 +25,49 @@ export function SimArrayEditor({ label, bind, val, theme, ctx }: ArrayEditorProp
   const itemKeys = Object.keys(templateItem).filter(k => typeof templateItem[k] !== 'object')
 
   const handleRemoveItem = (index: number) => {
-    ctx.updateDb(draft => {
-      const targetPath = bind.replace(/^db\./, '')
-      const pathParts = targetPath.split('.')
-      let parent: Record<string, unknown> = draft as Record<string, unknown>
-      for (let i = 0; i < pathParts.length - 1; i++) {
-        parent = parent[pathParts[i]] as Record<string, unknown>
-      }
-      const array = parent[pathParts[pathParts.length - 1]]
-      if (Array.isArray(array)) {
-        array.splice(index, 1)
-      }
+    const targetPath = bind.replace(/^db\./, '')
+    update<unknown[]>(ctx.updateDb, targetPath, (array = []) => {
+      if (Array.isArray(array)) array.splice(index, 1)
+      return array
     })
   }
 
   const handleAddItemSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    ctx.updateDb(draft => {
-      const targetPath = bind.replace(/^db\./, '')
-      const pathParts = targetPath.split('.')
-      let parent: Record<string, unknown> = draft as Record<string, unknown>
-      for (let i = 0; i < pathParts.length - 1; i++) {
-        parent = parent[pathParts[i]] as Record<string, unknown>
-      }
-      const array = parent[pathParts[pathParts.length - 1]]
-      if (Array.isArray(array)) {
-        const itemToAdd: Record<string, unknown> = {}
+    const targetPath = bind.replace(/^db\./, '')
+    update<unknown[]>(ctx.updateDb, targetPath, (array = []) => {
+      if (!Array.isArray(array)) return array
+      const itemToAdd: Record<string, unknown> = {}
 
-        if ('id' in templateItem) {
-          if (typeof templateItem.id === 'number') {
-            const maxId = array.reduce(
-              (max: number, item: unknown) =>
-                Math.max(max, Number((item as Record<string, unknown>).id) || 0),
-              0
-            )
-            itemToAdd.id = maxId + 1
-          } else {
-            itemToAdd.id = Math.random().toString(36).substring(2, 9)
-          }
+      if ('id' in templateItem) {
+        if (typeof templateItem.id === 'number') {
+          const maxId = array.reduce(
+            (max: number, item: unknown) =>
+              Math.max(max, Number((item as Record<string, unknown>).id) || 0),
+            0
+          )
+          itemToAdd.id = maxId + 1
+        } else {
+          itemToAdd.id = Math.random().toString(36).substring(2, 9)
         }
-
-        itemKeys.forEach(key => {
-          if (key === 'id') return
-          const templateVal = templateItem[key]
-          const inputVal = newItemData[key]
-
-          if (typeof templateVal === 'boolean') {
-            itemToAdd[key] = !!inputVal
-          } else if (typeof templateVal === 'number') {
-            itemToAdd[key] = parseFloat(inputVal as string) || 0
-          } else {
-            itemToAdd[key] = inputVal !== undefined ? String(inputVal) : ''
-          }
-        })
-
-        array.push(itemToAdd)
       }
+
+      itemKeys.forEach(key => {
+        if (key === 'id') return
+        const templateVal = templateItem[key]
+        const inputVal = newItemData[key]
+
+        if (typeof templateVal === 'boolean') {
+          itemToAdd[key] = !!inputVal
+        } else if (typeof templateVal === 'number') {
+          itemToAdd[key] = parseFloat(inputVal as string) || 0
+        } else {
+          itemToAdd[key] = inputVal !== undefined ? String(inputVal) : ''
+        }
+      })
+
+      array.push(itemToAdd)
+      return array
     })
 
     setNewItemData({})
@@ -135,7 +123,7 @@ export function SimArrayEditor({ label, bind, val, theme, ctx }: ArrayEditorProp
                   border: `1px solid ${theme.bg.border}50`,
                 }}
               >
-                <span className="truncate max-w-[200px]" style={{ color: theme.text.secondary }}>
+                <span className="truncate max-w-50" style={{ color: theme.text.secondary }}>
                   {getItemLabel(item, idx)}
                 </span>
                 <button

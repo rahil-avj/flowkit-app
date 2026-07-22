@@ -132,13 +132,13 @@ Click a row to select it for review. In dev mode, each row has a **save icon** (
 
 ### Right panel tabs
 
-| Tab      | What it shows                                          |
-| -------- | ------------------------------------------------------ |
-| Overview | Quality breakdown, key metrics, most visited screens   |
-| Timeline | Event timeline scrubber                                |
-| Paths    | Navigation paths — top screens by visit count          |
-| Funnel   | Flow completion rates                                  |
-| Heatmap  | Cursor density on the current screen                   |
+| Tab      | What it shows                                        |
+| -------- | ---------------------------------------------------- |
+| Overview | Quality breakdown, key metrics, most visited screens |
+| Timeline | Event timeline scrubber                              |
+| Paths    | Navigation paths — top screens by visit count        |
+| Funnel   | Flow completion rates                                |
+| Heatmap  | Cursor density on the current screen                 |
 
 Click **View all** in any tab to open a full-screen overlay with more detail. Use the **playback bar** at the bottom to scrub or auto-play the session.
 

@@ -82,10 +82,7 @@ function WorkspaceErrorPanel({
         </div>
 
         {/* Actions */}
-        <div
-          className="flex gap-2 px-5 py-3"
-          style={{ borderTop: `1px solid ${theme.bg.border}` }}
-        >
+        <div className="flex gap-2 px-5 py-3" style={{ borderTop: `1px solid ${theme.bg.border}` }}>
           <Button onClick={onReload} style={{ flex: 1 }} variant="primary">
             Reload app
           </Button>

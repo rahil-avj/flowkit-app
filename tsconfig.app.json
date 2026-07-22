@@ -21,7 +21,7 @@
     "types": ["vite/client"],
     "paths": {
       "@flowkit/*": ["./src/*"],
-      "@workspace/*": ["./src/workspace-stub/*"],
+      "@workspace/*": ["./workspaces/game-zone/*", "./src/workspace-stub/*"],
       "@flowkit-core": ["./src/core/index.ts"],
       "@flowkit-core/*": ["./src/core/*"],
       "@flowkit-features": ["./src/features/index.ts"],

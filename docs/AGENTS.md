@@ -13,13 +13,13 @@ Works the same across repo mode, flat mode, and multi-workspace mode — see [CL
 ## The agent file system
 
 > ⚠️ **This section describes repo mode only.** `.agent/INDEX.md`, `.agent/rules.md`,
-> `.agent/platform.md`, `.agent/project.md`, and `agent:sync`'s `--agent:` flag are all
-> produced by `scripts/platform/agent-sync.js`, which operates on this monorepo's own
+> `.agent/platform.md`, and `.agent/project.md` are all produced by
+> `scripts/platform/agent-sync.js`, which operates on this monorepo's own
 > `workspaces/<name>/` — it is not invoked by, and has no equivalent in,
 > `create-flowkit-app`/`create-flowkit-workspace` (flat/multi-workspace consumer mode). A
-> scaffolded consumer project gets exactly one generated file, an agent-agnostic
-> `AGENTS.md` at its root (see `writeAgentsMd()` in each scaffolder's `index.js`), plus a
-> copy of this `docs/` folder — no `.agent/` directory, no `--agent:` choice, no
+> scaffolded consumer project gets exactly one generated file, the same agent-agnostic
+> `AGENTS.md` repo mode now produces (see `writeAgentsMd()` in each scaffolder's
+> `index.js`), plus a copy of this `docs/` folder — no `.agent/` directory, no
 > `agent:sync`. Confirmed live 2026-07-21.
 
 Every **repo-mode** workspace ships a generated, layered file set so an agent can start
@@ -27,14 +27,22 @@ building without reading the codebase. All of it is rendered from a **single sou
 truth** (`scripts/platform/agent-spec.js`) by `scripts/platform/agent-sync.js`, so it never
 drifts from the platform.
 
-| Layer     | File                       | Role                                                                                                                          |
-| --------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Memory    | `CLAUDE.md` / `AGENTS.md` / `.cursor/rules/flowkit.mdc` | Auto-ingested by the agent's tool. Identity, read-order, the hardest directives. Chosen via `flowkit agent:sync --agent:…` (repo mode only). |
-| Map       | `.agent/INDEX.md`          | `Task → Action → Detail`. The fast lookup — every task in one hop.                                                           |
-| Rules     | `.agent/rules.md`          | The full directive set (`NEVER` / `ALWAYS` / `TO … → …`).                                                                    |
-| Reference | `.agent/platform.md`       | Terse surface map; each row points to further detail.                                                                        |
-| Product   | `.agent/project.md`        | Hand-owned brief: what the product is. **Never regenerated.**                                                                |
-| State     | `.agent/.agent-meta.json`  | `{ agent, kit, language, specVersion }` written by `agent:sync`.                                                              |
+There is **no per-tool choice of memory file** — every workspace gets one agent-agnostic
+`AGENTS.md`, matching what the consumer-mode scaffolders always produced. (An older
+per-tool target system — `--agent:claude|agents|cursor|none`, emitting `CLAUDE.md` /
+`AGENTS.md` / `.cursor/rules/flowkit.mdc` — existed here previously and was removed; a
+workspace scaffolded before the removal may still have a leftover `CLAUDE.md` on disk,
+untouched by this change, but re-running `agent:sync` on it now produces `AGENTS.md`
+instead.)
+
+| Layer     | File                      | Role                                                                                    |
+| --------- | ------------------------- | --------------------------------------------------------------------------------------- |
+| Memory    | `AGENTS.md`               | Auto-ingested by most coding-agent tools. Identity, read-order, the hardest directives. |
+| Map       | `.agent/INDEX.md`         | `Task → Action → Detail`. The fast lookup — every task in one hop.                      |
+| Rules     | `.agent/rules.md`         | The full directive set (`NEVER` / `ALWAYS` / `TO … → …`).                               |
+| Reference | `.agent/platform.md`      | Terse surface map; each row points to further detail.                                   |
+| Product   | `.agent/project.md`       | Hand-owned brief: what the product is. **Never regenerated.**                           |
+| State     | `.agent/.agent-meta.json` | `{ kit, language, specVersion }` written by `agent:sync`.                               |
 
 > ⚠️ **Within repo mode**, confirmed live 2026-07-10: `.agent/platform.md`'s rows point at
 > `Documentation/*.md` files and `@flowkit`/`@shared` path aliases specific to this
@@ -68,7 +76,7 @@ Example (from a generated `rules.md`):
 
 ```
 NEVER reference flows/router.tsx or _playFlow.ts — flat-flowplan workspaces don't have them
-ALWAYS read/mutate data via const { db, updateDb } = useDashboard()
+ALWAYS read/mutate data via const db = useDb()
 TO add a screen → create flows/<flow>/<screen-slug>/<ScreenName>.tsx, then add a step in flowplans/<flow>.ts
 ```
 
@@ -207,11 +215,16 @@ for simple taps — `onAction`/`onNext`/`onBack` are the escape hatch for progra
 ### Read / mutate data — repo mode
 
 ```ts
-const { db, updateDb } = useDashboard() // db is injected — do NOT import it directly
-updateDb(d => {
-  d.cart.count += 1
-})
+import { useDb } from '@flowkit-shared/utils'
+
+const db = useDb() // wraps useDashboard()'s injected db/updateDb
+db.update('cart.count', n => n + 1)
 ```
+
+`useDb()`'s `get`/`has`/`set`/`remove`/`update` reject unsafe dot-path segments
+(`__proto__`/`prototype`/`constructor`) instead of silently corrupting or no-opping. Falling back
+to raw `const { db, updateDb } = useDashboard()` still works but carries no such guard — prefer
+`useDb()` for any path-based read or write.
 
 Seed data lives in `lib/data/db.ts`. → FLOWKIT.md (Mock database)
 
@@ -306,27 +319,21 @@ All four work in every mode (repo, flat, multi-workspace).
 The agent files are generated, not hand-maintained. When the platform changes, regenerate:
 
 ```bash
-flowkit agent:sync                 # active workspace, keep its agent
+flowkit agent:sync                 # active workspace
 flowkit agent:sync:<ws>            # a specific workspace (repo mode)
-flowkit agent:sync --agent:cursor  # switch agent target (removes the old memory file)
 ```
 
-- `agent:sync` re-emits `INDEX.md`, `rules.md`, `platform.md`, and the memory file. It **never**
+- `agent:sync` re-emits `INDEX.md`, `rules.md`, `platform.md`, and `AGENTS.md`. It **never**
   touches `project.md`.
 - There is no separate staleness-check command as of this writing — `agent:check` doesn't exist,
   and `flowkit export`'s pre-flight checks (TypeScript, ESLint) don't cover agent-file staleness
   either. Re-run `agent:sync` yourself after any platform change.
 - To change platform facts, edit **`scripts/platform/agent-spec.js`** (the single source), bump
   `AGENT_SPEC_VERSION`, then `agent:sync` every workspace. Never hand-edit a generated `.agent/*` file.
-
-### Supported agent targets
-
-| `--agent:`         | Emits                       | Tool                |
-| ------------------ | --------------------------- | ------------------- |
-| `claude`           | `CLAUDE.md`                 | Claude Code         |
-| `agents` (default) | `AGENTS.md`                 | Cross-tool standard |
-| `cursor`           | `.cursor/rules/flowkit.mdc` | Cursor              |
-| `none`             | `.agent/*` docs only        | (no memory file)    |
+- There is no per-tool target to choose anymore — `agent:sync` always emits `AGENTS.md`. A
+  workspace scaffolded before this change may still have an old `CLAUDE.md`/`.cursor/rules/flowkit.mdc`
+  sitting on disk from the previous per-tool system; that file is left alone until you
+  delete it yourself — `agent:sync` does not clean it up automatically.
 
 ---
 

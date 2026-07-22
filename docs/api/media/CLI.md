@@ -49,7 +49,9 @@ flowkit nw:<name>       # express: value after colon, guided fallback for missin
 flowkit new-workspace:<name> --kit:apple --lang:ts   # fully express
 ```
 
-**Flags** follow the same `:` pattern: `--kit:apple`, `--lang:ts`, `--agent:claude`.
+`--agent:` and per-tool memory-file targets (Claude/Cursor/etc.) previously existed here and were removed — every workspace now gets one agent-agnostic `AGENTS.md`, matching the consumer-mode scaffolders (`create-flowkit-app`/`create-flowkit-workspace`), which never offered a per-tool choice.
+
+**Flags** follow the same `:` pattern: `--kit:apple`, `--lang:ts`.
 
 **Help** — any of these work:
 
@@ -78,7 +80,7 @@ flowkit version
 ```bash
 flowkit nw
 flowkit nw:<name>
-flowkit nw:<name> --kit:<name> --lang:ts --agent:claude
+flowkit nw:<name> --kit:<name> --lang:ts
 ```
 
 Creates a new workspace under `workspaces/<name>/` with the full folder structure, mock db, design tokens, and a demo flow. Switches the active workspace immediately and builds the router.
@@ -106,7 +108,7 @@ workspaces/<name>/
     platform.md
     project.md             ← hand-owned; never regenerated
     .agent-meta.json
-  CLAUDE.md / AGENTS.md    ← agent memory file (per --agent flag)
+  AGENTS.md                ← agent memory file (one agent-agnostic file, no per-tool choice)
   workspace.ts
   index.ts
 
@@ -122,10 +124,6 @@ workspaces/<name>/lib/flowLens/       ← committed session library + studies.js
 | `--kit:neo-brutalism` | Sharp edges, black borders, hard offset shadows                                     |
 | `--kit:none`          | No kit — base structural styles only (default)                                      |
 | `--lang:js`           | Scaffold screen files as `.jsx` / flowplan files as `.js` instead of `.tsx` / `.ts` |
-| `--agent:claude`      | Write agent memory to `CLAUDE.md`                                                   |
-| `--agent:agents`      | Write agent memory to `AGENTS.md` (cross-tool, default)                             |
-| `--agent:cursor`      | Write agent memory to `.cursor/rules/flowkit.mdc`                                   |
-| `--agent:none`        | `.agent/` docs only — no memory file                                                |
 
 Kits are applied via the `@flowkit-kit` CSS alias — no files are copied into the workspace. The selected kit is stored in `src/workspaces.ts` and applied as a `data-kit` attribute on the preview canvas at runtime.
 
@@ -907,7 +905,7 @@ Every workspace ships an **agent-ready** file set so a coding agent can start bu
 
 **Read order for a cold agent:**
 
-1. **memory file** (`CLAUDE.md` / `AGENTS.md` / `.cursor/rules/flowkit.mdc`) — auto-ingested; identity, read-order, hardest directives
+1. **`AGENTS.md`** — auto-ingested by most coding-agent tools; identity, read-order, hardest directives. One agent-agnostic file — there is no per-tool choice (`CLAUDE.md`/`.cursor/rules` targets were removed; a workspace scaffolded before this change may still have a leftover `CLAUDE.md` on disk from the old system, but new/resynced workspaces only ever get `AGENTS.md`)
 2. **`.agent/INDEX.md`** — the map: `Task → Action → Detail`
 3. **`.agent/rules.md`** — full directive set (`NEVER` / `ALWAYS` / `TO <task> → <action>`)
 4. **`.agent/platform.md`** — terse platform reference, rows pointing to `Documentation/*.md`
@@ -916,12 +914,11 @@ Every workspace ships an **agent-ready** file set so a coding agent can start bu
 ### `agent:sync` — Regenerate from the spec
 
 ```bash
-flowkit agent:sync                       # active workspace, keep current agent
+flowkit agent:sync                       # active workspace
 flowkit agent:sync:<name>                # specific workspace
-flowkit agent:sync --agent:cursor        # switch agent (removes old memory file)
 ```
 
-Re-emits `.agent/INDEX.md`, `rules.md`, `platform.md`, and the memory file. Never touches `project.md`. Run after platform changes.
+Re-emits `.agent/INDEX.md`, `rules.md`, `platform.md`, and `AGENTS.md`. Never touches `project.md`. Run after platform changes.
 
 ---
 

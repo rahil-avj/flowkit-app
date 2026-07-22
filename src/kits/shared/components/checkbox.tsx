@@ -2,18 +2,17 @@ import { cn } from '@flowkit-kit/lib/utils'
 import { Check } from 'lucide-react'
 import * as React from 'react'
 
-export interface CheckboxProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onChange' | 'defaultValue'> {
+export interface CheckboxProps extends Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  'onChange' | 'defaultValue'
+> {
   checked?: boolean
   defaultChecked?: boolean
   onCheckedChange?: (checked: boolean) => void
 }
 
 const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
-  (
-    { className, checked, defaultChecked, onCheckedChange, disabled, onClick, ...props },
-    ref
-  ) => {
+  ({ className, checked, defaultChecked, onCheckedChange, disabled, onClick, ...props }, ref) => {
     const [uncontrolled, setUncontrolled] = React.useState(defaultChecked ?? false)
     const isControlled = checked !== undefined
     const isChecked = isControlled ? checked : uncontrolled

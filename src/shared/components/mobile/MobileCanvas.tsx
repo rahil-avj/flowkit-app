@@ -203,7 +203,7 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
   const actionCtx = useMemo<ActionCtx>(
     () => ({
       navigateTo,
-      setActiveTab: () => { },
+      setActiveTab: () => {},
       setIsOpen: open => {
         if (!open) closeSheet()
       },
@@ -211,8 +211,8 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       toggleOrientation,
       resetToFirst,
       resetDb,
-      openGoTo: () => { },
-      openHelp: () => { },
+      openGoTo: () => {},
+      openHelp: () => {},
       openSettings: () => {
         setActiveTab('settings')
       },
@@ -221,8 +221,8 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       openFeedbackTab: () => {
         setActiveTab('feedback')
       },
-      openExportModal: () => { },
-      openImportModal: () => { },
+      openExportModal: () => {},
+      openImportModal: () => {},
       toggleAutoHideScrollbars,
       autoHideScrollbars,
       showSessionsFeature,
@@ -230,7 +230,7 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       autoRecordOnPlay,
       toggleAutoRecordOnPlay,
       flowLensAvailable: false,
-      enterFlowLens: () => { },
+      enterFlowLens: () => {},
     }),
     [
       navigateTo,

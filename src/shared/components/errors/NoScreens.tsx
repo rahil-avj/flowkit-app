@@ -32,8 +32,14 @@ export default function NoScreens({ workspaceName, onAction }: NoScreensProps) {
             <code className="rounded bg-theme-elevated px-1 py-0.5 font-mono text-ui-xs text-theme-text-secondary">
               workspace.ts
             </code>
-            's <code className="rounded bg-theme-elevated px-1 py-0.5 font-mono text-ui-xs text-theme-text-secondary">flows</code> /{' '}
-            <code className="rounded bg-theme-elevated px-1 py-0.5 font-mono text-ui-xs text-theme-text-secondary">screenOrder</code>{' '}
+            's{' '}
+            <code className="rounded bg-theme-elevated px-1 py-0.5 font-mono text-ui-xs text-theme-text-secondary">
+              flows
+            </code>{' '}
+            /{' '}
+            <code className="rounded bg-theme-elevated px-1 py-0.5 font-mono text-ui-xs text-theme-text-secondary">
+              screenOrder
+            </code>{' '}
             entries, or add a screen with{' '}
             <code className="rounded bg-theme-elevated px-1 py-0.5 font-mono text-ui-xs text-theme-text-secondary">
               flowkit create:screen

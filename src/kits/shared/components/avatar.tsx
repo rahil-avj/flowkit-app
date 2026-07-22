@@ -33,34 +33,33 @@ const Avatar = React.forwardRef<HTMLSpanElement, React.HTMLAttributes<HTMLSpanEl
 )
 Avatar.displayName = 'Avatar'
 
-const AvatarImage = React.forwardRef<
-  HTMLImageElement,
-  React.ImgHTMLAttributes<HTMLImageElement>
->(({ className, onLoad, onError, ...props }, ref) => {
-  const { status, setStatus } = useAvatarContext()
+const AvatarImage = React.forwardRef<HTMLImageElement, React.ImgHTMLAttributes<HTMLImageElement>>(
+  ({ className, onLoad, onError, ...props }, ref) => {
+    const { status, setStatus } = useAvatarContext()
 
-  React.useEffect(() => {
-    setStatus('loading')
-  }, [props.src, setStatus])
+    React.useEffect(() => {
+      setStatus('loading')
+    }, [props.src, setStatus])
 
-  if (status === 'error') return null
+    if (status === 'error') return null
 
-  return (
-    <img
-      ref={ref}
-      className={cn('aspect-square size-full', className)}
-      onLoad={e => {
-        setStatus('loaded')
-        onLoad?.(e)
-      }}
-      onError={e => {
-        setStatus('error')
-        onError?.(e)
-      }}
-      {...props}
-    />
-  )
-})
+    return (
+      <img
+        ref={ref}
+        className={cn('aspect-square size-full', className)}
+        onLoad={e => {
+          setStatus('loaded')
+          onLoad?.(e)
+        }}
+        onError={e => {
+          setStatus('error')
+          onError?.(e)
+        }}
+        {...props}
+      />
+    )
+  }
+)
 AvatarImage.displayName = 'AvatarImage'
 
 const AvatarFallback = React.forwardRef<HTMLSpanElement, React.HTMLAttributes<HTMLSpanElement>>(
@@ -70,7 +69,10 @@ const AvatarFallback = React.forwardRef<HTMLSpanElement, React.HTMLAttributes<HT
     return (
       <span
         ref={ref}
-        className={cn('flex items-center justify-center rounded-full bg-muted size-full', className)}
+        className={cn(
+          'flex items-center justify-center rounded-full bg-muted size-full',
+          className
+        )}
         {...props}
       />
     )

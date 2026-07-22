@@ -19,7 +19,7 @@ import { WORKSPACE_CONFIG_FILENAME } from '../helpers/config-filenames.js'
 
 const WS_ONE = 'twsone'
 const WS_TWO = 'twstwo'
-const NW_FLAGS = ['--lang:ts', '--agent:agents', '--kit:none']
+const NW_FLAGS = ['--lang:ts', '--kit:none']
 
 async function createWorkspace(name) {
   const result = await spawnCLI([`-nw:${name}`, ...NW_FLAGS])
