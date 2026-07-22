@@ -36,44 +36,54 @@ Rather than hand-editing 3 `package.json` files + 2 scaffolder `index.js` files 
 **New file:** `scripts/dev/scope-toggle.js` (Node ESM, run directly via `node scripts/dev/scope-toggle.js <scope> <on|off>`)
 
 Two subcommands:
+
 - `node scripts/dev/scope-toggle.js @rahil316 on` — applies scoped names everywhere
 - `node scripts/dev/scope-toggle.js @rahil316 off` — reverts to unscoped (also serves as the "back to real" step before the actual unscoped publish)
 
 ### Exact edits the script performs (all confirmed by direct file reads, not assumed)
 
 **1. `package.json` (repo root, the `flowkit` package)** — line 2, plus the version field
+
 ```
 "name": "flowkit"              →  "name": "@rahil316/flowkit"
 "version": "0.0.1-beta.0"      →  "version": "0.0.0-canary.<n>"
 ```
+
 No `bin` field to touch here (flowkit itself has no CLI bin exposed under a scope-sensitive name — its `bin.flowkit` entry maps to `scripts/flowkit.js`; npm scoping does not require changing bin key names, only the package `name` field. Confirmed via `bin` inspection — scoped packages' bin commands still install under the unscoped bin key npm derives, no edit needed).
 
 **2. `packages/create-flowkit-app/package.json`** — line 2, plus version field
+
 ```
 "name": "create-flowkit-app"       →  "name": "@rahil316/create-flowkit-app"
 "version": "0.0.1-beta.0"          →  "version": "0.0.0-canary.<n>"
 ```
+
 `bin.create-flowkit-app` (line 21-23) — **left unchanged**. npm scoping only affects the package name field; the `bin` map keys are independent and npm doesn't require them to match the scope.
 
 **3. `packages/create-flowkit-workspace/package.json`** — line 2 + version field, same treatment as above → `@rahil316/create-flowkit-workspace` at `0.0.0-canary.<n>`.
 
 **4. `packages/create-flowkit-app/index.js`** — line 132
+
 ```js
 const FLOWKIT_PUBLISHED_RANGE = '0.0.1-beta.0'
 ```
+
 →
+
 ```js
 const FLOWKIT_PUBLISHED_RANGE = 'npm:@rahil316/flowkit@0.0.0-canary.<n>'
 ```
-This is npm's dependency-aliasing syntax: it lets a `package.json` declare `"flowkit": "npm:@rahil316/flowkit@0.0.0-canary.<n>"`, which installs the scoped package under the *unscoped* local name `flowkit` in `node_modules`. This is the key trick that avoids having to rewrite every generated import statement to say `@rahil316/flowkit` — the generated code can keep importing from `'flowkit'` and it'll resolve correctly, because npm's alias makes the scoped package answer to the unscoped name inside `node_modules`. `<n>` here must be the exact same value published in step 1 for this specific publish run — the toggle script computes `n` once per `on` invocation and reuses it across all 5 edits, never recomputing mid-run.
+
+This is npm's dependency-aliasing syntax: it lets a `package.json` declare `"flowkit": "npm:@rahil316/flowkit@0.0.0-canary.<n>"`, which installs the scoped package under the _unscoped_ local name `flowkit` in `node_modules`. This is the key trick that avoids having to rewrite every generated import statement to say `@rahil316/flowkit` — the generated code can keep importing from `'flowkit'` and it'll resolve correctly, because npm's alias makes the scoped package answer to the unscoped name inside `node_modules`. `<n>` here must be the exact same value published in step 1 for this specific publish run — the toggle script computes `n` once per `on` invocation and reuses it across all 5 edits, never recomputing mid-run.
 
 **5. `packages/create-flowkit-workspace/index.js`** — line 142, identical treatment to #4.
 
 ### Version-pinning hazard (caught before execution, still relevant under the canary scheme)
 
-Because `@rahil316/*` stays published permanently as an ongoing canary channel, the version pinned into `FLOWKIT_PUBLISHED_RANGE` is **not disposable test scaffolding — it becomes permanent, load-bearing state**, the same way the real `FLOWKIT_PUBLISHED_RANGE` already is for the unscoped release (per the existing code comment: "Bump this alongside flowkit's own package.json version when cutting a release"). The shared incrementing counter (`scripts/dev/.canary-version.json`) fixes the *collision* half of this problem — every publish now gets a genuinely distinct, traceable version, so `npm view @rahil316/flowkit versions` becomes a real, readable history instead of the same string republished forever. It does **not** fix the *staleness* half: `@rahil316/create-flowkit-app@0.0.0-canary.3`, once published, is a frozen artifact whose `FLOWKIT_PUBLISHED_RANGE` is hard-pinned to whatever `@rahil316/flowkit` canary number was current at that moment. If `@rahil316/flowkit` alone is ever republished later (e.g. testing a library fix without touching the scaffolders), the scaffolder still on the shelf keeps installing the older pinned library version until it too is republished.
+Because `@rahil316/*` stays published permanently as an ongoing canary channel, the version pinned into `FLOWKIT_PUBLISHED_RANGE` is **not disposable test scaffolding — it becomes permanent, load-bearing state**, the same way the real `FLOWKIT_PUBLISHED_RANGE` already is for the unscoped release (per the existing code comment: "Bump this alongside flowkit's own package.json version when cutting a release"). The shared incrementing counter (`scripts/dev/.canary-version.json`) fixes the _collision_ half of this problem — every publish now gets a genuinely distinct, traceable version, so `npm view @rahil316/flowkit versions` becomes a real, readable history instead of the same string republished forever. It does **not** fix the _staleness_ half: `@rahil316/create-flowkit-app@0.0.0-canary.3`, once published, is a frozen artifact whose `FLOWKIT_PUBLISHED_RANGE` is hard-pinned to whatever `@rahil316/flowkit` canary number was current at that moment. If `@rahil316/flowkit` alone is ever republished later (e.g. testing a library fix without touching the scaffolders), the scaffolder still on the shelf keeps installing the older pinned library version until it too is republished.
 
 **Handling this correctly:**
+
 - Because all three packages share **one counter** (not independent per-package counters), the common case — republishing all three together for a fresh end-to-end rehearsal — automatically keeps them in lockstep: a new `on` run computes one fresh `n`, stamps all three at `0.0.0-canary.<n>`, and the pin is always exactly correct for that batch.
 - The hazard only materializes if someone republishes **one** of the three in isolation (e.g. `@rahil316/flowkit` alone, skipping the scaffolders) — the toggle script's `on` output prints an explicit warning covering this so it's never silently forgotten (see script implementation notes below).
 - This mirrors the real, unscoped release's existing discipline exactly (same comment already in the code) — the canary channel doesn't need a different or lesser standard, just the same one applied consistently.
@@ -83,6 +93,7 @@ Because `@rahil316/*` stays published permanently as an ongoing canary channel, 
 The alternative approach considered was rewriting all 9 generated `from 'flowkit'` strings (8 in `scripts/helpers/workspace-template.js` + 1 fallback in `scripts/authoring-support/config-patch.js`) to say `from '@rahil316/flowkit'` during the rehearsal. Rejected in favor of `npm:@scope/name@version` aliasing in `FLOWKIT_PUBLISHED_RANGE` (step 4/5 above) so that **workspace-template.js and config-patch.js never need to change at all** — they keep saying `'flowkit'`, and the alias makes that resolve correctly to the scoped package under the hood. This is strictly fewer moving parts than rewriting 9 separate generated-string call sites and is less error-prone to revert (only 5 files touched instead of 7, and the 2 highest-risk/most-called files — workspace-template.js, config-patch.js — are never touched at all).
 
 **This changes the toggle script's scope to touch exactly 5 files' content, plus one counter file**, not 7:
+
 - `package.json` (root) — `name` + `version`
 - `packages/create-flowkit-app/package.json` — `name` + `version`
 - `packages/create-flowkit-workspace/package.json` — `name` + `version`
@@ -102,7 +113,7 @@ The alternative approach considered was rewriting all 9 generated `from 'flowkit
   4. Increment `n` in `.canary-version.json` and write it back immediately — so even if the publish step later fails partway, the counter has already moved past the version that was about to be attempted, and a retry naturally gets a fresh, non-colliding version rather than retrying the same one.
   - Must be idempotent against double-invocation of `on` itself (running `on` twice in a row without an intervening `off` should not double-prefix `@rahil316/@rahil316/flowkit` or bump `n` twice for the same working state) — guard by checking if `name` already contains `@rahil316/` before treating the repo as "currently unscoped."
 - `off` mode: replace scoped `name` → real unscoped name in all 3 package.json files; replace `version` back to the real release version (read from a stored "original version" — see below); restore `FLOWKIT_PUBLISHED_RANGE` in both scaffolders to the plain unscoped value. Does **not** touch `.canary-version.json` — that counter only ever moves forward, on `on`.
-- Because `off` needs to know what the *real* version/`FLOWKIT_PUBLISHED_RANGE` values were before `on` overwrote them, `on` must stash them first — simplest approach: `on` writes a small `scripts/dev/.pre-canary-snapshot.json` (gitignored, purely transient) capturing the 5 original strings before editing; `off` reads that snapshot to restore exactly, then deletes the snapshot file. This avoids hardcoding the real version string into the toggle script itself (which would silently go stale the next time the real `package.json` version is bumped).
+- Because `off` needs to know what the _real_ version/`FLOWKIT_PUBLISHED_RANGE` values were before `on` overwrote them, `on` must stash them first — simplest approach: `on` writes a small `scripts/dev/.pre-canary-snapshot.json` (gitignored, purely transient) capturing the 5 original strings before editing; `off` reads that snapshot to restore exactly, then deletes the snapshot file. This avoids hardcoding the real version string into the toggle script itself (which would silently go stale the next time the real `package.json` version is bumped).
 - After either run, print a `git diff --stat` so the user can see exactly what changed before publishing or committing.
 - `on` mode must print an explicit warning after the diff: `⚠ Published as @rahil316/*@0.0.0-canary.<n>. FLOWKIT_PUBLISHED_RANGE in both scaffolders is pinned to this exact canary number. If @rahil316/flowkit is ever republished alone (a newer canary number) without republishing both scaffolders to match, every future 'npm create @rahil316/...' will keep installing the older pinned library version.` This is the one thing that makes the permanent-canary-channel decision safe to act on later without re-deriving this reasoning from scratch.
 - No dependency on external libs — plain `fs.readFileSync`/`writeFileSync`, matches the repo's existing style in `scripts/helpers/json.js`.

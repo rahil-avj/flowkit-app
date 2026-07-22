@@ -149,12 +149,13 @@ export function directives(ctx) {
         },
         {
           kind: 'never',
-          text: 'write a hand-rolled dot-path walker against `db` — `useDb()`\'s `set`/`remove`/`update` reject `__proto__`/`prototype`/`constructor` paths; a raw `updateDb(fn)` mutation callback does not',
+          text: "write a hand-rolled dot-path walker against `db` — `useDb()`'s `set`/`remove`/`update` reject `__proto__`/`prototype`/`constructor` paths; a raw `updateDb(fn)` mutation callback does not",
         },
         {
           kind: 'to',
           task: 'mutate data',
-          action: "`useDb().set('auth.isLoggedIn', true)` (or `useDb().update('cart.count', n => n + 1)`)",
+          action:
+            "`useDb().set('auth.isLoggedIn', true)` (or `useDb().update('cart.count', n => n + 1)`)",
         },
       ],
     },

@@ -2,12 +2,12 @@
 
 > A literal, step-by-step execution plan. Every task names the **exact file and line**, shows the **before/after code** to copy, and ends with a **verification checklist**. Work top to bottom. You do not need to understand the whole codebase — only the file in front of you.
 
-|                  |                                                   |
-| ---------------- | ------------------------------------------------- |
+|                  |                                                                          |
+| ---------------- | ------------------------------------------------------------------------ |
 | **Tasks**        | 6 (1 ship-blocker · 2 fast-follow · 2 hardening · 1 resolved-as-wontfix) |
-| **Total effort** | ~1.5 days                                         |
-| **Branch**       | `fix/pre-launch-audit`                            |
-| **Prereq**       | `npm install` done · `npm run dev` works          |
+| **Total effort** | ~1.5 days                                                                |
+| **Branch**       | `fix/pre-launch-audit`                                                   |
+| **Prereq**       | `npm install` done · `npm run dev` works                                 |
 
 > [!IMPORTANT]
 > **Before you touch anything.** FlowKit is a browser-only prototyping tool — there is no server, database, or deployed production. "Shipping" means publishing a new build / standalone HTML export. So none of these fixes require migrations, downtime, or coordination.
@@ -22,18 +22,18 @@
 
 ## Order of work
 
-| #   | Task                                                                                                                      | Severity | Phase            |
-| --- | ------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------- |
-| 1   | [Block JSONBin master keys from the build & export](#task-1--block-jsonbin-master-keys-from-the-build--export)            | ⚪ Resolved as wontfix | — |
-| 2   | [Index the IndexedDB snapshot queries](#task-2--index-the-indexeddb-snapshot-queries)                                     | 🟡 High  | A — ship-blocker |
-| 3   | [Make the coverage gate tell the truth](#task-3--make-the-coverage-gate-tell-the-truth)                                   | 🟡 High  | B — fast-follow  |
-| 4   | [Add a Playwright smoke suite (or drop the dep)](#task-4--add-a-playwright-smoke-suite-or-drop-the-dep)                   | 🟡 High  | B — fast-follow  |
-| 5   | [Guard the dot-path writers against prototype pollution](#task-5--guard-the-dot-path-writers-against-prototype-pollution) | 🔵 Low   | C — hardening    |
-| 6   | [Validate imported screenshot URIs](#task-6--validate-imported-screenshot-uris)                                           | 🔵 Low   | C — hardening    |
-| 7   | [Fix stale `recState` closure in `logEvent`](#task-7--fix-stale-recstate-closure-in-logevent)                             | 🟡 High  | D — flowTracer   |
-| 8   | [Cancel pending `recentFlushRef` in `resetLiveState`](#task-8--cancel-pending-recentflushref-in-resetlivestate)           | 🟡 High  | D — flowTracer   |
-| 9   | [Pass tags/testMode through `startRecording`](#task-9--pass-tagstestmode-through-startrecording)                         | 🟡 High  | D — flowTracer   |
-| 10  | [De-duplicate remarks rendering in `SessionInspect`](#task-10--de-duplicate-remarks-rendering-in-sessioninspect)          | 🟡 High  | D — flowTracer   |
+| #   | Task                                                                                                                      | Severity               | Phase            |
+| --- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ---------------- |
+| 1   | [Block JSONBin master keys from the build & export](#task-1--block-jsonbin-master-keys-from-the-build--export)            | ⚪ Resolved as wontfix | —                |
+| 2   | [Index the IndexedDB snapshot queries](#task-2--index-the-indexeddb-snapshot-queries)                                     | 🟡 High                | A — ship-blocker |
+| 3   | [Make the coverage gate tell the truth](#task-3--make-the-coverage-gate-tell-the-truth)                                   | 🟡 High                | B — fast-follow  |
+| 4   | [Add a Playwright smoke suite (or drop the dep)](#task-4--add-a-playwright-smoke-suite-or-drop-the-dep)                   | 🟡 High                | B — fast-follow  |
+| 5   | [Guard the dot-path writers against prototype pollution](#task-5--guard-the-dot-path-writers-against-prototype-pollution) | 🔵 Low                 | C — hardening    |
+| 6   | [Validate imported screenshot URIs](#task-6--validate-imported-screenshot-uris)                                           | 🔵 Low                 | C — hardening    |
+| 7   | [Fix stale `recState` closure in `logEvent`](#task-7--fix-stale-recstate-closure-in-logevent)                             | 🟡 High                | D — flowTracer   |
+| 8   | [Cancel pending `recentFlushRef` in `resetLiveState`](#task-8--cancel-pending-recentflushref-in-resetlivestate)           | 🟡 High                | D — flowTracer   |
+| 9   | [Pass tags/testMode through `startRecording`](#task-9--pass-tagstestmode-through-startrecording)                          | 🟡 High                | D — flowTracer   |
+| 10  | [De-duplicate remarks rendering in `SessionInspect`](#task-10--de-duplicate-remarks-rendering-in-sessioninspect)          | 🟡 High                | D — flowTracer   |
 
 > Task 2 (above, Phase A) already covers the `getSnapshots`/`deleteSession` full-scan bug — it was also flagged independently in the flowTracer review folded in here. Not duplicated as a separate task.
 
@@ -49,12 +49,12 @@ Task 2 only — Task 1 was resolved as wontfix (see below). Small, ~35 min of ed
 
 > **RESOLVED — wontfix.** Product decision: no client-side master-key rejection. `assertNotMasterKey()` (the runtime guard this task described adding, later implemented in `src/features/feedback/cloud-sync/jsonbin.ts`) has been **removed outright**, not hardened — the codebase now performs no master-vs-scoped-key distinction at all before sending `X-Access-Key`. Users are solely responsible for supplying a scoped Access Key. `inline.js`'s build-time warning/hard-fail (Step 2 below) was never implemented and is not planned. Do not re-open this task without a fresh product decision — see `src/features/feedback/cloud-sync/jsonbin.ts` for current behavior.
 
-|                     |                                                                   |
-| ------------------- | ----------------------------------------------------------------- |
-| **Severity**        | ~~🟡 High · Security~~ — N/A, wontfix                             |
-| **Files**           | `src/features/feedback/cloud-sync/jsonbin.ts` (not `FeedbackContext.tsx` — file moved/refactored since this task was written) |
-| **Effort**          | N/A                                                                |
-| **Risk accepted**   | A leaked JSONBin master key pasted into this app's cloud-sync UI grants full account access, not just scoped-bin access. Accepted as a client-only-prototyping-tool risk the user must manage themselves. |
+|                   |                                                                                                                                                                                                           |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Severity**      | ~~🟡 High · Security~~ — N/A, wontfix                                                                                                                                                                     |
+| **Files**         | `src/features/feedback/cloud-sync/jsonbin.ts` (not `FeedbackContext.tsx` — file moved/refactored since this task was written)                                                                             |
+| **Effort**        | N/A                                                                                                                                                                                                       |
+| **Risk accepted** | A leaked JSONBin master key pasted into this app's cloud-sync UI grants full account access, not just scoped-bin access. Accepted as a client-only-prototyping-tool risk the user must manage themselves. |
 
 ### Why this was originally proposed (kept for context, no longer acted on)
 
@@ -238,11 +238,11 @@ coverage: {
 
 > **RESOLVED — drop path taken.** `playwright` has been removed from `package.json`'s devDependencies. There is still **zero** end-to-end/component test coverage — that gap is unaddressed, only the stale-dependency half of this task is closed. Re-open this task (adopt path, steps below) if E2E coverage becomes a priority; the steps are unaffected by the dep removal since they start from a fresh `npm i -D @playwright/test`.
 
-|              |                                 |
-| ------------ | ------------------------------- |
-| **Severity** | 🟡 High · Testing               |
-| **Files**    | `playwright.config.ts` · `e2e/` |
-| **Effort**   | Medium (~4–6 hrs)               |
+|              |                                           |
+| ------------ | ----------------------------------------- |
+| **Severity** | 🟡 High · Testing                         |
+| **Files**    | `playwright.config.ts` · `e2e/`           |
+| **Effort**   | Medium (~4–6 hrs)                         |
 | **Decision** | Adopt (recommended) or drop — **dropped** |
 
 ### Why
@@ -447,11 +447,11 @@ Tasks 7–10. Scope: `src/features/flowTracer/` — the session recorder. None o
 
 ## Task 7 — Fix stale `recState` closure in `logEvent`
 
-|              |                                        |
-| ------------ | -------------------------------------- |
-| **Severity** | 🟡 High · Logic bug                    |
+|              |                                             |
+| ------------ | ------------------------------------------- |
+| **Severity** | 🟡 High · Logic bug                         |
 | **File**     | `src/features/flowTracer/context/index.tsx` |
-| **Lines**    | 219–223                                |
+| **Lines**    | 219–223                                     |
 
 ### Why
 
@@ -471,11 +471,11 @@ Track pause/recording state via a ref kept in sync with a `useEffect`, and read 
 
 ## Task 8 — Cancel pending `recentFlushRef` in `resetLiveState`
 
-|              |                                        |
-| ------------ | -------------------------------------- |
-| **Severity** | 🟡 High · Logic bug                    |
+|              |                                             |
+| ------------ | ------------------------------------------- |
+| **Severity** | 🟡 High · Logic bug                         |
 | **File**     | `src/features/flowTracer/context/index.tsx` |
-| **Lines**    | 301–307                                |
+| **Lines**    | 301–307                                     |
 
 ### Why
 
@@ -495,11 +495,11 @@ Track pause/recording state via a ref kept in sync with a `useEffect`, and read 
 
 ## Task 9 — Pass tags/testMode through `startRecording`
 
-|              |                       |
-| ------------ | --------------------- |
-| **Severity** | 🟡 High · Logic bug    |
+|              |                                                |
+| ------------ | ---------------------------------------------- |
+| **Severity** | 🟡 High · Logic bug                            |
 | **File**     | `src/features/flowTracer/components/panel.tsx` |
-| **Lines**    | 231                    |
+| **Lines**    | 231                                            |
 
 ### Why
 
@@ -519,11 +519,11 @@ Thread the settings-panel `tags` and `testMode` values through to the `startReco
 
 ## Task 10 — De-duplicate remarks rendering in `SessionInspect`
 
-|              |                                  |
-| ------------ | -------------------------------- |
-| **Severity** | 🟡 High · Logic bug               |
+|              |                                                         |
+| ------------ | ------------------------------------------------------- |
+| **Severity** | 🟡 High · Logic bug                                     |
 | **File**     | `src/features/flowTracer/components/SessionInspect.tsx` |
-| **Lines**    | 265–289                          |
+| **Lines**    | 265–289                                                 |
 
 ### Why
 
@@ -545,13 +545,13 @@ Pick one source of truth — prefer the timestamped `events` list — and stop r
 
 ### Suggested schedule
 
-| When         | Tasks    | Gate before moving on                                                                         |
-| ------------ | -------- | --------------------------------------------------------------------------------------------- |
-| Day 1 AM     | 2        | Committed; `npm run build` + `build:standalone` green; manual record/replay/delete works       |
-| Day 1 PM     | 5 · 6    | New pollution + screenshot tests pass; lint clean                                             |
-| → **Launch** | —        | Tasks 2, 5, 6 merged to main (Task 1 resolved as wontfix). **This clears the ship-blockers.**   |
-| Week 1       | 3 · 4    | Coverage gate honest; first Playwright smoke test green in CI                                 |
-| Week 1–2     | 7 · 8 · 9 · 10 | flowTracer logic bugs closed — not ship-blocking, but real correctness bugs in the recorder |
+| When         | Tasks          | Gate before moving on                                                                         |
+| ------------ | -------------- | --------------------------------------------------------------------------------------------- |
+| Day 1 AM     | 2              | Committed; `npm run build` + `build:standalone` green; manual record/replay/delete works      |
+| Day 1 PM     | 5 · 6          | New pollution + screenshot tests pass; lint clean                                             |
+| → **Launch** | —              | Tasks 2, 5, 6 merged to main (Task 1 resolved as wontfix). **This clears the ship-blockers.** |
+| Week 1       | 3 · 4          | Coverage gate honest; first Playwright smoke test green in CI                                 |
+| Week 1–2     | 7 · 8 · 9 · 10 | flowTracer logic bugs closed — not ship-blocking, but real correctness bugs in the recorder   |
 
 ### Definition of done for the whole runbook
 

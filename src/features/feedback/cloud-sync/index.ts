@@ -9,7 +9,7 @@
 //      context fields (context/index.tsx, panel.tsx, Settings.tsx, appActions.ts,
 //      ActionCenter.tsx, PreviewCanvas.tsx, MobileCanvas.tsx) — fix each flagged
 //      spot by deleting the reference. No other manual hunting required.
-export { CloudExportControls, CloudExportStatusHint,CloudKeyStepModal } from './CloudExportStep'
+export { CloudExportControls, CloudExportStatusHint, CloudKeyStepModal } from './CloudExportStep'
 export { CloudImportTab } from './CloudImportTab'
 export { buildCloudSyncSlot, type CloudSyncSlot } from './registerCloudSync'
 export { useCloudSync, type UseCloudSyncResult } from './useCloudSync'

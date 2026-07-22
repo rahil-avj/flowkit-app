@@ -14,7 +14,12 @@ export default function WorkspaceSimulatorControls() {
       </ControlAccordion>
 
       <ControlAccordion label="Data">
-        <SimAction label="Reset Database" icon="Trash2" badgeColor="red" onClick={ctx => ctx.resetDb()} />
+        <SimAction
+          label="Reset Database"
+          icon="Trash2"
+          badgeColor="red"
+          onClick={ctx => ctx.resetDb()}
+        />
       </ControlAccordion>
     </>
   )

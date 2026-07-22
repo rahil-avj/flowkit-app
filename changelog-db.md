@@ -11,13 +11,13 @@ name matching `*Path*`/`*Nested*`/`*DotPath*`) found **five separate implementat
 "walk/write a dot-path against `db`," each with different — and in two cases actively
 broken — safety behavior:
 
-| # | Location | Guard against `__proto__`/`constructor`/`prototype`? | Missing intermediate? |
-|---|---|---|---|
-| 1 | `applyDotPathPatch.ts`'s `setAtPath` | Yes (shared `UNSAFE_KEYS`) | Auto-creates |
-| 2 | `simulator/controls/helpers.ts`'s `getNestedValue`/`updateNestedDbValue` | Yes (own separate copy) | Auto-creates |
-| 3 | `SimArrayEditor.tsx`'s inline array walkers | **No** | **Throws (`TypeError`)** |
-| 4 | `flow-debugger/dbInspectorHelpers.ts`'s `setAtPath` (same name, different function — actually used by `DbInspector.tsx`) | **No** | **Silently no-ops — no error, no warning, the write just vanishes** |
-| 5 | `flowplan/compileFlowplan.ts`'s `readDotPath` (read-only, `Fork.db` condition matching) | n/a (read-only) | Returns `undefined` |
+| #   | Location                                                                                                                 | Guard against `__proto__`/`constructor`/`prototype`? | Missing intermediate?                                               |
+| --- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- | ------------------------------------------------------------------- |
+| 1   | `applyDotPathPatch.ts`'s `setAtPath`                                                                                     | Yes (shared `UNSAFE_KEYS`)                           | Auto-creates                                                        |
+| 2   | `simulator/controls/helpers.ts`'s `getNestedValue`/`updateNestedDbValue`                                                 | Yes (own separate copy)                              | Auto-creates                                                        |
+| 3   | `SimArrayEditor.tsx`'s inline array walkers                                                                              | **No**                                               | **Throws (`TypeError`)**                                            |
+| 4   | `flow-debugger/dbInspectorHelpers.ts`'s `setAtPath` (same name, different function — actually used by `DbInspector.tsx`) | **No**                                               | **Silently no-ops — no error, no warning, the write just vanishes** |
+| 5   | `flowplan/compileFlowplan.ts`'s `readDotPath` (read-only, `Fork.db` condition matching)                                  | n/a (read-only)                                      | Returns `undefined`                                                 |
 
 Any screen or platform code calling `useDashboard()`'s raw `updateDb(fn)` directly — the
 form shown in the type-doc JSDoc examples — also inherits zero validation, zero try/catch,

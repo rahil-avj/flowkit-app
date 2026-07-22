@@ -35,14 +35,14 @@ workspace scaffolded before the removal may still have a leftover `CLAUDE.md` on
 untouched by this change, but re-running `agent:sync` on it now produces `AGENTS.md`
 instead.)
 
-| Layer     | File                       | Role                                                                          |
-| --------- | -------------------------- | ------------------------------------------------------------------------------ |
-| Memory    | `AGENTS.md`                | Auto-ingested by most coding-agent tools. Identity, read-order, the hardest directives. |
-| Map       | `.agent/INDEX.md`          | `Task → Action → Detail`. The fast lookup — every task in one hop.           |
-| Rules     | `.agent/rules.md`          | The full directive set (`NEVER` / `ALWAYS` / `TO … → …`).                    |
-| Reference | `.agent/platform.md`       | Terse surface map; each row points to further detail.                        |
-| Product   | `.agent/project.md`        | Hand-owned brief: what the product is. **Never regenerated.**                |
-| State     | `.agent/.agent-meta.json`  | `{ kit, language, specVersion }` written by `agent:sync`.                     |
+| Layer     | File                      | Role                                                                                    |
+| --------- | ------------------------- | --------------------------------------------------------------------------------------- |
+| Memory    | `AGENTS.md`               | Auto-ingested by most coding-agent tools. Identity, read-order, the hardest directives. |
+| Map       | `.agent/INDEX.md`         | `Task → Action → Detail`. The fast lookup — every task in one hop.                      |
+| Rules     | `.agent/rules.md`         | The full directive set (`NEVER` / `ALWAYS` / `TO … → …`).                               |
+| Reference | `.agent/platform.md`      | Terse surface map; each row points to further detail.                                   |
+| Product   | `.agent/project.md`       | Hand-owned brief: what the product is. **Never regenerated.**                           |
+| State     | `.agent/.agent-meta.json` | `{ kit, language, specVersion }` written by `agent:sync`.                               |
 
 > ⚠️ **Within repo mode**, confirmed live 2026-07-10: `.agent/platform.md`'s rows point at
 > `Documentation/*.md` files and `@flowkit`/`@shared` path aliases specific to this

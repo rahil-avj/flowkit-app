@@ -119,7 +119,7 @@ export default defineConfig({
 ### Open questions (not yet resolved)
 
 - Exact default filename template when `export.output.filename` is unset
-  but a profile *was* explicitly requested.
+  but a profile _was_ explicitly requested.
 - Whether `export.output.dir` is relative to the consumer project root
   always, or mode-aware (repo mode vs. consumer mode) like `workspacePath()`.
 - Whether profiles are consumer-mode-only or also usable in repo mode (repo
@@ -259,6 +259,7 @@ profile-picker's choice list to have exactly one entry ("Everything, no
 exclusions").
 
 **New behavior, consumer mode:**
+
 - `flowkit export --profile:<name>` still works as a non-interactive
   shortcut.
 - Plain `flowkit export` (no flag) is **always** a guided, mode-aware
@@ -351,12 +352,12 @@ future task, not attempted here.
 4. **`agent-workflow-plans/*.md` (3 files) were found deleted** in the
    working tree partway through this session, cause unclear (predates this
    session's own actions as far as could be traced) — restored via `git
-   checkout`. Flagging here since this directory is explicitly
+checkout`. Flagging here since this directory is explicitly
    memory-tagged as "not stale, don't archive."
 5. **Scaffolded flat-mode demo screens (`HomeScreen`/`DetailScreen`/
    `SetupScreen`/`ReadyScreen`) fail `tsc --noEmit`** in every fresh
    scaffold — `db?.items ?? []` against `FlowScreenProps`'s `db: Record<string,
-   unknown>` hits a TS quirk where `unknown` narrowed through `??` becomes
+unknown>` hits a TS quirk where `unknown` narrowed through `??` becomes
    `{}`, incompatible with an explicit array type annotation. Repo mode's
    own templates (`scaffold.js`) don't hit this because `useDashboard()`
    types `db` as `Record<string, any>`, not `unknown`. Fixed per user's
@@ -396,5 +397,6 @@ intent).
 **Verification performed:** repo-mode export (single + multi workspace,
 named profile + default), flat-mode consumer export (fresh `--local-dev`
 scaffold), multi-workspace consumer export (single + multi workspace, flag
-+ interactive paths), `npx tsc --noEmit` clean, `npx eslint .` clean, all
-134 vitest tests pass, all 32 CLI integration tests pass.
+
+- interactive paths), `npx tsc --noEmit` clean, `npx eslint .` clean, all
+  134 vitest tests pass, all 32 CLI integration tests pass.

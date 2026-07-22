@@ -158,27 +158,26 @@ const AccordionTrigger = React.forwardRef<
 })
 AccordionTrigger.displayName = 'AccordionTrigger'
 
-const AccordionContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, children, ...props }, ref) => {
-  const { value } = useAccordionContext()
-  const itemValue = React.useContext(AccordionItemContext)
-  if (itemValue === null) throw new Error('AccordionContent must be used within <AccordionItem>')
-  const isOpen = value.includes(itemValue)
-  if (!isOpen) return null
+const AccordionContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, children, ...props }, ref) => {
+    const { value } = useAccordionContext()
+    const itemValue = React.useContext(AccordionItemContext)
+    if (itemValue === null) throw new Error('AccordionContent must be used within <AccordionItem>')
+    const isOpen = value.includes(itemValue)
+    if (!isOpen) return null
 
-  return (
-    <div
-      ref={ref}
-      data-state={isOpen ? 'open' : 'closed'}
-      className="overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
-      {...props}
-    >
-      <div className={cn('pb-4 pt-0', className)}>{children}</div>
-    </div>
-  )
-})
+    return (
+      <div
+        ref={ref}
+        data-state={isOpen ? 'open' : 'closed'}
+        className="overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
+        {...props}
+      >
+        <div className={cn('pb-4 pt-0', className)}>{children}</div>
+      </div>
+    )
+  }
+)
 AccordionContent.displayName = 'AccordionContent'
 
 export { Accordion, AccordionContent, AccordionItem, AccordionTrigger }

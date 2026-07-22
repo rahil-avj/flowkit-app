@@ -13,10 +13,10 @@ Three modes, detected by `scripts/helpers/paths.js#isRepoMode()` (checks for `.f
 marker at repo root) and `scripts/helpers/flowkit-manifest.js#isMultiMode()` (reads `package.json`'s
 `flowkit.mode`):
 
-| Mode | Workspace lives at | Create/remove workspace |
-|---|---|---|
-| Repo (this checkout) | `workspaces/<name>/` | `flowkit nw:<name>` / `rw:<name>` (repo-mode only, gated by `requireRepoMode()`) |
-| Flat (consumer, `create-flowkit-app`) | project root itself | N/A — one implicit workspace, is `process.cwd()` |
+| Mode                                         | Workspace lives at                                                  | Create/remove workspace                                                                |
+| -------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Repo (this checkout)                         | `workspaces/<name>/`                                                | `flowkit nw:<name>` / `rw:<name>` (repo-mode only, gated by `requireRepoMode()`)       |
+| Flat (consumer, `create-flowkit-app`)        | project root itself                                                 | N/A — one implicit workspace, is `process.cwd()`                                       |
 | Multi (consumer, `create-flowkit-workspace`) | sibling folder per `package.json`'s `flowkit.workspaces[name].path` | `flowkit create:workspace` / `remove:workspace` / `rename:workspace` (flat/multi-only) |
 
 All other authoring commands (`create:flow`, `create:screen`, `add:step`, etc.) work in every mode —
@@ -39,6 +39,7 @@ flowkit nw:my-app
 ```
 
 Scaffolds (exact file list, `scripts/helpers/scaffold.js`):
+
 ```
 index.ts                                        # barrel, empty by default
 lib/data/db.ts                                   # mock db — named exports become db.* keys
@@ -56,6 +57,7 @@ flows/home-flow/home-screen/HomeScreen.tsx
 flows/home-flow/detail-screen/DetailScreen.tsx
 lib/docs/overview.md
 ```
+
 Also registers the workspace in `src/workspaces.json` and runs `flowkit agent:sync` to generate
 `CLAUDE.md`/`AGENTS.md`/`.cursor/rules/flowkit.mdc` for the new workspace. Has rollback on failure.
 
@@ -70,6 +72,7 @@ screen uses `FlowScreenProps` — the demo ones deliberately don't.
 ```bash
 flowkit create:flow --name:checkout [--workspace:<name>]
 ```
+
 `--name:` required, kebab-case (enforced by `assertKebab`). Creates `flows/<name>/` and registers
 it in `workspace.ts`'s `flows[]` + initializes `screenOrder[name] = []`
 (`scripts/authoring/flows.js`).
@@ -79,6 +82,7 @@ it in `workspace.ts`'s `flows[]` + initializes `screenOrder[name] = []`
 ```bash
 flowkit create:screen --flow:checkout --name:payment-form [--label:"Payment Form"] [--workspace:<name>]
 ```
+
 `--flow:` and `--name:` required (both kebab-case). `--label:` optional, defaults to title-cased
 name. Fails if the flow doesn't exist yet, or the screen id is already taken.
 
@@ -101,6 +105,7 @@ not a convention to preserve.
 ```bash
 flowkit create:flowplan --name:checkout-flow [--workspace:<name>]
 ```
+
 Creates `flowplans/<name>.ts` with an empty `steps: []`. Import line is generated via
 `resolveDefineImport('defineFlow')` — correct for whatever mode you're in (see below).
 
@@ -109,6 +114,7 @@ Creates `flowplans/<name>.ts` with an empty `steps: []`. Import line is generate
 ```bash
 flowkit create:component --name:StatusBadge --path:lib/components/ui [--desc:"..."] [--workspace:<name>]
 ```
+
 `--name:` must be PascalCase (validated). `--path:` is workspace-relative and validated to stay
 inside the workspace (`assertWithinWorkspace`). Writes `<path>/<Name>.{tsx|jsx}`, registers it in
 `.flowkit/components.json` (array of `{name, path, desc, createdAt}`), and auto-appends an export
@@ -122,17 +128,19 @@ line to a barrel `index.ts`/`index.js` in the same directory if one exists.
 flowkit add:step --flowplan:checkout-flow --screen:payment-form \
   [--on:submit-btn] [--action:"User submits payment"] [--position:2] [--workspace:<name>]
 ```
+
 `--flowplan:` and `--screen:` required. `--screen:` is validated against the union of all
 `screenOrder` values — fails with a "did you mean" suggestion if not found. No `--force` flag on
 this command (unlike some others).
 
 **How the mutation actually works** (`scripts/authoring/flowplans.js`):
+
 1. Reads the flowplan file as text, strips the `import` line and the `export default defineFlow(`
    wrapper, and evaluates the remainder with `new Function()` to get the JS object back out.
 2. Splices the new step into the resulting `steps` array (respecting `--position:` if given).
 3. Re-serializes **only** the `steps: [...]` block back into the file via a **non-greedy regex**
    (`/steps:\s*\[[\s\S]*?\]/`) — everything else in the file (imports, `db`, `simulator`, `homeScreen`,
-   comments) is left untouched, but the regex only matches up to the *first* `]`.
+   comments) is left untouched, but the regex only matches up to the _first_ `]`.
 
 **Consequence — do not use `add:step`/`remove:step` on a flowplan that has `forks`.** The step
 formatter (`formatStep()`) only emits `screenId`/`on`/`actionNote`/`decisionNote`/`annotation` — it
@@ -144,11 +152,13 @@ hand-edit it directly or use `promote:flow` to pull the fork out first.
 ```bash
 flowkit remove:step --flowplan:checkout-flow --index:2 [--workspace:<name>]
 ```
+
 0-based index, same regex-rewrite mechanism and same fork caveat.
 
 ## Forks in flowplans
 
 Forks aren't created via CLI — author them directly in the flowplan file:
+
 ```ts
 {
   screenId: 'cart-screen',
@@ -159,6 +169,7 @@ Forks aren't created via CLI — author them directly in the flowplan file:
   ],
 }
 ```
+
 `mergesTo: 'next'` rejoins the parent flow at the step after the fork's entry point; omit it for a
 terminal branch. Forks are recursive (a fork's steps can themselves have forks).
 
@@ -167,6 +178,7 @@ terminal branch. Forks are recursive (a fork's steps can themselves have forks).
 ```bash
 flowkit promote:flow --flowplan:flowplans/checkout-flow.ts --fork:"Payment fails" [--as:payment-fails-flow]
 ```
+
 `--flowplan:` and `--fork:` required; `--as:` optional (defaults to kebab-cased fork label).
 Locates the fork by regex-matching its `label`, then does a **bracket-depth scan** (aware of quotes
 and escapes) to find the true end of that fork's `steps: [...]` array — this is the one place in
@@ -179,9 +191,10 @@ you must manually add at the fork site referencing the new flowplan.
 ```ts
 steps: [
   { screenId: 'welcome' },
-  { ref: 'shared-auth-flow' },   // FlowplanRef — inlines that flowplan's steps here, namespaced
+  { ref: 'shared-auth-flow' }, // FlowplanRef — inlines that flowplan's steps here, namespaced
 ]
 ```
+
 `isFlowplanRef()` type-guards on presence of `ref`. The compiler (`compileFlowplan.ts`) inlines the
 referenced plan's steps at this position when building the runtime `FlowConfig`.
 
@@ -196,12 +209,13 @@ because this was gotten wrong twice before (`create:flowplan` hardcoded `'flowki
 mode; `promote-flow.js` hardcoded `'@flowkit-core/config'`, breaking consumer mode):
 
 ```js
-resolveDefineImport('defineFlow')   // → `import { defineFlow } from '@flowkit-core/config'` (repo)
-                                     // → `import { defineFlow } from 'flowkit'`               (flat/multi)
+resolveDefineImport('defineFlow') // → `import { defineFlow } from '@flowkit-core/config'` (repo)
+// → `import { defineFlow } from 'flowkit'`               (flat/multi)
 resolveTypeImport('FlowScreenProps') // same branch, for type-only imports
 ```
+
 If you ever write a new file-generating authoring command, use these — don't inline the import
-string. (This is distinct from `config-patch.js`'s `writeConfig()`, which round-trips an *existing*
+string. (This is distinct from `config-patch.js`'s `writeConfig()`, which round-trips an _existing_
 file's import line rather than generating one from scratch — different mechanism, same underlying
 mode-awareness requirement.)
 
@@ -219,7 +233,7 @@ mode-awareness requirement.)
 
    A screen may instead call `useDashboard().navigateTo(id)` directly, guarded with
    `onClick={() => !isFlow && navigateTo(id)}`. This works, but the guard must be written by hand on
-   every call site, and forgetting it doesn't throw — it silently *also* fires during flow playback,
+   every call site, and forgetting it doesn't throw — it silently _also_ fires during flow playback,
    pushing onto `DashboardContext`'s view history and desyncing it from `FlowEngine`'s step index.
    `useAppNav()` avoids this by never requiring the guard in the first place. `useAppNav()` does not
    expose `db` — screens that need `db` also call `useDashboard()` alongside it (see the scaffold's
@@ -243,7 +257,7 @@ Pick one convention per screen. `id="submit-btn"` (convention 2) and `onClick={(
 via `useAppNav()` (convention 1) can coexist on the same element without conflict — this is exactly
 what the scaffold's demo buttons do (an `id` for FlowMaster's delegation, plus a `useAppNav()`-backed
 `onClick` for Screens-tab standalone use). What you must never do is combine convention 2's `id` with
-an *unconditional, unguarded* `useDashboard().navigateTo()` call — that double-fires (once via
+an _unconditional, unguarded_ `useDashboard().navigateTo()` call — that double-fires (once via
 React's bubble-phase `onClick`, again via FlowMaster's container-level delegation) and desyncs flow
 state from dashboard nav state.
 
@@ -257,6 +271,7 @@ exhaustive — `SimArrayEditor`/`SimObjectEditor` exist as files but are deliber
 
 Per-workspace controls live in `lib/data/simulator.tsx` (default export, a React component) — see
 the scaffold example:
+
 ```tsx
 import { ControlAccordion, SimAction, SimControl } from '@flowkit-features/simulator/controls'
 
@@ -269,6 +284,7 @@ export default function WorkspaceSimulatorControls() {
   )
 }
 ```
+
 Per-step overrides use `StepSimulatorOverride` (`hide?: string[]`, `exclusive?: SimulatorControl[]`)
 on a `FlowStep`'s `simulator` field — not a CLI-managed concern, author it directly in the flowplan.
 
@@ -279,10 +295,12 @@ on a `FlowStep`'s `simulator` field — not a CLI-managed concern, author it dir
 `FlowStep.db` and `Fork.db` are `DotPathPatch` (`Record<string, unknown>`), applied via
 `applyDotPathPatch(db, patch)` (`src/shared/utils/applyDotPathPatch.ts`) — immutable, dot-path keys
 auto-vivify nested objects, objects deep-merge, arrays and primitives replace wholesale:
+
 ```ts
 applyDotPathPatch({ user: { plan: 'free' } }, { 'user.plan': 'pro' })
 // → { user: { plan: 'pro' } }
 ```
+
 ⚠️ No `__proto__`/`constructor` guard on the setter — don't pass untrusted external input as a patch
 key.
 
@@ -300,6 +318,7 @@ flowkit check:db
 flowkit check:screens:my-workspace   # domain + explicit workspace
 flowkit check --json
 ```
+
 Domains map to `scripts/checks/index.js`'s `DOMAINS` table: `screens`, `config`, `components`, `db`,
 `flowplans`. Exits non-zero if `report.errorCount > 0` — this is what blocks `npm run build`.
 
@@ -307,21 +326,21 @@ Domains map to `scripts/checks/index.js`'s `DOMAINS` table: `screens`, `config`,
 
 # Full flag reference (verified against source, not paraphrased)
 
-| Command | Required flags | Optional flags |
-|---|---|---|
-| `create:flow` | `--name:` | `--workspace:` |
-| `remove:flow` | `--name:` | `--workspace:`, `--force` (if screens exist) |
-| `create:screen` | `--flow:`, `--name:` | `--label:`, `--workspace:` |
-| `remove:screen` | `--flow:`, `--name:` | `--workspace:` |
-| `rename:screen` | `--flow:`, `--name:` (old id), `--to:` (new id) | `--workspace:` |
-| `move:screen` | `--name:`, `--from-flow:`, `--to-flow:` | `--workspace:` |
-| `create:flowplan` | `--name:` | `--workspace:` |
-| `remove:flowplan` | `--name:` | `--workspace:`, `--force` |
-| `add:step` | `--flowplan:`, `--screen:` | `--on:`, `--action:`, `--position:`, `--workspace:` |
-| `remove:step` | `--flowplan:`, `--index:` | `--workspace:` |
-| `create:component` | `--name:`, `--path:` | `--desc:`, `--workspace:` |
-| `promote:flow` | `--flowplan:`, `--fork:` | `--as:`, `--workspace:` |
-| `add:export` | `--barrel:`, `--name:` | `--workspace:` |
+| Command            | Required flags                                  | Optional flags                                      |
+| ------------------ | ----------------------------------------------- | --------------------------------------------------- |
+| `create:flow`      | `--name:`                                       | `--workspace:`                                      |
+| `remove:flow`      | `--name:`                                       | `--workspace:`, `--force` (if screens exist)        |
+| `create:screen`    | `--flow:`, `--name:`                            | `--label:`, `--workspace:`                          |
+| `remove:screen`    | `--flow:`, `--name:`                            | `--workspace:`                                      |
+| `rename:screen`    | `--flow:`, `--name:` (old id), `--to:` (new id) | `--workspace:`                                      |
+| `move:screen`      | `--name:`, `--from-flow:`, `--to-flow:`         | `--workspace:`                                      |
+| `create:flowplan`  | `--name:`                                       | `--workspace:`                                      |
+| `remove:flowplan`  | `--name:`                                       | `--workspace:`, `--force`                           |
+| `add:step`         | `--flowplan:`, `--screen:`                      | `--on:`, `--action:`, `--position:`, `--workspace:` |
+| `remove:step`      | `--flowplan:`, `--index:`                       | `--workspace:`                                      |
+| `create:component` | `--name:`, `--path:`                            | `--desc:`, `--workspace:`                           |
+| `promote:flow`     | `--flowplan:`, `--fork:`                        | `--as:`, `--workspace:`                             |
+| `add:export`       | `--barrel:`, `--name:`                          | `--workspace:`                                      |
 
 Flag syntax is `--name:value` or `--name:"quoted value"` (`scripts/helpers/args.js#parseStringFlag`
 strips only leading/trailing quote characters, not internal escapes).
@@ -336,19 +355,19 @@ interface FlowplanDef {
   name: string
   description?: string
   tags?: string[]
-  db?: Record<string, unknown> | string   // inline baseline OR "db/<preset>.ts" ref (preset loading Phase-1-stubbed)
+  db?: Record<string, unknown> | string // inline baseline OR "db/<preset>.ts" ref (preset loading Phase-1-stubbed)
   simulator?: { controls: SimulatorControl[] }
-  homeScreen?: string                     // device home-button target during this plan's playback
-  steps: FlowplanStepEntry[]              // FlowStep | FlowplanRef
+  homeScreen?: string // device home-button target during this plan's playback
+  steps: FlowplanStepEntry[] // FlowStep | FlowplanRef
 }
 
 interface FlowStep {
   screenId: string
-  on?: string                    // element id whose tap advances; omit = tap-anywhere
+  on?: string // element id whose tap advances; omit = tap-anywhere
   db?: DotPathPatch
-  actionNote?: string             // playback overlay caption
-  decisionNote?: string           // step-list narrative
-  annotation?: string             // canvas sticky note
+  actionNote?: string // playback overlay caption
+  decisionNote?: string // step-list narrative
+  annotation?: string // canvas sticky note
   simulator?: StepSimulatorOverride
   forks?: Fork[]
 }
@@ -357,10 +376,12 @@ interface Fork {
   label: string
   db?: DotPathPatch
   steps: FlowStep[]
-  mergesTo?: 'next'               // omit = terminal branch
+  mergesTo?: 'next' // omit = terminal branch
 }
 
-interface FlowplanRef { ref: string }
+interface FlowplanRef {
+  ref: string
+}
 
 interface FlowScreenProps<TState = Record<string, unknown>, TDb = Record<string, unknown>> {
   onAction?: (actionName: string, payload?: unknown) => void
@@ -371,5 +392,6 @@ interface FlowScreenProps<TState = Record<string, unknown>, TDb = Record<string,
   db?: TDb
 }
 ```
+
 All fields on `FlowScreenProps` are `undefined` when the screen is previewed standalone — check
 `isFlow` to branch, don't assume `onNext` exists.

@@ -18,7 +18,7 @@ to `workspace-template.js` — and it turns out repo mode is strictly more capab
   unconditionally, standalone or in-flow, no flowplan required — true hub-and-spoke free
   navigation, exactly what an arcade needs. No "umbrella flowplan" workaround needed.
 - **`useDb()`** (`@flowkit-shared/utils/useDb`, wrapping `src/shared/contexts/
-  DashboardContext.tsx`'s `updateDb`) is the one `db` API every game screen uses — a real,
+DashboardContext.tsx`'s `updateDb`) is the one `db` API every game screen uses — a real,
   general-purpose, guarded read/write suite. Screens can genuinely persist high
   scores/bankroll to `db`, any time, not gated by flow playback. (This is the one place repo
   mode and consumer mode diverge hard: consumer mode's `defineFlow` steps can only apply
@@ -32,7 +32,7 @@ Flowplans in this phase are exactly what you described: **small, named, optional
 on top of screens that already navigate themselves via `useAppNav()` — never the thing that
 drives navigation. This matches the existing convention already generated into
 `workspaces/game-zone/flows/onboarding-flow/welcome-screen/WelcomeScreen.tsx` (uses
-`useAppNav()`, and its button carries both the flowplan-matching `id="get-started"` *and*
+`useAppNav()`, and its button carries both the flowplan-matching `id="get-started"` _and_
 a real `onClick={() => navigateTo(...)}` — works with or without a flowplan active).
 
 `workspaces/game-zone` is currently an untouched stock scaffold (confirmed: 5 demo screens,
@@ -45,7 +45,7 @@ a real `onClick={() => navigateTo(...)}` — works with or without a flowplan ac
 - **Screen anatomy** (repo mode): default-exported component, no required props (unlike
   consumer mode's `FlowScreenProps`) — reads/writes data via `const db = useDb()`
   (`get`/`set`/`has`/`remove`/`update`/`reset`), navigates via `const { navigateTo } =
-  useAppNav()`. `screenMeta` export: `{ label?, desc?, canEnter?, canNotEnter?, tags?, ... }`
+useAppNav()`. `screenMeta` export: `{ label?, desc?, canEnter?, canNotEnter?, tags?, ... }`
   (`ScreenMeta`, `src/types/index.ts`).
 - **Path aliases** (this workspace's own generated `CLAUDE.md`): `@flowkit/` → `src/`
   (read-only, never edit), `@workspace/` → `workspaces/game-zone/` (this workspace root).
@@ -63,7 +63,7 @@ a real `onClick={() => navigateTo(...)}` — works with or without a flowplan ac
   `WelcomeScreen` template scaffolder output — missing there, but done correctly in this
   workspace's own generated screens, e.g. `id="get-started"`). Every new screen's
   navigation-out elements should carry a real `id` even when built primarily for
-  `useAppNav()`, so they *also* work inside any named flowplan journey for free.
+  `useAppNav()`, so they _also_ work inside any named flowplan journey for free.
 - **`db` mutation — every game screen uses `useDb()`, never raw `updateDb`.**
   `@flowkit-shared/utils/useDb` (built on `dbHelpers.ts`, documented in full in
   `changelog-db.md` at the repo root) is a small, safe, `Map`-like verb suite:
@@ -107,10 +107,18 @@ the existing `bg-theme-*` vocabulary:
   --dice-pip: #1a1a1a;
 
   /* 2048 tile value ramp */
-  --tile-2: #eee4da;   --tile-4: #ede0c8;   --tile-8: #f2b179;
-  --tile-16: #f59563;  --tile-32: #f67c5f;  --tile-64: #f65e3b;
-  --tile-128: #edcf72; --tile-256: #edcc61; --tile-512: #edc850;
-  --tile-1024: #edc53f; --tile-2048: #edc22e; --tile-super: #3c3a32;
+  --tile-2: #eee4da;
+  --tile-4: #ede0c8;
+  --tile-8: #f2b179;
+  --tile-16: #f59563;
+  --tile-32: #f67c5f;
+  --tile-64: #f65e3b;
+  --tile-128: #edcf72;
+  --tile-256: #edcc61;
+  --tile-512: #edc850;
+  --tile-1024: #edc53f;
+  --tile-2048: #edc22e;
+  --tile-super: #3c3a32;
   --tile-text-light: #f9f6f2;
   --tile-text-dark: #776e65;
 
@@ -125,18 +133,18 @@ value) — never a raw hex literal in JSX.
 
 **Shared components** (`lib/components/ui/` unless noted), built once, reused by every game:
 
-| Component | Props (sketch) | Used by |
-|---|---|---|
-| `PrimaryButton` | `id?, onClick?, children, disabled?, variant?: 'default'\|'danger'` | Every CTA (Play, Play Again, Confirm Bet, Back) |
-| `IconButton` | `id?, onClick?, icon, label` | Back buttons, header icons |
-| `SectionHeader` | `title, onBack?, backId?` | Consistent header bar (extracted from the repeated inline markup in the current stock Setup/Home/Detail screens) |
-| `GameCard` | `id, title, icon, blurb, onClick?` | Hub grid — one per game |
-| `Grid<T>` | `items, columns, renderItem, gap?` | Hub grid, Memory grid, 2048 grid, Tic-Tac-Toe grid |
-| `ScoreBadge` | `label, value, tone?` | Bankroll, score, streak displays across all games |
-| `GameOverModal` | `open, title, message, onPlayAgain?, onBackToHub?` | Every game's end-state (in-screen overlay, board stays visible behind it) |
-| `PlayingCard` | `card: {rank, suit}, faceDown?` | Blackjack hands |
-| `HowToPlayList` | `steps: string[]` | Every how-to-play screen |
-| `DifficultyPicker` | `value, onSelect?` | Math Quiz |
+| Component          | Props (sketch)                                                      | Used by                                                                                                          |
+| ------------------ | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `PrimaryButton`    | `id?, onClick?, children, disabled?, variant?: 'default'\|'danger'` | Every CTA (Play, Play Again, Confirm Bet, Back)                                                                  |
+| `IconButton`       | `id?, onClick?, icon, label`                                        | Back buttons, header icons                                                                                       |
+| `SectionHeader`    | `title, onBack?, backId?`                                           | Consistent header bar (extracted from the repeated inline markup in the current stock Setup/Home/Detail screens) |
+| `GameCard`         | `id, title, icon, blurb, onClick?`                                  | Hub grid — one per game                                                                                          |
+| `Grid<T>`          | `items, columns, renderItem, gap?`                                  | Hub grid, Memory grid, 2048 grid, Tic-Tac-Toe grid                                                               |
+| `ScoreBadge`       | `label, value, tone?`                                               | Bankroll, score, streak displays across all games                                                                |
+| `GameOverModal`    | `open, title, message, onPlayAgain?, onBackToHub?`                  | Every game's end-state (in-screen overlay, board stays visible behind it)                                        |
+| `PlayingCard`      | `card: {rank, suit}, faceDown?`                                     | Blackjack hands                                                                                                  |
+| `HowToPlayList`    | `steps: string[]`                                                   | Every how-to-play screen                                                                                         |
+| `DifficultyPicker` | `value, onSelect?`                                                  | Math Quiz                                                                                                        |
 
 **Verification for Phase 0**: a throwaway `/design-check` screen rendering one of every
 component with placeholder data, viewed via `npm run dev` — confirms tokens + components
@@ -347,7 +355,7 @@ instruction to test here first.
 1. **Tic-Tac-Toe**: local 2-player pass-and-play (recommended — simplest to build fully
    correct) vs. an AI opponent. Building 2-player-only for Phase 2 unless you say otherwise.
 2. **Memory Match grid size**: fixed 4×4 for the base build (recommended) vs. a
-   settings-driven size picker. Repo mode *can* support a real settings screen (unlike
+   settings-driven size picker. Repo mode _can_ support a real settings screen (unlike
    consumer mode) since `useDb().set()` is a real write — so this is more open here than it
    will be later; still recommend starting fixed and adding a picker only if it feels thin.
 3. Should `workspaces/game-zone`'s existing empty `.agent/project.md` be filled in with the
@@ -369,6 +377,7 @@ instruction to test here first.
   playing all 6 games end-to-end once.
 
 ### Critical files
+
 - `/Users/mac/Documents/flowkit-app/workspaces/game-zone/` — everything built lives here
 - `/Users/mac/Documents/flowkit-app/src/shared/utils/useAppNav.ts` — navigation primitive
 - `/Users/mac/Documents/flowkit-app/src/shared/utils/useDb.ts` — **the `db` API every game screen should actually use** (`get`/`set`/`has`/`remove`/`update`/`reset`), not raw `updateDb`

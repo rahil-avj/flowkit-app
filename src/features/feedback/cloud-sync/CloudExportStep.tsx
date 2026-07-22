@@ -153,7 +153,12 @@ export function CloudExportControls({
   const { theme } = useTheme()
   return (
     <>
-      <Button size="sm" onClick={onManageKey} disabled={exportStatus === 'uploading'} icon={<KeyRound size={13} />}>
+      <Button
+        size="sm"
+        onClick={onManageKey}
+        disabled={exportStatus === 'uploading'}
+        icon={<KeyRound size={13} />}
+      >
         {cloudKey ? 'Manage Key' : 'Add Key'}
       </Button>
       <Button
@@ -189,7 +194,9 @@ export function CloudExportStatusHint({ cloudKey }: { cloudKey: string }) {
         className="text-ui-2xs"
         style={{ color: cloudKey ? theme.accent.green : theme.text.muted }}
       >
-        {cloudKey ? 'Cloud key saved — ready to push.' : 'No key set. Use "Manage Key" to configure.'}
+        {cloudKey
+          ? 'Cloud key saved — ready to push.'
+          : 'No key set. Use "Manage Key" to configure.'}
       </span>
     </div>
   )

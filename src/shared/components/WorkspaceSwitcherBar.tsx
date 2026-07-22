@@ -116,7 +116,11 @@ export default function WorkspaceSwitcherBar({ panelOpen }: WorkspaceSwitcherBar
         disabled={isSingle}
         className={`flex-1 h-full flex items-center transition-colors min-w-0 ${isSingle ? 'cursor-default' : 'hover:bg-white/3'} ${panelOpen ? 'gap-3 px-2' : 'justify-center px-0'}`}
       >
-        <WorkspaceAvatar name={activeWorkspace} label={current.label ?? activeWorkspace} size={28} />
+        <WorkspaceAvatar
+          name={activeWorkspace}
+          label={current.label ?? activeWorkspace}
+          size={28}
+        />
         {panelOpen && (
           <>
             <div className="flex flex-col items-start min-w-0 flex-1">

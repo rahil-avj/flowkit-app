@@ -7,6 +7,7 @@ purposes, not a replacement for the full FRD.
 ---
 
 ## Canvas: Viewer Mode / Canvas Mode split
+
 Source: `specs/canvas-viewer-mode.md` · Tracked as: `features.md` #20, #20b
 
 **Status:** Viewer Mode shipped and verified. Canvas Mode not started — design-only.
@@ -20,6 +21,7 @@ have. It shows one screen at a time. This complexity produced real bugs (a dupli
 race, since fixed).
 
 **Decision:** Split into two named modes:
+
 - **Viewer Mode** (built): one screen, CSS-flex centered, zoom in/out + fit-to-screen only. No
   pan, no hand-tool, no fixed-size scroll surface. Fit-scale = visible container size ÷ device
   size — a pure ratio, no scroll-position race possible.
@@ -34,6 +36,7 @@ back, the fallback must not have been damaged. It's untouched, unreferenced by t
 selection, and its own future (become Canvas Mode's basis, or get deleted later) is an open question.
 
 **Open questions (unresolved):**
+
 1. Should Canvas Mode evolve from the existing `FigmaExportGrid.tsx`/`FigmaExportView` (already
    does grouped, device-chrome-free screen tiling for Figma handoff, reachable via Cmd+Alt+Shift+P)
    rather than being built fresh?
@@ -49,6 +52,7 @@ code since Canvas Mode isn't reachable, but a real change to a file the FRD said
 ---
 
 ## FlowLens: Multi-session Reports two-pane revamp
+
 Source: `specs/flowlens-reports-overlay.md` · Tracked as: `features.md` #17
 
 **Status per verification-log.md (2026-07-02): NOT STARTED.** Spec is complete and ready to
@@ -62,6 +66,7 @@ or `HeatmapView.tsx` — the data/aggregation layer is already correct, this is 
 tab bar + tab body on the right. Tabs: `Overview`, `Funnel`, `Heatmap`, `Sessions`.
 
 **New pieces needed:**
+
 - `FilterSidebar` — all filters exposed (screen/device/connection/outcome/source selects, min+max
   quality sliders, date range, tag checkboxes, test-mode checkbox) — several of these exist in the
   data model but were never wired into the old flat UI (date range, tags, maxQuality).
@@ -79,6 +84,7 @@ skeletons appear briefly; empty state on zero-match filters; export still works;
 ---
 
 ## Flowaid — onboarding persona & cross-session persistence
+
 Source: `specs/flowaid-onboarding.md` (includes exact stub-file source appended from a merged
 earlier draft) · Tracked as: `features.md` #40 (status: **done**)
 
@@ -92,6 +98,7 @@ decisions itself. Design constraint: **multi-session continuity must feel like o
 relationship, not a series of first meetings.**
 
 **Behavior:**
+
 - **Cold start:** if the first message is already a concrete task, build immediately with sane
   defaults; thread the 5 profiling questions into natural checkpoints instead of front-loading.
 - **Interview topics** (once, conversational): name, dev-experience level, what they're building,
@@ -122,6 +129,7 @@ heading by name with no shared render step. Low risk today, flagged for a one-li
 ---
 
 ## Flat-mode export command (new)
+
 Source: `execution/flat-mode-export-command.md` · Tracked as: `features.md` T-22
 
 **Status: planned, holding notes only** — detailed design deferred until prioritized for real work.
@@ -130,11 +138,13 @@ Source: `execution/flat-mode-export-command.md` · Tracked as: `features.md` T-2
 (`requireRepoMode()` in `scripts/cli/export.js:73`). User considers flat-mode export important.
 
 **Hard constraints:**
+
 - Do **not** touch the existing `export`/`export:full` commands.
 - Build a **separate, new command** for flat-mode export.
 - `flowkit watch` does **not** need flat-mode support — deprioritized/dropped from scope entirely.
 
 **Open decisions (nothing locked yet):**
+
 - New command's name (explicitly not `export`/`export:full`)
 - Which parts of repo-mode export translate directly to flat mode (single implicit workspace, no
   workspace-enumeration prompt needed) vs. need new logic

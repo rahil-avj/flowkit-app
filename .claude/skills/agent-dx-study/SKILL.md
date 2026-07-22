@@ -14,8 +14,8 @@ comparable over time, not just a one-off chat summary.
 ## Why this exists
 
 Static code reading (grepping `help.js`, reading router dispatch tables) finds
-*inaccuracies* — flags that don't exist, commands that are undocumented. It cannot find
-*confusion* — places where the docs are technically correct but an agent still has to
+_inaccuracies_ — flags that don't exist, commands that are undocumented. It cannot find
+_confusion_ — places where the docs are technically correct but an agent still has to
 guess, retry, or reverse-engineer the real behavior. This skill runs an actual empirical
 session to surface the second kind of problem, which static analysis structurally can't see.
 

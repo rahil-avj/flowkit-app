@@ -484,14 +484,14 @@ Guards control whether the sidebar shows the screen as locked.
 
 Agent-ready workspaces are a core value prop: drop a coding agent in and it builds correctly and fast, without reading the whole codebase. Every workspace ships a **layered, lookup-first** file set, all generated from one platform spec (`scripts/platform/agent-spec.js`, formatted by `scripts/platform/agent-sync.js`) so it never drifts.
 
-| File                                                                  | Purpose                                                                                                                       |
-| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| memory file — `AGENTS.md`                                             | Auto-ingested by most coding-agent tools. Identity + read-order + the hardest `NEVER`/`ALWAYS` directives. One agent-agnostic file, no per-tool choice. |
-| `.agent/INDEX.md`                                                     | The map: `Task → Action → Detail`. The fast-lookup layer — the agent finds any task in one hop, no blind search.              |
-| `.agent/rules.md`                                                     | Full directive set in a structured grammar: `NEVER` / `ALWAYS` / `TO <task> → <action>`.                                      |
-| `.agent/platform.md`                                                  | Terse platform reference (hooks, types, CLI, kit), each row pointing to the full `Documentation/*.md`.                        |
-| `.agent/project.md`                                                   | Hand-owned product brief — flows, data model, decisions. **Never regenerated.**                                               |
-| `.agent/.agent-meta.json`                                             | Formatter state (kit, language, spec version) for `agent:sync`.                                                        |
+| File                      | Purpose                                                                                                                                                 |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| memory file — `AGENTS.md` | Auto-ingested by most coding-agent tools. Identity + read-order + the hardest `NEVER`/`ALWAYS` directives. One agent-agnostic file, no per-tool choice. |
+| `.agent/INDEX.md`         | The map: `Task → Action → Detail`. The fast-lookup layer — the agent finds any task in one hop, no blind search.                                        |
+| `.agent/rules.md`         | Full directive set in a structured grammar: `NEVER` / `ALWAYS` / `TO <task> → <action>`.                                                                |
+| `.agent/platform.md`      | Terse platform reference (hooks, types, CLI, kit), each row pointing to the full `Documentation/*.md`.                                                  |
+| `.agent/project.md`       | Hand-owned product brief — flows, data model, decisions. **Never regenerated.**                                                                         |
+| `.agent/.agent-meta.json` | Formatter state (kit, language, spec version) for `agent:sync`.                                                                                         |
 
 > ⚠️ **Known gap (consumer mode):** `agent:sync` generates `.agent/platform.md` with repo-mode-only content (pointers to `Documentation/*.md`, `@flowkit`/`@flowkit-shared` aliases) even when run inside a flat/multi-workspace consumer project, where neither exists. Confirmed live 2026-07-10 — see [CLI.md](CLI.md#agent-onboarding) for the full note. Treat its pointers/import-path examples as reference-only in consumer mode until fixed.
 

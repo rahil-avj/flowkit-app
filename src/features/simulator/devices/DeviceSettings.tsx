@@ -8,7 +8,7 @@ export default function DeviceSettings() {
   const { connectionMode, setConnectionMode, networkSpeed, setNetworkSpeed } = useSimulator()
 
   return (
-<>
+    <>
       <div className="flex flex-col gap-1.5">
         <span
           className="font-black tracking-widest px-1"
@@ -85,6 +85,6 @@ export default function DeviceSettings() {
           </SegmentedControl.Segment>
         </SegmentedControl>
       </div>
-</>
+    </>
   )
 }

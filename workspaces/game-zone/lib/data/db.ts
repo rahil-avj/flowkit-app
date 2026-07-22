@@ -4,13 +4,30 @@
 
 export const user = {
   id: 'usr_001',
-  name: 'Demo User',
+  name: 'Demo Player',
   email: 'demo@example.com',
   plan: 'Free',
 }
 
-export const items = [
-  { id: 1, title: 'First Item', desc: 'A sample item to demonstrate db reads.', status: 'active' },
-  { id: 2, title: 'Second Item', desc: 'Another item showing list rendering.', status: 'pending' },
-  { id: 3, title: 'Third Item', desc: 'More items can be added in db.ts.', status: 'active' },
-]
+export const blackjack = {
+  bankroll: 500,
+}
+
+export const dice = {
+  bankroll: 500,
+  forcedRoll: 'none',
+}
+
+export const ticTacToe = {
+  sessionTally: { x: 0, o: 0, draws: 0 },
+}
+
+export const mathQuiz = {
+  difficulty: 'easy',
+}
+
+// twentyFortyEight.best, memoryMatch.bestMoves/bestTimeMs, and mathQuiz.score
+// are intentionally NOT seeded here — canEnter guards on the 2048 and Memory
+// Match high-scores screens check db.has('highScores.twentyFortyEight') /
+// db.has('highScores.memoryMatch.bestMoves'); those paths must be absent
+// until the player's first game writes them via db.update().

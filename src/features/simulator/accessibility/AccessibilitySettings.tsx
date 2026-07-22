@@ -150,7 +150,7 @@ export default function AccessibilitySettings() {
   }
 
   return (
-<>
+    <>
       {/* Color vision */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-1.5 px-1">
@@ -332,6 +332,6 @@ export default function AccessibilitySettings() {
           </div>
         </div>
       </div>
-</>
+    </>
   )
 }

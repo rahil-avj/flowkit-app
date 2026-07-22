@@ -98,10 +98,14 @@ ${b('Feedback:')}
 ${b('Export & handoff:')}
   ${c('export')} ${d('[--workspace:<name>] [--profile:<name>]')}   Standalone HTML export — guided flow, works in every mode
   ${c('handoff')} ${d('[<workspace>]')}             Developer handoff zip  ${d('— repo mode only, guided prompt if omitted')}
-${isRepoMode() ? `
+${
+  isRepoMode()
+    ? `
 ${b('Agent onboarding (repo mode only):')}
   ${c('agent:sync')}                       Regenerate .agent/* and AGENTS.md from spec
-` : ''}
+`
+    : ''
+}
   ${c('flowkit -h')} / ${c('flowkit help')}     — show this help
   ${c('flowkit -v')} / ${c('flowkit version')}  — show installed version
 `)

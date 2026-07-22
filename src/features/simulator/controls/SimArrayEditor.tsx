@@ -123,7 +123,7 @@ export function SimArrayEditor({ label, bind, val, theme, ctx }: ArrayEditorProp
                   border: `1px solid ${theme.bg.border}50`,
                 }}
               >
-                <span className="truncate max-w-[200px]" style={{ color: theme.text.secondary }}>
+                <span className="truncate max-w-50" style={{ color: theme.text.secondary }}>
                   {getItemLabel(item, idx)}
                 </span>
                 <button
