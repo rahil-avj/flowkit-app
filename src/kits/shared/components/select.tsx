@@ -67,7 +67,8 @@ const Select = ({
   const registerItem = (itemValue: string, label: string) => {
     labelsRef.current.set(itemValue, label)
   }
-  const labelFor = (v: string | undefined) => (v === undefined ? undefined : labelsRef.current.get(v))
+  const labelFor = (v: string | undefined) =>
+    v === undefined ? undefined : labelsRef.current.get(v)
 
   return (
     <SelectContext.Provider
@@ -96,9 +97,7 @@ SelectGroup.displayName = 'SelectGroup'
 const SelectValue = ({ placeholder }: { placeholder?: string }) => {
   const { value, labelFor } = useSelectContext()
   const label = labelFor(value)
-  return (
-    <span data-placeholder={label === undefined ? '' : undefined}>{label ?? placeholder}</span>
-  )
+  return <span data-placeholder={label === undefined ? '' : undefined}>{label ?? placeholder}</span>
 }
 SelectValue.displayName = 'SelectValue'
 
@@ -134,21 +133,28 @@ const SelectTrigger = React.forwardRef<
 })
 SelectTrigger.displayName = 'SelectTrigger'
 
-const SelectScrollUpButton = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('flex cursor-default items-center justify-center py-1', className)} {...props}>
-    <ChevronUp className="size-4" />
-  </div>
-))
+const SelectScrollUpButton = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn('flex cursor-default items-center justify-center py-1', className)}
+      {...props}
+    >
+      <ChevronUp className="size-4" />
+    </div>
+  )
+)
 SelectScrollUpButton.displayName = 'SelectScrollUpButton'
 
 const SelectScrollDownButton = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('flex cursor-default items-center justify-center py-1', className)} {...props}>
+  <div
+    ref={ref}
+    className={cn('flex cursor-default items-center justify-center py-1', className)}
+    {...props}
+  >
     <ChevronDown className="size-4" />
   </div>
 ))
@@ -255,8 +261,14 @@ const SelectItem = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & { value: string; disabled?: boolean }
 >(({ className, children, value, disabled, onClick, ...props }, ref) => {
-  const { value: selected, setValue, setOpen, activeValue, setActiveValue, registerItem } =
-    useSelectContext()
+  const {
+    value: selected,
+    setValue,
+    setOpen,
+    activeValue,
+    setActiveValue,
+    registerItem,
+  } = useSelectContext()
   const isSelected = selected === value
   const isActive = activeValue === value
 

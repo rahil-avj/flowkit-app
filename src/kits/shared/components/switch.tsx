@@ -1,18 +1,17 @@
 import { cn } from '@flowkit-kit/lib/utils'
 import * as React from 'react'
 
-export interface SwitchProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onChange' | 'defaultValue'> {
+export interface SwitchProps extends Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  'onChange' | 'defaultValue'
+> {
   checked?: boolean
   defaultChecked?: boolean
   onCheckedChange?: (checked: boolean) => void
 }
 
 const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
-  (
-    { className, checked, defaultChecked, onCheckedChange, disabled, onClick, ...props },
-    ref
-  ) => {
+  ({ className, checked, defaultChecked, onCheckedChange, disabled, onClick, ...props }, ref) => {
     const [uncontrolled, setUncontrolled] = React.useState(defaultChecked ?? false)
     const isControlled = checked !== undefined
     const isChecked = isControlled ? checked : uncontrolled

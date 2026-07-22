@@ -46,8 +46,8 @@ if (import.meta.hot && !import.meta.hot.data.DbHighlightSettingsContext) {
 }
 const DbHighlightSettingsContext =
   (import.meta.hot?.data.DbHighlightSettingsContext as
-    | ReturnType<typeof createContext<DbHighlightSettingsValue | null>>
-    | undefined) ?? createContext<DbHighlightSettingsValue | null>(null)
+    ReturnType<typeof createContext<DbHighlightSettingsValue | null>> | undefined) ??
+  createContext<DbHighlightSettingsValue | null>(null)
 
 export function DbHighlightSettingsProvider({ children }: { children: React.ReactNode }) {
   const [highlightBg, setHighlightBgState] = useState<string>(

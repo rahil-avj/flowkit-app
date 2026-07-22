@@ -16,7 +16,7 @@ import {
 } from './helpers.js'
 
 const WS = 'twscheck'
-const NW_FLAGS = ['--lang:ts', '--agent:agents', '--kit:none']
+const NW_FLAGS = ['--lang:ts', '--kit:none']
 
 describe('Suite C — flowkit check', () => {
   let snapshot

@@ -63,12 +63,12 @@ For Claude Code users the post-write hook is configured in `.claude/settings.jso
 
 Files: `workspaces/<ws>/flows/<flow>/<screen>/<ScreenName>.tsx`
 
-| Rule ID                     | Check                                                                 | Severity |
-| --------------------------- | --------------------------------------------------------------------- | -------- |
-| `screen/no-default-export`  | File has no default export (React component)                          | Error    |
-| `screen/missing-meta`       | No `export const screenMeta`                                          | Error    |
-| `screen/meta-missing-label` | `screenMeta` has no `label` field                                     | Warning  |
-| `screen/meta-id-mismatch`   | `screenMeta.id` present but doesn't match directory name              | Error    |
+| Rule ID                     | Check                                                    | Severity |
+| --------------------------- | -------------------------------------------------------- | -------- |
+| `screen/no-default-export`  | File has no default export (React component)             | Error    |
+| `screen/missing-meta`       | No `export const screenMeta`                             | Error    |
+| `screen/meta-missing-label` | `screenMeta` has no `label` field                        | Warning  |
+| `screen/meta-id-mismatch`   | `screenMeta.id` present but doesn't match directory name | Error    |
 
 > **Forbidden cross-layer imports are NOT a FlowKit-check rule** — resolved during
 > implementation planning: `eslint-plugin-boundaries` (already configured in `eslint.config.js`

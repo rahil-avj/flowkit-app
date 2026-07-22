@@ -171,7 +171,7 @@ export const screenMeta = {
 
 > Prefer element `id` + flowplan `on:` over `onAction`/`onNext`/`onBack` for simple taps — it keeps screens free of routing logic.
 
-> **Screens tab vs. Flows tab:** `onAction`/`onNext`/`onBack` are only wired up during flowplan playback (Flows tab / FlowMaster) — those callbacks are `undefined` when a screen is viewed standalone from the **Screens tab**, so `onClick={() => onNext?.()}`-style handlers no-op silently there. That's by design, not a bug. If a screen should also be freely clickable from the Screens tab, wire navigation a different way: `const { navigateTo } = useDashboard()`, guarded on the `isFlow` prop FlowMaster injects — `onClick={() => !isFlow && navigateTo(id)}` (see "Navigate from screen logic" below). The guard is required; without it the click also fires during flow playback and desyncs `DashboardContext`'s view history from `FlowEngine`'s own step index.
+> **Screens tab vs. Flows tab:** `onAction`/`onNext`/`onBack` are only wired up during flowplan playback (Flows tab / FlowMaster) — those callbacks are `undefined` when a screen is viewed standalone from the **Screens tab**, so `onClick={() => onNext?.()}`-style handlers no-op silently there. That's by design, not a bug. If a screen should also be freely clickable from the Screens tab, use `useAppNav()` instead: `const { navigateTo } = useAppNav(); onClick={() => navigateTo(id)}` (see "Navigate from screen logic" below). `useAppNav()` picks the flow-aware `navigateTo` automatically when the screen is rendered inside a flow, so it's always safe to call unconditionally — no `isFlow` check needed in the screen's own code.
 
 ### `screenMeta` fields
 
@@ -226,7 +226,7 @@ Targets: a screen id, `"next"`, `"back"`, or `"complete"`.
 
 > **During flow playback**, use `useFlowNav()`, not `useDashboard()`'s `navigateTo` — guards, animations, and session replay only fire through FlowMaster's `commitNavigation`. `useFlowNav()` itself throws if called from a screen with no `FlowMaster` ancestor (i.e. previewed standalone from the Screens tab), so it isn't a drop-in replacement there.
 >
-> A screen that should **also** be freely clickable from the Screens tab (no flow active) can call `const { navigateTo } = useDashboard()` directly, guarded on the `isFlow` prop FlowMaster injects: `onClick={() => !isFlow && navigateTo(id)}`. The guard matters — without it, the same click also fires during flow playback and desyncs `DashboardContext`'s view history from `FlowEngine`'s own step index. See `scripts/helpers/scaffold.js`'s demo screens for the pattern.
+> A screen that should **also** be freely clickable from the Screens tab (no flow active) should call `useAppNav()` (`@flowkit-shared/utils`) instead of `useFlowNav()` or `useDashboard()` directly: `const { navigateTo } = useAppNav(); onClick={() => navigateTo(id)}`. `useAppNav()` reads whichever navigation context actually applies — FlowMaster's flow-aware one when rendered inside a flow, `DashboardContext`'s otherwise — so the same call is correct in both places with no `isFlow` check written by the screen. See `scripts/helpers/scaffold.js`'s demo screens for the pattern.
 
 ---
 

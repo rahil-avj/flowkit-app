@@ -1,6 +1,11 @@
 import { useState } from 'react'
 
-import { JSONBIN_CONFIG, LS_CLOUD_EXPORT_ENABLED, LS_JSONBIN_KEY, LS_JSONBIN_READ_KEY } from './constants'
+import {
+  JSONBIN_CONFIG,
+  LS_CLOUD_EXPORT_ENABLED,
+  LS_JSONBIN_KEY,
+  LS_JSONBIN_READ_KEY,
+} from './constants'
 import { fetchFromJsonBin, pushToJsonBin } from './jsonbin'
 
 export interface UseCloudSyncResult {

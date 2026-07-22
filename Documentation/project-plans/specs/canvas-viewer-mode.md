@@ -34,7 +34,7 @@ An important simplification fell out of this framing for free: once there's no p
 
 ### The near-miss: almost building a Figma clone
 
-While describing what canvas mode should look like, the scope started drifting toward a general-purpose 2D placement canvas — screens placed anywhere, moved around, selected, and inspected like elements in a design tool. Mid-description, this was caught and named directly: "i just realized now i am talking about creating a figma clone. i don't want that." That self-correction reshaped canvas mode entirely. Instead of freeform placement, canvas mode became a **fixed, deterministic layout**: every flow is a card (a title plus a row of its screens, arranged via ordinary flexbox), and all those cards are tiled across a pannable/zoomable surface — a documentation/overview view, not a design-tool canvas. No manual x/y coordinates, no drag-to-reposition, no per-element selection model to invent. The pan/zoom surface is real; the *content* inside it is deterministic, derived from existing flow/screen data, not manually arranged.
+While describing what canvas mode should look like, the scope started drifting toward a general-purpose 2D placement canvas — screens placed anywhere, moved around, selected, and inspected like elements in a design tool. Mid-description, this was caught and named directly: "i just realized now i am talking about creating a figma clone. i don't want that." That self-correction reshaped canvas mode entirely. Instead of freeform placement, canvas mode became a **fixed, deterministic layout**: every flow is a card (a title plus a row of its screens, arranged via ordinary flexbox), and all those cards are tiled across a pannable/zoomable surface — a documentation/overview view, not a design-tool canvas. No manual x/y coordinates, no drag-to-reposition, no per-element selection model to invent. The pan/zoom surface is real; the _content_ inside it is deterministic, derived from existing flow/screen data, not manually arranged.
 
 The remaining pieces of canvas mode were deliberately narrowed at the same time: no device mockup chrome (screens shown at their real size, adjustable via a settings control later); no in-place editing (hovering a screen just reveals a play button that jumps into viewer mode to actually interact with it); no reordering UI yet (a fixed layout order is enough for now). Canvas mode's scope shrank from "a 2D design surface" to "a read-only map of what already exists."
 
@@ -67,7 +67,7 @@ The throughline across all of the above is a single operating principle, stated 
 
 ## 3. Non-Goals
 
-- Building any part of Canvas Mode's actual UI (flow-card tiling, hover-to-play, screen selection/inspection). This FRD documents its *shape* for forward-compatibility only.
+- Building any part of Canvas Mode's actual UI (flow-card tiling, hover-to-play, screen selection/inspection). This FRD documents its _shape_ for forward-compatibility only.
 - Removing or refactoring the existing pannable canvas code (`canvasReducer.ts`, `useHandTool.ts`, `PreviewCanvas.tsx`'s scroll-centering effects). That is an explicit future task, deliberately deferred.
 - A mode-switching UI/setting. Mode selection is a hardcoded constant today.
 - Adding coordinate/placement data models for screens (deferred to when Canvas Mode is actually scoped).
@@ -76,12 +76,12 @@ The throughline across all of the above is a single operating principle, stated 
 
 ## 4. Definitions
 
-| Term | Meaning |
-|---|---|
-| **Viewer Mode** | Shows exactly one screen/device mockup, CSS-flex centered, zoom in/out + fit-to-screen only. No pan, no hand-tool, no fixed-size scroll surface. |
-| **Canvas Mode** | (Future, not built) A pannable/zoomable 2D surface tiling every flow as a fixed-layout card of its screens, for at-a-glance browsing. No device mockup chrome. |
+| Term                | Meaning                                                                                                                                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Viewer Mode**     | Shows exactly one screen/device mockup, CSS-flex centered, zoom in/out + fit-to-screen only. No pan, no hand-tool, no fixed-size scroll surface.                                                              |
+| **Canvas Mode**     | (Future, not built) A pannable/zoomable 2D surface tiling every flow as a fixed-layout card of its screens, for at-a-glance browsing. No device mockup chrome.                                                |
 | **Pannable canvas** | The pre-existing implementation (2000×2000 fixed surface, hand-tool, scroll-centering) that predates this FRD. Kept alive, unused, pending a future decision on whether it becomes the basis for Canvas Mode. |
-| **Mockup host** | The DOM element hosting the live device mockup, used by FlowLens (cursor-ghost overlay) and the feedback tool (screenshot capture) regardless of which mode is active. |
+| **Mockup host**     | The DOM element hosting the live device mockup, used by FlowLens (cursor-ghost overlay) and the feedback tool (screenshot capture) regardless of which mode is active.                                        |
 
 ---
 
@@ -89,42 +89,42 @@ The throughline across all of the above is a single operating principle, stated 
 
 ### 5.1 Viewer Mode (shipped)
 
-| ID | Requirement |
-|---|---|
-| FR-1 | Exactly one screen is visible at a time, centered in the available canvas area via CSS flex layout (no absolute-position scroll math). |
-| FR-2 | Zoom in / zoom out / reset-to-100% / toggle-fit-to-screen are supported via toolbar buttons and existing keyboard shortcuts (`⌘+`, `⌘-`, `⌘0`, `0`). |
-| FR-3 | "Fit to screen" (`keepFit`) computes scale from the visible container's measured size ÷ the active device's dimensions — no reference to a fixed abstract canvas size. |
-| FR-4 | Zoom level is cached per **device type**, not per screen. Switching screens without changing device type must **not** trigger a refit or reset zoom. Switching device type **must** trigger a refit (or reuse that device type's own cached zoom, if previously set). |
-| FR-5 | No hand-tool / pan affordance is present in Viewer Mode — no toolbar button, no space-hold/H-key binding, no drag-to-pan behavior. |
+| ID   | Requirement                                                                                                                                                                                                                                                                                  |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-1 | Exactly one screen is visible at a time, centered in the available canvas area via CSS flex layout (no absolute-position scroll math).                                                                                                                                                       |
+| FR-2 | Zoom in / zoom out / reset-to-100% / toggle-fit-to-screen are supported via toolbar buttons and existing keyboard shortcuts (`⌘+`, `⌘-`, `⌘0`, `0`).                                                                                                                                         |
+| FR-3 | "Fit to screen" (`keepFit`) computes scale from the visible container's measured size ÷ the active device's dimensions — no reference to a fixed abstract canvas size.                                                                                                                       |
+| FR-4 | Zoom level is cached per **device type**, not per screen. Switching screens without changing device type must **not** trigger a refit or reset zoom. Switching device type **must** trigger a refit (or reuse that device type's own cached zoom, if previously set).                        |
+| FR-5 | No hand-tool / pan affordance is present in Viewer Mode — no toolbar button, no space-hold/H-key binding, no drag-to-pan behavior.                                                                                                                                                           |
 | FR-6 | The device mockup container grows/shrinks smoothly (CSS transition) as side panels are resized or toggled — no jump cuts, no dependency on panel-drag state to suppress/enable the transition (unlike the pannable canvas, which must suppress transitions during drag to track the cursor). |
-| FR-7 | Fullscreen toggle hides both side panels and keeps the mockup centered, with zoom level preserved (not refit) unless the container's measured size actually changed. |
-| FR-8 | FlowLens's cursor-ghost overlay and the feedback tool's screenshot capture continue to work identically to before this change, regardless of which mode is rendering the mockup. |
-| FR-9 | Viewer Mode is the default and, as of this FRD, the *only* reachable mode — the mode switch exists in code but the alternate branch is not wired to anything user-facing. |
+| FR-7 | Fullscreen toggle hides both side panels and keeps the mockup centered, with zoom level preserved (not refit) unless the container's measured size actually changed.                                                                                                                         |
+| FR-8 | FlowLens's cursor-ghost overlay and the feedback tool's screenshot capture continue to work identically to before this change, regardless of which mode is rendering the mockup.                                                                                                             |
+| FR-9 | Viewer Mode is the default and, as of this FRD, the _only_ reachable mode — the mode switch exists in code but the alternate branch is not wired to anything user-facing.                                                                                                                    |
 
 ### 5.2 Canvas Mode (future — design only, not built)
 
 These are captured for forward-compatibility, not as commitments for the current milestone.
 
-| ID | Requirement (draft) |
-|---|---|
-| FR-10 | Every flow renders as a fixed-layout card: a title row plus a row of its screens, laid out with plain flex (no manual x/y coordinates). |
-| FR-11 | Screens render without device mockup chrome, at a size configurable via a settings control (not tied to a device preset). |
-| FR-12 | The overall surface (all flow-cards) is pannable and zoomable. |
-| FR-13 | Hovering a screen reveals an action affordance (e.g. a play button) that jumps into Viewer Mode for that specific screen, entering an interactive state. |
-| FR-14 | Screen selection/inspection (clicking into a screen's DOM to inspect elements) and reordering are explicitly out of scope for the first version of Canvas Mode and are not designed here. |
+| ID    | Requirement (draft)                                                                                                                                                                                                      |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| FR-10 | Every flow renders as a fixed-layout card: a title row plus a row of its screens, laid out with plain flex (no manual x/y coordinates).                                                                                  |
+| FR-11 | Screens render without device mockup chrome, at a size configurable via a settings control (not tied to a device preset).                                                                                                |
+| FR-12 | The overall surface (all flow-cards) is pannable and zoomable.                                                                                                                                                           |
+| FR-13 | Hovering a screen reveals an action affordance (e.g. a play button) that jumps into Viewer Mode for that specific screen, entering an interactive state.                                                                 |
+| FR-14 | Screen selection/inspection (clicking into a screen's DOM to inspect elements) and reordering are explicitly out of scope for the first version of Canvas Mode and are not designed here.                                |
 | FR-15 | Canvas Mode must **not** require Viewer Mode's architecture to change. The mode-switch point and the mockup-host abstraction introduced by this FRD are the intended integration seams for Canvas Mode when it is built. |
 
 ---
 
 ## 6. Non-Functional Requirements
 
-| ID | Requirement |
-|---|---|
-| NFR-1 | Zero behavior change to the pre-existing pannable canvas's *tested* behavior. All 43 `canvasReducer.ts` unit tests (`scripts/tests/canvasReducer.test.ts`) must continue to pass unmodified. |
-| NFR-2 | No new runtime dependency on `CANVAS_W`/`CANVAS_H` (the pannable surface's fixed dimensions) anywhere in Viewer Mode's fit/zoom math — that constant is only meaningful when a fixed scroll surface exists. |
+| ID    | Requirement                                                                                                                                                                                                                                     |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| NFR-1 | Zero behavior change to the pre-existing pannable canvas's _tested_ behavior. All 43 `canvasReducer.ts` unit tests (`scripts/tests/canvasReducer.test.ts`) must continue to pass unmodified.                                                    |
+| NFR-2 | No new runtime dependency on `CANVAS_W`/`CANVAS_H` (the pannable surface's fixed dimensions) anywhere in Viewer Mode's fit/zoom math — that constant is only meaningful when a fixed scroll surface exists.                                     |
 | NFR-3 | `react-hooks/rules-of-hooks` (ESLint) must pass with zero suppressions. Mode-specific hooks (`useViewerFit`, `useHandTool`) must each be called unconditionally within their own component, not branched inline inside a shared component body. |
-| NFR-4 | `tsc --noEmit` and the full test suite (`npm test`) must pass with no regressions. |
-| NFR-5 | The change must be reversible without risk: rolling back to the pannable-only behavior must not require having modified `canvasReducer.ts`, `useHandTool.ts`, or the pannable JSX path, since those are left completely untouched. |
+| NFR-4 | `tsc --noEmit` and the full test suite (`npm test`) must pass with no regressions.                                                                                                                                                              |
+| NFR-5 | The change must be reversible without risk: rolling back to the pannable-only behavior must not require having modified `canvasReducer.ts`, `useHandTool.ts`, or the pannable JSX path, since those are left completely untouched.              |
 
 ---
 

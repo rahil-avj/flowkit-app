@@ -5,6 +5,7 @@
 > `scripts/authoring-support/config-patch.js` (not `scripts/cli/agent/*.js` + `scripts/lib/*.js` —
 > those paths predate the `scripts/platform/` / `scripts/authoring/` / `scripts/helpers/` reorg).
 > Known divergences worth knowing before reading further as if it were current behavior:
+>
 > - The workspace config file is `workspace.ts` (`WORKSPACE_CONFIG_FILENAME`), not `flowkit.config.ts`.
 > - `defineConfig`/`defineFlow` import from `@flowkit-core/config` (repo mode) or `'flowkit'` (consumer
 >   mode) via `resolveDefineImport()`/`resolveTypeImport()` in `scripts/helpers/paths.js` — not the

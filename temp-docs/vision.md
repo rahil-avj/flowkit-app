@@ -25,15 +25,15 @@ session is a data source — FlowLens gives real behavioral data, not guesses).
 
 ## What a successful v1 looks like — 7 core features, fully working, correctly gated
 
-| Feature | What it does |
-|---|---|
-| FlowMaster | Executes flows — interactions, guards, animations, flowplan journeys |
-| FlowTracer | Records every session automatically |
-| FlowLens | Replays recordings; single + multi-session analytics |
-| Feedback | In-canvas per-screen comment wall, cloud sync, export |
-| Flow Debugger | Live runtime inspection |
-| Flow Library | Browse/run flowplans; workspace hierarchy tree |
-| Simulator | Device presets, connection mode, accessibility filters, custom controls |
+| Feature       | What it does                                                            |
+| ------------- | ----------------------------------------------------------------------- |
+| FlowMaster    | Executes flows — interactions, guards, animations, flowplan journeys    |
+| FlowTracer    | Records every session automatically                                     |
+| FlowLens      | Replays recordings; single + multi-session analytics                    |
+| Feedback      | In-canvas per-screen comment wall, cloud sync, export                   |
+| Flow Debugger | Live runtime inspection                                                 |
+| Flow Library  | Browse/run flowplans; workspace hierarchy tree                          |
+| Simulator     | Device presets, connection mode, accessibility filters, custom controls |
 
 Gated by a planned feature management system (registry → entitlement resolver → gate) —
 **not yet implemented**, see `features.md` #36.
@@ -50,6 +50,7 @@ Gated by a planned feature management system (registry → entitlement resolver 
 ## Distribution model
 
 Two ways to ship from one repo:
+
 - **Repo mode** — this checkout, for platform development
 - **Flat/author mode** — `npm create flowkit-app@latest`, gets `flowkit` in `node_modules/`, no
   `workspaces/` dir. **Not live yet** — see `features.md` Package-Publish section, T-23 through T-29.
@@ -70,13 +71,13 @@ gives universal agent/editor blindness by convention.
 
 ## Personas (U1–U5)
 
-| ID | Role | Environment | Core need |
-|---|---|---|---|
-| U1 | Platform Developer | `production` branch, full tooling | Build and evolve FlowKit itself |
-| U2 | Workspace Author | `deployment` branch, CLI + browser | Create prototype flows, possibly via AI agents |
-| U3 | UX Researcher | `deployment` browser + CLI | Gather and export session data and feedback |
-| U4 | Stakeholder / Teammate | Browser or standalone HTML | Experience and review flows, give feedback |
-| U5 | Workspace Recipient | Handoff zip, no FlowKit needed | Implement the real product from prototype specs |
+| ID  | Role                   | Environment                        | Core need                                       |
+| --- | ---------------------- | ---------------------------------- | ----------------------------------------------- |
+| U1  | Platform Developer     | `production` branch, full tooling  | Build and evolve FlowKit itself                 |
+| U2  | Workspace Author       | `deployment` branch, CLI + browser | Create prototype flows, possibly via AI agents  |
+| U3  | UX Researcher          | `deployment` browser + CLI         | Gather and export session data and feedback     |
+| U4  | Stakeholder / Teammate | Browser or standalone HTML         | Experience and review flows, give feedback      |
+| U5  | Workspace Recipient    | Handoff zip, no FlowKit needed     | Implement the real product from prototype specs |
 
 Full per-feature persona mapping: `product/features-by-persona.md` (frozen June 2026 snapshot,
 not auto-synced with `features.md` in this tracker).

@@ -7,9 +7,6 @@
  * toggle can tint without importing this lazy chunk; re-exported here for the
  * FlowLens UI plus a couple of derived tokens.
  */
-export {
-  FLOWLENS_ACCENT,
-  FLOWLENS_ACCENT_SOFT,
-} from '@flowkit-shared/contexts/FlowLensModeContext'
+export { FLOWLENS_ACCENT, FLOWLENS_ACCENT_SOFT } from '@flowkit-shared/contexts/FlowLensModeContext'
 
 export const FLOWLENS_ACCENT_BORDER = 'rgba(139, 92, 246, 0.5)'

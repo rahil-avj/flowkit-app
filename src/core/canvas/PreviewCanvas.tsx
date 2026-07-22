@@ -70,8 +70,8 @@ const DISABLED_LENS = {
   available: false,
   enabled: false,
   pendingSessionId: null,
-  enter: () => { },
-  exit: () => { },
+  enter: () => {},
+  exit: () => {},
   consumePendingSessionId: () => null,
 } as const
 
@@ -177,8 +177,8 @@ function DesktopCanvas({ flows, views }: Props) {
   const actionCtx = useMemo<ActionCtx>(
     () => ({
       navigateTo,
-      setActiveTab: () => { },
-      setIsOpen: () => { },
+      setActiveTab: () => {},
+      setIsOpen: () => {},
       toggleTheme,
       toggleOrientation,
       resetToFirst,
@@ -804,8 +804,9 @@ function CanvasContent({
               {ActiveComponent ? (
                 // Screens tab is a static structural preview outside flowplan
                 // playback — screens that also want Screens-tab interactivity
-                // should call useDashboard().navigateTo(), guarded on the isFlow
-                // prop FlowMaster injects during playback (see FLOWMASTER.md).
+                // should call useAppNav() (@flowkit-shared/utils) for navigateTo;
+                // it's flow-aware automatically, no isFlow guard needed (see
+                // FLOWMASTER.md).
                 <ActiveComponent db={db} />
               ) : (
                 <div className="flex-1 flex items-center justify-center h-full bg-theme-elevated text-theme-text-disabled text-ui-sm font-sans">
@@ -875,15 +876,15 @@ function CanvasContent({
             tooltip={
               showHandTooltip
                 ? {
-                  label: 'Hand tool active',
-                  shortcut: 'H',
-                  hint: 'Click again to exit · interact mode on',
-                }
+                    label: 'Hand tool active',
+                    shortcut: 'H',
+                    hint: 'Click again to exit · interact mode on',
+                  }
                 : {
-                  label: 'Hand tool',
-                  shortcut: 'H',
-                  hint: 'Drag to pan · hold Space for quick access',
-                }
+                    label: 'Hand tool',
+                    shortcut: 'H',
+                    hint: 'Drag to pan · hold Space for quick access',
+                  }
             }
             active={handMode}
             tint={showHandTooltip ? 'warning' : 'default'}
@@ -1046,4 +1047,3 @@ function formatElapsed(ms: number) {
   const s = totalSec % 60
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
-

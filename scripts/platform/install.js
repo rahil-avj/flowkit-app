@@ -14,7 +14,11 @@ const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
 const binName = Object.keys(packageJson.bin || {})[0] || 'flowkit'
 
 const shell = process.env.SHELL || ''
-const rcFile = shell.includes('zsh') ? '~/.zshrc' : shell.includes('bash') ? '~/.bashrc' : 'your shell rc file'
+const rcFile = shell.includes('zsh')
+  ? '~/.zshrc'
+  : shell.includes('bash')
+    ? '~/.bashrc'
+    : 'your shell rc file'
 const aliasLine = `alias ${binName}="npx ${binName}"`
 
 console.log(`To run '${binName}' directly in your terminal, add this line to ${rcFile}:\n`)

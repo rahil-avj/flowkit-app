@@ -94,9 +94,7 @@ function SectionHeader({ icon, title, description }: SectionHeaderProps) {
       </div>
       <div>
         <div className="text-ui-base font-bold text-theme-text-primary">{title}</div>
-        <div className="text-ui-xs text-theme-text-muted mt-0.5 leading-normal">
-          {description}
-        </div>
+        <div className="text-ui-xs text-theme-text-muted mt-0.5 leading-normal">{description}</div>
       </div>
     </div>
   )

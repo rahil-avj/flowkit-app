@@ -12,20 +12,43 @@ Works the same across repo mode, flat mode, and multi-workspace mode — see [CL
 
 ## The agent file system
 
-Every workspace ships a generated, layered file set so an agent can start building without
-reading the codebase. All of it is rendered from a **single source of truth**
-(`scripts/platform/agent-spec.js`) by `scripts/platform/agent-sync.js`, so it never drifts from the platform.
+> ⚠️ **This section describes repo mode only.** `.agent/INDEX.md`, `.agent/rules.md`,
+> `.agent/platform.md`, and `.agent/project.md` are all produced by
+> `scripts/platform/agent-sync.js`, which operates on this monorepo's own
+> `workspaces/<name>/` — it is not invoked by, and has no equivalent in,
+> `create-flowkit-app`/`create-flowkit-workspace` (flat/multi-workspace consumer mode). A
+> scaffolded consumer project gets exactly one generated file, the same agent-agnostic
+> `AGENTS.md` repo mode now produces (see `writeAgentsMd()` in each scaffolder's
+> `index.js`), plus a copy of this `docs/` folder — no `.agent/` directory, no
+> `agent:sync`. Confirmed live 2026-07-21.
 
-| Layer     | File                                                    | Role                                                                                                                                                                                                                       |
-| --------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Memory    | `CLAUDE.md` / `AGENTS.md` / `.cursor/rules/flowkit.mdc` | Auto-ingested by the agent's tool. Identity, read-order, the hardest directives. Chosen at `flowkit nw --agent:…` (repo mode) or `--agent:` on the create-flowkit-app/create-flowkit-workspace scaffolder (consumer mode). |
-| Map       | `.agent/INDEX.md`                                       | `Task → Action → Detail`. The fast lookup — every task in one hop.                                                                                                                                                         |
-| Rules     | `.agent/rules.md`                                       | The full directive set (`NEVER` / `ALWAYS` / `TO … → …`).                                                                                                                                                                  |
-| Reference | `.agent/platform.md`                                    | Terse surface map; each row points to further detail.                                                                                                                                                                      |
-| Product   | `.agent/project.md`                                     | Hand-owned brief: what the product is. **Never regenerated.**                                                                                                                                                              |
-| State     | `.agent/.agent-meta.json`                               | `{ agent, kit, language, specVersion }` written by `agent:sync`.                                                                                                                                                           |
+Every **repo-mode** workspace ships a generated, layered file set so an agent can start
+building without reading the codebase. All of it is rendered from a **single source of
+truth** (`scripts/platform/agent-spec.js`) by `scripts/platform/agent-sync.js`, so it never
+drifts from the platform.
 
-> ⚠️ **Known gap in consumer mode (flat/multi-workspace), confirmed live 2026-07-10:** `.agent/platform.md`'s rows currently point at `Documentation/*.md` files and `@flowkit`/`@shared` path aliases that only exist inside this monorepo — neither ships to a scaffolded consumer project. `agent:sync` itself runs successfully and produces valid files in consumer mode; only `platform.md`'s _content_ assumes repo mode unconditionally. Treat its pointers/import-path examples as reference-only in consumer mode until fixed — see [CLI.md](CLI.md#agent-onboarding).
+There is **no per-tool choice of memory file** — every workspace gets one agent-agnostic
+`AGENTS.md`, matching what the consumer-mode scaffolders always produced. (An older
+per-tool target system — `--agent:claude|agents|cursor|none`, emitting `CLAUDE.md` /
+`AGENTS.md` / `.cursor/rules/flowkit.mdc` — existed here previously and was removed; a
+workspace scaffolded before the removal may still have a leftover `CLAUDE.md` on disk,
+untouched by this change, but re-running `agent:sync` on it now produces `AGENTS.md`
+instead.)
+
+| Layer     | File                      | Role                                                                                    |
+| --------- | ------------------------- | --------------------------------------------------------------------------------------- |
+| Memory    | `AGENTS.md`               | Auto-ingested by most coding-agent tools. Identity, read-order, the hardest directives. |
+| Map       | `.agent/INDEX.md`         | `Task → Action → Detail`. The fast lookup — every task in one hop.                      |
+| Rules     | `.agent/rules.md`         | The full directive set (`NEVER` / `ALWAYS` / `TO … → …`).                               |
+| Reference | `.agent/platform.md`      | Terse surface map; each row points to further detail.                                   |
+| Product   | `.agent/project.md`       | Hand-owned brief: what the product is. **Never regenerated.**                           |
+| State     | `.agent/.agent-meta.json` | `{ kit, language, specVersion }` written by `agent:sync`.                               |
+
+> ⚠️ **Within repo mode**, confirmed live 2026-07-10: `.agent/platform.md`'s rows point at
+> `Documentation/*.md` files and `@flowkit`/`@shared` path aliases specific to this
+> monorepo. `agent:sync` runs successfully here; the note above is about consumer mode not
+> having this system at all, which is a separate, larger gap than platform.md's content
+> being repo-mode-flavored.
 
 ### Cold-start sequence (what an agent reads, in order)
 
@@ -53,7 +76,7 @@ Example (from a generated `rules.md`):
 
 ```
 NEVER reference flows/router.tsx or _playFlow.ts — flat-flowplan workspaces don't have them
-ALWAYS read/mutate data via const { db, updateDb } = useDashboard()
+ALWAYS read/mutate data via const db = useDb()
 TO add a screen → create flows/<flow>/<screen-slug>/<ScreenName>.tsx, then add a step in flowplans/<flow>.ts
 ```
 
@@ -63,13 +86,13 @@ The few hardest rules are inlined into the memory file so they're loaded before 
 
 ## The non-negotiables (why they exist)
 
-| Rule                                                                                       | Why                                                                                                                                                                                                                                                                                                                   |
-| ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Never call `useDashboard()`'s `navigateTo` unguarded during flow playback                  | Use `useFlowNav()` (or id-wiring) inside a flow so FlowMaster's guards, animations, and recorded `flow.transition` fire. `useDashboard().navigateTo`, guarded on the `isFlow` prop FlowMaster injects, is the correct way to make a screen _also_ navigable standalone from the Screens tab — see "Navigation" below. |
-| Never hand-write flow/screen files from scratch                                            | Copy an existing screen's boilerplate — the structure and exports must be consistent.                                                                                                                                                                                                                                 |
-| Never edit platform source (`src/` in repo mode, `node_modules/flowkit/` in consumer mode) | That's the shared platform engine, not workspace content.                                                                                                                                                                                                                                                             |
-| Never hardcode hex colors                                                                  | Use `lib/design-system/tokens.css` vars or `useTheme()` tokens so kit/theme switching works.                                                                                                                                                                                                                          |
-| Always use the right import for the mode you're in                                         | Repo mode: `@flowkit/`/`@workspace/` aliases (renamed from `@platform` 2026-07-12). Consumer mode: import directly from `'flowkit'` — the `@flowkit*`/`@workspace` aliases only exist inside this monorepo, not in a scaffolded project. Relative `../../` paths break across the workspace boundary in either mode.  |
+| Rule                                                                                                                                             | Why                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Never call `useDashboard()`'s `navigateTo` directly inside a screen that relies on FlowMaster's guards/animations/recording during flow playback | Use `useFlowNav()` (or id-wiring) inside a flow-only screen so FlowMaster's guards, animations, and recorded `flow.transition` fire. `useAppNav()` (`@flowkit-shared/utils`) is the correct way to make a screen navigable both standalone from the Screens tab and during flow playback — see "Navigation" below.   |
+| Never hand-write flow/screen files from scratch                                                                                                  | Copy an existing screen's boilerplate — the structure and exports must be consistent.                                                                                                                                                                                                                                |
+| Never edit platform source (`src/` in repo mode, `node_modules/flowkit/` in consumer mode)                                                       | That's the shared platform engine, not workspace content.                                                                                                                                                                                                                                                            |
+| Never hardcode hex colors                                                                                                                        | Use `lib/design-system/tokens.css` vars or `useTheme()` tokens so kit/theme switching works.                                                                                                                                                                                                                         |
+| Always use the right import for the mode you're in                                                                                               | Repo mode: `@flowkit/`/`@workspace/` aliases (renamed from `@platform` 2026-07-12). Consumer mode: import directly from `'flowkit'` — the `@flowkit*`/`@workspace` aliases only exist inside this monorepo, not in a scaffolded project. Relative `../../` paths break across the workspace boundary in either mode. |
 
 ---
 
@@ -145,7 +168,7 @@ Drop a `.ts` file into `flowplans/` using `defineFlow()`, or run `flowkit create
 },
 ```
 
-### Navigate from screen logic (state / async)
+### Navigate from screen logic (state / async) — repo mode only
 
 ```ts
 const { navigateTo, goNext, goBack } = useFlowNav()
@@ -154,31 +177,74 @@ const submit = async () => {
 }
 ```
 
-`useFlowNav()` throws if the screen has no `FlowMaster` ancestor — flow playback only.
+`useFlowNav()` throws if the screen has no `FlowMaster` ancestor — flow playback only. Not
+available in consumer mode (see below).
 
-### Make a screen also navigable from the Screens tab (no flow active)
+### Make a screen also navigable from the Screens tab (no flow active) — repo mode only
 
 ```ts
-export default function HomeScreen({ isFlow }: FlowScreenProps) {
-  const { navigateTo } = useDashboard()
-  return <button onClick={() => !isFlow && navigateTo('detail')}>Open</button>
+import { useAppNav } from '@flowkit-shared/utils'
+
+export default function HomeScreen() {
+  const { navigateTo } = useAppNav()
+  return <button onClick={() => navigateTo('detail')}>Open</button>
 }
 ```
 
-The `isFlow` guard is required — without it the click also fires during flow
-playback and desyncs `DashboardContext`'s view history from `FlowEngine`'s own
-step index.
+`useAppNav()` reads whichever navigation context actually applies — FlowMaster's flow-aware
+`navigateTo` when this screen is rendered inside a flow, `DashboardContext`'s otherwise — so calling
+it unconditionally is correct in both places. No `isFlow` prop, no guard. `@flowkit-shared/utils`
+is a repo-mode-only path alias — not exported from the public `flowkit` package.
 
-### Read / mutate data
+### Navigate from a screen — consumer mode (flat/multi-workspace)
+
+There is no navigation hook. A screen receives `onAction?`, `onNext?`, `onBack?` as props
+(all `undefined` unless the screen is currently playing inside a flow — always optional-chain
+them):
 
 ```ts
-const { db, updateDb } = useDashboard() // db is injected — do NOT import it directly
-updateDb(d => {
-  d.cart.count += 1
-})
+export default function HomeScreen({ onAction }: FlowScreenProps) {
+  return <button onClick={() => onAction?.('open-detail')}>Open</button>
+}
 ```
 
+Prefer wiring a plain DOM `id` + a matching flowplan step's `on` field over calling `onAction`
+for simple taps — `onAction`/`onNext`/`onBack` are the escape hatch for programmatic triggers
+(async callbacks, form submits), not the default navigation path.
+
+### Read / mutate data — repo mode
+
+```ts
+import { useDb } from '@flowkit-shared/utils'
+
+const db = useDb() // wraps useDashboard()'s injected db/updateDb
+db.update('cart.count', n => n + 1)
+```
+
+`useDb()`'s `get`/`has`/`set`/`remove`/`update` reject unsafe dot-path segments
+(`__proto__`/`prototype`/`constructor`) instead of silently corrupting or no-opping. Falling back
+to raw `const { db, updateDb } = useDashboard()` still works but carries no such guard — prefer
+`useDb()` for any path-based read or write.
+
 Seed data lives in `lib/data/db.ts`. → FLOWKIT.md (Mock database)
+
+### Read / mutate data — consumer mode (flat/multi-workspace)
+
+A screen's `db` prop (`FlowScreenProps.db`) is **read-only** and `undefined` outside flow
+playback — there is no `useDashboard()`/`updateDb` hook here. Mutation happens in the
+flowplan, not the screen: give the interactive element an `id`, then add a
+`ctx.updateDb()` call in that flowplan's `interactions[id].do`:
+
+```ts
+// flowplans/<flow>.ts
+interactions: {
+  'add-to-cart': {
+    trigger: 'tap',
+    do: (ctx) => { ctx.updateDb(db => { db.cart.count += 1 }) },
+    goTo: 'cart',
+  },
+}
+```
 
 ### Gate access (entry guards)
 
@@ -194,7 +260,7 @@ Tailwind for static values; `style={{}}` only for dynamic/computed values; color
 
 ### Add a reviewer toggle
 
-Edit `lib/data/simulator.tsx` (a default-exported JSX component):
+**Repo mode:** edit `data/simulator.tsx` (a default-exported JSX component):
 
 ```tsx
 <ControlAccordion label="Auth" defaultOpen>
@@ -202,7 +268,19 @@ Edit `lib/data/simulator.tsx` (a default-exported JSX component):
 </ControlAccordion>
 ```
 
-Components: `ControlAccordion`, `SimToggle`, `SimSegmented`, `SimSelect`, `SimAction`, `SimTextInput`, `SimNumberInput`, `SimControl` — from `@features/simulator/controls` (repo mode) or `'flowkit'` (consumer mode). → FLOWKIT.md (Simulator controls authoring)
+Components: `ControlAccordion`, `SimToggle`, `SimSegmented`, `SimSelect`, `SimAction`, `SimTextInput`, `SimNumberInput`, `SimControl` — from `@features/simulator/controls`. This JSX-component convention and its barrel are **repo-mode only**; neither is exported from the public `flowkit` package.
+
+**Consumer mode (flat/multi-workspace):** there is no `simulator.tsx`/JSX API. Add a plain `SimulatorControl` data object to the relevant flowplan's `simulator.controls` array instead:
+
+```ts
+simulator: {
+  controls: [
+    { label: 'Logged in', path: 'auth.isLoggedIn', type: 'boolean', default: true },
+  ],
+}
+```
+
+`path` is a dot-path into the flow's db copy; `type` is one of `boolean` / `toggle` / `count` / `select` / `text` / `null-toggle`. See `FlowplanDef`/`SimulatorControl` in `src/types/index.ts` for the full field set (`min`/`max`/`options`/`states`). → FLOWKIT.md (Simulator controls authoring)
 
 ### Work with recorded sessions
 
@@ -241,27 +319,21 @@ All four work in every mode (repo, flat, multi-workspace).
 The agent files are generated, not hand-maintained. When the platform changes, regenerate:
 
 ```bash
-flowkit agent:sync                 # active workspace, keep its agent
+flowkit agent:sync                 # active workspace
 flowkit agent:sync:<ws>            # a specific workspace (repo mode)
-flowkit agent:sync --agent:cursor  # switch agent target (removes the old memory file)
 ```
 
-- `agent:sync` re-emits `INDEX.md`, `rules.md`, `platform.md`, and the memory file. It **never**
+- `agent:sync` re-emits `INDEX.md`, `rules.md`, `platform.md`, and `AGENTS.md`. It **never**
   touches `project.md`.
 - There is no separate staleness-check command as of this writing — `agent:check` doesn't exist,
   and `flowkit export`'s pre-flight checks (TypeScript, ESLint) don't cover agent-file staleness
   either. Re-run `agent:sync` yourself after any platform change.
 - To change platform facts, edit **`scripts/platform/agent-spec.js`** (the single source), bump
   `AGENT_SPEC_VERSION`, then `agent:sync` every workspace. Never hand-edit a generated `.agent/*` file.
-
-### Supported agent targets
-
-| `--agent:`         | Emits                       | Tool                |
-| ------------------ | --------------------------- | ------------------- |
-| `claude`           | `CLAUDE.md`                 | Claude Code         |
-| `agents` (default) | `AGENTS.md`                 | Cross-tool standard |
-| `cursor`           | `.cursor/rules/flowkit.mdc` | Cursor              |
-| `none`             | `.agent/*` docs only        | (no memory file)    |
+- There is no per-tool target to choose anymore — `agent:sync` always emits `AGENTS.md`. A
+  workspace scaffolded before this change may still have an old `CLAUDE.md`/`.cursor/rules/flowkit.mdc`
+  sitting on disk from the previous per-tool system; that file is left alone until you
+  delete it yourself — `agent:sync` does not clean it up automatically.
 
 ---
 

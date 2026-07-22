@@ -1,3 +1,4 @@
+import { isPlainObject, type Obj, UNSAFE_KEYS } from '@flowkit-shared/utils/applyDotPathPatch'
 import { useCallback, useState } from 'react'
 
 // ─── Value helpers ────────────────────────────────────────────────────────────
@@ -38,14 +39,28 @@ export function countMatches(text: string, query: string): number {
   return count
 }
 
-/** Walk a dot-path like "user.plan" and set the value on the draft. */
+/**
+ * Walk a dot-path like "user.plan" and set the value on the draft.
+ *
+ * This used to be its own hand-rolled walker with two bugs, both fixed by
+ * routing through the shared `applyDotPathPatch.ts` primitives: (1) no
+ * `__proto__`/`prototype`/`constructor` guard at all, and (2) it SILENTLY
+ * NO-OPED whenever an intermediate segment didn't exist yet (`if (cursor ==
+ * null) return`) — editing a not-yet-existing path via the DbInspector UI did
+ * nothing, with no error and no indication the write was dropped. Now it
+ * throws on an unsafe key (consistent with the rest of the `db.*` helper
+ * suite) and auto-creates missing intermediates instead of silently bailing.
+ */
 export function setAtPath(draft: Record<string, unknown>, dotPath: string, value: unknown) {
   const parts = dotPath.split('.')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let cursor: any = draft
+  if (parts.some(key => UNSAFE_KEYS.has(key))) {
+    throw new Error(`setAtPath: unsafe key in path "${dotPath}"`)
+  }
+  let cursor: Obj = draft
   for (let i = 0; i < parts.length - 1; i++) {
-    cursor = cursor[parts[i]]
-    if (cursor == null) return
+    const key = parts[i]
+    if (!isPlainObject(cursor[key])) cursor[key] = {}
+    cursor = cursor[key]
   }
   cursor[parts[parts.length - 1]] = value
 }
@@ -70,7 +85,11 @@ export function contrastRatio(hexA: string, hexB: string): number {
 // Alpha-composites a semi-transparent foreground hex over an opaque backdrop hex,
 // so a partially/fully transparent highlight background is checked against what it
 // will actually render on top of — not treated as if it were fully opaque itself.
-export function compositeOverBackdrop(fgHex: string, alphaPct: number, backdropHex: string): string {
+export function compositeOverBackdrop(
+  fgHex: string,
+  alphaPct: number,
+  backdropHex: string
+): string {
   const alpha = alphaPct / 100
   const fg = fgHex.replace('#', '')
   const bg = backdropHex.replace('#', '')

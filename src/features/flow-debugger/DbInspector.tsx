@@ -42,8 +42,7 @@ function hexToRgba(hex: string, opacityPct: number): string {
 
 /** Renders `text` with every case-insensitive occurrence of `query` wrapped in a <mark>. */
 function HighlightedText({ text, query }: { text: string; query: string }) {
-  const { highlightBg, highlightText, highlightOpacity, highlightRadius } =
-    useDbHighlightSettings()
+  const { highlightBg, highlightText, highlightOpacity, highlightRadius } = useDbHighlightSettings()
 
   if (!query) return <>{text}</>
 
@@ -405,7 +404,7 @@ export default function DbInspector({
               icon={<RefreshCw size={11} />}
             />
           </Tooltip>
-                    <Tooltip content={viewMode === 'styled' ? 'Raw JSON' : 'Tree view'} placement="bottom">
+          <Tooltip content={viewMode === 'styled' ? 'Raw JSON' : 'Tree view'} placement="bottom">
             <IconButton
               onClick={() => setViewMode(viewMode === 'styled' ? 'raw' : 'styled')}
               variant="ghost"

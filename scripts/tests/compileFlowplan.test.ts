@@ -391,7 +391,7 @@ describe('compileFlowplan', () => {
     expect(cfg.__flowplan.simulatorControls).toEqual([])
   })
 
-  it('CP9. fork db with dot-path key matches nested db value via readDotPath', () => {
+  it('CP9. fork db with dot-path key matches nested db value via get()', () => {
     const plan: FlowplanDef = {
       id: 'p',
       name: 'P',

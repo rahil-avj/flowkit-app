@@ -27,6 +27,7 @@ export const FLOWLENS_AVAILABLE = _flowlensLoader !== undefined
 If `src/modes/flowlens/index.ts` exists on disk, Vite resolves the glob at build time → `FLOWLENS_AVAILABLE = true` → the lazy chunk is included in the bundle. If the folder is absent, the glob is empty, `FLOWLENS_AVAILABLE = false`, and Rollup DCEs the entire FlowLens chunk — **no `flowlens-*.js` in the build**.
 
 To exclude FlowLens from a build:
+
 - **Repo mode**: delete or rename `src/modes/flowlens/` before `npm run build`
 - **Consumer mode (packages)**: no `src/modes/flowlens/` folder exists by default — it ships without FlowLens and cannot be re-enabled at build time
 
@@ -96,7 +97,7 @@ Cleanup: the debounce timer (`recentFlushRef`) is cleared in the component's unm
 
 See `EventType` in `src/features/flowTracer/types.ts`. Notable: `flow.entered/completed/
 exited-early/blocked`, **`flow.transition`** (emitted only when a navigation resolves
-*with a problem* — a screen guard blocks it, or a `do()`/`goTo()` resolver throws/warns;
+_with a problem_ — a screen guard blocks it, or a `do()`/`goTo()` resolver throws/warns;
 never fires on a clean, successful navigation — carries `action`, `from`, `to`, and
 `blocked`/`error`/`warnings` describing what went wrong; confirmed in
 `src/core/layout/FlowEngine.ts`, both emission sites are gated behind a

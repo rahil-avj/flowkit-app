@@ -105,7 +105,7 @@ For each numbered question:
   is this new, or a recurrence of something already logged?): `___________`
 - **Follow-up actions:** `___________`
 - **Worth promoting into the scripted exercise bank?** `[ ] yes → added to
-  agent-dx-exercises.md  [ ] no, too specific to this session`
+agent-dx-exercises.md  [ ] no, too specific to this session`
 
 ---
 
