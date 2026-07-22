@@ -36,3 +36,27 @@
   /* Memory match */
   --memory-card-back: #4a3f8f;
 }
+
+/* Card deal-in — used by PlayingCard when a new card enters a hand. */
+@keyframes card-deal-in {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Inline hand-result banner — used by Blackjack at the end of a round. */
+@keyframes result-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

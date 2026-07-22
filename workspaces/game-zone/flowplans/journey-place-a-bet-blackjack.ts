@@ -60,8 +60,8 @@ export default defineFlow({
     },
     {
       screenId: 'blackjack-game-screen',
-      on: 'play-again',
-      actionNote: 'Hand settled — plays again',
+      on: 'deal',
+      actionNote: 'Hand settled — deals again',
     },
   ],
 })

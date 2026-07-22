@@ -155,17 +155,42 @@ export default function TwentyFortyEightGameScreen() {
         </div>
       </div>
 
-      <div className="p-4 pb-8 flex justify-center gap-2">
-        {(['up', 'down', 'left', 'right'] as const).map(dir => (
+      <div className="p-4 pb-8 flex justify-center">
+        <div className="grid grid-cols-3 grid-rows-3 gap-1.5 w-36">
+          <div />
           <button
-            key={dir}
-            id={`move-${dir}`}
-            onClick={() => handleMove(dir)}
+            id="move-up"
+            onClick={() => handleMove('up')}
             className="size-10 rounded-md bg-theme-surface shadow-theme-card flex items-center justify-center text-ui-sm text-theme-text-primary"
           >
-            {{ up: '↑', down: '↓', left: '←', right: '→' }[dir]}
+            ↑
           </button>
-        ))}
+          <div />
+          <button
+            id="move-left"
+            onClick={() => handleMove('left')}
+            className="size-10 rounded-md bg-theme-surface shadow-theme-card flex items-center justify-center text-ui-sm text-theme-text-primary"
+          >
+            ←
+          </button>
+          <div />
+          <button
+            id="move-right"
+            onClick={() => handleMove('right')}
+            className="size-10 rounded-md bg-theme-surface shadow-theme-card flex items-center justify-center text-ui-sm text-theme-text-primary"
+          >
+            →
+          </button>
+          <div />
+          <button
+            id="move-down"
+            onClick={() => handleMove('down')}
+            className="size-10 rounded-md bg-theme-surface shadow-theme-card flex items-center justify-center text-ui-sm text-theme-text-primary"
+          >
+            ↓
+          </button>
+          <div />
+        </div>
       </div>
 
       {won && !continuedPastWin && (

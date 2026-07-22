@@ -1,6 +1,5 @@
 import type { ScreenMeta } from '@flowkit/types'
 import { useAppNav, useDb } from '@flowkit-shared/utils'
-import GameOverModal from '@workspace/lib/components/ui/GameOverModal'
 import IconButton from '@workspace/lib/components/ui/IconButton'
 import PlayingCard from '@workspace/lib/components/ui/PlayingCard'
 import PrimaryButton from '@workspace/lib/components/ui/PrimaryButton'
@@ -89,14 +88,6 @@ export default function BlackjackGameScreen() {
     playDealer(deck, playerHand)
   }
 
-  function handlePlayAgain() {
-    setPhase('betting')
-    setPlayerHand([])
-    setDealerHand([])
-    setBet(0)
-    setResult(null)
-  }
-
   const playerValue = handValue(playerHand)
   const dealerRevealed = phase === 'dealer-turn' || phase === 'resolved'
 
@@ -138,7 +129,12 @@ export default function BlackjackGameScreen() {
           </span>
           <div className="flex gap-2">
             {dealerHand.map((card, i) => (
-              <PlayingCard key={i} card={card} faceDown={i === 1 && !dealerRevealed} />
+              <PlayingCard
+                key={i}
+                card={card}
+                faceDown={i === 1 && !dealerRevealed}
+                dealIndex={i}
+              />
             ))}
           </div>
         </div>
@@ -146,7 +142,7 @@ export default function BlackjackGameScreen() {
         <div className="flex flex-col items-center gap-2">
           <div className="flex gap-2">
             {playerHand.map((card, i) => (
-              <PlayingCard key={i} card={card} />
+              <PlayingCard key={i} card={card} dealIndex={i} />
             ))}
           </div>
           <span className="text-ui-xs" style={{ color: 'var(--tile-text-light)' }}>
@@ -157,6 +153,28 @@ export default function BlackjackGameScreen() {
           </span>
         </div>
       </div>
+
+      {phase === 'resolved' && result && (
+        <div
+          key={result}
+          className="mx-4 mb-3 rounded-[10px] shadow-theme-card px-3 py-2 flex items-center justify-between gap-2"
+          style={{
+            background: 'var(--card-face-bg)',
+            animation: 'result-banner-in 220ms ease-out',
+          }}
+        >
+          <span className="text-ui-sm font-semibold" style={{ color: 'var(--tile-text-dark)' }}>
+            {RESULT_LABEL[result]}
+          </span>
+          <span className="text-ui-sm font-medium" style={{ color: 'var(--tile-text-dark)' }}>
+            {result === 'push'
+              ? 'Bet returned'
+              : result === 'dealer-win'
+                ? `-$${bet}`
+                : `+$${payout(result, bet)}`}
+          </span>
+        </div>
+      )}
 
       <div className="p-4 pb-8 flex flex-col gap-2">
         {phase === 'betting' && (
@@ -174,21 +192,21 @@ export default function BlackjackGameScreen() {
             </PrimaryButton>
           </div>
         )}
+        {phase === 'resolved' && (
+          <div className="flex gap-2">
+            <PrimaryButton id="deal" onClick={startHand} disabled={bankroll < BET_AMOUNT}>
+              Deal (${BET_AMOUNT})
+            </PrimaryButton>
+            <PrimaryButton
+              id="exit-to-hub"
+              variant="danger"
+              onClick={() => navigateTo('hub-screen')}
+            >
+              Exit to Hub
+            </PrimaryButton>
+          </div>
+        )}
       </div>
-
-      <GameOverModal
-        open={phase === 'resolved'}
-        title={result ? RESULT_LABEL[result] : ''}
-        message={
-          result === 'push'
-            ? 'Your bet is returned.'
-            : result === 'dealer-win'
-              ? `-$${bet} from your bankroll.`
-              : `+$${payout(result, bet)} added to your bankroll.`
-        }
-        onPlayAgain={handlePlayAgain}
-        onBackToHub={() => navigateTo('hub-screen')}
-      />
     </div>
   )
 }
