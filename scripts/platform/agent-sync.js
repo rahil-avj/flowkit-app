@@ -19,14 +19,15 @@ import {
   cliRows,
 } from './agent-spec.js'
 
-// ─── Supported agent targets: single source → each tool's native memory file ─────
+// ─── Memory file: one agent-agnostic output, no per-tool target choice ───────────
+// Previously this was a chooseable per-tool target (CLAUDE.md / AGENTS.md /
+// .cursor/rules/flowkit.mdc / none). Collapsed to a single AGENTS.md output,
+// matching the consumer-mode scaffolders (create-flowkit-app/create-flowkit-workspace),
+// which never offered a choice at all. A workspace synced under the old system
+// keeps whatever memory file it already has on disk — this only changes what
+// future `agent:sync` runs produce, it does not delete or migrate old output.
 
-export const AGENT_TARGETS = {
-  claude: { label: 'Claude Code (CLAUDE.md)', file: 'CLAUDE.md' },
-  agents: { label: 'AGENTS.md (cross-tool standard)', file: 'AGENTS.md' },
-  cursor: { label: 'Cursor (.cursor/rules)', file: '.cursor/rules/flowkit.mdc' },
-  none: { label: 'None (.agent docs only)', file: null },
-}
+export const MEMORY_FILE = 'AGENTS.md'
 
 // ─── Directive formatting ─────────────────────────────────────────────────────────
 
@@ -138,16 +139,14 @@ export function renderProjectStub(name) {
 
 // ─── The transformation: spec → the full file set for a chosen agent ──────────────
 
-/** Returns { ".agent/INDEX.md": "...", ... , [memoryFile]: "..." } (excludes project.md). */
-export function renderAgentFiles(ctx, agent) {
-  const out = {
+/** Returns { ".agent/INDEX.md": "...", ... , "AGENTS.md": "..." } (excludes project.md). */
+export function renderAgentFiles(ctx) {
+  return {
     '.agent/INDEX.md': renderIndex(ctx),
     '.agent/rules.md': renderRules(ctx),
     '.agent/platform.md': renderPlatform(ctx),
+    [MEMORY_FILE]: renderMemory(ctx),
   }
-  const target = AGENT_TARGETS[agent] ?? AGENT_TARGETS.agents
-  if (target.file) out[target.file] = renderMemory(ctx)
-  return out
 }
 
 // ─── Per-workspace meta (formatter state for sync/check) ──────────────────────────
@@ -156,11 +155,10 @@ export function metaPath(ws) {
   return path.join(workspacePath(ws), '.agent', '.agent-meta.json')
 }
 
-export function writeAgentMeta(ws, ctx, agent) {
+export function writeAgentMeta(ws, ctx) {
   const dir = path.join(workspacePath(ws), '.agent')
   fs.mkdirSync(dir, { recursive: true })
   writeJson(metaPath(ws), {
-    agent,
     kit: ctx.kit,
     language: ctx.language,
     specVersion: AGENT_SPEC_VERSION,
@@ -198,8 +196,8 @@ export function ctxFor(ws) {
 
 // ─── Commands ─────────────────────────────────────────────────────────────────────
 
-/** flowkit agent:sync[:<ws>] [--agent:<target>] — re-emit generated files (never project.md). */
-export function cmdAgentSync(val, args = []) {
+/** flowkit agent:sync[:<ws>] — re-emit generated files (never project.md, never a workspace's existing memory file). */
+export function cmdAgentSync(val, _args = []) {
   const ws = (val || '').trim() || requireActiveWorkspace('flowkit agent:sync')
   const wsDir = workspacePath(ws)
   if (!fs.existsSync(wsDir)) {
@@ -210,26 +208,7 @@ export function cmdAgentSync(val, args = []) {
   // correct in both modes. Flat mode has no workspaces/<name>/ subpath to print.
   const wsLabel = isRepoMode() ? `workspaces/${ws}` : '.'
 
-  const flagAgent = (args.find(a => a.startsWith('--agent:')) || '').split(':')[1]
-  const meta = readAgentMeta(ws)
-  const agent = flagAgent || meta?.agent || 'agents'
-  if (!AGENT_TARGETS[agent]) {
-    console.error(
-      r(`✗ Unknown agent: ${agent}`) + d(`  (${Object.keys(AGENT_TARGETS).join(', ')})`)
-    )
-    process.exit(1)
-  }
-
   const ctx = ctxFor(ws)
-
-  // If switching away from a previous agent, remove its stale memory file.
-  if (meta?.agent && meta.agent !== agent) {
-    const prev = AGENT_TARGETS[meta.agent]?.file
-    if (prev && fs.existsSync(path.join(wsDir, prev))) {
-      fs.rmSync(path.join(wsDir, prev))
-      console.log(d(`  removed previous ${meta.agent} memory file: ${prev}`))
-    }
-  }
 
   // Remove legacy files superseded by the new layout (BOOTSTRAP.md → INDEX.md).
   const legacy = path.join(wsDir, '.agent', 'BOOTSTRAP.md')
@@ -238,7 +217,7 @@ export function cmdAgentSync(val, args = []) {
     console.log(d('  removed legacy .agent/BOOTSTRAP.md (→ INDEX.md)'))
   }
 
-  const files = renderAgentFiles(ctx, agent)
+  const files = renderAgentFiles(ctx)
   for (const [rel, content] of Object.entries(files)) {
     const full = path.join(wsDir, rel)
     fs.mkdirSync(path.dirname(full), { recursive: true })
@@ -252,6 +231,6 @@ export function cmdAgentSync(val, args = []) {
     console.log(g('✓') + ' ' + b(`${wsLabel}/.agent/project.md`) + d(' (created)'))
   } else console.log(d('  · .agent/project.md preserved (hand-owned)'))
 
-  writeAgentMeta(ws, ctx, agent)
-  console.log(g('✓') + ` Agent files synced for ${b(ws)} ` + d(`→ ${AGENT_TARGETS[agent].label}`))
+  writeAgentMeta(ws, ctx)
+  console.log(g('✓') + ` Agent files synced for ${b(ws)} ` + d(`→ ${MEMORY_FILE}`))
 }

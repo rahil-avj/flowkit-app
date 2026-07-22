@@ -16,7 +16,7 @@ ${b('Syntax:')} short alias or long-form, both always work
   ${c('flowkit nw')}                         guided
   ${c('flowkit nw:<name>')}                  express — colon separates command from value
   ${c('flowkit new-workspace:<name>')}        same, long form
-  ${c('flowkit nw:<name> --kit:apple --lang:ts --agent:claude')}   with flags
+  ${c('flowkit nw:<name> --kit:apple --lang:ts')}   with flags
 
 ${b('Workspaces (repo mode only')} ${d('— not available in flat/multi consumer projects, see below')}${b('):')}
   ${c('nw')} / ${c('new-workspace')}           Create workspace (guided or express)
@@ -37,16 +37,24 @@ ${b('Scaffold (authoring):')}
   ${c('create:flow')} ${d('--name:<id>')}            Add a flow + register in workspace.ts
   ${c('create:screen')} ${d('--flow:<id> --name:<id>')}  Add a screen to a flow
   ${c('create:flowplan')} ${d('--name:<id>')}         Add a flowplan script
-  ${c('create:component')} ${d('--name:<id>')}        Add a workspace component
-  ${c('remove:flow')} / ${c('remove:screen')} / ${c('remove:flowplan')} / ${c('remove:component')} / ${c('remove:step')} ${d('--flowplan:<id> --index:<n>')}
-  ${c('rename:screen')} ${d('--flow:<id> --name:<old> --new:<new>')}
-  ${c('move:screen')} ${d('--name:<id> --from:<flow> --to:<flow>')}
+  ${c('create:component')} ${d('--name:<PascalName> --path:<lib/components/...>')}   Add a workspace component
+  ${c('remove:flow')} ${d('--name:<flow-id> [--force]')}
+  ${c('remove:screen')} ${d('--flow:<id> --name:<screen-id>')}
+  ${c('remove:flowplan')} ${d('--name:<flowplan-id> [--force]')}
+  ${c('remove:component')} ${d('--name:<ComponentName>')}
+  ${c('remove:step')} ${d('--flowplan:<id> --index:<n>')}
+  ${c('rename:screen')} ${d('--flow:<id> --name:<old-id> --to:<new-id>')}
+  ${c('move:screen')} ${d('--name:<id> --from-flow:<id> --to-flow:<id>')}
   ${c('add:step')} ${d('--flowplan:<id> --screen:<id>')}   Append a step to a flowplan
   ${c('add:export')} ${d('--barrel:<path> --name:<ExportName>')}   Add a barrel re-export
-  ${c('list:flows')} / ${c('list:screens')} / ${c('list:steps')} / ${c('list:exports')} ${d('--barrel:<path>')}
-  ${c('screen:info')} ${d('--name:<id>')}            Show screen metadata + flowplan refs
+  ${c('list:flows')}                        List flows in the workspace
+  ${c('list:screens')} ${d('[--flow:<id>]')}         List screens, optionally filtered by flow
+  ${c('list:steps')} ${d('--flowplan:<id>')}         List a flowplan's steps
+  ${c('list:exports')} ${d('--barrel:<path>')}       List a barrel's re-exports
+  ${c('screen:info')} ${d('--flow:<id> --name:<id>')}   Show screen metadata + flowplan refs
   ${c('flowplan:info')} ${d('--name:<id>')}          Show flowplan steps
-  ${c('components:ls')} / ${c('components:find')} / ${c('components:scan')}
+  ${c('components:ls')} / ${c('components:scan')}
+  ${c('components:find')} ${d('--name:<ComponentName>')}
   ${c('promote:flow')} ${d('--flowplan:<path> --fork:"<label>" [--as:<new-id>]')}   Extract a fork into its own flowplan
 
   ${d('All scaffold commands accept --workspace:<name> to target a non-active workspace.')}
@@ -90,10 +98,10 @@ ${b('Feedback:')}
 ${b('Export & handoff:')}
   ${c('export')} ${d('[--workspace:<name>] [--profile:<name>]')}   Standalone HTML export — guided flow, works in every mode
   ${c('handoff')} ${d('[<workspace>]')}             Developer handoff zip  ${d('— repo mode only, guided prompt if omitted')}
-
-${b('Agent onboarding:')}
-  ${c('agent:sync')} ${d('[--agent:claude|agents|cursor|none]')}   Regenerate .agent/* from spec
-
+${isRepoMode() ? `
+${b('Agent onboarding (repo mode only):')}
+  ${c('agent:sync')}                       Regenerate .agent/* and AGENTS.md from spec
+` : ''}
   ${c('flowkit -h')} / ${c('flowkit help')}     — show this help
   ${c('flowkit -v')} / ${c('flowkit version')}  — show installed version
 `)

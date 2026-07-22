@@ -141,16 +141,20 @@ export function directives(ctx) {
       rules: [
         {
           kind: 'always',
-          text: 'read/mutate data via `const { db, updateDb } = useDashboard()` — `db` is injected from `data/db.ts`',
+          text: 'read/mutate data via `const db = useDb()` (`@flowkit-shared/utils`) — safe get/has/set/remove/update helpers over the injected `db`; falls back to `const { db, updateDb } = useDashboard()` only when you need the raw object/setter directly',
         },
         {
           kind: 'never',
-          text: '`import { … } from "@workspace/lib/data/db"` inside a screen — direct import breaks flowplan db-patching; use the injected `db` from `useDashboard()`',
+          text: '`import { … } from "@workspace/lib/data/db"` inside a screen — direct import breaks flowplan db-patching; use the injected `db` from `useDashboard()`/`useDb()`',
+        },
+        {
+          kind: 'never',
+          text: 'write a hand-rolled dot-path walker against `db` — `useDb()`\'s `set`/`remove`/`update` reject `__proto__`/`prototype`/`constructor` paths; a raw `updateDb(fn)` mutation callback does not',
         },
         {
           kind: 'to',
           task: 'mutate data',
-          action: '`updateDb((d) => { d.auth.isLoggedIn = true })`',
+          action: "`useDb().set('auth.isLoggedIn', true)` (or `useDb().update('cart.count', n => n + 1)`)",
         },
       ],
     },
@@ -215,7 +219,7 @@ export function indexRows(_ctx) {
     },
     {
       task: 'Read or change data',
-      action: '`useDashboard()` → `db` / `updateDb`',
+      action: '`useDb()` → `get`/`has`/`set`/`remove`/`update`',
       detail: 'platform.md → Data',
     },
     {

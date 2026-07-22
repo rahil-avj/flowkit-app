@@ -21,7 +21,7 @@ import {
 import { prompt, selectFromList } from '../helpers/prompt.js'
 import { assertKebab, ValidationError } from '../helpers/validate.js'
 import { specContext } from './agent-spec.js'
-import { renderAgentFiles, renderProjectStub, writeAgentMeta, AGENT_TARGETS } from './agent-sync.js'
+import { renderAgentFiles, renderProjectStub, writeAgentMeta, MEMORY_FILE } from './agent-sync.js'
 
 export function restartVite() {
   try {
@@ -93,28 +93,6 @@ export async function cmdNewWorkspace(val) {
     )
     console.log('\n')
     selectedLang = langSelection.startsWith('JavaScript') ? 'js' : 'ts'
-  }
-
-  // ── Agent target (which tool's memory file to emit) ────────────────────────
-  let selectedAgent = 'agents'
-  const agentFlag = parseStringFlag(process.argv, 'agent')
-  if (agentFlag) {
-    const clean = agentFlag.toLowerCase().trim()
-    if (AGENT_TARGETS[clean]) selectedAgent = clean
-    else {
-      console.error(
-        r(`✗ Invalid agent: ${agentFlag}. Supported: ${Object.keys(AGENT_TARGETS).join(', ')}.`)
-      )
-      process.exit(1)
-    }
-  } else {
-    console.log(c('? ') + 'Coding agent (↑↓ Enter) — which memory file to generate:')
-    const sel = await selectFromList(
-      Object.entries(AGENT_TARGETS).map(([k, v]) => `${k} — ${v.label}`),
-      null
-    )
-    console.log('\n')
-    selectedAgent = sel.split(' —')[0].trim()
   }
 
   // ── Kit (filtered by language compatibility) ───────────────────────────────
@@ -268,7 +246,7 @@ export async function cmdNewWorkspace(val) {
     isStandalone: isStandaloneKit,
     language: selectedLang,
   })
-  const agentFiles = renderAgentFiles(agentCtx, selectedAgent)
+  const agentFiles = renderAgentFiles(agentCtx)
   for (const [rel, content] of Object.entries(agentFiles)) {
     const full = path.join(wsDir, rel)
     fs.mkdirSync(path.dirname(full), { recursive: true })
@@ -278,8 +256,8 @@ export async function cmdNewWorkspace(val) {
   // project.md is hand-owned — write the stub once, never regenerated.
   fs.writeFileSync(path.join(wsDir, '.agent', 'project.md'), renderProjectStub(wsName))
   console.log(g('✓') + ' ' + b(`workspaces/${wsName}/.agent/project.md`))
-  writeAgentMeta(wsName, agentCtx, selectedAgent)
-  console.log(g('✓') + ' Agent: ' + b(AGENT_TARGETS[selectedAgent].label))
+  writeAgentMeta(wsName, agentCtx)
+  console.log(g('✓') + ' Agent: ' + b(MEMORY_FILE))
 
   if (selectedKit !== 'none') {
     const kitType = isStandaloneKit ? 'standalone' : 'shared'

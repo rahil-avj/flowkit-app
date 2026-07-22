@@ -13,18 +13,21 @@ import type { DotPathPatch } from '@flowkit/types/index'
 //   • Array values REPLACE entirely — the author declares the exact array state.
 //   • Primitive / null values overwrite.
 //
-// This generalizes the private `setAtPath` in features/mock-db/DbInspector.tsx,
-// which bails on a null intermediate and mutates in place — neither of which is
-// safe for flow playback.
+// `setAtPath`/`UNSAFE_KEYS` here are also the shared foundation for the `db.*`
+// helper suite in `dbHelpers.ts` (get/set/has/remove/update) — see that file's
+// header comment for the history of why this consolidation happened: this
+// codebase had accumulated FIVE independently-hand-rolled dot-path walkers
+// across DbInspector, the simulator controls, and the flowplan compiler, each
+// with different (and in two cases actively broken) safety behavior.
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Obj = Record<string, any>
+export type Obj = Record<string, any>
 
-function isPlainObject(v: unknown): v is Obj {
+export function isPlainObject(v: unknown): v is Obj {
   return typeof v === 'object' && v !== null && !Array.isArray(v)
 }
 
-const UNSAFE_KEYS = new Set(['__proto__', 'prototype', 'constructor'])
+export const UNSAFE_KEYS = new Set(['__proto__', 'prototype', 'constructor'])
 
 /** Structured deep clone with a JSON fallback (db values are JSON-serializable). */
 function clone<T>(v: T): T {
@@ -51,8 +54,15 @@ function deepMerge(base: unknown, patch: unknown): unknown {
   return clone(patch)
 }
 
-/** Set `value` at a dot-path on `target` (mutates target), creating intermediates. */
-function setAtPath(target: Obj, dotPath: string, value: unknown): void {
+/**
+ * Set `value` at a dot-path on `target` (mutates target), creating intermediates.
+ * Object values at the leaf DEEP-MERGE with the existing value there; arrays and
+ * primitives overwrite. This merge behavior is specific to patch semantics — the
+ * `db.set()` helper in `dbHelpers.ts` wants a plain overwrite instead, so it does
+ * not call this function; it reimplements the create-intermediates/guard logic
+ * directly. See `dbHelpers.ts` for that version.
+ */
+export function setAtPath(target: Obj, dotPath: string, value: unknown): void {
   const parts = dotPath.split('.')
   if (parts.some(key => UNSAFE_KEYS.has(key))) {
     throw new Error(`applyDotPathPatch: unsafe key in path "${dotPath}"`)

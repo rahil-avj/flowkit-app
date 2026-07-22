@@ -17,7 +17,7 @@ import {
 } from './helpers.js'
 
 const WS = 'twsfpsteps'
-const NW_FLAGS = ['--lang:ts', '--agent:agents', '--kit:none']
+const NW_FLAGS = ['--lang:ts', '--kit:none']
 const FORKED_PLAN_PATH = path.join(ROOT, 'workspaces', WS, 'flowplans', 'forked-plan.ts')
 
 const FORKED_PLAN_SRC = `import { defineFlow } from '@flowkit-core/config'

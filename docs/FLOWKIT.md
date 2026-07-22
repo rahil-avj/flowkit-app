@@ -71,7 +71,7 @@ flowkit/
         platform.md             ← terse surface reference → Documentation/*
         project.md              ← living product brief (hand-owned, never regenerated)
         .agent-meta.json        ← formatter state for agent:sync
-      CLAUDE.md / AGENTS.md     ← agent memory file (chosen via --agent: flag)
+      AGENTS.md                 ← agent memory file (one agent-agnostic file, no per-tool choice)
       workspace.ts         ← workspace manifest (defineConfig)
       index.ts                  ← Workspace entry (optional shared exports)
   scripts/                      ← Node.js CLI (never bundled by Vite)
@@ -264,7 +264,7 @@ export const user = { id: 'u1', name: '…', email: '…', plan: 'pro' }
 export const settings = { theme: 'dark', language: 'en' }
 ```
 
-`DashboardContext` imports it on startup and holds a live copy. Screens receive it as the `db` prop — no import needed. Mutations go through `updateDb` from `useDashboard()`.
+`DashboardContext` imports it on startup and holds a live copy. Screens receive it as the `db` prop — no import needed. Mutations go through `updateDb` from `useDashboard()`, or preferably `useDb()` (`@flowkit-shared/utils`) — a thin wrapper with `get`/`has`/`set`/`remove`/`update` helpers that reject unsafe dot-paths (`__proto__`/`prototype`/`constructor`) instead of silently corrupting or no-opping. Raw `updateDb(fn)` still works but carries no such guard.
 
 ---
 
@@ -486,18 +486,18 @@ Agent-ready workspaces are a core value prop: drop a coding agent in and it buil
 
 | File                                                                  | Purpose                                                                                                                       |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| memory file — `CLAUDE.md` / `AGENTS.md` / `.cursor/rules/flowkit.mdc` | Auto-ingested by the chosen agent. Identity + read-order + the hardest `NEVER`/`ALWAYS` directives. Chosen at `nw --agent:…`. |
+| memory file — `AGENTS.md`                                             | Auto-ingested by most coding-agent tools. Identity + read-order + the hardest `NEVER`/`ALWAYS` directives. One agent-agnostic file, no per-tool choice. |
 | `.agent/INDEX.md`                                                     | The map: `Task → Action → Detail`. The fast-lookup layer — the agent finds any task in one hop, no blind search.              |
 | `.agent/rules.md`                                                     | Full directive set in a structured grammar: `NEVER` / `ALWAYS` / `TO <task> → <action>`.                                      |
 | `.agent/platform.md`                                                  | Terse platform reference (hooks, types, CLI, kit), each row pointing to the full `Documentation/*.md`.                        |
 | `.agent/project.md`                                                   | Hand-owned product brief — flows, data model, decisions. **Never regenerated.**                                               |
-| `.agent/.agent-meta.json`                                             | Formatter state (agent, kit, language, spec version) for `agent:sync`.                                                        |
+| `.agent/.agent-meta.json`                                             | Formatter state (kit, language, spec version) for `agent:sync`.                                                        |
 
 > ⚠️ **Known gap (consumer mode):** `agent:sync` generates `.agent/platform.md` with repo-mode-only content (pointers to `Documentation/*.md`, `@flowkit`/`@flowkit-shared` aliases) even when run inside a flat/multi-workspace consumer project, where neither exists. Confirmed live 2026-07-10 — see [CLI.md](CLI.md#agent-onboarding) for the full note. Treat its pointers/import-path examples as reference-only in consumer mode until fixed.
 
 **Read order for a cold agent:** memory file → `rules.md` → `INDEX.md` → (depth only when a row points there) → `platform.md` / `Documentation/*`.
 
-**Single source → many agents.** `agent-spec.js` holds the facts once; `agent-sync.js` formats them into whichever agent's native file. Regenerate with `flowkit agent:sync` (also switches agent via `--agent:`).
+**Single source, one output.** `agent-spec.js` holds the facts once; `agent-sync.js` formats them into `AGENTS.md` plus the `.agent/*` reference files. Regenerate with `flowkit agent:sync`. (An earlier per-tool target system — `--agent:claude|agents|cursor|none` — existed here and was removed; every workspace now gets the same agent-agnostic `AGENTS.md` the consumer-mode scaffolders always produced.)
 
 For how an agent actually _works_ a workspace — the cold-start sequence, task recipes, and the directive grammar — see **[AGENTS.md](AGENTS.md)**.
 

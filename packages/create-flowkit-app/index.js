@@ -541,10 +541,10 @@ async function offerGlobalInstall() {
   const answer = await prompt(
     rl,
     c('? ') +
-      `Install flowkit globally so you can run bare \`flowkit <command>\` here? (y/N) `
+      `Install flowkit globally so you can run bare \`flowkit <command>\` here? (Y/n) `
   )
   rl.close()
-  if (!/^y(es)?$/i.test(answer.trim())) return false
+  if (/^n(o)?$/i.test(answer.trim())) return false
 
   try {
     console.log(d(`  Installing flowkit globally (npm install -g ${globalSpec})...`))
