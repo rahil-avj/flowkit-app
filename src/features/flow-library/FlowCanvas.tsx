@@ -61,7 +61,7 @@ function Sequence({
           <div key={i} className="flex flex-col items-start">
             <Connector theme={theme} hide={i === 0 && depth === 0} active={isActive} />
             <div className="flex items-start gap-3">
-              <ScreenNode
+              <PageNode
                 step={step}
                 theme={theme}
                 scale={scale}
@@ -89,7 +89,7 @@ function Sequence({
   )
 }
 
-function ScreenNode({
+function PageNode({
   step,
   theme,
   scale,

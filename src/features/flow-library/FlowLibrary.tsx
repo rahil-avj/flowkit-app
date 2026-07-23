@@ -1,5 +1,5 @@
 import { type FlowplanDef, type FlowStep, type Fork, isFlowplanRef } from '@flowkit/types/index'
-import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
+import { useFlowPlaybackOptional } from '@flowkit-features/flowStory/FlowPlaybackContext'
 import Button from '@flowkit-shared/components/ui/Button'
 import SharedEmptyState from '@flowkit-shared/components/ui/EmptyState'
 import Tag from '@flowkit-shared/components/ui/Tag'
@@ -24,16 +24,16 @@ import { type FlowSummary, useFlowLibrary } from './useFlowLibrary'
 // ── Flow Library ────────────────────────────────────────────────────────────────
 
 interface Props {
-  screenFilter?: string | null
-  onClearScreenFilter?: () => void
+  pageFilter?: string | null
+  onClearPageFilter?: () => void
   search?: string
   activeTags?: Set<string>
   onDetailChange?: (open: boolean) => void
 }
 
 export default function FlowLibrary({
-  screenFilter,
-  onClearScreenFilter,
+  pageFilter,
+  onClearPageFilter,
   search: searchProp,
   activeTags: activeTagsProp,
   onDetailChange,
@@ -74,14 +74,14 @@ export default function FlowLibrary({
     })
   }, [summaries, q, activeTags])
 
-  const screenGroups = useMemo(() => {
-    if (!screenFilter) return null
-    const starts = filtered.filter(s => s.firstPageId === screenFilter)
+  const pageGroups = useMemo(() => {
+    if (!pageFilter) return null
+    const starts = filtered.filter(s => s.firstPageId === pageFilter)
     const includes = filtered.filter(
-      s => s.firstPageId !== screenFilter && s.pageIds.includes(screenFilter)
+      s => s.firstPageId !== pageFilter && s.pageIds.includes(pageFilter)
     )
     return { starts, includes }
-  }, [filtered, screenFilter])
+  }, [filtered, pageFilter])
 
   if (selected) {
     const isSelectedPlaying =
@@ -98,7 +98,7 @@ export default function FlowLibrary({
             playback?.exit()
             // Same as onStop below — must navigate OFF the `-play` runner view,
             // otherwise FlowMaster stays mounted with its already-compiled flow
-            // and keeps rendering flowplan hints/captions after exit().
+            // and keeps rendering flowStory hints/captions after exit().
             navigateTo(activeSourcePageId ?? firstViewId ?? 'home')
           }
           setSelectedId(null)
@@ -106,10 +106,10 @@ export default function FlowLibrary({
         onPlay={() => navigateTo(`${selected.id}-play`)}
         onStop={() => {
           playback?.exit()
-          // Land on the GENERIC (non-flowplan) version of whatever screen was
+          // Land on the GENERIC (non-flowStory) version of whatever page was
           // active — not home, not back to this list. Known trade-off: the db
-          // resets to the workspace default on exit(), so a screen authored
-          // assuming accumulated flowplan db state may render sparsely here.
+          // resets to the workspace default on exit(), so a page authored
+          // assuming accumulated flowStory db state may render sparsely here.
           navigateTo(activeSourcePageId ?? firstViewId ?? 'home')
         }}
       />
@@ -135,25 +135,25 @@ export default function FlowLibrary({
         </div>
       )}
 
-      {screenFilter && (
-        <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg flex items-center justify-between shrink-0 bg-theme-blue-dim border border-theme-blue/20">
-          <span className="text-ui-2xs text-theme-blue">
-            Flows with <code className="font-mono">{screenFilter}</code>
-          </span>
-          <button
-            onClick={onClearScreenFilter}
-            className="font-semibold text-ui-2xs text-theme-blue"
-          >
-            clear
-          </button>
-        </div>
-      )}
+      {pageFilter && (
+          <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg flex items-center justify-between shrink-0 bg-theme-blue-dim border border-theme-blue/20">
+            <span className="text-ui-2xs text-theme-blue">
+              Flows with <code className="font-mono">{pageFilter}</code>
+            </span>
+            <button
+              onClick={onClearPageFilter}
+              className="font-semibold text-ui-2xs text-theme-blue"
+            >
+              clear
+            </button>
+          </div>
+        )}
 
       <div className="flex-1 overflow-y-auto px-2 pb-3 flex flex-col gap-1.5 pt-1">
-        {screenGroups ? (
+        {pageGroups ? (
           <>
-            <Group label="Starts here" list={screenGroups.starts} onSelect={setSelectedId} />
-            <Group label="Passes through" list={screenGroups.includes} onSelect={setSelectedId} />
+            <Group label="Starts here" list={pageGroups.starts} onSelect={setSelectedId} />
+            <Group label="Passes through" list={pageGroups.includes} onSelect={setSelectedId} />
           </>
         ) : filtered.length === 0 ? (
           <EmptyState hasAny={summaries.length > 0} />
@@ -284,7 +284,7 @@ function FlowDetail({ summary, onBack, onPlay, onStop }: FlowDetailProps) {
   const [view, setView] = useState<'steps' | 'canvas'>('steps')
   const playback = useFlowPlaybackOptional()
 
-  // Resolve the active sourcePageId when this summary's flowplan is playing.
+  // Resolve the active sourcePageId when this summary's flowStory is playing.
   // compiledSteps[currentStepIndex].pageId is the compiled (possibly namespaced) id;
   // sourcePageId is the authored id that matches def.steps entries.
   const activeSourcePageId = useMemo(() => {

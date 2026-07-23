@@ -5,7 +5,7 @@
 export interface FlowRunRecord {
   /** ISO timestamp of the run. */
   at: string
-  /** Total steps in the flowplan. */
+  /** Total steps in the flowStory. */
   totalSteps: number
   /** Steps reached during the run. */
   stepsReached: number

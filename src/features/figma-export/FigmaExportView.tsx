@@ -4,7 +4,7 @@ import { Z } from '@flowkit-shared/constants/zIndex'
 import { PanelLeft } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
-import FigmaExportGrid, { groupScreens } from './FigmaExportGrid'
+import FigmaExportGrid, { groupPages } from './FigmaExportGrid'
 import type { CanvasBg, GroupBy, LabelField } from './FigmaExportSidebar'
 import FigmaExportSidebar, { SIDEBAR_W } from './FigmaExportSidebar'
 
@@ -55,7 +55,7 @@ function FigmaIcon({ size = 16 }: { size?: number }) {
 // ─── FigmaExportView ──────────────────────────────────────────────────────────
 
 export default function FigmaExportView({ views }: { views: WireframeView[] }) {
-  const screens = useMemo(() => views.filter(v => !v.id.endsWith('-play')), [views])
+  const pages = useMemo(() => views.filter(v => !v.id.endsWith('-play')), [views])
 
   // ── Device ──────────────────────────────────────────────────────────────────
   const [preset, setPreset] = useState<DevicePreset>(DEFAULT_PRESET)
@@ -94,39 +94,39 @@ export default function FigmaExportView({ views }: { views: WireframeView[] }) {
 
   // ── Filtering ────────────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('')
-  const [filterFlow, setFilterFlow] = useState<string | null>(null)
+  const [filterChapter, setFilterChapter] = useState<string | null>(null)
   const [filterTags, setFilterTags] = useState<Set<string>>(new Set())
 
   // ── Derived filter options ───────────────────────────────────────────────────
   const allTags = useMemo(
-    () => [...new Set(screens.flatMap(v => v.meta?.tags ?? []))].sort(),
-    [screens]
+    () => [...new Set(pages.flatMap(v => v.meta?.tags ?? []))].sort(),
+    [pages]
   )
-  const allFlows = useMemo(
-    () => [...new Set(screens.map(v => v.flow).filter((f): f is string => Boolean(f)))].sort(),
-    [screens]
+  const allChapters = useMemo(
+    () => [...new Set(pages.map(v => v.chapter).filter((f): f is string => Boolean(f)))].sort(),
+    [pages]
   )
 
-  // ── Filtered + grouped screens ───────────────────────────────────────────────
-  const filteredScreens = useMemo(
+  // ── Filtered + grouped pages ─────────────────────────────────────────────────
+  const filteredPages = useMemo(
     () =>
-      screens.filter(view => {
+      pages.filter(view => {
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase()
           if (!view.label.toLowerCase().includes(q) && !view.id.toLowerCase().includes(q))
             return false
         }
-        if (filterFlow !== null && (view.flow ?? null) !== filterFlow) return false
+        if (filterChapter !== null && (view.chapter ?? null) !== filterChapter) return false
         if (filterTags.size > 0) {
           const tags = view.meta?.tags ?? []
           if (!tags.some(t => filterTags.has(t))) return false
         }
         return true
       }),
-    [screens, searchQuery, filterFlow, filterTags]
+    [pages, searchQuery, filterChapter, filterTags]
   )
 
-  const sections = useMemo(() => groupScreens(filteredScreens, groupBy), [filteredScreens, groupBy])
+  const sections = useMemo(() => groupPages(filteredPages, groupBy), [filteredPages, groupBy])
 
   // ── Grid area width ──────────────────────────────────────────────────────────
   const gridAreaWidth = windowWidth - (sidebarOpen && !figmaMode ? SIDEBAR_W : 0)
@@ -156,11 +156,11 @@ export default function FigmaExportView({ views }: { views: WireframeView[] }) {
         onGroupByChange={setGroupBy}
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
-        filterFlow={filterFlow}
-        onFilterFlowChange={setFilterFlow}
+        filterChapter={filterChapter}
+        onFilterChapterChange={setFilterChapter}
         filterTags={filterTags}
         onFilterTagsChange={setFilterTags}
-        allFlows={allFlows}
+        allChapters={allChapters}
         allTags={allTags}
         onFigmaExport={() => setFigmaMode(true)}
       />
@@ -189,9 +189,9 @@ export default function FigmaExportView({ views }: { views: WireframeView[] }) {
               <PanelLeft size={13} />
             </button>
             <span className="text-ui-2xs font-semibold text-theme-text-muted">
-              {filteredScreens.length === screens.length
-                ? `${screens.length} screens`
-                : `${filteredScreens.length} of ${screens.length} screens`}
+              {filteredPages.length === pages.length
+                ? `${pages.length} pages`
+                : `${filteredPages.length} of ${pages.length} pages`}
               {' · '}
               {preset.label}
               {' · '}⌘⌥⇧P to close
@@ -214,12 +214,12 @@ export default function FigmaExportView({ views }: { views: WireframeView[] }) {
               <FigmaIcon size={16} />
               <span className="font-bold text-ui-sm">Figma Export Mode</span>
               <span className="text-ui-2xs opacity-75">
-                Screens are at 1:1 on white. Run the Web to Figma plugin now, then click Done.
+                Pages are at 1:1 on white. Run the Web to Figma plugin now, then click Done.
               </span>
             </div>
             <button
               onClick={() => setFigmaMode(false)}
-              className="text-ui-2xs font-bold px-3.5 py-[5px] rounded-[6px] cursor-pointer bg-white/20 border border-white/35 text-white hover:bg-white/30 transition-colors duration-150"
+              className="text-ui-2xs font-bold px-3.5 py-1.25 rounded-md cursor-pointer bg-white/20 border border-white/35 text-white hover:bg-white/30 transition-colors duration-150"
             >
               Done
             </button>

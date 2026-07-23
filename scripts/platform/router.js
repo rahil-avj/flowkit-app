@@ -237,7 +237,7 @@ export async function route(argv) {
     const sub = p.val
     if (sub === 'chapter') await cmdCreateChapter('', rest)
     else if (sub === 'page') await cmdCreatePage('', rest)
-    else if (sub === 'flowplan') await cmdCreateFlowplan('', rest)
+    else if (sub === 'flowStory') await cmdCreateFlowplan('', rest)
     else if (sub === 'component') await cmdCreateComponent('', rest)
     else if (sub === 'workspace') await cmdAddWorkspace('', rest)
     else {
@@ -248,7 +248,7 @@ export async function route(argv) {
     const sub = p.val
     if (sub === 'chapter') await cmdRemoveChapter('', rest)
     else if (sub === 'page') await cmdRemovePage('', rest)
-    else if (sub === 'flowplan') await cmdRemoveFlowplan('', rest)
+    else if (sub === 'flowStory') await cmdRemoveFlowplan('', rest)
     else if (sub === 'component') await cmdRemoveComponent('', rest)
     else if (sub === 'step') await cmdRemoveStep('', rest)
     else if (sub === 'workspace') await cmdRemoveWorkspaceFlat('', rest)
@@ -306,10 +306,10 @@ export async function route(argv) {
       console.error(r(`✗ Unknown: page:${p.val}`))
       process.exit(1)
     }
-  } else if (p.cmd === 'flowplan') {
+  } else if (p.cmd === 'flowStory') {
     if (p.val === 'info') await cmdFlowplanInfo('', rest)
     else {
-      console.error(r(`✗ Unknown: flowplan:${p.val}`))
+      console.error(r(`✗ Unknown: flowStory:${p.val}`))
       process.exit(1)
     }
   } else if (p.cmd === 'components') {

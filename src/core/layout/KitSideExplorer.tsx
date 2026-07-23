@@ -1,7 +1,7 @@
 import type { Chapter } from '@flowkit/types/index'
 import { ToolbarTooltipContent } from '@flowkit-core/canvas/ToolbarBtn'
 import PanelBody from '@flowkit-core/layout/PanelBody'
-import { FlowLibrary, ScreensHierarchy } from '@flowkit-features/flow-library'
+import { FlowLibrary, PagesHierarchy } from '@flowkit-features/flow-library'
 import { useFlowLibrary } from '@flowkit-features/flow-library'
 import { useSessionRecorderOptional } from '@flowkit-features/flowTracer/context'
 import { DEVICE_PRESETS } from '@flowkit-shared/components/devices'
@@ -48,17 +48,17 @@ function writeStorage(key: string, value: unknown) {
 
 // ── Left panel tabs ───────────────────────────────────────────────────────────
 
-type LeftTab = 'screens' | 'flows'
+type LeftTab = 'screens' | 'chapters'
 
 const LEFT_TAB_META: Record<LeftTab, { label: string; icon: React.ElementType }> = {
   screens: { label: 'Screens', icon: Layers },
-  flows: { label: 'Flow Library', icon: GitBranch },
+  chapters: { label: 'Flow Library', icon: GitBranch },
 }
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface Props {
-  flows: Chapter[]
+  chapters: Chapter[]
   /** Controlled open state — owned by the parent (DesktopCanvas via usePanelLayout). Required unless bare=true. */
   isOpen?: boolean
   onOpenChange?: (isOpen: boolean) => void
@@ -71,7 +71,7 @@ interface Props {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function KitSideExplorer({
-  flows,
+  chapters,
   isOpen = false,
   onOpenChange = () => {},
   onOpenSettings,
@@ -91,7 +91,7 @@ export default function KitSideExplorer({
 
   const activeWorkspaceName = useActiveWorkspace()
   const [tab, setTab] = useState<LeftTab>(() => readStorage(STORAGE_LEFT_TAB, 'screens') as LeftTab)
-  const [screenFilter, setScreenFilter] = useState<string | null>(null)
+  const [pageFilter, setPageFilter] = useState<string | null>(null)
   const [filterState, setFilterState] = useState<FilterState>({})
 
   const { hasHierarchy, tree } = useWorkspaceHierarchy(activeWorkspaceName)
@@ -112,7 +112,7 @@ export default function KitSideExplorer({
 
   // Build filter groups per tab
   const filterGroups = useMemo((): FilterGroup[] => {
-    const tags = tab === 'flows' ? flowTags : screenTags
+    const tags = tab === 'chapters' ? flowTags : screenTags
     const groups: FilterGroup[] = []
     if (tags.length > 0) {
       groups.push({
@@ -173,7 +173,7 @@ export default function KitSideExplorer({
     },
     focusSearch,
   })
-  useNavigationShortcuts({ flows, activeViewId, navigateTo })
+  useNavigationShortcuts({ chapters, activeViewId, navigateTo })
 
   useExplorerCommands(
     useCallback(
@@ -190,7 +190,7 @@ export default function KitSideExplorer({
     )
   )
 
-  const searchPlaceholder = tab === 'flows' ? 'Search flows…' : 'Search screens…'
+  const searchPlaceholder = tab === 'chapters' ? 'Search chapters…' : 'Search screens…'
 
   // ── Content pane ──────────────────────────────────────────────────────────────
   const contentPane =
@@ -202,7 +202,7 @@ export default function KitSideExplorer({
         toolbar={
           <div
             className="p-2 flex items-center gap-2"
-            style={{ display: tab === 'flows' && flowDetailOpen ? 'none' : undefined }}
+            style={{ display: tab === 'chapters' && flowDetailOpen ? 'none' : undefined }}
           >
             <Input
               ref={searchRef}
@@ -291,11 +291,11 @@ export default function KitSideExplorer({
         }
       >
         {/* Flow Library */}
-        {tab === 'flows' && (
+        {tab === 'chapters' && (
           <div className="flex-1 min-h-0 overflow-y-auto">
             <FlowLibrary
-              screenFilter={screenFilter}
-              onClearScreenFilter={() => setScreenFilter(null)}
+              pageFilter={pageFilter}
+              onClearPageFilter={() => setPageFilter(null)}
               search={search}
               activeTags={activeTags}
               onDetailChange={setFlowDetailOpen}
@@ -305,12 +305,12 @@ export default function KitSideExplorer({
 
         {/* Screens — hierarchy */}
         {tab === 'screens' && hasHierarchy && (
-          <ScreensHierarchy
+          <PagesHierarchy
             search={search}
             activeTags={activeTags}
-            onFindInLibrary={pageId => {
-              setScreenFilter(pageId)
-              setTab('flows')
+            onFindInLibrary={(pageId: string) => {
+              setPageFilter(pageId)
+              setTab('chapters')
             }}
           />
         )}
@@ -356,7 +356,7 @@ export default function KitSideExplorer({
         onToggle={() => onOpenChange(!isOpen)}
         onOpenSettings={onOpenSettings}
       >
-        {(['screens', 'flows'] as LeftTab[]).map(t => (
+        {(['screens', 'chapters'] as LeftTab[]).map(t => (
           <SidebarButton
             key={t}
             label={LEFT_TAB_META[t].label}

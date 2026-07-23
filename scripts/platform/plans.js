@@ -1,4 +1,4 @@
-// Platform command: read-only flowplan/project discovery (plan:ls, project:ls). Flowplan
+// Platform command: read-only flowStory/project discovery (plan:ls, project:ls). Flowplan
 // validation lives in scripts/checks/flowStories.js — see `flowkit check:flowStories`.
 import fs from 'fs'
 import path from 'path'
@@ -17,7 +17,7 @@ function listProjects(ws) {
   return fs.readdirSync(dir).filter(f => fs.statSync(path.join(dir, f)).isDirectory())
 }
 
-// ─── Format-aware flowplan resolver (R1) ──────────────────────────────────────
+// ─── Format-aware flowStory resolver (R1) ──────────────────────────────────────
 // Checks the flat layout (workspaces/<ws>/flowStories/) first, then falls back
 // to the legacy nested layout (workspaces/<ws>/projects/<proj>/flowStories/).
 // This is the single source of truth for ALL plan-discovery commands.
@@ -101,7 +101,7 @@ export function cmdProjectLs(val) {
     if (plans.length > 0 && plans[0].flat) {
       console.log(
         d(
-          `  Flat workspace — no projects layer. ${plans.length} flowplan${plans.length !== 1 ? 's' : ''} in ${FLOW_STORIES_DIRNAME}/`
+          `  Flat workspace — no projects layer. ${plans.length} flowStory${plans.length !== 1 ? 's' : ''} in ${FLOW_STORIES_DIRNAME}/`
         )
       )
     } else {

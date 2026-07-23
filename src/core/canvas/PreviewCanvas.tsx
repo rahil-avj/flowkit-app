@@ -1,6 +1,6 @@
 import type { Chapter, WireframeView } from '@flowkit/types/index'
 import { useFeedback } from '@flowkit-features/feedback/context/FeedbackContext'
-import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
+import { useFlowPlaybackOptional } from '@flowkit-features/flowStory/FlowPlaybackContext'
 import { useSessionSettings } from '@flowkit-features/flowTracer/components/useSessionSettings'
 import { useSessionRecorderOptional } from '@flowkit-features/flowTracer/context'
 import { GoToOverlay } from '@flowkit-features/go-to-overlay'
@@ -95,16 +95,16 @@ const FlowLensMode = flowlensLoader
   : null
 
 interface Props {
-  flows: Chapter[]
+  chapters: Chapter[]
   views: WireframeView[]
 }
-export default function PreviewCanvas({ flows, views }: Props) {
+export default function PreviewCanvas({ chapters, views }: Props) {
   const isMobile = useIsMobile()
-  if (isMobile) return <MobileCanvas flows={flows} views={views} />
-  return <DesktopCanvas flows={flows} views={views} />
+  if (isMobile) return <MobileCanvas chapters={chapters} views={views} />
+  return <DesktopCanvas chapters={chapters} views={views} />
 }
 
-function DesktopCanvas({ flows, views }: Props) {
+function DesktopCanvas({ chapters, views }: Props) {
   const {
     activeViewId,
     devicePreset,
@@ -547,7 +547,7 @@ function DesktopCanvas({ flows, views }: Props) {
       >
         <div className="flex flex-1 min-h-0">
           <KitSideExplorer
-            flows={flows}
+            chapters={chapters}
             isOpen={leftOpen}
             onOpenChange={setLeftOpen}
             onOpenSettings={openSettings}
@@ -610,7 +610,7 @@ function DesktopCanvas({ flows, views }: Props) {
 
       {showGoTo && (
         <GoToOverlay
-          flows={flows}
+          chapters={chapters}
           activeViewId={activeViewId}
           navigateTo={navigateTo}
           onClose={() => setShowGoTo(false)}
@@ -802,7 +802,7 @@ function CanvasContent({
                 .join(' ')}
             >
               {ActiveComponent ? (
-                // Screens tab is a static structural preview outside flowplan
+                // Screens tab is a static structural preview outside flowStory
                 // playback — screens that also want Screens-tab interactivity
                 // should call useAppNav() (@flowkit-shared/utils) for navigateTo;
                 // it's flow-aware automatically, no isChapter guard needed (see

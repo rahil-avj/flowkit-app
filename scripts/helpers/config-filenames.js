@@ -13,5 +13,5 @@ export const PROJECT_CONFIG_FILENAME = 'flowkit.json'
 /** Directory holding per-flow screen folders. Was 'flows', then 'flowBook'. */
 export const FLOW_BOOK_DIRNAME = 'flowBook'
 
-/** Directory holding flowplan definition files. Was 'flowStories', then 'flowStories'. */
+/** Directory holding flowStory definition files. Was 'flowStories', then 'flowStories'. */
 export const FLOW_STORIES_DIRNAME = 'flowStories'

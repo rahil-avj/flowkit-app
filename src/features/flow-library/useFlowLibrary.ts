@@ -30,7 +30,7 @@ export interface FlowSummary {
   def: FlowplanDef
 }
 
-/** Recursively count steps + forks and collect screen ids in a flowplan. */
+/** Recursively count steps + forks and collect screen ids in a flowStory. */
 function analyze(
   steps: FlowplanDef['steps'],
   registry: Map<string, FlowplanDef>,
@@ -76,12 +76,12 @@ export interface FlowLibraryData {
   /** All tags across all flowStories (for the filter bar). */
   allTags: string[]
   /**
-   * Union of all screen ids referenced by any flowplan step.
-   * Used by ScreensHierarchy to dim uncovered screens.
+   * Union of all page ids referenced by any flowStory step.
+   * Used by PagesHierarchy to dim uncovered pages.
    */
   coveredPageIds: Set<string>
-  /** O(1) screen lookup by id. Derived from views. */
-  screenById: Map<string, WireframeView>
+  /** O(1) page lookup by id. Derived from views. */
+  pageById: Map<string, WireframeView>
 }
 
 export function useFlowLibrary(): FlowLibraryData {
@@ -123,8 +123,8 @@ export function useFlowLibrary(): FlowLibraryData {
       return a.name.localeCompare(b.name)
     })
 
-    const screenById = new Map<string, WireframeView>(views.map(v => [v.id, v]))
+    const pageById = new Map<string, WireframeView>(views.map(v => [v.id, v]))
 
-    return { summaries, allTags: [...tagSet].sort(), coveredPageIds, screenById }
+    return { summaries, allTags: [...tagSet].sort(), coveredPageIds, pageById }
   }, [registry, views, activeWorkspace])
 }

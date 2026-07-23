@@ -7,7 +7,7 @@ import {
   isNonExistent,
   parsePageSegments,
   makePageId,
-} from '../../../src/shared/utils/screenPathIdentity.js'
+} from '../../../src/shared/utils/pagePathIdentity.js'
 
 // ── Path helpers ─────────────────────────────────────────────────────────────
 

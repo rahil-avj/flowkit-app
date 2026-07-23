@@ -1,7 +1,7 @@
-// Public API for the flowplan feature.
-// Import from '@flowkit-features/flowplan' — never reach inside internals.
-export type { CompiledFlowplan, CompiledStep, PageResolver, ResolvedPage } from './compileFlowplan'
-export { compileFlowplan, FlowplanCompileError } from './compileFlowplan'
+// Public API for the flowStory feature.
+// Import from '@flowkit-features/flowStory' — never reach inside internals.
+export type { CompiledFlowplan, CompiledStep, PageResolver, ResolvedPage } from './compileFlowStory'
+export { compileFlowStory, FlowplanCompileError } from './compileFlowStory'
 export { default as MobilePlaybackBar } from './components/MobilePlaybackBar'
 export type { FlowplanSettingsValue, HighlightColor, HintPosition } from './FlowplanSettingsContext'
 export { FlowplanSettingsProvider, useFlowplanSettings } from './FlowplanSettingsContext'

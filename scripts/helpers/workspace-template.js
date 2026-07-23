@@ -19,13 +19,13 @@
 //
 // NOTE on onAction?.('id') below only working during flow playback: FlowMaster
 // injects onAction/onNext/onBack into a screen only while it's rendered inside
-// an active flowplan (see PageProps' own JSDoc in src/types/index.ts —
+// an active flowStory (see PageProps' own JSDoc in src/types/index.ts —
 // "automatically injected... by FlowMaster"). These demo screens are correctly
 // inert when viewed standalone (e.g. flat mode's Screens-tab-equivalent
 // preview) — that's not a bug. A screen author wanting the same interactivity
 // outside a flow should call useDashboard() directly instead (repo mode's own
 // convention) and wire onClick={() => navigateTo(id)} — that path has no
-// dependency on FlowMaster or any flowplan. Don't conflate "these demo buttons
+// dependency on FlowMaster or any flowStory. Don't conflate "these demo buttons
 // don't respond outside a flow" with "navigation is broken" — the two
 // navigation conventions are independent, and this demo only shows one.
 import fs from 'fs'
@@ -119,7 +119,7 @@ export function writeWelcomeScreen(dir, language) {
         </h1>
         <p className="text-ui-sm text-theme-text-secondary text-center max-w-xs">
           This project shows how pages read from db, use theme tokens, and wire interactions via
-          flowplan steps.
+          flowStory steps.
         </p>
       </div>
       <div className="p-4 pb-8">

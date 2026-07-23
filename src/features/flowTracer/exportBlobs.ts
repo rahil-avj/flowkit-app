@@ -10,9 +10,9 @@ export function metricsCsvBlob(sessions: SessionExport[]): Blob {
       'name',
       'date',
       'duration_ms',
-      'screens_visited',
-      'flows_entered',
-      'flows_completed',
+      'pages_visited',
+      'chapters_entered',
+      'chapters_completed',
       'interactions',
       'frustrated_clicks',
       'remarks',
@@ -31,9 +31,9 @@ export function metricsCsvBlob(sessions: SessionExport[]): Blob {
       q(s.meta.name),
       date,
       String(m.totalDuration),
-      String(m.uniqueScreensVisited),
-      String(m.flowsEntered.length),
-      String(m.flowsCompleted.length),
+      String(m.uniquePagesVisited),
+      String(m.chaptersEntered.length),
+      String(m.chaptersCompleted.length),
       String(interactionCount),
       String(frustratedClickCount),
       String(s.meta.remarks.length),
@@ -74,9 +74,9 @@ export function markdownSummaryBlob(sessions: SessionExport[]): Blob {
     lines.push(`- **Date:** ${new Date(s.meta.startTime).toLocaleString()}`)
     lines.push(`- **Duration:** ${durationSec}s`)
     lines.push(`- **Quality score:** ${s.meta.qualityScore}/100`)
-    lines.push(`- **Screens visited:** ${m.uniqueScreensVisited}`)
+    lines.push(`- **Pages visited:** ${m.uniquePagesVisited}`)
     lines.push(
-      `- **Flows entered/completed:** ${m.flowsEntered.length} / ${m.flowsCompleted.length}`
+      `- **Chapters entered/completed:** ${m.chaptersEntered.length} / ${m.chaptersCompleted.length}`
     )
     lines.push(`- **Interactions:** ${interactionCount} (${frustratedClickCount} frustrated)`)
     if (s.meta.tags.length) lines.push(`- **Tags:** ${s.meta.tags.join(', ')}`)
@@ -86,13 +86,13 @@ export function markdownSummaryBlob(sessions: SessionExport[]): Blob {
     }
     lines.push('')
 
-    const topScreens = [...m.screenMetrics].sort((a, b) => b.avgDwellMs - a.avgDwellMs).slice(0, 5)
-    if (topScreens.length) {
-      lines.push('### Top screens by avg dwell')
+    const topPages = [...m.pageMetrics].sort((a, b) => b.avgDwellMs - a.avgDwellMs).slice(0, 5)
+    if (topPages.length) {
+      lines.push('### Top pages by avg dwell')
       lines.push('')
-      for (const sm of topScreens) {
+      for (const pm of topPages) {
         lines.push(
-          `- **${sm.pageId}**: ${Math.round(sm.avgDwellMs)}ms avg (${sm.visitCount} visit${sm.visitCount !== 1 ? 's' : ''})`
+          `- **${pm.pageId}**: ${Math.round(pm.avgDwellMs)}ms avg (${pm.visitCount} visit${pm.visitCount !== 1 ? 's' : ''})`
         )
       }
       lines.push('')

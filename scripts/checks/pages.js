@@ -15,7 +15,7 @@ import {
   parsePageSegments,
   makePageId,
   pickPageFile,
-} from '../../src/shared/utils/screenPathIdentity.js'
+} from '../../src/shared/utils/pagePathIdentity.js'
 
 const PAGE_EXTS = ['.tsx', '.jsx']
 

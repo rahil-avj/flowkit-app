@@ -1,6 +1,6 @@
 import {
   CopyScriptButton,
-  generateFlowOrderPatch,
+  generateChapterOrderPatch,
   generateWorkspaceOrderPatch,
 } from '@flowkit-features/script-patch'
 import { useActiveWorkspace } from '@flowkit-shared/contexts/ActiveWorkspaceContext'
@@ -91,11 +91,11 @@ export function ManageContent() {
 
   const wsNames = workspaces.map(w => w.name)
 
-  // Build project → flow map from the current tree
-  const projectFlowMap: Record<string, string[]> = {}
+  // Build project → chapter map from the current tree
+  const projectChapterMap: Record<string, string[]> = {}
   for (const projectNode of tree) {
     if (projectNode.kind === 'project') {
-      projectFlowMap[projectNode.id] = (projectNode.children ?? [])
+      projectChapterMap[projectNode.id] = (projectNode.children ?? [])
         .filter(c => c.kind === 'chapter')
         .map(c => c.id)
     }
@@ -118,19 +118,19 @@ export function ManageContent() {
         <CopyScriptButton patch={generateWorkspaceOrderPatch(wsNames)} size="sm" />
       </Accordion>
 
-      {/* ── Section 2: Flow Order ─────────────────────────────────────────── */}
-      <Accordion label="Flow Order">
-        {Object.keys(projectFlowMap).length === 0 ? (
+      {/* ── Section 2: Chapter Order ─────────────────────────────────────────── */}
+      <Accordion label="Chapter Order">
+        {Object.keys(projectChapterMap).length === 0 ? (
           <p className="italic" style={{ fontSize: scale.text.xs, color: theme.text.muted }}>
-            No project flows discovered.
+            No project chapters discovered.
           </p>
         ) : (
-          Object.entries(projectFlowMap).map(([project, flows]) => {
+          Object.entries(projectChapterMap).map(([project, chapters]) => {
             const declaredOrder =
               config.projects?.[project]?.chapters ?? config.projects?.[project]?.modules ?? []
             const ordered = [
-              ...declaredOrder.filter(f => flows.includes(f)),
-              ...flows.filter(f => !declaredOrder.includes(f)),
+              ...declaredOrder.filter(f => chapters.includes(f)),
+              ...chapters.filter(f => !declaredOrder.includes(f)),
             ]
             return (
               <div key={project} className="flex flex-col gap-2">
@@ -142,7 +142,7 @@ export function ManageContent() {
                 </span>
                 <OrderedList items={ordered} />
                 <CopyScriptButton
-                  patch={generateFlowOrderPatch(activeWorkspace, { [project]: ordered })}
+                  patch={generateChapterOrderPatch(activeWorkspace, { [project]: ordered })}
                   size="sm"
                 />
               </div>

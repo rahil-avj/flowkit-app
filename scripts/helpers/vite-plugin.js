@@ -10,7 +10,7 @@
  * Virtual modules produced:
  *   virtual:flowkit/config      — parsed FlowkitConfig object
  *   virtual:flowkit/screens     — lazy screen import map
- *   virtual:flowkit/flowStories   — eager flowplan import map
+ *   virtual:flowkit/flowStories   — eager flowStory import map
  *   virtual:flowkit/workspace   — db, simulator, tokens, logos, tags, sessions
  */
 
@@ -31,7 +31,7 @@ import {
   makePageId,
   parsePageSegments,
   pickPageFile,
-} from '../../src/shared/utils/screenPathIdentity.js'
+} from '../../src/shared/utils/pagePathIdentity.js'
 
 // src/ directory of the flowkit package — resolved relative to this plugin file.
 // In flat mode (author project) all @flowkit/* aliases point here.
@@ -116,7 +116,7 @@ async function genScreens(config, cwd) {
   const pageOrder = config.pageOrder ?? {}
 
   // Scan the whole flowBook/ tree — flow id is now derived from path position
-  // (via the shared screenPathIdentity module), not assumed from config.flows/
+  // (via the shared pagePathIdentity module), not assumed from config.flows/
   // pageOrder keys. Node's fs/promises glob() matches both depth-0
   // (flowBook/File.tsx) and deeper nesting with a single `**/*.tsx` pattern —
   // verified directly, no `{*,**/*}` workaround needed.

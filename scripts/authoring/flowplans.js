@@ -21,7 +21,7 @@ function flowplanPath(wsDir, id) {
   return path.join(wsDir, FLOW_STORIES_DIRNAME, `${id}.ts`)
 }
 
-/** Parse a flowplan .ts file into a plain object. Returns null on failure. */
+/** Parse a flowStory .ts file into a plain object. Returns null on failure. */
 function parseFlowplan(filePath) {
   if (!fs.existsSync(filePath)) return null
   let src = fs.readFileSync(filePath, 'utf8')
@@ -45,12 +45,12 @@ function formatStep(step) {
 }
 
 /**
- * Replace the steps: [...] block in a flowplan source with regenerated steps.
+ * Replace the steps: [...] block in a flowStory source with regenerated steps.
  *
  * formatStep() only serializes pageId/on/actionNote/decisionNote/annotation —
  * it has no serialization path for a step's `forks`, and the non-greedy regex
  * below only matches up to the first `]`, not the true end of a nested-bracket
- * steps array. Silently proceeding on a flowplan with forks would either drop
+ * steps array. Silently proceeding on a flowStory with forks would either drop
  * the fork data or write out a truncated/malformed array. Refuse instead —
  * `promote:chapter` is the one command that correctly bracket-scans nested
  * structures, so route the author there or ask them to hand-edit.
@@ -59,7 +59,7 @@ function rewriteSteps(filePath, steps) {
   const forkedIndex = steps.findIndex(s => Array.isArray(s.forks) && s.forks.length > 0)
   if (forkedIndex !== -1) {
     throw new Error(
-      `Step [${forkedIndex}] has forks — add:step/remove:step can't safely rewrite a flowplan ` +
+      `Step [${forkedIndex}] has forks — add:step/remove:step can't safely rewrite a flowStory ` +
         `with forks (only simple, non-nested step arrays are supported). Hand-edit ` +
         `${path.basename(filePath)} directly, or use "flowkit promote:flow" to extract the fork first.`
     )
@@ -93,8 +93,8 @@ export async function cmdCreateFlowplan(_val, args = []) {
   let id = parseStringFlag(args, 'name')
 
   if (!id) {
-    console.error(r('✗ --name:<flowplan-id> is required'))
-    console.error(d('  Example: flowkit create:flowplan --name:auth'))
+    console.error(r('✗ --name:<flowStory-id> is required'))
+    console.error(d('  Example: flowkit create:flowStory --name:auth'))
     process.exit(1)
   }
 
@@ -120,8 +120,8 @@ export async function cmdCreateFlowplan(_val, args = []) {
   console.log(g(`✓ Flowplan: ${FLOW_STORIES_DIRNAME}/${id}.ts`))
   console.log('')
   console.log(d(`Next:`))
-  console.log(d(`  flowkit add:step --flowplan:${id} --page:<pageId> --action:"User arrives"`))
-  console.log(d(`  flowkit list:steps --flowplan:${id}`))
+  console.log(d(`  flowkit add:step --flowStory:${id} --page:<pageId> --action:"User arrives"`))
+  console.log(d(`  flowkit list:steps --flowStory:${id}`))
 }
 
 export async function cmdRemoveFlowplan(_val, args = []) {
@@ -132,7 +132,7 @@ export async function cmdRemoveFlowplan(_val, args = []) {
   const force = args.includes('--force')
 
   if (!id) {
-    console.error(r('✗ --name:<flowplan-id> is required'))
+    console.error(r('✗ --name:<flowStory-id> is required'))
     process.exit(1)
   }
 
@@ -155,20 +155,20 @@ export async function cmdAddStep(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
-  const fpId = parseStringFlag(args, 'flowplan')
+  const fpId = parseStringFlag(args, 'flowStory')
   const pageId = parseStringFlag(args, 'page')
   const on = parseStringFlag(args, 'on')
   const actionNote = parseStringFlag(args, 'action')
   const positionStr = parseStringFlag(args, 'position')
 
   if (!fpId || !pageId) {
-    console.error(r('✗ --flowplan:<id> and --page:<pageId> are required'))
+    console.error(r('✗ --flowStory:<id> and --page:<pageId> are required'))
     process.exit(1)
   }
 
   // Validate the bare pageId exists in some flow's pageOrder (pageOrder is
   // flow-scoped/bare, per config-patch.js), then build the collision-proof composite
-  // id (chapter-page) from whichever flow it's actually registered under — a flowplan's
+  // id (chapter-page) from whichever flow it's actually registered under — a flowStory's
   // own id is a separate authored concept, not necessarily the same as the target
   // page's chapter folder, so this can't be assumed from fpId.
   const config = readWorkspaceConfig(wsDir)
@@ -188,7 +188,7 @@ export async function cmdAddStep(_val, args = []) {
   const fpPath = flowplanPath(wsDir, fpId)
   if (!fs.existsSync(fpPath)) {
     console.error(r(`✗ Flowplan not found: ${FLOW_STORIES_DIRNAME}/${fpId}.ts`))
-    console.error(d(`  Create it first: flowkit create:flowplan --name:${fpId}`))
+    console.error(d(`  Create it first: flowkit create:flowStory --name:${fpId}`))
     process.exit(1)
   }
 
@@ -224,18 +224,18 @@ export async function cmdAddStep(_val, args = []) {
     `  ${d('page:')} ${pageId}${on ? `  ${d('on:')} ${on}` : ''}${actionNote ? `  ${d('action:')} ${actionNote}` : ''}`
   )
   console.log('')
-  console.log(d(`View: flowkit list:steps --flowplan:${fpId}`))
+  console.log(d(`View: flowkit list:steps --flowStory:${fpId}`))
 }
 
 export async function cmdRemoveStep(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
-  const fpId = parseStringFlag(args, 'flowplan')
+  const fpId = parseStringFlag(args, 'flowStory')
   const indexStr = parseStringFlag(args, 'index')
 
   if (!fpId || indexStr === null || indexStr === undefined) {
-    console.error(r('✗ --flowplan:<id> and --index:<n> are required (0-based)'))
+    console.error(r('✗ --flowStory:<id> and --index:<n> are required (0-based)'))
     process.exit(1)
   }
 
@@ -276,10 +276,10 @@ export async function cmdListSteps(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
-  const fpId = parseStringFlag(args, 'flowplan')
+  const fpId = parseStringFlag(args, 'flowStory')
 
   if (!fpId) {
-    console.error(r('✗ --flowplan:<id> is required'))
+    console.error(r('✗ --flowStory:<id> is required'))
     process.exit(1)
   }
 
@@ -302,7 +302,7 @@ export async function cmdListSteps(_val, args = []) {
 
   if (steps.length === 0) {
     console.log(d('  (no steps)'))
-    console.log(d(`  Add one: flowkit add:step --flowplan:${fpId} --page:<pageId>`))
+    console.log(d(`  Add one: flowkit add:step --flowStory:${fpId} --page:<pageId>`))
     return
   }
 
@@ -323,7 +323,7 @@ export async function cmdFlowplanInfo(_val, args = []) {
   const fpId = parseStringFlag(args, 'name')
 
   if (!fpId) {
-    console.error(r('✗ --name:<flowplan-id> is required'))
+    console.error(r('✗ --name:<flowStory-id> is required'))
     process.exit(1)
   }
 

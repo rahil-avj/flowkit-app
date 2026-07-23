@@ -3,7 +3,7 @@ interface NoPagesProps {
   onAction?: () => void
 }
 
-export default function NoScreens({ workspaceName, onAction }: NoPagesProps) {
+export default function NoPages({ workspaceName, onAction }: NoPagesProps) {
   return (
     <div className="flex h-screen w-full items-center justify-center bg-theme-base">
       <div className="flex flex-col items-center gap-4 text-center">
@@ -25,24 +25,24 @@ export default function NoScreens({ workspaceName, onAction }: NoPagesProps) {
         </div>
         <div className="flex flex-col gap-1">
           <p className="text-ui-md font-semibold text-theme-text-primary">
-            No screens in "{workspaceName}"
+            No pages in "{workspaceName}"
           </p>
           <p className="max-w-xs text-ui-sm text-theme-text-muted">
-            This workspace exists but has no screens registered. Check{' '}
+            This workspace exists but has no pages registered. Check{' '}
             <code className="rounded bg-theme-elevated px-1 py-0.5 font-mono text-ui-xs text-theme-text-secondary">
               workspace.ts
             </code>
             's{' '}
             <code className="rounded bg-theme-elevated px-1 py-0.5 font-mono text-ui-xs text-theme-text-secondary">
-              flows
+              chapters
             </code>{' '}
             /{' '}
             <code className="rounded bg-theme-elevated px-1 py-0.5 font-mono text-ui-xs text-theme-text-secondary">
               pageOrder
             </code>{' '}
-            entries, or add a screen with{' '}
+            entries, or add a page with{' '}
             <code className="rounded bg-theme-elevated px-1 py-0.5 font-mono text-ui-xs text-theme-text-secondary">
-              flowkit create:screen
+              flowkit create:page
             </code>
             .
           </p>

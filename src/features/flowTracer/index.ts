@@ -19,7 +19,7 @@ export { SessionDb } from './sessionDb'
 export {
   computeSessionMetrics,
   type FlowMetrics,
-  type ScreenMetrics,
+  type PageMetrics,
   type SessionMetrics,
 } from './sessionMetrics'
 export type {

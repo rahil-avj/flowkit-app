@@ -9,7 +9,7 @@ type ViewMode = 'wall' | 'add-comment'
 export interface CommentFilter {
   pageId: string | null
   tags: Set<FeedbackTag>
-  filterForCurrentScreen: boolean
+  filterForCurrentPage: boolean
 }
 
 async function captureElementAsDataURL(element: HTMLElement): Promise<string> {
@@ -96,10 +96,10 @@ interface FeedbackTabContextType {
   setFilter: Dispatch<SetStateAction<CommentFilter>>
 
   // Add Comment Form State
-  selectedScreen: string
-  setSelectedScreen: (screen: string) => void
-  selectedScreenLabel: string
-  setSelectedScreenLabel: (label: string) => void
+  selectedPage: string
+  setSelectedPage: (page: string) => void
+  selectedPageLabel: string
+  setSelectedPageLabel: (label: string) => void
   textInput: string
   setTextInput: (text: string) => void
   selectedTags: FeedbackTag[]
@@ -184,20 +184,20 @@ export function FeedbackTabProvider({
   const [filter, setFilter] = useState<CommentFilter>({
     pageId: null,
     tags: new Set(),
-    filterForCurrentScreen: false,
+    filterForCurrentPage: false,
   })
 
-  const [selectedScreen, setSelectedScreen] = useState('')
-  const [selectedScreenLabel, setSelectedScreenLabel] = useState('')
+  const [selectedPage, setSelectedPage] = useState('')
+  const [selectedPageLabel, setSelectedPageLabel] = useState('')
 
-  // Reset screen selection to the active screen whenever the add-comment form opens.
+  // Reset page selection to the active page whenever the add-comment form opens.
   useEffect(() => {
     if (viewMode !== 'add-comment') return
     const id = activeViewId.replace('-play', '')
     const label = views.find(v => v.id === id)?.label ?? ''
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSelectedScreen(id)
-    setSelectedScreenLabel(label)
+    setSelectedPage(id)
+    setSelectedPageLabel(label)
   }, [viewMode, activeViewId, views])
   const [textInput, setTextInput] = useState('')
   const [selectedTags, setSelectedTags] = useState<FeedbackTag[]>([])
@@ -225,12 +225,12 @@ export function FeedbackTabProvider({
   const [exportIncludeScreenshots, setExportIncludeScreenshots] = useState(true)
 
   const handleAddComment = async () => {
-    if (!textInput.trim() || !selectedScreen) return
+    if (!textInput.trim() || !selectedPage) return
 
     let screenshotUrl: string | undefined = undefined
     const cleanActiveId = activeViewId.replace('-play', '')
 
-    if (includeScreenshot && selectedScreen === cleanActiveId) {
+    if (includeScreenshot && selectedPage === cleanActiveId) {
       setIsCapturing(true)
       try {
         const mockupEl = document.querySelector('#mockup-container')
@@ -246,8 +246,8 @@ export function FeedbackTabProvider({
     }
 
     addComment(
-      selectedScreen,
-      selectedScreenLabel,
+      selectedPage,
+      selectedPageLabel,
       selectedTags,
       textInput.trim(),
       'Me',
@@ -256,8 +256,8 @@ export function FeedbackTabProvider({
     setTextInput('')
     setSelectedTags([])
     setTagInput('')
-    setSelectedScreen('')
-    setSelectedScreenLabel('')
+    setSelectedPage('')
+    setSelectedPageLabel('')
     setViewMode('wall')
   }
 
@@ -329,7 +329,8 @@ export function FeedbackTabProvider({
   }
 
   // Compute filters
-  const effectivePageId = filter.filterForCurrentScreen
+  // Compute filters
+  const effectivePageId = filter.filterForCurrentPage
     ? activeViewId.replace('-play', '')
     : filter.pageId
   const filteredComments = comments.filter(c => {
@@ -346,7 +347,7 @@ export function FeedbackTabProvider({
     },
     {} as Record<string, typeof comments>
   )
-  // Sort groups by screen label, comments within each group by timestamp ascending
+  // Sort groups by page label, comments within each group by timestamp ascending
   const filteredGroupedComments = Object.fromEntries(
     Object.entries(grouped)
       .sort(([, a], [, b]) => (a[0].pageLabel || '').localeCompare(b[0].pageLabel || ''))
@@ -369,10 +370,10 @@ export function FeedbackTabProvider({
         setShowFilterPanel,
         filter,
         setFilter,
-        selectedScreen,
-        setSelectedScreen,
-        selectedScreenLabel,
-        setSelectedScreenLabel,
+        selectedPage,
+        setSelectedPage,
+        selectedPageLabel,
+        setSelectedPageLabel,
         textInput,
         setTextInput,
         selectedTags,

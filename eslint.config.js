@@ -12,7 +12,7 @@ export default tseslint.config(
   // packages/** are scaffold templates copied into author projects at runtime —
   // not part of this app's own TypeScript project (see tsconfig.app.json's
   // include: ["src", "workspaces"]) and not subject to this repo's lint rules.
-  { ignores: ['dist', 'coverage', 'packages', 'testspace', 'test', 'temp-test*'] },
+  { ignores: ['dist', 'coverage', 'packages', 'testspace', 'tests', 'test', 'temp-test*'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],

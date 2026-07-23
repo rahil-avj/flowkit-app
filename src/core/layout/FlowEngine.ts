@@ -8,10 +8,10 @@ import { useSessionRecorderOptional } from '@flowkit-features/flowTracer/context
 import { TransitionLogEntry, useDashboard } from '@flowkit-shared/contexts/DashboardContext'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-// ─── Flowplan gating (optional — engine stays flowplan-agnostic otherwise) ────
+// ─── Flowplan gating (optional — engine stays flowStory-agnostic otherwise) ────
 //
-// FlowMaster passes this in when the active flow is a compiled flowplan. The
-// engine never imports flowplan types — it only reads the three primitives it
+// FlowMaster passes this in when the active flow is a compiled flowStory. The
+// engine never imports flowStory types — it only reads the three primitives it
 // needs to gate a "user"-origin navigation against the planned step.
 
 export interface FlowplanGate {
@@ -249,7 +249,7 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
         // Emit dwell-end for the screen we're leaving
         const dwell = performance.now() - screenEntryTimeRef.current
         recorder.current?.logEvent('screen.dwell-end', {
-          pageId: logEntry.fromScreen,
+          pageId: logEntry.fromPage,
           dwellMs: Math.round(dwell),
           flowId: flow.id,
         })
@@ -258,11 +258,11 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
         // "push" appends the new screen; "pop" (back nav) drops the current tail
         // so history shrinks instead of duplicating the target.
         setHistory(h => (historyMode === 'pop' ? h.slice(0, -1) : [...h, name]))
-        setTransitionLog(prev => [...prev, { ...logEntry, toScreen: name }])
+        setTransitionLog(prev => [...prev, { ...logEntry, toPage: name }])
         recorder.current?.logEvent('screen.visited', {
           pageId: name,
           flowId: flow.id,
-          from: logEntry.fromScreen,
+          from: logEntry.fromPage,
           action: logEntry.action,
         })
       }
@@ -331,21 +331,21 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
             ? flowplanGate.currentNext({ db, flowState: localState })
             : flowplanGate.currentNext
         if (resolvedPlanned !== undefined && target !== resolvedPlanned) {
-          warnings.push(`Navigation to "${target}" blocked — outside the planned flowplan step.`)
+          warnings.push(`Navigation to "${target}" blocked — outside the planned flowStory step.`)
           setTransitionLog(prev => [
             ...prev,
             {
               timestamp,
               action: actionName,
-              fromScreen: activeScreenLabel,
-              toScreen: `[Blocked: ${target}]`,
+              fromPage: activeScreenLabel,
+              toPage: `[Blocked: ${target}]`,
               warnings,
             },
           ])
           recorder.current?.logEvent('screen.blocked', {
             pageId: target,
             flowId: flow.id,
-            fromScreen: activeScreenLabel,
+            fromPage: activeScreenLabel,
             strict: true,
           })
           return
@@ -358,14 +358,14 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
           {
             timestamp,
             action: actionName,
-            fromScreen: activeScreenLabel,
-            toScreen: '[Flow Completed]',
+            fromPage: activeScreenLabel,
+            toPage: '[Flow Completed]',
             warnings,
           },
         ])
         recorder.current?.logEvent('flow.completed', {
           flowId: flow.id,
-          fromScreen: activeScreenLabel,
+          fromPage: activeScreenLabel,
         })
         if (completionTimerRef.current) clearTimeout(completionTimerRef.current)
         completionTimerRef.current = setTimeout(() => {
@@ -383,8 +383,8 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
             {
               timestamp,
               action: actionName,
-              fromScreen: activeScreenLabel,
-              toScreen: '[Flow Completed]',
+              fromPage: activeScreenLabel,
+              toPage: '[Flow Completed]',
               warnings,
             },
           ])
@@ -400,8 +400,8 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
           {
             timestamp,
             action: actionName,
-            fromScreen: activeScreenLabel,
-            toScreen: '',
+            fromPage: activeScreenLabel,
+            toPage: '',
             warnings,
           },
           animation
@@ -421,8 +421,8 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
               {
                 timestamp,
                 action: actionName,
-                fromScreen: activeScreenLabel,
-                toScreen: prevName,
+                fromPage: activeScreenLabel,
+                toPage: prevName,
                 warnings,
               },
               backAnim,
@@ -442,14 +442,14 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
           {
             timestamp,
             action: actionName,
-            fromScreen: activeScreenLabel,
-            toScreen: `[External: ${target}]`,
+            fromPage: activeScreenLabel,
+            toPage: `[External: ${target}]`,
             warnings,
           },
         ])
         recorder.current?.logEvent('flow.exited-early', {
           flowId: flow.id,
-          fromScreen: activeScreenLabel,
+          fromPage: activeScreenLabel,
           to: target,
         })
         navigateTo(target)
@@ -461,8 +461,8 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
           {
             timestamp,
             action: actionName,
-            fromScreen: activeScreenLabel,
-            toScreen: `${target} (state updated)`,
+            fromPage: activeScreenLabel,
+            toPage: `${target} (state updated)`,
             warnings,
           },
         ])
@@ -475,15 +475,15 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
           {
             timestamp,
             action: actionName,
-            fromScreen: activeScreenLabel,
-            toScreen: `[Blocked: ${target}]`,
+            fromPage: activeScreenLabel,
+            toPage: `[Blocked: ${target}]`,
             warnings,
           },
         ])
         recorder.current?.logEvent('screen.blocked', {
           pageId: target,
           flowId: flow.id,
-          fromScreen: activeScreenLabel,
+          fromPage: activeScreenLabel,
         })
         recorder.current?.logEvent('flow.transition', {
           flowId: flow.id,
@@ -500,13 +500,13 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
         animation !== 'none' ? animation : (flow.pages[nextIdx].enterAnimation ?? 'none')
       navigateToScreen(
         nextIdx,
-        { timestamp, action: actionName, fromScreen: activeScreenLabel, toScreen: '', warnings },
+        { timestamp, action: actionName, fromPage: activeScreenLabel, toPage: '', warnings },
         resolvedAnim
       )
     },
     // recorder.current and setTransitionLog are stable refs/setters and correctly
     // omitted. All varying state is captured in the dep list below. localState and
-    // db are read only inside the flowplan gate branch (fork resolver call).
+    // db are read only inside the flowStory gate branch (fork resolver call).
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       activeScreenLabel,
@@ -574,8 +574,8 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
             {
               timestamp,
               action: `${triggerName} → ${elementId}`,
-              fromScreen: activeScreenLabel,
-              toScreen: activeScreenLabel + ' (state updated)',
+              fromPage: activeScreenLabel,
+              toPage: activeScreenLabel + ' (state updated)',
               warnings,
             },
           ])
@@ -596,8 +596,8 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
             {
               timestamp,
               action: `${triggerName} → ${elementId}`,
-              fromScreen: activeScreenLabel,
-              toScreen: activeScreenLabel,
+              fromPage: activeScreenLabel,
+              toPage: activeScreenLabel,
               warnings,
             },
           ])
@@ -715,8 +715,8 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
             {
               timestamp,
               action: 'auto-play',
-              fromScreen: activeScreenLabel,
-              toScreen: '',
+              fromPage: activeScreenLabel,
+              toPage: '',
               warnings: [],
             },
             animation
@@ -755,7 +755,7 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
     []
   )
 
-  // ─── Engine reset (called by FlowMaster on flowplan restart) ─────────────
+  // ─── Engine reset (called by FlowMaster on flowStory restart) ─────────────
   const resetEngine = useCallback(() => {
     if (autoTimerRef.current) clearTimeout(autoTimerRef.current)
     if (animTimerRef.current) clearTimeout(animTimerRef.current)

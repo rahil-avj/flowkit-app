@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 // ── useFlowplanElementCheck ──────────────────────────────────────────────────────
 //
-// Authoring-time diagnostic: a flowplan step's `on` field names a DOM element id
+// Authoring-time diagnostic: a flowStory step's `on` field names a DOM element id
 // the screen is expected to render. If the screen never actually sets that id
 // (author forgot it, renamed it, or the screen's advance button uses custom
 // logic instead), the step silently degrades to "off-script on every tap" —
@@ -48,10 +48,10 @@ export function useFlowplanElementCheck(
       setMissing(isMissing)
       if (isMissing && import.meta.env.DEV) {
         console.warn(
-          `[Flowkit] flowplan "${flowplanId ?? '?'}" step ${stepIndex + 1} expects ` +
+          `[Flowkit] flowStory "${flowplanId ?? '?'}" step ${stepIndex + 1} expects ` +
             `#${on} on screen "${pageId}" but no matching element exists. ` +
             `Add id="${on}" to the element that should advance this step, or update ` +
-            `the flowplan's "on" field to match the screen's real element id.`
+            `the flowStory's "on" field to match the screen's real element id.`
         )
       }
     }, 0)

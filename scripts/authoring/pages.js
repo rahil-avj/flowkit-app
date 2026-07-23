@@ -25,7 +25,7 @@ import {
   FLOW_BOOK_DIRNAME,
   FLOW_STORIES_DIRNAME,
 } from '../helpers/config-filenames.js'
-import { makePageId, isNonExistent, isHidden } from '../../src/shared/utils/screenPathIdentity.js'
+import { makePageId, isNonExistent, isHidden } from '../../src/shared/utils/pagePathIdentity.js'
 
 /** kebab-case → PascalCase: 'sign-in' → 'SignIn' */
 function toPascal(kebab) {
@@ -65,7 +65,7 @@ export const pageMeta = { label: ${asJsStringLiteral(label)}, desc: '' }
 `
 }
 
-/** Scan all flowplan files for any step referencing pageId. Returns list of flowplan ids. */
+/** Scan all flowStory files for any step referencing pageId. Returns list of flowStory ids. */
 function findFlowplanRefs(wsDir, pageId) {
   const fpDir = path.join(wsDir, FLOW_STORIES_DIRNAME)
   if (!fs.existsSync(fpDir)) return []
@@ -122,12 +122,12 @@ export async function cmdCreatePage(_val, args = []) {
   // folders in between) — variable-depth nesting is a hand-authoring capability,
   // not something this command needs to produce itself.
   const pageDir = path.join(wsDir, FLOW_BOOK_DIRNAME, flowId, pageId)
-  // "Page" suffix is no longer REQUIRED anywhere (screenPathIdentity.js derives
+  // "Page" suffix is no longer REQUIRED anywhere (pagePathIdentity.js derives
   // identity from folders, not filename) — but we keep generating it as the CLI's
   // own friendly convention default, since it costs nothing and reads clearly.
   const pageFile = path.join(pageDir, `${pascalName}Page.${ext}`)
   // Collision-proof display/registration id: `${flowId}-${pageId}` — see
-  // screenPathIdentity.js's makePageId(). config-patch.js's pageOrder map is
+  // pagePathIdentity.js's makePageId(). config-patch.js's pageOrder map is
   // already flow-scoped (pageOrder[flowId] = [...]) so it stores the bare
   // pageId internally without risk of cross-flow collision; makePageId is
   // only needed where an id is shown to the user or would be compared globally.
@@ -147,7 +147,7 @@ export async function cmdCreatePage(_val, args = []) {
     console.log('')
     console.log(
       d(
-        `Next: flowkit add:step --flowplan:${flowId} --screen:${pageId} --action:"User arrives at ${label}"`
+        `Next: flowkit add:step --flowStory:${flowId} --screen:${pageId} --action:"User arrives at ${label}"`
       )
     )
   } catch (e) {
@@ -178,7 +178,7 @@ export async function cmdRemovePage(_val, args = []) {
 
   const refs = findFlowplanRefs(wsDir, pageId)
   if (refs.length > 0) {
-    console.log(r(`⚠  Warning: flowplan(s) reference '${pageId}': ${refs.join(', ')}`))
+    console.log(r(`⚠  Warning: flowStory(s) reference '${pageId}': ${refs.join(', ')}`))
     console.log(r('   Update those flowStories after removing this page.'))
   }
 
@@ -285,7 +285,7 @@ export async function cmdRenamePage(_val, args = []) {
 
   const refs = findFlowplanRefs(wsDir, oldId)
   if (refs.length > 0) {
-    console.log(r(`⚠  Warning: flowplan(s) still reference '${oldId}': ${refs.join(', ')}`))
+    console.log(r(`⚠  Warning: flowStory(s) still reference '${oldId}': ${refs.join(', ')}`))
     console.log(r(`   Update step pageIds from '${oldId}' to '${newId}'.`))
   }
 
@@ -370,7 +370,7 @@ export async function cmdMovePage(_val, args = []) {
  * per-flow already, so no makePageId() prefix is stored internally — see
  * config-patch.js). A hidden page's folder is literally named '_something',
  * so the registered pageId itself carries the single-'_' prefix; this just
- * re-uses screenPathIdentity.js's isHidden() on that raw id string.
+ * re-uses pagePathIdentity.js's isHidden() on that raw id string.
  */
 function isHiddenPageId(pageId) {
   return isHidden(pageId)
@@ -467,7 +467,7 @@ export async function cmdListPages(_val, args = []) {
   // registered pageOrder only ever contains normal + hidden pages (never
   // '__' ones) — visibility here is folder-name-only (single '_' prefix on the
   // pageId's own folder segment). This does not walk cosmetic in-between
-  // folders for hidden-ness the way screenPathIdentity.js's full
+  // folders for hidden-ness the way pagePathIdentity.js's full
   // resolveVisibility() does, since the CLI's own registered pages are
   // always the plain 2-level shape; a hand-authored deeper path with a hidden
   // cosmetic ancestor folder isn't reflected in pageOrder in the first place.

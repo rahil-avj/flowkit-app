@@ -30,7 +30,7 @@ const ANNOTATION_ICONS: Record<string, React.ElementType> = {
   Tag: TagIcon,
 }
 
-// ── ScreensHierarchy ──────────────────────────────────────────────────────────
+// ── PagesHierarchy ──────────────────────────────────────────────────────────
 //
 // Screens tab: a project → flow → screen tree with tag filtering, A/B variant
 // picker, Flowplan-coverage dimming, and a ▶ "find in Flow Library" jump.
@@ -46,7 +46,7 @@ interface Props {
 
 import { LS_HIERARCHY_EXPANDED as LS_EXPANDED } from '@flowkit-shared/constants/storageKeys'
 
-export default function ScreensHierarchy({
+export default function PagesHierarchy({
   onFindInLibrary,
   search: searchProp,
   activeTags: activeTagsProp,
@@ -54,7 +54,7 @@ export default function ScreensHierarchy({
   const activeWorkspace = useActiveWorkspace()
   const { theme } = useTheme()
   const { activeViewId, navigateTo } = useNavigation()
-  const { tree, tagsByScreen } = useWorkspaceHierarchy(activeWorkspace)
+  const { tree, tagsByPage } = useWorkspaceHierarchy(activeWorkspace)
 
   const { comments } = useFeedback()
   const commentedPageIds = useMemo(() => new Set(comments.map(c => c.pageId)), [comments])
@@ -92,7 +92,7 @@ export default function ScreensHierarchy({
   }
 
   const q = search.toLowerCase()
-  function screenMatches(v: WireframeView): boolean {
+  function pageMatches(v: WireframeView): boolean {
     if (q && !v.label.toLowerCase().includes(q) && !v.id.toLowerCase().includes(q)) return false
     const tags = v.meta?.tags ?? []
     // Inclusive-OR; untagged always shown.
@@ -114,7 +114,7 @@ export default function ScreensHierarchy({
             <input
               value={internalSearch}
               onChange={e => setInternalSearch(e.target.value)}
-              placeholder="Search screens…"
+              placeholder="Search pages…"
               className="w-full rounded-md pl-7 pr-3 py-1.5 text-xs outline-none"
               style={{
                 background: theme.bg.base,
@@ -138,9 +138,9 @@ export default function ScreensHierarchy({
               toggle={toggle}
               activeViewId={activeViewId}
               navigateTo={navigateTo}
-              screenMatches={screenMatches}
+              screenMatches={pageMatches}
               commentedScreens={commentedPageIds}
-              tagsByScreen={tagsByScreen}
+              tagsByPage={tagsByPage}
               onFindInLibrary={onFindInLibrary}
             />
           ))}
@@ -159,7 +159,7 @@ function TreeNode({
   navigateTo,
   screenMatches,
   commentedScreens,
-  tagsByScreen,
+  tagsByPage,
   onFindInLibrary,
 }: {
   node: WorkspaceHierarchyNode
@@ -169,7 +169,7 @@ function TreeNode({
   navigateTo: (id: string) => void
   screenMatches: (v: WireframeView) => boolean
   commentedScreens: Set<string>
-  tagsByScreen: Map<string, AnnotationTag[]>
+  tagsByPage: Map<string, AnnotationTag[]>
   onFindInLibrary: (pageId: string) => void
 }) {
   const { theme, scale } = useTheme()
@@ -177,25 +177,25 @@ function TreeNode({
   if (node.kind === 'page' && node.view) {
     if (!screenMatches(node.view)) return null
     return (
-      <ScreenRow
+      <PageRow
         view={node.view}
         active={activeViewId === node.view.id}
         hasComments={commentedScreens.has(node.view.id)}
-        annotationTags={tagsByScreen.get(node.view.id) ?? []}
+        annotationTags={tagsByPage.get(node.view.id) ?? []}
         onNavigate={() => navigateTo(node.view!.id)}
         onFindInLibrary={() => onFindInLibrary(node.view!.id)}
       />
     )
   }
 
-  // Container node (project / flow). Hide if all descendant screens filtered out.
+  // Container node (project / chapter). Hide if all descendant pages filtered out.
   const nodeKey = `${node.kind}:${node.id}`
   const isOpen = expanded.has(nodeKey)
-  const visibleChildren = (node.children ?? []).filter(c => hasVisibleScreen(c, screenMatches))
+  const visibleChildren = (node.children ?? []).filter(c => hasVisiblePage(c, screenMatches))
   if (visibleChildren.length === 0) return null
 
   const childHasComments = hasDescendantComment(node, commentedScreens)
-  const childAnnotationTags = collectDescendantAnnotationTags(node, tagsByScreen)
+  const childAnnotationTags = collectDescendantAnnotationTags(node, tagsByPage)
 
   return (
     <div className="mb-0.5">
@@ -233,7 +233,7 @@ function TreeNode({
         <div className="ml-auto flex items-center gap-1 shrink-0">
           {!isOpen && childAnnotationTags.map(t => <AnnotationTagBadge key={t.label} tag={t} />)}
           <span style={{ fontSize: scale.text.xxs, color: theme.text.disabled }}>
-            {countScreens(node)}
+            {countPages(node)}
           </span>
         </div>
       </button>
@@ -249,7 +249,7 @@ function TreeNode({
               navigateTo={navigateTo}
               screenMatches={screenMatches}
               commentedScreens={commentedScreens}
-              tagsByScreen={tagsByScreen}
+              tagsByPage={tagsByPage}
               onFindInLibrary={onFindInLibrary}
             />
           ))}
@@ -259,9 +259,9 @@ function TreeNode({
   )
 }
 
-// ─── Screen row (with variant picker + coverage dim + find-in-library) ──────────
+// ─── Page row (with variant picker + coverage dim + find-in-library) ─────────────
 
-function ScreenRow({
+function PageRow({
   view,
   active,
   hasComments,
@@ -334,7 +334,7 @@ function ScreenRow({
         </button>
         {/* Action buttons — visible on row hover */}
         <div className="flex items-center gap-0.5 pr-1 opacity-0 group-hover:opacity-100 transition-opacity duration-120">
-          <Tooltip content="Find flows with this screen" placement="left">
+          <Tooltip content="Find flows with this page" placement="left">
             <button
               onClick={onFindInLibrary}
               className="p-1 rounded transition-colors duration-120"
@@ -404,17 +404,17 @@ function collectExpandableIds(nodes: WorkspaceHierarchyNode[]): string[] {
   return ids
 }
 
-function hasVisibleScreen(
+function hasVisiblePage(
   node: WorkspaceHierarchyNode,
   matches: (v: WireframeView) => boolean
 ): boolean {
   if (node.kind === 'page' && node.view) return matches(node.view)
-  return (node.children ?? []).some(c => hasVisibleScreen(c, matches))
+  return (node.children ?? []).some(c => hasVisiblePage(c, matches))
 }
 
-function countScreens(node: WorkspaceHierarchyNode): number {
+function countPages(node: WorkspaceHierarchyNode): number {
   if (node.kind === 'page') return 1
-  return (node.children ?? []).reduce((sum, c) => sum + countScreens(c), 0)
+  return (node.children ?? []).reduce((sum, c) => sum + countPages(c), 0)
 }
 
 function hasDescendantComment(node: WorkspaceHierarchyNode, commented: Set<string>): boolean {
@@ -424,13 +424,13 @@ function hasDescendantComment(node: WorkspaceHierarchyNode, commented: Set<strin
 
 function collectDescendantAnnotationTags(
   node: WorkspaceHierarchyNode,
-  tagsByScreen: Map<string, AnnotationTag[]>
+  tagsByPage: Map<string, AnnotationTag[]>
 ): AnnotationTag[] {
   const seen = new Set<string>()
   const result: AnnotationTag[] = []
   const walk = (n: WorkspaceHierarchyNode) => {
     if (n.kind === 'page' && n.view) {
-      for (const t of tagsByScreen.get(n.view.id) ?? []) {
+      for (const t of tagsByPage.get(n.view.id) ?? []) {
         if (!seen.has(t.label)) {
           seen.add(t.label)
           result.push(t)

@@ -8,7 +8,7 @@ import {
   HIGHLIGHT_SWATCHES,
   useDbHighlightSettings,
 } from '@flowkit-features/flow-debugger'
-import { type HighlightColor, useFlowplanSettings } from '@flowkit-features/flowplan'
+import { type HighlightColor, useFlowplanSettings } from '@flowkit-features/flowStory'
 import { useSessionSettings } from '@flowkit-features/flowTracer'
 import { LS_LEFT_PANEL_W, LS_RIGHT_PANEL_W } from '@flowkit-shared/constants/storageKeys'
 import {
@@ -427,7 +427,7 @@ function FlowPlansSection() {
       <SectionHeader
         icon={<Workflow size={15} />}
         title="Flow Plans"
-        description="Control how flowplan playback is gated, hinted, and displayed."
+        description="Control how flowStory playback is gated, hinted, and displayed."
       />
 
       <SettingGroup title="Playback">

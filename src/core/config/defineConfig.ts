@@ -41,7 +41,7 @@ export function defineConfig(config: FlowkitConfig): FlowkitConfig {
  * Identity function — returns `flow` unchanged, same rationale as
  * {@link defineConfig}.
  *
- * @param flow - The flowplan definition (id, name, steps, simulator, etc.)
+ * @param flow - The flowStory definition (id, name, steps, simulator, etc.)
  * @returns The same `flow` object, unmodified.
  *
  * @example

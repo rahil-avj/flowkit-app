@@ -9,42 +9,42 @@ import type { GoToItemMeta } from './types'
 import { useGoToItems } from './useGoToItems'
 
 interface Props {
-  flows: Chapter[]
+  chapters: Chapter[]
   activeViewId: string
   navigateTo: (id: string) => void
   onClose: () => void
 }
 
-function useGoToHandlers({ flows, activeViewId, navigateTo, onClose }: Props) {
+function useGoToHandlers({ chapters, activeViewId, navigateTo, onClose }: Props) {
   const [query, setQuery] = useState('')
-  const groups = useGoToItems({ flows, activeViewId, query })
+  const groups = useGoToItems({ chapters, activeViewId, query })
 
   const handleSelect = useCallback(
     (item: PaletteItem) => {
       const meta = item.meta as GoToItemMeta | undefined
 
-      if (meta?.kind === 'screen') {
+      if (meta?.kind === 'page') {
         navigateTo(item.id)
         dispatchExplorerCommand({ type: 'switchTab', tab: 'screens' })
-        if (meta.flowId) {
+        if (meta.chapterId) {
           dispatchExplorerCommand({
             type: 'expandAndHighlight',
-            flowId: meta.flowId,
+            chapterId: meta.chapterId,
             pageId: item.id,
           })
         }
       } else if (meta?.kind === 'chapter') {
         dispatchExplorerCommand({ type: 'switchTab', tab: 'screens' })
-        if (meta.flowId) {
+        if (meta.chapterId) {
           const firstPageId = meta.firstPageId ?? ''
           dispatchExplorerCommand({
             type: 'expandAndHighlight',
-            flowId: meta.flowId,
+            chapterId: meta.chapterId,
             pageId: firstPageId,
           })
           if (firstPageId) navigateTo(firstPageId)
         }
-      } else if (meta?.kind === 'flowplan') {
+      } else if (meta?.kind === 'flowStory') {
         dispatchExplorerCommand({ type: 'switchTab', tab: 'flows' })
         dispatchExplorerCommand({ type: 'openFlowplanDetail', flowplanId: item.id })
       }
@@ -54,14 +54,14 @@ function useGoToHandlers({ flows, activeViewId, navigateTo, onClose }: Props) {
     [navigateTo, onClose]
   )
 
-  return { groups, handleSelect, setQuery }
+  return { query, groups, handleSelect, setQuery }
 }
 
 // ── Inline content (no shell — for BottomSheet / mobile) ─────────────────────
 
-export function GoToOverlayContent({ flows, activeViewId, navigateTo, onClose }: Props) {
+export function GoToOverlayContent({ chapters, activeViewId, navigateTo, onClose }: Props) {
   const { groups, handleSelect, setQuery } = useGoToHandlers({
-    flows,
+    chapters,
     activeViewId,
     navigateTo,
     onClose,
@@ -71,7 +71,7 @@ export function GoToOverlayContent({ flows, activeViewId, navigateTo, onClose }:
     <CommandPalette
       modal={false}
       headerIcon={Search}
-      placeholder="Go to screen, flow, or flow plan…"
+      placeholder="Go to page, chapter, or flow Story"
       source={groups}
       onSelect={handleSelect}
       onClose={onClose}
@@ -84,9 +84,9 @@ export function GoToOverlayContent({ flows, activeViewId, navigateTo, onClose }:
 
 // ── Modal wrapper (desktop overlay) ──────────────────────────────────────────
 
-export default function GoToOverlay({ flows, activeViewId, navigateTo, onClose }: Props) {
+export default function GoToOverlay({ chapters, activeViewId, navigateTo, onClose }: Props) {
   const { groups, handleSelect, setQuery } = useGoToHandlers({
-    flows,
+    chapters,
     activeViewId,
     navigateTo,
     onClose,
@@ -95,7 +95,7 @@ export default function GoToOverlay({ flows, activeViewId, navigateTo, onClose }
   return (
     <CommandPalette
       headerIcon={Search}
-      placeholder="Go to screen, flow, or flow plan…"
+      placeholder="Go to page, chapter, or flow story..."
       source={groups}
       onSelect={handleSelect}
       onClose={onClose}

@@ -9,7 +9,7 @@ import type {
 import { isFlowplanRef } from '@flowkit/types/index'
 import { get } from '@flowkit-shared/utils/dbHelpers'
 
-// ── compileFlowplan ─────────────────────────────────────────────────────────────
+// ── compileFlowStory ─────────────────────────────────────────────────────────────
 //
 // Turns an authored FlowplanDef into the runtime ChapterConfig that the EXISTING
 // useFlowEngine/FlowMaster already accept. The engine is never modified — this
@@ -21,7 +21,7 @@ import { get } from '@flowkit-shared/utils/dbHelpers'
 //   • forks              → a function-valued goTo (engine calls it with {db,flowState})
 //   • mergesTo:"next"    → last branch step advances to the parent's next step
 //   • terminal fork      → last branch step advances to "__complete__"
-//   • flowplan refs      → referenced plan's steps inlined here, ids namespaced
+//   • flowStory refs      → referenced plan's steps inlined here, ids namespaced
 //
 // The compiler also emits a parallel `__flowplan.steps` array (CompiledStep[])
 // that the FlowPlaybackContext reads to apply per-step db patches, show
@@ -74,7 +74,7 @@ export interface CompiledFlowplan extends ChapterConfig {
     steps: CompiledStep[]
     /** Flow-level simulator controls shown during playback (F4.4). */
     simulatorControls: SimulatorControl[]
-    /** Screen id the home button should target while this flowplan plays. */
+    /** Screen id the home button should target while this flowStory plays. */
     homeScreen?: string
   }
 }
@@ -122,11 +122,11 @@ function flatten(
         const refId = entry.ref
         if (vis.has(refId)) {
           throw new FlowplanCompileError(
-            `circular flowplan reference: ${[...vis, refId].join(' → ')}`
+            `circular flowStory reference: ${[...vis, refId].join(' → ')}`
           )
         }
         const refPlan = registry.get(refId)
-        if (!refPlan) throw new FlowplanCompileError(`flowplan not found: "${refId}"`)
+        if (!refPlan) throw new FlowplanCompileError(`flowStory not found: "${refId}"`)
         expand(refPlan.steps, `${pfx}${refId}::`, new Set([...vis, refId]))
         continue
       }
@@ -246,7 +246,7 @@ function forkMatches(fork: Fork, db: Record<string, any>): boolean {
  * metadata). Throws FlowplanCompileError on missing screen, missing ref, or a
  * circular ref.
  */
-export function compileFlowplan(
+export function compileFlowStory(
   plan: FlowplanDef,
   resolve: PageResolver,
   registry: Map<string, FlowplanDef>,
@@ -256,7 +256,7 @@ export function compileFlowplan(
   flatten(plan.steps, '__complete__', resolve, registry, visited, '', flat)
 
   if (flat.length === 0) {
-    throw new FlowplanCompileError(`flowplan "${plan.id}" has no steps`)
+    throw new FlowplanCompileError(`flowStory "${plan.id}" has no steps`)
   }
 
   // pages[] — dedupe compiled ids (a page may repeat; engine matches by id).
@@ -273,7 +273,7 @@ export function compileFlowplan(
   // tap-anywhere, handled by FlowMaster via CompiledStep.next — they emit no
   // interaction entry here.
   //
-  // NOTE: at RUNTIME, flowplan advancement is driven entirely by the active
+  // NOTE: at RUNTIME, flowStory advancement is driven entirely by the active
   // step (FlowMaster reads CompiledStep.on/next), NOT by this interactions map —
   // because the same element id can appear at two journey positions (e.g. a ref'd
   // flow) and would collide here. This map is retained as informational metadata

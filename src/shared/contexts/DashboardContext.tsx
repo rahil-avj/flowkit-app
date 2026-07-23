@@ -38,8 +38,8 @@ export interface TransitionLogEntry {
   timestamp: string
   action: string
   payload?: unknown
-  fromScreen: string
-  toScreen: string
+  fromPage: string
+  toPage: string
   warnings?: string[]
   error?: string
 }
@@ -79,7 +79,7 @@ export interface DashboardContextValue extends DashboardState {
 
   firstViewId: string
   workspaceConfig: WorkspaceConfig
-  /** Active flowplan's declared home screen (FlowplanDef.homeScreen), or null when unset/no flow active. */
+  /** Active flowStory's declared home screen (FlowplanDef.homeScreen), or null when unset/no flow active. */
   activeFlowHomeScreen: string | null
   setActiveFlowHomeScreen: (pageId: string | null) => void
   activeFlowDebugInfo: FlowDebugInfo | null

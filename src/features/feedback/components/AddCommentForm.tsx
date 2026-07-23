@@ -15,10 +15,10 @@ import { useFeedbackTabContext } from '../context'
 export default function AddCommentForm() {
   const {
     setViewMode,
-    selectedScreen,
-    setSelectedScreen,
-    selectedScreenLabel,
-    setSelectedScreenLabel,
+    selectedPage,
+    setSelectedPage,
+    selectedPageLabel,
+    setSelectedPageLabel,
     textInput,
     setTextInput,
     selectedTags,
@@ -61,15 +61,15 @@ export default function AddCommentForm() {
       </div>
 
       <Select
-        label="Select Screen"
-        value={`${selectedScreen}|${selectedScreenLabel}`}
+        label="Select Page"
+        value={`${selectedPage}|${selectedPageLabel}`}
         onChange={e => {
           const parts = e.target.value.split('|')
-          setSelectedScreen(parts[0])
-          setSelectedScreenLabel(parts[1] || '')
+          setSelectedPage(parts[0])
+          setSelectedPageLabel(parts[1] || '')
         }}
       >
-        <option value="|">Choose a screen...</option>
+        <option value="|">Choose a page...</option>
         {Array.from(new Set(comments.map(c => c.pageId)))
           .concat(views.filter(v => !v.id.endsWith('-play')).map(v => v.id))
           .filter((id, idx, arr) => arr.indexOf(id) === idx)
@@ -96,7 +96,7 @@ export default function AddCommentForm() {
       />
 
       {/* Screenshot attachment check */}
-      {selectedScreen === activeViewId.replace('-play', '') && (
+      {selectedPage === activeViewId.replace('-play', '') && (
         <div
           className="flex items-center justify-between p-2 rounded-lg border"
           style={{ borderColor: theme.bg.border, backgroundColor: theme.bg.surface }}
@@ -205,7 +205,7 @@ export default function AddCommentForm() {
         </Button>
         <Button
           onClick={handleAddComment}
-          disabled={!textInput.trim() || !selectedScreen || isCapturing}
+          disabled={!textInput.trim() || !selectedPage || isCapturing}
           variant="primary"
           style={{ flex: 1, backgroundColor: theme.accent.green, borderColor: theme.accent.green }}
         >

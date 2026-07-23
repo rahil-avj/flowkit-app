@@ -34,25 +34,25 @@ export default function CommentsWall() {
       )
     }
 
-    // Case 2 — auto-filter for current screen is on, but this screen has no comments
-    if (filter.filterForCurrentScreen) {
+    // Case 2 — auto-filter for current page is on, but this page has no comments
+    if (filter.filterForCurrentPage) {
       return (
         <EmptyState
           variant="panel"
           icon={<FileSearch size={36} strokeWidth={1.5} />}
-          title="This screen hasn't been reviewed yet"
-          subtitle="No one has left feedback on this screen yet. Be the first to share your thoughts."
+          title="This page hasn't been reviewed yet"
+          subtitle="No one has left feedback on this page yet. Be the first to share your thoughts."
           cta={
             <div className="flex flex-col items-center gap-2">
-              <Button size="sm" variant="primary" onClick={() => setViewMode('add-comment')}>
+               <Button size="sm" variant="primary" onClick={() => setViewMode('add-comment')}>
                 Add comment
               </Button>
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => setFilter(prev => ({ ...prev, filterForCurrentScreen: false }))}
+                onClick={() => setFilter(prev => ({ ...prev, filterForCurrentPage: false }))}
               >
-                See feedback from all screens
+                See feedback from all pages
               </Button>
             </div>
           }
@@ -60,13 +60,13 @@ export default function CommentsWall() {
       )
     }
 
-    // Case 3 — manual screen or tag filter active, no matches
+    // Case 3 — manual page or tag filter active, no matches
     return (
       <EmptyState
         variant="panel"
         icon={<ListFilter size={36} strokeWidth={1.5} />}
         title="No comments match these filters"
-        subtitle="Try widening your search — clear the active screen or tag filters to see all feedback."
+        subtitle="Try widening your search — clear the active page or tag filters to see all feedback."
         cta={
           <Button
             size="sm"
@@ -83,20 +83,20 @@ export default function CommentsWall() {
 
   return (
     <div className="flex flex-col">
-      {Object.entries(filteredGroupedComments).map(([pageId, screenComments], index) => {
+      {Object.entries(filteredGroupedComments).map(([pageId, pageComments], index) => {
         const pageExists = views.some(v => v.id === pageId)
-        const isCurrentScreen = pageId === activeViewId.replace('-play', '')
+        const isCurrentPage = pageId === activeViewId.replace('-play', '')
         return (
           <CommentGroup
             key={pageId}
             pageId={pageId}
-            pageLabel={screenComments[0].pageLabel}
+            pageLabel={pageComments[0].pageLabel}
             pageExists={pageExists}
-            isCurrentScreen={isCurrentScreen}
+            isCurrentPage={isCurrentPage}
             isFirst={index === 0}
             onNavigate={navigateTo}
           >
-            {screenComments.map(comment => (
+            {pageComments.map(comment => (
               <CommentCard
                 key={comment.id}
                 comment={comment}

@@ -6,12 +6,12 @@ import { useAppShortcuts } from './core/shortcuts/useKeyboardShortcuts'
 import { FeedbackProvider } from './features/feedback/context/FeedbackContext'
 import { FigmaExportView } from './features/figma-export'
 import { DbHighlightSettingsProvider } from './features/flow-debugger'
-import { FlowplanSettingsProvider } from './features/flowplan/FlowplanSettingsContext'
-import { FlowPlaybackProvider } from './features/flowplan/FlowPlaybackContext'
+import { FlowplanSettingsProvider } from './features/flowStory/FlowplanSettingsContext'
+import { FlowPlaybackProvider } from './features/flowStory/FlowPlaybackContext'
 import { SessionRecorderProvider, useSessionRecorderOptional } from './features/flowTracer/context'
 import Forbidden from './shared/components/errors/Forbidden'
 import Maintenance from './shared/components/errors/Maintenance'
-import NoScreens from './shared/components/errors/NoScreens'
+import NoPages from './shared/components/errors/NoPages'
 import NotFound from './shared/components/errors/NotFound'
 import ServerError from './shared/components/errors/ServerError'
 import WorkspaceErrorBoundary from './shared/components/errors/WorkspaceErrorBoundary'
@@ -101,14 +101,14 @@ function WorkspaceRunner({ name, onSwitch }: WorkspaceRunnerProps) {
   useAppShortcuts({ toggleCanvasMode: () => setCanvasMode(v => !v) })
 
   const hierarchy = useWorkspaceHierarchy(name)
-  const FLOWS = hierarchy.flows
+  const CHAPTERS = hierarchy.stories
   const ALL_VIEWS = hierarchy.views
   const workspaceConfig = workspaces.find(w => w.name === name)?.config ?? {}
 
   if (!ALL_VIEWS || ALL_VIEWS.length === 0) {
     return (
       <ThemeProvider>
-        <NoScreens workspaceName={name} onAction={() => window.location.reload()} />
+        <NoPages workspaceName={name} onAction={() => window.location.reload()} />
       </ThemeProvider>
     )
   }
@@ -137,7 +137,7 @@ function WorkspaceRunner({ name, onSwitch }: WorkspaceRunnerProps) {
                         <DbHighlightSettingsProvider>
                           <FlowPlaybackProvider>
                             <FeedbackProvider>
-                              <PreviewCanvas flows={FLOWS} views={ALL_VIEWS} />
+                              <PreviewCanvas chapters={CHAPTERS} views={ALL_VIEWS} />
                             </FeedbackProvider>
                           </FlowPlaybackProvider>
                         </DbHighlightSettingsProvider>

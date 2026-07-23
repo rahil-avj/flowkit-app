@@ -1,12 +1,12 @@
-import type { ScreenMetaPatchEntry } from '@flowkit-features/script-patch'
+import type { PageMetaPatchEntry } from '@flowkit-features/script-patch'
 import type { ReactNode } from 'react'
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 
-// ScreenEdit is the internal edit record (what the user typed); ScreenMetaPatchEntry
-// is the shape expected by generateScreenMetaPatch. They are kept aligned.
-export type { ScreenMetaPatchEntry }
+// ScreenEdit is the internal edit record (what the user typed); PageMetaPatchEntry
+// is the shape expected by generatePageMetaPatch. They are kept aligned.
+export type { PageMetaPatchEntry }
 
-type ScreenEdit = ScreenMetaPatchEntry
+type ScreenEdit = PageMetaPatchEntry
 
 interface DevModeCtx {
   devMode: boolean

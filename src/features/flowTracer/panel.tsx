@@ -89,7 +89,7 @@ function getRandomPun() {
 // Runtime CSS vars — used only for the per-row dot color, which can't be a static Tailwind class.
 const CATEGORY_COLORS: Record<string, string> = {
   flow: 'var(--color-theme-green)',
-  screen: 'var(--color-theme-green)',
+  page: 'var(--color-theme-green)',
   interaction: 'var(--color-theme-blue)',
   navigation: 'var(--color-theme-purple)',
   state: 'var(--color-theme-amber)',
@@ -104,7 +104,7 @@ const CATEGORY_TAG_COLORS: Record<
   'blue' | 'green' | 'red' | 'amber' | 'purple' | 'neutral'
 > = {
   flow: 'green',
-  screen: 'green',
+  page: 'green',
   interaction: 'blue',
   navigation: 'purple',
   state: 'amber',
@@ -373,10 +373,10 @@ export default function SessionsPanel({
             </span>
           </div>
 
-          {/* Current screen */}
+          {/* Current page */}
           {recorder.currentPageId && (
             <div className="text-ui-xs text-theme-text-muted mb-1.5">
-              Screen: <span className="text-theme-text-secondary">{recorder.currentPageId}</span>
+              Page: <span className="text-theme-text-secondary">{recorder.currentPageId}</span>
             </div>
           )}
 

@@ -102,20 +102,20 @@ interface SidebarShortcutActions {
 //   Shift+ArrowLeft / Right    Previous / next flow (lands on its first screen)
 
 interface NavigationShortcutActions {
-  flows: Chapter[]
+  chapters: Chapter[]
   activeViewId: string
   navigateTo: (id: string) => void
 }
 
 export function useNavigationShortcuts({
-  flows,
+  chapters,
   activeViewId,
   navigateTo,
 }: NavigationShortcutActions) {
   // Flat list of all non-play screens, grouped by flow
   const allPages = useMemo(
-    () => flows.flatMap(f => (f.children ?? []).filter(v => !v.id.endsWith('-play'))),
-    [flows]
+    () => chapters.flatMap(f => (f.children ?? []).filter(v => !v.id.endsWith('-play'))),
+    [chapters]
   )
 
   useEffect(() => {
@@ -129,14 +129,14 @@ export function useNavigationShortcuts({
 
       if (e.shiftKey) {
         // Jump to the first screen of the prev / next flow
-        const flowIdx = flows.findIndex(f => activeViewId.startsWith(f.id))
+        const flowIdx = chapters.findIndex(f => activeViewId.startsWith(f.id))
         if (flowIdx === -1) return
-        const nextFlow = flows[flowIdx + dir]
+        const nextFlow = chapters[flowIdx + dir]
         if (!nextFlow) return
         const firstScreen = (nextFlow.children ?? []).find(v => !v.id.endsWith('-play'))
         if (firstScreen) navigateTo(firstScreen.id)
       } else {
-        // Cycle screens within all screens (wraps across flows)
+        // Cycle screens within all screens (wraps across chapters)
         const idx = allPages.findIndex(v => v.id === activeViewId)
         if (idx === -1) return
         const next = allPages[idx + dir]
@@ -145,7 +145,7 @@ export function useNavigationShortcuts({
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [flows, allPages, activeViewId, navigateTo])
+  }, [chapters, allPages, activeViewId, navigateTo])
 }
 
 // ─── Global overlay shortcuts ─────────────────────────────────────────────────
@@ -321,7 +321,7 @@ export function useFlowLensSidebarShortcuts({
 //   0              Toggle keep-fit
 //   F              Toggle fullscreen
 //   \              Toggle orientation
-//   R              Reset to first screen (or restart flowplan)
+//   R              Reset to first screen (or restart flowStory)
 //   Escape         Exit fullscreen
 //   ArrowUp/Down   Blocked when keep-fit is active (prevents scroll interference)
 

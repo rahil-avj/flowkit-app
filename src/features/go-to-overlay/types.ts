@@ -1,10 +1,10 @@
-export type SearchItemKind = 'screen' | 'flowplan' | 'chapter'
+export type SearchItemKind = 'page' | 'flowStory' | 'chapter'
 
 /** Extra metadata attached to PaletteItem.meta for Go-To results. */
 export interface GoToItemMeta {
   kind: SearchItemKind
-  /** Parent flow id — present for screen items; the flow id itself for flow items. */
-  flowId?: string
-  /** First screen id in the flow — present for flow items. */
+  /** Parent chapter id — present for page items; the chapter id itself for chapter items. */
+  chapterId?: string
+  /** First page id in the chapter — present for chapter items. */
   firstPageId?: string
 }

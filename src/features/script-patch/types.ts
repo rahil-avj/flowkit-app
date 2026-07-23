@@ -7,8 +7,8 @@ export interface PatchScript {
   restoreScript?: string
 }
 
-/** One screen's pending metadata edits — passed to generateScreenMetaPatch. */
-export interface ScreenMetaPatchEntry {
+/** One screen's pending metadata edits — passed to generatePageMetaPatch. */
+export interface PageMetaPatchEntry {
   filePath: string
   pageLabel: string
   desc: string

@@ -46,7 +46,7 @@ declare module 'virtual:flowkit/workspace' {
   export const sessions: Record<string, unknown>
 }
 
-declare module '@flowkit-shared/utils/screenPathIdentity' {
+declare module '@flowkit-shared/utils/pagePathIdentity' {
   export const MISC_CHAPTER_ID: string
   export function isNonExistent(segment: string): boolean
   export function isHidden(segment: string): boolean

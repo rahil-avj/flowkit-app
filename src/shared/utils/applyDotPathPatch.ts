@@ -17,7 +17,7 @@ import type { DotPathPatch } from '@flowkit/types/index'
 // helper suite in `dbHelpers.ts` (get/set/has/remove/update) — see that file's
 // header comment for the history of why this consolidation happened: this
 // codebase had accumulated FIVE independently-hand-rolled dot-path walkers
-// across DbInspector, the simulator controls, and the flowplan compiler, each
+// across DbInspector, the simulator controls, and the flowStory compiler, each
 // with different (and in two cases actively broken) safety behavior.
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

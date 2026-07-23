@@ -40,26 +40,26 @@ export function updateNestedDbValue(ctx: Ctx, path: string, value: unknown) {
 export function shouldShowControl(
   activeViewId: string | undefined,
   activeFlowDebugInfo: FlowDebugInfo | null,
-  onlyForFlow?: string | string[],
-  onlyForScreen?: string | string[]
+  onlyForChapter?: string | string[],
+  onlyForPage?: string | string[]
 ): boolean {
-  if (onlyForFlow) {
-    const currentFlowId = activeViewId?.endsWith('-play') ? activeViewId.replace('-play', '') : null
-    const flows = Array.isArray(onlyForFlow) ? onlyForFlow : [onlyForFlow]
-    if (!currentFlowId || !flows.includes(currentFlowId)) {
+  if (onlyForChapter) {
+    const currentStoryId = activeViewId?.endsWith('-play') ? activeViewId.replace('-play', '') : null
+    const stories = Array.isArray(onlyForChapter) ? onlyForChapter : [onlyForChapter]
+    if (!currentStoryId || !stories.includes(currentStoryId)) {
       return false
     }
   }
 
-  if (onlyForScreen) {
+  if (onlyForPage) {
     const currentPageId =
       activeFlowDebugInfo && activeFlowDebugInfo.history.length > 0
         ? activeFlowDebugInfo.history[activeFlowDebugInfo.history.length - 1]
         : activeViewId
-    const screens = Array.isArray(onlyForScreen) ? onlyForScreen : [onlyForScreen]
+    const pages = Array.isArray(onlyForPage) ? onlyForPage : [onlyForPage]
     const normalize = (s: string) => s.toLowerCase().replace(/[\s-_]/g, '')
     const normalizedCurrent = normalize(currentPageId || '')
-    const match = screens.some(s => {
+    const match = pages.some(s => {
       const norm = normalize(s)
       return norm === normalizedCurrent || s === currentPageId
     })

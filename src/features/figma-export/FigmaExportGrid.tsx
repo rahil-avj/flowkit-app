@@ -19,7 +19,7 @@ const LABEL_H = 36
 
 // ─── Grouping ─────────────────────────────────────────────────────────────────
 
-export function groupScreens(screens: WireframeView[], groupBy: GroupBy): GroupedSection[] {
+export function groupPages(screens: WireframeView[], groupBy: GroupBy): GroupedSection[] {
   if (groupBy === 'flat') return [{ key: '__flat__', label: '', pages: screens }]
 
   const UNGROUPED = '(Ungrouped)'
@@ -28,7 +28,7 @@ export function groupScreens(screens: WireframeView[], groupBy: GroupBy): Groupe
   for (const view of screens) {
     let key: string
     if (groupBy === 'chapter') {
-      key = view.flow ?? UNGROUPED
+      key = view.chapter ?? UNGROUPED
     } else if (groupBy === 'project') {
       key = view.project ?? UNGROUPED
     } else {
@@ -76,9 +76,9 @@ function GroupHeader({
   )
 }
 
-// ─── ScreenCell ───────────────────────────────────────────────────────────────
+// ─── PageCell ─────────────────────────────────────────────────────────────────
 
-interface ScreenCellProps {
+interface PageCellProps {
   view: WireframeView
   W: number
   H: number
@@ -94,7 +94,7 @@ interface ScreenCellProps {
   scale: number
 }
 
-function ScreenCell({
+function PageCell({
   view,
   W,
   H,
@@ -108,7 +108,7 @@ function ScreenCell({
   showLabels,
   labelFields,
   scale,
-}: ScreenCellProps) {
+}: PageCellProps) {
   const Component = view.component
 
   return (
@@ -269,7 +269,7 @@ export default function FigmaExportGrid({
             }}
           >
             {section.pages.map(view => (
-              <ScreenCell
+              <PageCell
                 key={view.id}
                 view={view}
                 W={W}

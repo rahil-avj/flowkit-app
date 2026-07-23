@@ -1,4 +1,4 @@
-// Public API for workspace config + flowplan authoring helpers.
+// Public API for workspace config + flowStory authoring helpers.
 // Import from '@flowkit-core/config'.
 export type {
   AnnotationTag,

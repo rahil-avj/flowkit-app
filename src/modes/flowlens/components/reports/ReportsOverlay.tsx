@@ -182,7 +182,7 @@ export default function ReportsOverlay({ entries, views, onClose }: Props) {
             <Stat label="Avg quality" value={`${stats.avgQuality}%`} />
             <Stat label="Avg duration" value={fmtDur(stats.avgDurationMs)} />
             <Stat label="Frustration / session" value={stats.frustrationRate.toFixed(1)} />
-            <Stat label="Avg screens" value={String(stats.avgScreensPerSession)} />
+            <Stat label="Avg pages" value={String(stats.avgPagesPerSession)} />
             <Stat label="Total events" value={String(stats.totalEvents)} />
           </div>
 
@@ -235,14 +235,14 @@ export default function ReportsOverlay({ entries, views, onClose }: Props) {
             )}
           </Section>
 
-          {/* Top frustrated screens */}
-          {stats.topFrustratedScreens.length > 0 && (
+          {/* Top frustrated pages */}
+          {stats.topFrustratedPages.length > 0 && (
             <Section
-              title="Most frustrated screens"
+              title="Most frustrated pages"
               hint="Frustrated clicks pooled across the cohort"
             >
               <div className="flex flex-col gap-1">
-                {stats.topFrustratedScreens.map(s => (
+                {stats.topFrustratedPages.map(s => (
                   <div
                     key={s.pageId}
                     className="flex justify-between text-xs text-theme-text-primary py-0.75"

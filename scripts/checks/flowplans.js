@@ -1,10 +1,10 @@
-// flowkit check:plans — flowplan rules. Real successor to plan:check's previous
+// flowkit check:plans — flowStory rules. Real successor to plan:check's previous
 // string-presence-only implementation (scripts/platform/plans.js's cmdPlanCheck now
 // delegates here).
 //
 // Known gap, deliberate: fork-nested steps (the `label:`+`steps:[...]` sub-objects
 // scripts/authoring/promote-flow.js text-matches by regex) are NOT walked by
-// `flowplan/invalid-page` below — forks aren't part of FlowplanDef's typed `steps[]`
+// `flowStory/invalid-page` below — forks aren't part of FlowplanDef's typed `steps[]`
 // union (src/types/index.ts's FlowplanStepEntry is FlowStep | FlowplanRef, neither of
 // which models a fork's nested structure), and promote-flow.js's own fork-detection is
 // itself regex-based rather than a stable, reusable AST shape. Revisit once forks have a
@@ -18,7 +18,7 @@ import {
   resolveVisibility,
   parsePageSegments,
   makePageId,
-} from '../../src/shared/utils/screenPathIdentity.js'
+} from '../../src/shared/utils/pagePathIdentity.js'
 
 function listFlowplanFiles(wsDir) {
   const dir = path.join(wsDir, FLOW_STORIES_DIRNAME)
@@ -39,8 +39,8 @@ const SCREEN_EXTS = ['.tsx', '.jsx']
 /**
  * Recursively walks the flow-designs root collecting every real page-candidate file at
  * any depth ≥1, mirroring checks/screens.js's walk. `__`-prefixed folders/files are pruned
- * from traversal entirely (never included, as if they don't exist) — so a flowplan step
- * referencing a `__`-hidden page naturally fails flowplan/invalid-page below with no
+ * from traversal entirely (never included, as if they don't exist) — so a flowStory step
+ * referencing a `__`-hidden page naturally fails flowStory/invalid-page below with no
  * special-casing needed.
  */
 function walkPageFiles(dir, segments) {
@@ -73,7 +73,7 @@ function collectAllPageIds(wsDir) {
   return ids
 }
 
-/** Runs flowplan-domain rules for one workspace. Appends findings to `report`. */
+/** Runs flowStory-domain rules for one workspace. Appends findings to `report`. */
 export async function checkFlowplans(wsDir, report) {
   const files = listFlowplanFiles(wsDir)
   if (files.length === 0) {
@@ -82,11 +82,11 @@ export async function checkFlowplans(wsDir, report) {
     // (the naive string-check command this rule module supersedes).
     if (fs.existsSync(path.join(wsDir, FLOW_STORIES_DIRNAME))) {
       report.add({
-        ruleId: 'flowplan/empty-workspace',
+        ruleId: 'flowStory/empty-workspace',
         severity: 'error',
         file: `${FLOW_STORIES_DIRNAME}/`,
         message: `${FLOW_STORIES_DIRNAME}/ directory exists but contains no .ts/.js plans.`,
-        fix: 'flowkit create:flowplan --name:<id>',
+        fix: 'flowkit create:flowStory --name:<id>',
       })
     }
     return
@@ -96,10 +96,10 @@ export async function checkFlowplans(wsDir, report) {
 
   for (const { file, fullPath } of files) {
     const relPath = path.relative(wsDir, fullPath)
-    const flowplan = await readFlowplanModule(fullPath)
-    if (!flowplan) {
+    const flowStory = await readFlowplanModule(fullPath)
+    if (!flowStory) {
       report.add({
-        ruleId: 'flowplan/unreadable',
+        ruleId: 'flowStory/unreadable',
         severity: 'error',
         file: relPath,
         message: 'Could not be parsed/evaluated — check for a syntax error.',
@@ -108,24 +108,24 @@ export async function checkFlowplans(wsDir, report) {
     }
 
     const expectedId = file.replace(/\.(ts|js)$/, '')
-    if (flowplan.id && flowplan.id !== expectedId) {
+    if (flowStory.id && flowStory.id !== expectedId) {
       report.add({
-        ruleId: 'flowplan/id-filename-mismatch',
+        ruleId: 'flowStory/id-filename-mismatch',
         severity: 'error',
         file: relPath,
-        message: `defineFlow's id is '${flowplan.id}' but the filename implies '${expectedId}'.`,
+        message: `defineFlow's id is '${flowStory.id}' but the filename implies '${expectedId}'.`,
         fix: `Set id to '${expectedId}', or rename the file to match.`,
       })
     }
 
-    const steps = flowplan.steps ?? []
+    const steps = flowStory.steps ?? []
     if (steps.length === 0) {
       report.add({
-        ruleId: 'flowplan/empty-steps',
+        ruleId: 'flowStory/empty-steps',
         severity: 'warning',
         file: relPath,
         message: 'Flowplan has zero steps.',
-        fix: `flowkit add:step --flowplan:${expectedId} --page:<id>`,
+        fix: `flowkit add:step --flowStory:${expectedId} --page:<id>`,
       })
       continue
     }
@@ -135,7 +135,7 @@ export async function checkFlowplans(wsDir, report) {
 
       if (!knownPageIds.has(step.pageId)) {
         report.add({
-          ruleId: 'flowplan/invalid-page',
+          ruleId: 'flowStory/invalid-page',
           severity: 'error',
           file: relPath,
           message: `step[${i}]'s pageId '${step.pageId}' is not a real page in this workspace. Expected the 'chapter-page' composite id form (see makePageId).`,
@@ -145,7 +145,7 @@ export async function checkFlowplans(wsDir, report) {
 
       if (!step.actionNote && !step.on) {
         report.add({
-          ruleId: 'flowplan/weak-step',
+          ruleId: 'flowStory/weak-step',
           severity: 'warning',
           file: relPath,
           message: `step[${i}] has no actionNote and no 'on' handler — playback shows no guidance.`,

@@ -1,8 +1,8 @@
 import type { ChapterConfig, Hotspot, PageProps } from '@flowkit/types/index'
 import type { CompiledFlowplan } from '@flowkit-features/flow-library'
-import { useFlowplanSettings } from '@flowkit-features/flowplan/FlowplanSettingsContext'
-import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
-import { useFlowplanElementCheck } from '@flowkit-features/flowplan/useFlowplanElementCheck'
+import { useFlowplanSettings } from '@flowkit-features/flowStory/FlowplanSettingsContext'
+import { useFlowPlaybackOptional } from '@flowkit-features/flowStory/FlowPlaybackContext'
+import { useFlowplanElementCheck } from '@flowkit-features/flowStory/useFlowplanElementCheck'
 import { useSessionRecorderOptional } from '@flowkit-features/flowTracer/context'
 import PanelErrorBoundary from '@flowkit-shared/components/errors/PanelErrorBoundary'
 import { type FlowNavContextValue, FlowNavCtx } from '@flowkit-shared/contexts/FlowNavContext'
@@ -23,11 +23,11 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
   const { theme } = useTheme()
 
   // ─── Flowplan playback integration ───────────────────────────────────────────
-  // A compiled flowplan carries a `__flowplan` field; flows without it leave
+  // A compiled flowStory carries a `__flowplan` field; flows without it leave
   // the entire playback branch dormant. Derived from `flow` directly (not from
   // the engine's activePageId) so this is available BEFORE useFlowEngine is
   // called — the engine needs currentOn/currentNext/strictMode to build its gate.
-  const flowplan = (flow as Partial<CompiledFlowplan>).__flowplan
+  const flowStory = (flow as Partial<CompiledFlowplan>).__flowplan
   const playback = useFlowPlaybackOptional()
   const {
     strictMode,
@@ -39,7 +39,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
     hintPosition,
   } = useFlowplanSettings()
 
-  // The engine needs the flowplan gate (which depends on the CURRENT step, i.e.
+  // The engine needs the flowStory gate (which depends on the CURRENT step, i.e.
   // activePageId) but activePageId is only known once the engine itself has
   // run. Broken via a ref: the gate reads the latest resolved step off a ref that
   // FlowMaster updates every render (see the sync effect below), so the engine
@@ -53,7 +53,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
   }>({ currentOn: undefined, currentNext: undefined })
 
   const flowplanGate: FlowplanGate | null = useMemo(() => {
-    if (!flowplan) return null
+    if (!flowStory) return null
     return {
       get currentOn() {
         return currentStepRef.current.currentOn
@@ -63,7 +63,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
       },
       strictMode,
     }
-  }, [flowplan, strictMode])
+  }, [flowStory, strictMode])
 
   // Blind Mode: hold the completion navigate-away for a few seconds so the
   // pass/fail summary below has a visible render window — without this,
@@ -71,7 +71,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
   // transitionLog entry and FlowMaster unmounts before anything can render.
   const engine = useFlowEngine(flow, {
     flowplanGate,
-    completionDelayMs: flowplan && blindMode ? 4000 : 0,
+    completionDelayMs: flowStory && blindMode ? 4000 : 0,
   })
   const {
     activeScreenIndex,
@@ -92,54 +92,54 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
     history,
   } = engine
 
-  // The current flowplan step, derived SYNCHRONOUSLY from activePageId + the
+  // The current flowStory step, derived SYNCHRONOUSLY from activePageId + the
   // compiled step list (FlowMaster is the source of truth for the active screen;
   // the context never looks the step up itself). Used by the patch effect, the
   // gating handler, and the actionNote caption.
-  const currentStepIndex = flowplan ? flowplan.steps.findIndex(s => s.pageId === activePageId) : -1
+  const currentStepIndex = flowStory ? flowStory.steps.findIndex(s => s.pageId === activePageId) : -1
   const currentStep =
-    flowplan && currentStepIndex >= 0 ? flowplan.steps[currentStepIndex] : undefined
+    flowStory && currentStepIndex >= 0 ? flowStory.steps[currentStepIndex] : undefined
 
   // Planned advance element id / target for the current step (undefined = tap-
   // anywhere). Synced onto currentStepRef via useLayoutEffect (never mutate a
   // ref during render) — must be current before the next paint/interaction so
   // the gate object built above (whose identity is stable across renders)
   // always resolves the CURRENT step when commitNavigation reads it.
-  const currentOn = flowplan ? currentStep?.on : undefined
-  const currentNext = flowplan ? currentStep?.next : undefined
+  const currentOn = flowStory ? currentStep?.on : undefined
+  const currentNext = flowStory ? currentStep?.next : undefined
   useLayoutEffect(() => {
     currentStepRef.current = { currentOn, currentNext }
   }, [currentOn, currentNext])
 
   // Authoring diagnostic — independent of Show Hints/Blind Mode, since a
-  // broken flowplan↔screen id contract is a signal for the author, not a
+  // broken flowStory↔screen id contract is a signal for the author, not a
   // hint for the tester. See useFlowplanElementCheck for the full rationale.
   const { missing: elementCheckMissing } = useFlowplanElementCheck(screenContainerRef, {
-    flowplanId: flowplan?.flowplanId,
+    flowplanId: flowStory?.flowplanId,
     stepIndex: currentStepIndex,
     pageId: activePageId,
     on: currentOn,
   })
 
-  // ── Per-step db patch: when the active screen changes during flowplan
+  // ── Per-step db patch: when the active screen changes during flowStory
   // playback, apply that step's db patch (silently) + advance currentStep.
   const applyStep = playback?.applyStep
   useEffect(() => {
-    if (!flowplan || !applyStep || currentStepIndex < 0) return
+    if (!flowStory || !applyStep || currentStepIndex < 0) return
     applyStep(currentStepIndex, currentStep?.db)
-    // currentStep is derived from flowplan + currentStepIndex which are already
+    // currentStep is derived from flowStory + currentStepIndex which are already
     // in deps — including it would be redundant and cause a double-apply.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flowplan, applyStep, currentStepIndex])
+  }, [flowStory, applyStep, currentStepIndex])
 
   // ── Restart coordination: FlowPlaybackContext increments restartSignal when
   // restart() is called. FlowMaster is the coordinator — it owns the engine
   // reference, so it is the only place that can call engine.resetEngine().
   const restartSignal = playback?.restartSignal ?? 0
   useEffect(() => {
-    if (!flowplan || restartSignal === 0) return
+    if (!flowStory || restartSignal === 0) return
     resetEngine()
-    // resetEngine and flowplan intentionally omitted — restartSignal is the
+    // resetEngine and flowStory intentionally omitted — restartSignal is the
     // sole trigger; adding resetEngine would fire on every engine identity change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restartSignal])
@@ -189,16 +189,16 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
   // PanelErrorBoundary remount boundary) or a reused ScreenComp could keep a
   // stale glow after the plan has moved past that element.
   useEffect(() => {
-    if (!flowplan || blindMode || !showHints || !currentOn) return
+    if (!flowStory || blindMode || !showHints || !currentOn) return
     const el = screenContainerRef.current?.querySelector<HTMLElement>(`#${CSS.escape(currentOn)}`)
     el?.classList.add('fm-planned-highlight')
     return () => el?.classList.remove('fm-planned-highlight')
-  }, [flowplan, showHints, blindMode, currentOn, activePageId, screenContainerRef])
+  }, [flowStory, showHints, blindMode, currentOn, activePageId, screenContainerRef])
 
   // ── Diverged Hint (Blind Mode only): a soft, low-emphasis warning shown after
   // a delay of no progress toward the next planned step. Must resolve
   // currentStep.next fresh (calling it if it's a fork resolver function) rather
-  // than indexing flowplan.steps[currentStepIndex + 1] positionally — the "+1"
+  // than indexing flowStory.steps[currentStepIndex + 1] positionally — the "+1"
   // entry in the flattened steps array is not necessarily where a forking
   // branch would actually route to.
   const [diverged, setDiverged] = useState(false)
@@ -211,7 +211,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
     if (divergedResetRef.current) clearTimeout(divergedResetRef.current)
     divergedResetRef.current = setTimeout(() => setDiverged(false), 0)
     if (divergedTimerRef.current) clearTimeout(divergedTimerRef.current)
-    if (!flowplan || !blindMode || !divergedHint || currentNext === undefined) return
+    if (!flowStory || !blindMode || !divergedHint || currentNext === undefined) return
     const expectedNext =
       typeof currentNext === 'function'
         ? currentNext({ db: engine.buildCtx().db, flowState: localState })
@@ -227,21 +227,21 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
     // timer should reset only on genuine progress (activePageId change) or
     // relevant setting changes, not on every localState mutation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flowplan, blindMode, divergedHint, currentNext, activePageId])
+  }, [flowStory, blindMode, divergedHint, currentNext, activePageId])
 
   // ── Blind Mode pass/fail: edge-validity check against the compiled step
-  // graph, NOT a linear sequence diff — flowplan.steps is a flattened array
+  // graph, NOT a linear sequence diff — flowStory.steps is a flattened array
   // containing every fork branch's steps concatenated, so there is no single
   // canonical "planned sequence" to diff history against once forks exist. For
   // each consecutive pair in the actual recorded history, verify some step
   // with that pageId resolves (fresh, at verdict time) to the next pageId.
   const blindModeVerdict = useMemo(() => {
-    if (!flowplan || !blindMode) return null
+    if (!flowStory || !blindMode) return null
     for (let i = 0; i < history.length - 1; i++) {
       const from = history[i]
       const to = history[i + 1]
-      const step = flowplan.steps.find(s => s.pageId === from)
-      if (!step) return { pass: false, reason: `"${from}" is not a step in this flowplan.` }
+      const step = flowStory.steps.find(s => s.pageId === from)
+      if (!step) return { pass: false, reason: `"${from}" is not a step in this flowStory.` }
       const resolved =
         typeof step.next === 'function'
           ? step.next({ db: engine.buildCtx().db, flowState: localState })
@@ -250,16 +250,16 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
         return { pass: false, reason: `Unexpected path: "${from}" → "${to}".` }
       }
     }
-    return { pass: true, reason: 'Followed a valid path through the flowplan.' }
+    return { pass: true, reason: 'Followed a valid path through the flowStory.' }
     // engine/localState omitted — verdict only needs to reflect the final
     // recorded history once completion fires (transitionLog gains the
     // '[Flow Completed]' entry); it is not meant to track flowState drift.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flowplan, blindMode, history])
+  }, [flowStory, blindMode, history])
   // Completion is only knowable from the transitionLog's terminal marker —
   // history itself never records it (the flow just stops advancing).
   const isFlowComplete = useMemo(
-    () => transitionLog.some(e => e.toScreen === '[Flow Completed]'),
+    () => transitionLog.some(e => e.toPage === '[Flow Completed]'),
     [transitionLog]
   )
 
@@ -295,7 +295,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
       // when the same screen/element appears at two journey positions, e.g. a
       // ref'd flow). Resolve the advance target from currentNext; forks resolve
       // via the function form.
-      if (flowplan && currentNext !== undefined) {
+      if (flowStory && currentNext !== undefined) {
         const advance = () => {
           const timestamp = new Date().toLocaleTimeString()
           const target =
@@ -368,7 +368,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
       setIsAutoPlayPaused,
       recorderOpt,
       activePageId,
-      flowplan,
+      flowStory,
       currentOn,
       currentNext,
       flashOffScript,
@@ -509,7 +509,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
         .fm-scale-in         { animation: fm-scale-in        ${ANIM_DURATION}ms cubic-bezier(.4,0,.2,1) both }
         .fm-scale-out        { animation: fm-scale-out       ${ANIM_DURATION}ms cubic-bezier(.4,0,.2,1) both }
 
-        /* Off-script tap feedback (flowplan gating) — color driven by --fm-offscript-color,
+        /* Off-script tap feedback (flowStory gating) — color driven by --fm-offscript-color,
            set inline per-element in flashOffScript() from the configurable wrongClickColor. */
         @keyframes fm-offscript-pulse { 0%{outline-color:rgba(0,0,0,0)} 30%{outline-color:var(--fm-offscript-color, #ef4444)} 100%{outline-color:rgba(0,0,0,0)} }
         [data-off-script] { outline: 2px solid rgba(0,0,0,0); outline-offset: 2px; animation: fm-offscript-pulse 300ms ease both; }
@@ -637,7 +637,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
             Blind Mode (this is a signal for the author, not a playback hint),
             dev-only since it's a build-time content issue, not a runtime state
             a shipped/exported build's viewer needs to see. */}
-        {flowplan && elementCheckMissing && import.meta.env.DEV && (
+        {flowStory && elementCheckMissing && import.meta.env.DEV && (
           <div
             className={`absolute ${hintPosition === 'top' ? 'bottom-6' : 'top-4'} left-1/2 z-50 px-3 py-1.5 rounded-full text-xs font-semibold pointer-events-none`}
             style={{
@@ -655,7 +655,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
 
         {/* Flowplan: actionNote caption for the current step (Show Hints only,
             hidden entirely in Blind Mode) */}
-        {flowplan && showHints && !blindMode && currentStep?.actionNote && (
+        {flowStory && showHints && !blindMode && currentStep?.actionNote && (
           <div
             className={`absolute ${hintPosition === 'top' ? 'top-4' : 'bottom-6'} left-1/2 z-50 px-3 py-1.5 rounded-full text-xs font-semibold pointer-events-none`}
             style={{
@@ -674,7 +674,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
             Diverged Hint toast below is Blind Mode's equivalent soft signal).
             Copy reflects whether Strict Mode actually refused the navigation
             or this is just Guided-mode advisory feedback. */}
-        {flowplan && offScript && !blindMode && (
+        {flowStory && offScript && !blindMode && (
           <div
             className={`absolute ${hintPosition === 'top' ? 'top-4' : 'bottom-6'} left-1/2 z-50 px-3 py-1.5 rounded-full text-xs font-semibold pointer-events-none`}
             style={{
@@ -693,7 +693,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
         {/* Blind Mode: soft divergence nudge — a lower-emphasis signal than the
             Strict Mode toast above, since Blind Mode is meant to let the user
             wander before telling them anything. */}
-        {flowplan && blindMode && diverged && !isFlowComplete && (
+        {flowStory && blindMode && diverged && !isFlowComplete && (
           <div
             className={`absolute ${hintPosition === 'top' ? 'top-4' : 'bottom-6'} left-1/2 z-50 px-3 py-1.5 rounded-full text-xs font-semibold pointer-events-none`}
             style={{
@@ -713,7 +713,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
         {/* Blind Mode: pass/fail summary — rendered during the completionDelayMs
             window (see useFlowEngine options above) between the completion
             transitionLog entry and the actual navigate-away. */}
-        {flowplan && blindMode && isFlowComplete && blindModeVerdict && (
+        {flowStory && blindMode && isFlowComplete && blindModeVerdict && (
           <div
             className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
             style={{ background: 'rgba(0,0,0,0.55)' }}

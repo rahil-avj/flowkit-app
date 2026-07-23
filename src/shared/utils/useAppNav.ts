@@ -9,7 +9,7 @@ export interface AppNav {
    * when this screen is rendered inside a flow, DashboardContext otherwise.
    */
   navigateTo: (target: string) => void
-  /** True when this screen is currently rendered inside a flowplan. */
+  /** True when this screen is currently rendered inside a flowStory. */
   isChapter: boolean
   /** Flow-local sandbox state. Undefined when not in a flow. */
   state: Record<string, unknown> | undefined

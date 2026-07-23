@@ -1,4 +1,4 @@
-import type { Chapter } from '@flowkit/types/index'
+import type { Chapter, WireframeView } from '@flowkit/types/index'
 import type { PaletteGroup, PaletteItem } from '@flowkit-features/command-palette'
 import { PALETTE_ACCENT_COLORS } from '@flowkit-features/command-palette'
 import { useFlowLibrary } from '@flowkit-features/flow-library'
@@ -9,102 +9,102 @@ import { useMemo } from 'react'
 
 import type { GoToItemMeta } from './types'
 
-// Pages  = blue [0], Flows = green [1], flowStories = purple [2]
-const SCREEN_COLOR = PALETTE_ACCENT_COLORS[0]
-const FLOW_COLOR = PALETTE_ACCENT_COLORS[1]
+// Pages  = blue [0], Chapters = green [1], flowStories = purple [2]
+const PAGE_COLOR = PALETTE_ACCENT_COLORS[0]
+const CHAPTER_COLOR = PALETTE_ACCENT_COLORS[1]
 const FLOWPLAN_COLOR = PALETTE_ACCENT_COLORS[2]
 
 interface Options {
-  flows: Chapter[]
+  chapters: Chapter[]
   activeViewId: string
   query: string
 }
 
-export function useGoToItems({ flows, activeViewId, query }: Options): PaletteGroup[] {
+export function useGoToItems({ chapters, activeViewId, query }: Options): PaletteGroup[] {
   const activeWorkspace = useActiveWorkspace()
   const { summaries } = useFlowLibrary()
   const { tree, hasHierarchy } = useWorkspaceHierarchy(activeWorkspace)
   const q = query.toLowerCase()
 
   return useMemo<PaletteGroup[]>(() => {
-    const screenItems: PaletteItem[] = []
-    const flowItems: PaletteItem[] = []
+    const pageItems: PaletteItem[] = []
+    const chapterItems: PaletteItem[] = []
 
     if (hasHierarchy) {
       for (const projectNode of tree) {
-        for (const flowNode of projectNode.children ?? []) {
-          if (flowNode.kind !== 'chapter') continue
-          const flowId = flowNode.id
-          const flowLabel = flowNode.label
-          const screenChildren = (flowNode.children ?? []).filter(n => n.kind === 'page')
+        for (const chapterNode of projectNode.children ?? []) {
+          if (chapterNode.kind !== 'chapter') continue
+          const chapterId = chapterNode.id
+          const chapterLabel = chapterNode.label
+          const pageChildren = (chapterNode.children ?? []).filter(n => n.kind === 'page')
 
-          if (!q || flowLabel.toLowerCase().includes(q)) {
-            const firstPageId = screenChildren[0]?.id
-            const meta: GoToItemMeta = { kind: 'chapter', flowId, firstPageId }
-            flowItems.push({
-              id: `flow:${flowId}`,
-              label: flowLabel,
-              subtitle: `${screenChildren.length} screen${screenChildren.length !== 1 ? 's' : ''}`,
+          if (!q || chapterLabel.toLowerCase().includes(q)) {
+            const firstPageId = pageChildren[0]?.id
+            const meta: GoToItemMeta = { kind: 'chapter', chapterId, firstPageId }
+            chapterItems.push({
+              id: `flow:${chapterId}`, // Keep command prefix
+              label: chapterLabel,
+              subtitle: `${pageChildren.length} page${pageChildren.length !== 1 ? 's' : ''}`,
               icon: Folder,
-              iconColor: FLOW_COLOR,
+              iconColor: CHAPTER_COLOR,
               meta: meta as unknown as Record<string, unknown>,
             })
           }
 
-          for (const screenNode of screenChildren) {
-            if (!screenNode.view) continue
-            const label = screenNode.label
-            if (q && !label.toLowerCase().includes(q) && !flowLabel.toLowerCase().includes(q))
+          for (const pageNode of pageChildren) {
+            if (!pageNode.view) continue
+            const label = pageNode.label
+            if (q && !label.toLowerCase().includes(q) && !chapterLabel.toLowerCase().includes(q))
               continue
-            const meta: GoToItemMeta = { kind: 'screen', flowId }
-            const screenTags = screenNode.view.meta?.tags ?? []
-            screenItems.push({
-              id: screenNode.id,
+            const meta: GoToItemMeta = { kind: 'page', chapterId }
+            const pageTags = pageNode.view.meta?.tags ?? []
+            pageItems.push({
+              id: pageNode.id,
               label,
-              subtitle: flowLabel,
+              subtitle: chapterLabel,
               icon: Smartphone,
-              iconColor: SCREEN_COLOR,
-              tags: screenTags,
+              iconColor: PAGE_COLOR,
+              tags: pageTags,
               badges:
-                screenNode.id === activeViewId ? [{ label: 'current', style: 'green' }] : undefined,
+                pageNode.id === activeViewId ? [{ label: 'current', style: 'green' }] : undefined,
               meta: meta as unknown as Record<string, unknown>,
             })
           }
         }
       }
     } else {
-      for (const flow of flows) {
-        const pages = (flow.children ?? []).filter(v => !v.id.endsWith('-play'))
+      for (const chapter of chapters) {
+        const pages = (chapter.children ?? []).filter((v: WireframeView) => !v.id.endsWith('-play'))
 
-        if (!q || flow.label.toLowerCase().includes(q)) {
+        if (!q || chapter.label.toLowerCase().includes(q)) {
           const meta: GoToItemMeta = {
             kind: 'chapter',
-            flowId: flow.id,
+            chapterId: chapter.id,
             firstPageId: pages[0]?.id,
           }
-          flowItems.push({
-            id: `flow:${flow.id}`,
-            label: flow.label,
-            subtitle: `${pages.length} screen${pages.length !== 1 ? 's' : ''}`,
+          chapterItems.push({
+            id: `flow:${chapter.id}`,
+            label: chapter.label,
+            subtitle: `${pages.length} page${pages.length !== 1 ? 's' : ''}`,
             icon: Folder,
-            iconColor: FLOW_COLOR,
+            iconColor: CHAPTER_COLOR,
             meta: meta as unknown as Record<string, unknown>,
           })
         }
 
         const matched = q
           ? pages.filter(
-              s => s.label.toLowerCase().includes(q) || flow.label.toLowerCase().includes(q)
+              (s: WireframeView) => s.label.toLowerCase().includes(q) || chapter.label.toLowerCase().includes(q)
             )
           : pages
         for (const s of matched) {
-          const meta: GoToItemMeta = { kind: 'screen', flowId: flow.id }
-          screenItems.push({
+          const meta: GoToItemMeta = { kind: 'page', chapterId: chapter.id }
+          pageItems.push({
             id: s.id,
             label: s.label,
-            subtitle: flow.label,
+            subtitle: chapter.label,
             icon: Smartphone,
-            iconColor: SCREEN_COLOR,
+            iconColor: PAGE_COLOR,
             tags: s.meta?.tags ?? [],
             badges: s.id === activeViewId ? [{ label: 'current', style: 'green' }] : undefined,
             meta: meta as unknown as Record<string, unknown>,
@@ -121,7 +121,7 @@ export function useGoToItems({ flows, activeViewId, query }: Options): PaletteGr
         !(summary.description ?? '').toLowerCase().includes(q)
       )
         continue
-      const meta: GoToItemMeta = { kind: 'flowplan' }
+      const meta: GoToItemMeta = { kind: 'flowStory' }
       const subtitle =
         summary.tags.length > 0 ? summary.tags.slice(0, 3).join(', ') : `${summary.stepCount} steps`
       flowplanItems.push({
@@ -136,9 +136,9 @@ export function useGoToItems({ flows, activeViewId, query }: Options): PaletteGr
     }
 
     return [
-      { id: 'pages', label: 'Pages', items: screenItems, color: SCREEN_COLOR },
-      { id: 'flows', label: 'Flows', items: flowItems, color: FLOW_COLOR },
+      { id: 'pages', label: 'Pages', items: pageItems, color: PAGE_COLOR },
+      { id: 'flows', label: 'Chapters', items: chapterItems, color: CHAPTER_COLOR },
       { id: 'flowStories', label: 'Flow Plans', items: flowplanItems, color: FLOWPLAN_COLOR },
     ]
-  }, [flows, tree, hasHierarchy, summaries, q, activeViewId])
+  }, [chapters, tree, hasHierarchy, summaries, q, activeViewId])
 }

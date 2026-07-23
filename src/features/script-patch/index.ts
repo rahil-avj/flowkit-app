@@ -1,7 +1,7 @@
 export { default as CopyScriptButton } from './CopyScriptButton'
 export {
-  generateFlowOrderPatch,
-  generateScreenMetaPatch,
+  generateChapterOrderPatch,
+  generatePageMetaPatch,
   generateWorkspaceOrderPatch,
 } from './generators'
-export type { PatchScript, ScreenMetaPatchEntry } from './types'
+export type { PageMetaPatchEntry,PatchScript } from './types'

@@ -92,7 +92,7 @@ interface FeedbackContextValue {
   editComment: (id: string, text: string, tags: FeedbackTag[]) => void
   deleteComment: (id: string) => void
   clearAll: () => void
-  commentedScreenCount: number
+  commentedPageCount: number
   totalCommentCount: number
   exportAndDownload: (
     reviewerName: string,
@@ -209,7 +209,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
     FeedbackImageStore.clear().catch(() => {})
   }
 
-  const commentedScreenCount = new Set(comments.map(c => c.pageId)).size
+  const commentedPageCount = new Set(comments.map(c => c.pageId)).size
   const totalCommentCount = comments.length
 
   const exportMarkdown = (
@@ -218,29 +218,29 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
     includeScreenshots: boolean
   ): string => {
     const generated = new Date().toISOString().split('T')[0]
-    const screenComments: Record<string, FeedbackComment[]> = {}
+    const pageComments: Record<string, FeedbackComment[]> = {}
 
     commentsList.forEach(comment => {
-      if (!screenComments[comment.pageId]) {
-        screenComments[comment.pageId] = []
+      if (!pageComments[comment.pageId]) {
+        pageComments[comment.pageId] = []
       }
-      screenComments[comment.pageId].push(comment)
+      pageComments[comment.pageId].push(comment)
     })
 
-    const pageIds = Object.keys(screenComments).sort()
+    const pageIds = Object.keys(pageComments).sort()
     let md = `# Flowkit Feedback\n`
     md += `Reviewer: ${reviewerName}\n`
-    md += `Generated: ${generated} · ${totalCommentCount} comment${totalCommentCount !== 1 ? 's' : ''} across ${commentedScreenCount} screen${commentedScreenCount !== 1 ? 's' : ''}\n\n`
+    md += `Generated: ${generated} · ${totalCommentCount} comment${totalCommentCount !== 1 ? 's' : ''} across ${commentedPageCount} page${commentedPageCount !== 1 ? 's' : ''}\n\n`
     md += `---\n\n`
 
     pageIds.forEach(pageId => {
-      const screenComments_ = screenComments[pageId]
-      if (screenComments_.length === 0) return
+      const pageComments_ = pageComments[pageId]
+      if (pageComments_.length === 0) return
 
-      const firstComment = screenComments_[0]
+      const firstComment = pageComments_[0]
       md += `## ${pageId} — ${firstComment.pageLabel}\n\n`
 
-      screenComments_.forEach((c, idx) => {
+      pageComments_.forEach((c, idx) => {
         const time = new Date(c.timestamp).toLocaleString()
         md += `**Comment ${idx + 1}** · ${time}  \n`
         if (c.tags.length > 0) {
@@ -396,7 +396,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
           exported: new Date().toISOString(),
           reviewer: reviewerName,
           totalComments: totalCommentCount,
-          commentedScreens: commentedScreenCount,
+          commentedPages: commentedPageCount,
           comments: hydratedComments.map(c => {
             if (!includeScreenshots) {
               const clone = { ...c }
@@ -507,7 +507,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
         editComment,
         deleteComment,
         clearAll,
-        commentedScreenCount,
+        commentedPageCount,
         totalCommentCount,
         exportAndDownload,
         importComments,

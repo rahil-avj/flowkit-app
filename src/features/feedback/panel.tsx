@@ -51,8 +51,8 @@ function FeedbackTabContent() {
     importReadKey,
     setImportReadKey,
     handleImportFromCloud,
-    setSelectedScreen,
-    setSelectedScreenLabel,
+    setSelectedPage,
+    setSelectedPageLabel,
     filteredGroupedComments,
   } = useFeedbackTabContext()
 
@@ -68,7 +68,7 @@ function FeedbackTabContent() {
 
   // Derive the current view's id/label from activeViewId for defaulting the add-comment form.
   // We use the keys from filteredGroupedComments + raw activeViewId since we don't have ALL_VIEWS here.
-  const getDefaultScreen = useCallback(() => {
+  const getDefaultPage = useCallback(() => {
     const cleanId = activeViewId.replace('-play', '')
     // Prefer any existing comment's pageLabel for the clean id
     const existingEntry = Object.entries(filteredGroupedComments).find(([sid]) => sid === cleanId)
@@ -77,13 +77,13 @@ function FeedbackTabContent() {
 
   useEffect(() => {
     setOpenCommentForm(() => {
-      const defaultScreen = getDefaultScreen()
-      setSelectedScreen(defaultScreen.id)
-      setSelectedScreenLabel(defaultScreen.label)
+      const defaultPage = getDefaultPage()
+      setSelectedPage(defaultPage.id)
+      setSelectedPageLabel(defaultPage.label)
       setViewMode('add-comment')
     })
     return () => setOpenCommentForm(() => {})
-  }, [setOpenCommentForm, setViewMode, setSelectedScreen, setSelectedScreenLabel, getDefaultScreen])
+  }, [setOpenCommentForm, setViewMode, setSelectedPage, setSelectedPageLabel, getDefaultPage])
 
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
@@ -96,7 +96,7 @@ function FeedbackTabContent() {
       }
       if (mod && e.shiftKey && key === 'f') {
         e.preventDefault()
-        setFilter(prev => ({ ...prev, filterForCurrentScreen: !prev.filterForCurrentScreen }))
+        setFilter(prev => ({ ...prev, filterForCurrentPage: !prev.filterForCurrentPage }))
       }
     }
     window.addEventListener('keydown', handleKeydown)
@@ -212,9 +212,9 @@ function FeedbackTabContent() {
           }}
         >
           <p>
-            ⌘K: Add comment • ⌘I: Import • ⌘⇧F: Toggle screen filter
-            {filter.filterForCurrentScreen && (
-              <span style={{ color: theme.accent.blue }}> · Screen filter ON</span>
+            ⌘K: Add comment • ⌘I: Import • ⌘⇧F: Toggle page filter
+            {filter.filterForCurrentPage && (
+              <span style={{ color: theme.accent.blue }}> · Page filter ON</span>
             )}
           </p>
         </div>

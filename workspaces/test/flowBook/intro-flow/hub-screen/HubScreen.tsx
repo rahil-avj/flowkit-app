@@ -85,5 +85,5 @@ export default function HubScreen() {
 
 export const pageMeta: PageMeta = {
   label: 'Hub Screen',
-  desc: 'Grid of all 6 games — free navigation via useAppNav(), no flowplan required.',
+  desc: 'Grid of all 6 games — free navigation via useAppNav(), no flowStory required.',
 }

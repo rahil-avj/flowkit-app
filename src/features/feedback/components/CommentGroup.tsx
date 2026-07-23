@@ -6,7 +6,7 @@ interface CommentGroupProps {
   pageId: string
   pageLabel: string
   pageExists: boolean
-  isCurrentScreen: boolean
+  isCurrentPage: boolean
   isFirst?: boolean
   onNavigate: (id: string) => void
   children: React.ReactNode
@@ -16,7 +16,7 @@ export default function CommentGroup({
   pageId,
   pageLabel,
   pageExists,
-  isCurrentScreen,
+  isCurrentPage,
   isFirst,
   onNavigate,
   children,
@@ -76,7 +76,7 @@ export default function CommentGroup({
           )}
         </div>
 
-        {pageExists && !isCurrentScreen && (
+        {pageExists && !isCurrentPage && (
           <button
             onClick={(e: React.MouseEvent) => {
               e.stopPropagation()

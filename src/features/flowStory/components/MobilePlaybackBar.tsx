@@ -7,8 +7,8 @@ import { useFlowPlaybackOptional } from '../FlowPlaybackContext'
 //
 // Mobile has no equivalent to the desktop Flow Library header's Play/Stop button
 // (no side panel visible during playback) — this sticky bar is the mobile Stop
-// control the flowplan playback settings work asked for. Rendered only while a
-// flowplan is actively gating; lands the user on the generic (non-flowplan)
+// control the flowStory playback settings work asked for. Rendered only while a
+// flowStory is actively gating; lands the user on the generic (non-flowStory)
 // version of the current screen, same landing behavior as the desktop Stop
 // button (see FlowLibrary.tsx's onStop).
 

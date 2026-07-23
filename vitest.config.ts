@@ -1,7 +1,7 @@
 import path from 'path'
 import { defineConfig } from 'vitest/config'
 
-// Unit-test config for pure logic (applyDotPathPatch, compileFlowplan, …).
+// Unit-test config for pure logic (applyDotPathPatch, compileFlowStory, …).
 // Mirrors the path aliases from vite.config.ts so test files can import via
 // @flowkit/* etc. Node environment — no DOM needed for the pure-logic suites.
 export default defineConfig({

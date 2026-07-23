@@ -11,13 +11,13 @@ import {
   type DebugSubTab,
   FlowDebuggerContent,
 } from '@flowkit-features/flow-debugger'
-import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
+import { useFlowPlaybackOptional } from '@flowkit-features/flowStory/FlowPlaybackContext'
 import {
   SessionsPanel,
   useSavedSessionCount,
   useSessionRecorderOptional,
 } from '@flowkit-features/flowTracer'
-import { CopyScriptButton, generateScreenMetaPatch } from '@flowkit-features/script-patch'
+import { CopyScriptButton, generatePageMetaPatch } from '@flowkit-features/script-patch'
 import {
   AccessibilitySettings,
   ColorBlindSVGDefs,
@@ -624,7 +624,7 @@ export function ScreenInfoContent({
             </button>
           </div>
           <CopyScriptButton
-            patch={generateScreenMetaPatch([...pendingEdits.values()], activeWorkspace)}
+            patch={generatePageMetaPatch([...pendingEdits.values()], activeWorkspace)}
           />
           <p
             className="text-center italic"

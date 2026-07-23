@@ -39,11 +39,11 @@ export interface FigmaExportSidebarProps {
 
   searchQuery: string
   onSearchQueryChange: (v: string) => void
-  filterFlow: string | null
-  onFilterFlowChange: (v: string | null) => void
+  filterChapter: string | null
+  onFilterChapterChange: (v: string | null) => void
   filterTags: Set<string>
   onFilterTagsChange: (v: Set<string>) => void
-  allFlows: string[]
+  allChapters: string[]
   allTags: string[]
 
   onFigmaExport: () => void
@@ -175,16 +175,16 @@ export default function FigmaExportSidebar({
   onGroupByChange,
   searchQuery,
   onSearchQueryChange,
-  filterFlow,
-  onFilterFlowChange,
+  filterChapter,
+  onFilterChapterChange,
   filterTags,
   onFilterTagsChange,
-  allFlows,
+  allChapters,
   allTags,
   onFigmaExport,
 }: FigmaExportSidebarProps) {
   const anyFilterActive =
-    searchQuery.trim().length > 0 || filterFlow !== null || filterTags.size > 0
+    searchQuery.trim().length > 0 || filterChapter !== null || filterTags.size > 0
 
   function toggleTag(tag: string) {
     const next = new Set(filterTags)
@@ -203,7 +203,7 @@ export default function FigmaExportSidebar({
 
   function clearAllFilters() {
     onSearchQueryChange('')
-    onFilterFlowChange(null)
+    onFilterChapterChange(null)
     onFilterTagsChange(new Set())
   }
 
@@ -382,7 +382,7 @@ export default function FigmaExportSidebar({
             />
             <input
               type="text"
-              placeholder="Search screens…"
+              placeholder="Search pages…"
               value={searchQuery}
               onChange={e => onSearchQueryChange(e.target.value)}
               className="w-full h-8 text-ui-sm bg-theme-base border border-theme-border rounded-md text-theme-text-primary placeholder:text-theme-text-muted outline-none focus:border-theme-blue transition-[border-color] duration-150 px-7"
@@ -397,18 +397,18 @@ export default function FigmaExportSidebar({
             )}
           </div>
 
-          {/* Flow filter */}
-          {allFlows.length > 0 && (
+          {/* Chapter filter */}
+          {allChapters.length > 0 && (
             <div className="flex flex-col gap-1">
               <span className="text-ui-2xs font-bold text-theme-text-muted uppercase tracking-wider">
-                Flow
+                Chapter
               </span>
               <Select
-                value={filterFlow ?? ''}
-                onChange={e => onFilterFlowChange(e.target.value || null)}
+                value={filterChapter ?? ''}
+                onChange={e => onFilterChapterChange(e.target.value || null)}
               >
-                <option value="">All flows</option>
-                {allFlows.map(f => (
+                <option value="">All chapters</option>
+                {allChapters.map(f => (
                   <option key={f} value={f}>
                     {f}
                   </option>

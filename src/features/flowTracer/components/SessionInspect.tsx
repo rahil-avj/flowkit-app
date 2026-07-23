@@ -13,7 +13,7 @@ type CategoryFilter =
 
 const CATEGORY_COLORS: Record<string, string> = {
   flow: '#22c55e',
-  screen: '#22c55e',
+  page: '#22c55e',
   interaction: '#3b82f6',
   navigation: '#a855f7',
   state: '#f59e0b',
@@ -97,18 +97,18 @@ export default function SessionInspect({ sessionId, onBack }: Props) {
   }
 
   const duration = meta.endTime ? meta.endTime - meta.startTime : null
-  const screenVisits = events.filter(e => e.type === 'screen.visited')
+  const pageVisits = events.filter(e => e.type === 'screen.visited')
   const flowEntries = events.filter(e => e.type === 'flow.entered')
   const firstTs = events[0]?.timestamp ?? 0
 
-  const screenPath: { id: string; dwell: number | null }[] = []
-  for (let i = 0; i < screenVisits.length; i++) {
-    const id = (screenVisits[i].payload.pageId ??
-      screenVisits[i].payload.viewId ??
+  const pagePath: { id: string; dwell: number | null }[] = []
+  for (let i = 0; i < pageVisits.length; i++) {
+    const id = (pageVisits[i].payload.pageId ??
+      pageVisits[i].payload.viewId ??
       'unknown') as string
-    const next = screenVisits[i + 1]
-    const dwell = next ? next.timestamp - screenVisits[i].timestamp : null
-    screenPath.push({ id, dwell })
+    const next = pageVisits[i + 1]
+    const dwell = next ? next.timestamp - pageVisits[i].timestamp : null
+    pagePath.push({ id, dwell })
   }
 
   const CATEGORIES: CategoryFilter[] = [
@@ -185,7 +185,7 @@ export default function SessionInspect({ sessionId, onBack }: Props) {
           {[
             { label: 'Duration', value: duration ? formatDuration(duration) : '—' },
             { label: 'Events', value: String(events.length) },
-            { label: 'Screens', value: String(screenVisits.length) },
+            { label: 'Pages', value: String(pageVisits.length) },
             { label: 'Flows', value: String(flowEntries.length) },
             { label: 'Quality', value: `${meta.qualityScore}%` },
           ].map(({ label, value }) => (
@@ -199,11 +199,11 @@ export default function SessionInspect({ sessionId, onBack }: Props) {
           ))}
         </div>
 
-        {/* Screen path */}
-        {screenPath.length > 0 && (
-          <Section title="Screen path">
+        {/* Page path */}
+        {pagePath.length > 0 && (
+          <Section title="Page path">
             <div className="flex flex-col gap-0.5">
-              {screenPath.map(({ id, dwell }, i) => (
+              {pagePath.map(({ id, dwell }, i) => (
                 <div
                   key={i}
                   className="flex items-center gap-2 px-2 py-1 bg-theme-elevated rounded"

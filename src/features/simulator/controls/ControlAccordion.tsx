@@ -10,22 +10,22 @@ interface AccordionProps {
   label: string
   defaultOpen?: boolean
   children: React.ReactNode
-  onlyForFlow?: string | string[]
-  onlyForScreen?: string | string[]
+  onlyForFlowStory?: string | string[]
+  onlyForPage?: string | string[]
 }
 
 export function ControlAccordion({
   label,
   defaultOpen = false,
   children,
-  onlyForFlow,
-  onlyForScreen,
+  onlyForFlowStory,
+  onlyForPage,
 }: AccordionProps) {
   const { activeViewId, activeFlowDebugInfo } = useDashboard()
   const { theme, scale } = useTheme()
   const [open, setOpen] = useState(defaultOpen)
 
-  if (!shouldShowControl(activeViewId, activeFlowDebugInfo, onlyForFlow, onlyForScreen)) {
+  if (!shouldShowControl(activeViewId, activeFlowDebugInfo, onlyForFlowStory, onlyForPage)) {
     return null
   }
 

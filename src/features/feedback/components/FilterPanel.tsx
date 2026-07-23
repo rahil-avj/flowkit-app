@@ -22,19 +22,19 @@ export default function FilterPanel() {
     >
       <div className="flex items-center justify-between gap-2">
         <Checkbox
-          label="Auto filter for current screen"
-          checked={filter.filterForCurrentScreen}
+          label="Auto filter for current page"
+          checked={filter.filterForCurrentPage}
           onChange={e =>
             setFilter(prev => ({
               ...prev,
-              filterForCurrentScreen: e.target.checked,
+              filterForCurrentPage: e.target.checked,
               pageId: e.target.checked ? prev.pageId : null,
             }))
           }
         />
         <span
           className="shrink-0 font-mono font-bold px-1.5 py-0.5 rounded"
-          title="Toggle auto filter for current screen"
+          title="Toggle auto filter for current page"
           style={{
             fontSize: scale.text.xxs,
             color: theme.text.muted,
@@ -45,12 +45,12 @@ export default function FilterPanel() {
           ⇧F
         </span>
       </div>
-      {!filter.filterForCurrentScreen && (
+      {!filter.filterForCurrentPage && (
         <Select
           value={filter.pageId || ''}
           onChange={e => setFilter(prev => ({ ...prev, pageId: e.target.value || null }))}
         >
-          <option value="">All screens</option>
+          <option value="">All pages</option>
           {Array.from(new Set(comments.map(c => c.pageId))).map(pageId => {
             const label = comments.find(c => c.pageId === pageId)?.pageLabel || pageId
             return (

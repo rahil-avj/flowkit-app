@@ -13,7 +13,7 @@ import { isPlainObject, type Obj, UNSAFE_KEYS } from './applyDotPathPatch'
 //   4. flow-debugger/dbInspectorHelpers.ts's
 //      setAtPath (same name, different fn) — NO guard, SILENTLY NO-OPS on a
 //      missing intermediate (the one DbInspector.tsx actually uses).
-//   5. flowplan/compileFlowplan.ts's readDotPath — read-only, its own walker.
+//   5. flowStory/compileFlowStory.ts's readDotPath — read-only, its own walker.
 //
 // This file is the one canonical implementation all five now route through.
 // Six one-word, Map-like verbs — get/set/has/remove/update mirror Map's own
@@ -76,7 +76,7 @@ export function has(db: Obj, dotPath: string): boolean {
  * inside an `updateDb` callback, same contract as the underlying primitive).
  * Auto-creates missing intermediate objects. Unlike `applyDotPathPatch.ts`'s
  * own `setAtPath`, this OVERWRITES the leaf outright rather than deep-merging
- * — that function's merge behavior is specific to flowplan patch semantics;
+ * — that function's merge behavior is specific to flowStory patch semantics;
  * a plain `db.set()` call should behave like `Map.set` (replace, don't merge).
  */
 function setAtPathOverwrite(draft: Obj, dotPath: string, value: unknown): void {

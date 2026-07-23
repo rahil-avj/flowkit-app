@@ -11,7 +11,7 @@ import React, { createContext, useCallback, useContext, useMemo, useState } from
 
 // ── FlowplanSettingsContext ─────────────────────────────────────────────────────
 //
-// Shared, real-time-synced settings for flowplan playback (Strict Mode, hint
+// Shared, real-time-synced settings for flowStory playback (Strict Mode, hint
 // visibility/appearance, Blind Mode). MUST be a Context, not independent
 // per-component useState — Settings.tsx (an overlay layered on top of the
 // still-mounted canvas) and FlowMaster.tsx (rendering underneath it) are
@@ -142,7 +142,7 @@ export function FlowplanSettingsProvider({ children }: { children: React.ReactNo
   )
 }
 
-/** Access flowplan playback settings. Throws outside the provider. */
+/** Access flowStory playback settings. Throws outside the provider. */
 export function useFlowplanSettings(): FlowplanSettingsValue {
   const ctx = useContext(FlowplanSettingsContext)
   if (!ctx) throw new Error('useFlowplanSettings() must be used within a FlowplanSettingsProvider')

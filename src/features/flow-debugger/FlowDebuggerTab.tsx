@@ -50,7 +50,7 @@ export default function FlowDebuggerTab({ subTab }: Props) {
               >
                 <span>{log.timestamp}</span>
                 <span className="font-mono">
-                  {log.fromScreen} ➔ {log.toScreen}
+                  {log.fromPage} ➔ {log.toPage}
                 </span>
               </div>
               <div className="font-bold font-mono truncate" style={{ color: theme.text.primary }}>
@@ -133,16 +133,16 @@ export default function FlowDebuggerTab({ subTab }: Props) {
           subtitle={
             isEmpty
               ? 'Play a flow to start tracking the journey.'
-              : 'Screens visited will appear here.'
+              : 'Pages visited will appear here.'
           }
         />
       ) : (
         <div className="flex flex-col gap-1.5 pl-2 relative">
           <div
-            className="absolute left-[3px] w-px inset-y-1.5"
+            className="absolute left-0.75 w-px inset-y-1.5"
             style={{ backgroundColor: theme.bg.border }}
           />
-          {activeFlowDebugInfo.history.map((screen, idx) => {
+          {activeFlowDebugInfo.history.map((pageId, idx) => {
             const isCurrent = idx === activeFlowDebugInfo.history.length - 1
             return (
               <div
@@ -163,7 +163,7 @@ export default function FlowDebuggerTab({ subTab }: Props) {
                   className={isCurrent ? 'font-bold text-sm' : 'font-normal'}
                   style={{ color: isCurrent ? theme.text.primary : theme.text.secondary }}
                 >
-                  {screen}
+                  {pageId}
                 </span>
               </div>
             )

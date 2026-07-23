@@ -12,7 +12,7 @@
 //   data     → src/shared/contexts/DashboardContext.tsx (db, updateDb, resetDb)
 //   screens  → src/types.ts PageProps / PageMeta
 //   flows    → src/types.ts FlowDef + OnMapEntry; declared in flowStories/*.ts
-//   flowplan → src/features/flow-library/compileFlowplan.ts + src/types FlowkitConfig
+//   flowStory → src/features/flow-library/compileFlowStory.ts + src/types FlowkitConfig
 //   sim      → src/core/layout/ (ControlAccordion, SimControl, SimAction, etc.)
 //   theme    → src/theme.ts (bg/text/accent/shadow) + ThemeContext useTheme()
 //   CLI      → scripts/flowkit.js
@@ -95,7 +95,7 @@ export function directives(ctx) {
         kind: 'to',
         task: 'hide a screen or flow from the Screens tab without deleting it',
         action:
-          'prefix its folder (or file) name with a single `_` — it stays fully real/playable/referenceable, just hidden from default browsing. Prefix with `__` instead to make it practically non-existent (excluded from checks, flowplan references, and status counts). Use `flowkit list:screens --hidden`/`--gone`/`--all` to see them.',
+          'prefix its folder (or file) name with a single `_` — it stays fully real/playable/referenceable, just hidden from default browsing. Prefix with `__` instead to make it practically non-existent (excluded from checks, flowStory references, and status counts). Use `flowkit list:screens --hidden`/`--gone`/`--all` to see them.',
       },
       {
         kind: 'never',
@@ -123,7 +123,7 @@ export function directives(ctx) {
       {
         kind: 'to',
         task: 'wire tap interactions declaratively during flow playback',
-        action: 'add an `interactions` map in the flowplan step for the screen',
+        action: 'add an `interactions` map in the flowStory step for the screen',
       },
       {
         kind: 'never',
@@ -155,7 +155,7 @@ export function directives(ctx) {
         },
         {
           kind: 'never',
-          text: '`import { … } from "@workspace/lib/data/db"` inside a screen — direct import breaks flowplan db-patching; use the injected `db` from `useDashboard()`/`useDb()`',
+          text: '`import { … } from "@workspace/lib/data/db"` inside a screen — direct import breaks flowStory db-patching; use the injected `db` from `useDashboard()`/`useDb()`',
         },
         {
           kind: 'never',
@@ -220,7 +220,7 @@ export function indexRows(_ctx) {
     },
     {
       task: 'Wire a tap / interaction',
-      action: 'add `interactions` map in the flowplan step (`flowStories/<f>.ts`)',
+      action: 'add `interactions` map in the flowStory step (`flowStories/<f>.ts`)',
       detail: 'platform.md → Flows · Documentation/FLOWMASTER.md',
     },
     {
@@ -359,7 +359,7 @@ export function cliRows(_ctx) {
       cmd: 'flowkit check / flowkit check:<domain>',
       what: 'validate authored content — screens/config/components/db/flowStories',
     },
-    { cmd: 'flowkit project:ls', what: 'list projects and their flowplan counts' },
+    { cmd: 'flowkit project:ls', what: 'list projects and their flowStory counts' },
     { cmd: 'flowkit status', what: 'workspace health: projects, flowStories, sessions, feedback' },
     {
       cmd: 'flowkit sessions:ls / import / check / stats / sample / rm',

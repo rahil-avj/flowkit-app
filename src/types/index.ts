@@ -119,8 +119,8 @@ export interface WireframeView {
    * "default" variant whose component === `component`. Absent for legacy views.
    */
   variants?: PageVariant[]
-  /** The flow folder this screen is grouped under (Flowplan hierarchy). */
-  flow?: string
+  /** The chapter folder this page is grouped under (Flowplan hierarchy). */
+  chapter?: string
   /** The project this screen belongs to (Flowplan hierarchy). */
   project?: string
 }
@@ -148,7 +148,7 @@ export type TransitionAnimation =
 //
 // How it works:
 //   1. Give any HTML element in your screen an `id` attribute.
-//   2. In your flowplan, add a matching entry in `interactions`.
+//   2. In your flowStory, add a matching entry in `interactions`.
 //   3. FlowMaster listens at the container level — one global listener catches
 //      all clicks and bubbles them up. No per-element wiring needed.
 //
@@ -157,7 +157,7 @@ export type TransitionAnimation =
 //   <button id="pay-btn">Pay now</button>
 //   <div id="cancel">Cancel</div>
 //
-//   // In your flowplan — all logic in one place:
+//   // In your flowStory — all logic in one place:
 //   interactions: {
 //     "pay-btn": {
 //       trigger: "tap",
@@ -408,13 +408,13 @@ export interface ChapterConfig {
 
 /**
  * Props automatically injected into every screen component by FlowMaster
- * during flowplan playback. All fields are `undefined` when a screen is
+ * during flowStory playback. All fields are `undefined` when a screen is
  * previewed standalone (e.g. the Screens tab, outside any flow) — use the
  * `isChapter` field to detect which case you're in.
  *
  * These exist as an escape hatch for screens that need programmatic
  * triggers (form submits, async callbacks, custom gesture libraries, etc.);
- * simple taps should prefer an element `id` + a matching flowplan step
+ * simple taps should prefer an element `id` + a matching flowStory step
  * instead of destructuring these props.
  */
 export interface PageProps<
@@ -496,7 +496,7 @@ export interface FeedbackComment {
 // ─── Flowplan System (Phase 1) ──────────────────────────────────────────────────
 //
 // A Flowplan is an authored user journey. It is COMPILED into the runtime
-// ChapterConfig (see features/flow-library/compileFlowplan.ts) and run by the
+// ChapterConfig (see features/flow-library/compileFlowStory.ts) and run by the
 // existing FlowMaster/useFlowEngine — the engine is never modified.
 //
 // Authoring lives in: workspaces/<ws>/projects/<proj>/[modules/<mod>/]flowStories/<Name>.ts
@@ -622,7 +622,7 @@ export interface FlowplanDef {
   simulator?: { controls: SimulatorControl[] }
   /**
    * Screen id the device's home button/reset-to-first should target while this
-   * flowplan is playing. Falls back to the workspace's `startPage` (or the
+   * flowStory is playing. Falls back to the workspace's `startPage` (or the
    * first declared screen) when unset.
    */
   homeScreen?: string
@@ -636,13 +636,13 @@ export interface FlowplanDef {
 export interface FlowkitProjectConfig {
   /** Display name (defaults to folder name). */
   label?: string
-  /** Screens live directly under the project — skip module/flowplan levels. */
+  /** Screens live directly under the project — skip module/flowStory levels. */
   flat?: boolean
   /** Path to a default db preset file for this project. */
   db?: string
   /**
    * Explicit chapter ordering for the Screens tab and Flow Library.
-   * Values must match chapter folder names (which equal flowplan ids after the Part 0 rename).
+   * Values must match chapter folder names (which equal flowStory ids after the Part 0 rename).
    * Unlisted chapters are appended after declared ones in discovery order.
    */
   chapters?: string[]
@@ -672,7 +672,7 @@ export interface FlowkitConfig {
   projects?: Record<string, FlowkitProjectConfig>
   /**
    * Screen id to load by default (cold load, canvas "home" button, reset-to-first)
-   * when no flowplan is active. Falls back to the first declared screen when unset.
+   * when no flowStory is active. Falls back to the first declared screen when unset.
    */
   startPage?: string
   /**

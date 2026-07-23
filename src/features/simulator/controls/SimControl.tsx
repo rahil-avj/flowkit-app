@@ -21,8 +21,8 @@ interface SimControlProps {
   badgeColor?: 'red' | 'amber' | 'emerald' | 'blue'
   icon?: string
   onClick?: (ctx: Ctx) => void
-  onlyForFlow?: string | string[]
-  onlyForScreen?: string | string[]
+  onlyForChapter?: string | string[]
+  onlyForPage?: string | string[]
 }
 
 export function SimControl({
@@ -34,13 +34,13 @@ export function SimControl({
   badgeColor,
   icon,
   onClick,
-  onlyForFlow,
-  onlyForScreen,
+  onlyForChapter,
+  onlyForPage,
 }: SimControlProps) {
   const ctx = useDashboard()
   const { theme } = useTheme()
 
-  if (!shouldShowControl(ctx.activeViewId, ctx.activeFlowDebugInfo, onlyForFlow, onlyForScreen)) {
+  if (!shouldShowControl(ctx.activeViewId, ctx.activeFlowDebugInfo, onlyForChapter, onlyForPage)) {
     return null
   }
 

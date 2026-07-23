@@ -10,7 +10,7 @@ import os from 'os'
 import { pathToFileURL } from 'url'
 import esbuild from 'esbuild'
 import { WORKSPACE_CONFIG_FILENAME, FLOW_BOOK_DIRNAME } from '../helpers/config-filenames.js'
-import { isNonExistent, resolveVisibility } from '../../src/shared/utils/screenPathIdentity.js'
+import { isNonExistent, resolveVisibility } from '../../src/shared/utils/pagePathIdentity.js'
 
 // Shared shim so esbuild can bundle files that `import { defineConfig, defineFlow } from
 // 'flowkit'` (or '@flowkit-core/config' in repo mode) without needing the real package
@@ -101,7 +101,7 @@ export async function readWorkspaceConfig(wsDir) {
   return readTsModule(path.join(wsDir, WORKSPACE_CONFIG_FILENAME))
 }
 
-/** Reads an arbitrary flowplan .ts file, returning the evaluated FlowplanDef object, or null. */
+/** Reads an arbitrary flowStory .ts file, returning the evaluated FlowplanDef object, or null. */
 export async function readFlowplanModule(filePath) {
   return readTsModule(filePath)
 }

@@ -5,7 +5,7 @@ import { workspacePath, isRepoMode, ROOT, getActiveWorkspaceName } from '../help
 import { b, c, d, g, r } from '../helpers/colors.js'
 import { flowLensModuleExists } from './sessions/index.js'
 import { FLOW_BOOK_DIRNAME, FLOW_STORIES_DIRNAME } from '../helpers/config-filenames.js'
-import { isHidden, isNonExistent } from '../../src/shared/utils/screenPathIdentity.js'
+import { isHidden, isNonExistent } from '../../src/shared/utils/pagePathIdentity.js'
 
 export function cmdStatus(wsArg) {
   const ws = (wsArg || '').trim() || getActiveWorkspaceName()

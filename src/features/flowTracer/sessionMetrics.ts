@@ -2,7 +2,7 @@ import type { SessionExport } from './types'
 
 // ─── Core metric types ────────────────────────────────────────────────────────
 
-export interface ScreenMetrics {
+export interface PageMetrics {
   pageId: string
   visitCount: number
   totalDwellMs: number
@@ -24,13 +24,13 @@ export interface FlowMetrics {
 export interface SessionMetrics {
   totalDuration: number
   eventCount: number
-  uniqueScreensVisited: number
-  flowsEntered: string[]
-  flowsCompleted: string[]
+  uniquePagesVisited: number
+  chaptersEntered: string[]
+  chaptersCompleted: string[]
   navigationBreakdown: Record<string, number>
   interactionBreakdown: Record<string, number>
   remarksCount: number
-  screenMetrics: ScreenMetrics[]
+  pageMetrics: PageMetrics[]
   flowMetrics: FlowMetrics[]
   qualityScore: number
 }
@@ -41,12 +41,12 @@ export function computeSessionMetrics(session: SessionExport): SessionMetrics {
   const { meta, events } = session
   const totalDuration = meta.endTime ? meta.endTime - meta.startTime : 0
 
-  const screenVisits: Record<string, number[]> = {}
-  const screenDwells: Record<string, number> = {}
-  const screenTaps: Record<string, number> = {}
-  const screenFrustrated: Record<string, number> = {}
-  const flowsEntered = new Set<string>()
-  const flowsCompleted = new Set<string>()
+  const pageVisits: Record<string, number[]> = {}
+  const pageDwells: Record<string, number> = {}
+  const pageTaps: Record<string, number> = {}
+  const pageFrustrated: Record<string, number> = {}
+  const chaptersEntered = new Set<string>()
+  const chaptersCompleted = new Set<string>()
   const flowEntryTimes: Record<string, number[]> = {}
   const flowCompletionTimes: Record<string, number[]> = {}
   const flowBlockedSet = new Set<string>()
@@ -54,41 +54,41 @@ export function computeSessionMetrics(session: SessionExport): SessionMetrics {
   const interactionBreakdown: Record<string, number> = {}
 
   let currentPageId = ''
-  let currentScreenEnterTime = 0
+  let currentPageEnterTime = 0
 
   for (const ev of events) {
     if (ev.type === 'screen.visited') {
-      if (currentPageId && currentScreenEnterTime > 0) {
-        screenDwells[currentPageId] =
-          (screenDwells[currentPageId] ?? 0) + (ev.timestamp - currentScreenEnterTime)
+      if (currentPageId && currentPageEnterTime > 0) {
+        pageDwells[currentPageId] =
+          (pageDwells[currentPageId] ?? 0) + (ev.timestamp - currentPageEnterTime)
       }
       const sid = ev.payload.pageId as string
       currentPageId = sid
-      currentScreenEnterTime = ev.timestamp
-      screenVisits[sid] = screenVisits[sid] ?? []
-      screenVisits[sid].push(ev.timestamp)
+      currentPageEnterTime = ev.timestamp
+      pageVisits[sid] = pageVisits[sid] ?? []
+      pageVisits[sid].push(ev.timestamp)
     } else if (ev.type === 'screen.dwell-end') {
       const sid = ev.payload.pageId as string
       const dwell = (ev.payload.dwellMs as number) ?? 0
-      screenDwells[sid] = (screenDwells[sid] ?? 0) + dwell
+      pageDwells[sid] = (pageDwells[sid] ?? 0) + dwell
     } else if (ev.type === 'interaction.tap' || ev.type === 'interaction.double-tap') {
       const sid = ev.payload.pageId as string
-      if (sid) screenTaps[sid] = (screenTaps[sid] ?? 0) + 1
+      if (sid) pageTaps[sid] = (pageTaps[sid] ?? 0) + 1
       interactionBreakdown[ev.type] = (interactionBreakdown[ev.type] ?? 0) + 1
     } else if (ev.type === 'interaction.frustrated-click') {
       const sid = ev.payload.pageId as string
-      if (sid) screenFrustrated[sid] = (screenFrustrated[sid] ?? 0) + 1
+      if (sid) pageFrustrated[sid] = (pageFrustrated[sid] ?? 0) + 1
       interactionBreakdown[ev.type] = (interactionBreakdown[ev.type] ?? 0) + 1
     } else if (ev.type.startsWith('interaction.')) {
       interactionBreakdown[ev.type] = (interactionBreakdown[ev.type] ?? 0) + 1
     } else if (ev.type === 'flow.entered') {
       const fid = ev.payload.flowId as string
-      flowsEntered.add(fid)
+      chaptersEntered.add(fid)
       flowEntryTimes[fid] = flowEntryTimes[fid] ?? []
       flowEntryTimes[fid].push(ev.timestamp)
     } else if (ev.type === 'flow.completed') {
       const fid = ev.payload.flowId as string
-      flowsCompleted.add(fid)
+      chaptersCompleted.add(fid)
       flowCompletionTimes[fid] = flowCompletionTimes[fid] ?? []
       flowCompletionTimes[fid].push(ev.timestamp)
     } else if (ev.type === 'flow.blocked') {
@@ -99,26 +99,26 @@ export function computeSessionMetrics(session: SessionExport): SessionMetrics {
     }
   }
 
-  if (currentPageId && currentScreenEnterTime > 0 && meta.endTime) {
-    screenDwells[currentPageId] =
-      (screenDwells[currentPageId] ?? 0) + (meta.endTime - currentScreenEnterTime)
+  if (currentPageId && currentPageEnterTime > 0 && meta.endTime) {
+    pageDwells[currentPageId] =
+      (pageDwells[currentPageId] ?? 0) + (meta.endTime - currentPageEnterTime)
   }
 
-  const screenMetrics: ScreenMetrics[] = Object.keys(screenVisits).map(sid => {
-    const visits = screenVisits[sid].length
-    const total = screenDwells[sid] ?? 0
+  const pageMetrics: PageMetrics[] = Object.keys(pageVisits).map(sid => {
+    const visits = pageVisits[sid].length
+    const total = pageDwells[sid] ?? 0
     return {
       pageId: sid,
       visitCount: visits,
       totalDwellMs: total,
       avgDwellMs: visits > 0 ? Math.round(total / visits) : 0,
-      tapCount: screenTaps[sid] ?? 0,
-      frustratedClickCount: screenFrustrated[sid] ?? 0,
+      tapCount: pageTaps[sid] ?? 0,
+      frustratedClickCount: pageFrustrated[sid] ?? 0,
       entryCount: 0,
     }
   })
 
-  const flowMetrics: FlowMetrics[] = Array.from(flowsEntered).map(fid => {
+  const flowMetrics: FlowMetrics[] = Array.from(chaptersEntered).map(fid => {
     const entries = (flowEntryTimes[fid] ?? []).length
     const completions = (flowCompletionTimes[fid] ?? []).length
     const avgDuration = computeAvgFlowDuration(
@@ -138,13 +138,13 @@ export function computeSessionMetrics(session: SessionExport): SessionMetrics {
   return {
     totalDuration,
     eventCount: events.length,
-    uniqueScreensVisited: Object.keys(screenVisits).length,
-    flowsEntered: Array.from(flowsEntered),
-    flowsCompleted: Array.from(flowsCompleted),
+    uniquePagesVisited: Object.keys(pageVisits).length,
+    chaptersEntered: Array.from(chaptersEntered),
+    chaptersCompleted: Array.from(chaptersCompleted),
     navigationBreakdown: navBreakdown,
     interactionBreakdown,
     remarksCount: meta.remarks.length,
-    screenMetrics,
+    pageMetrics,
     flowMetrics,
     qualityScore: meta.qualityScore,
   }

@@ -336,11 +336,11 @@ function OverviewTab({
   replayScreen: string
   onViewAll: () => void
 }) {
-  const topScreens = [...metrics.screenMetrics]
+  const topPages = [...metrics.pageMetrics]
     .sort((a, b) => b.visitCount - a.visitCount)
     .slice(0, 5)
-  const maxVisit = Math.max(1, ...topScreens.map(s => s.visitCount))
-  const frustrated = metrics.screenMetrics.reduce((n, s) => n + s.frustratedClickCount, 0)
+  const maxVisit = Math.max(1, ...topPages.map(s => s.visitCount))
+  const frustrated = metrics.pageMetrics.reduce((n, s) => n + s.frustratedClickCount, 0)
   const dbKeys = Object.keys(db ?? {})
 
   return (
@@ -353,9 +353,9 @@ function OverviewTab({
       <QuickStatGrid>
         <QuickStat label="Duration" value={fmtDur(metrics.totalDuration)} />
         <QuickStat label="Events" value={String(metrics.eventCount)} />
-        <QuickStat label="Screens" value={String(metrics.uniqueScreensVisited)} />
+        <QuickStat label="Pages" value={String(metrics.uniquePagesVisited)} />
         <QuickStat label="Quality" value={`${metrics.qualityScore}%`} accent />
-        <QuickStat label="Flows done" value={String(metrics.flowsCompleted.length)} />
+        <QuickStat label="Chapters done" value={String(metrics.chaptersCompleted.length)} />
         <QuickStat label="Frustrated" value={String(frustrated)} />
       </QuickStatGrid>
 
@@ -383,13 +383,13 @@ function OverviewTab({
 
       <div>
         <div className="text-ui-2xs font-semibold text-theme-text-secondary mb-1.5">
-          Most visited screens
+          Most visited pages
         </div>
-        {topScreens.length === 0 ? (
-          <EmptyHint label="No screen visits" />
+        {topPages.length === 0 ? (
+          <EmptyHint label="No page visits" />
         ) : (
           <div className="flex flex-col gap-1.5">
-            {topScreens.map(s => (
+            {topPages.map(s => (
               <MiniBarRow key={s.pageId} label={s.pageId} value={s.visitCount} max={maxVisit} />
             ))}
           </div>

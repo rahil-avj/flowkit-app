@@ -10,7 +10,7 @@ import {
 } from '@flowkit-core/layout/KitSideInspector'
 import { useFeedback } from '@flowkit-features/feedback/context/FeedbackContext'
 import { FlowDebuggerContent } from '@flowkit-features/flow-debugger'
-import { MobilePlaybackBar, useFlowPlaybackOptional } from '@flowkit-features/flowplan'
+import { MobilePlaybackBar, useFlowPlaybackOptional } from '@flowkit-features/flowStory'
 import { useSessionSettings } from '@flowkit-features/flowTracer/components/useSessionSettings'
 import { GoToOverlayContent } from '@flowkit-features/go-to-overlay'
 import { Z } from '@flowkit-shared/constants/zIndex'
@@ -118,11 +118,11 @@ function RailShell({ tabs, activeId, onSelect, children, badgeMap = {} }: RailSh
 // ── Main canvas ────────────────────────────────────────────────────────────────
 
 interface MobileCanvasProps {
-  flows: Chapter[]
+  chapters: Chapter[]
   views: WireframeView[]
 }
 
-export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
+export default function MobileCanvas({ chapters, views }: MobileCanvasProps) {
   const {
     activeViewId,
     navigateTo,
@@ -285,7 +285,7 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
 
       {/* Flowplan playback bar — mobile has no side-panel Play/Stop button
           (see desktop's FlowLibrary.tsx), so this sticky top bar is the mobile
-          Stop control. Only renders while a flowplan is actively gating. */}
+          Stop control. Only renders while a flowStory is actively gating. */}
       <MobilePlaybackBar
         onStop={() => {
           if (!playback?.isGating) return
@@ -335,11 +335,11 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
         activeTabId={activeTab ?? undefined}
         onTabChange={id => setActiveTab(id as MobileTab)}
       >
-        {activeTab === 'explore' && <KitSideExplorer flows={flows} bare hideDeviceControls />}
+        {activeTab === 'explore' && <KitSideExplorer chapters={chapters} bare hideDeviceControls />}
 
         {activeTab === 'goto' && (
           <GoToOverlayContent
-            flows={flows}
+            chapters={chapters}
             activeViewId={activeViewId}
             navigateTo={id => {
               navigateTo(id)

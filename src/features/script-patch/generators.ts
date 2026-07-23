@@ -1,10 +1,10 @@
-import type { PatchScript, ScreenMetaPatchEntry } from './types'
+import type { PageMetaPatchEntry,PatchScript } from './types'
 
 // ─── Page Meta Patch ────────────────────────────────────────────────────────
 // Migrated from DevModeContext.generateScript / generateRestoreScript.
 
-export function generateScreenMetaPatch(
-  entries: ScreenMetaPatchEntry[],
+export function generatePageMetaPatch(
+  entries: PageMetaPatchEntry[],
   _activeWorkspace: string
 ): PatchScript {
   if (entries.length === 0) {
@@ -95,37 +95,49 @@ FLOWKIT_WS_ORDER`
   return { label: 'Copy workspace order script', script }
 }
 
-// ─── Flow Order Patch ─────────────────────────────────────────────────────────
+// ─── Chapter Order Patch ──────────────────────────────────────────────────────
 
-export function generateFlowOrderPatch(
+export function generateChapterOrderPatch(
   ws: string,
-  projectFlowMap: Record<string, string[]>
+  projectChapterMap: Record<string, string[]>
 ): PatchScript {
-  const script = `node << 'FLOWKIT_FLOW_ORDER'
+  const script = `node << 'FLOWKIT_CHAPTER_ORDER'
 const fs = require('fs');
 const configPath = 'workspaces/${ws}/workspace.ts';
 let src = fs.readFileSync(configPath, 'utf8');
-const projectFlowMap = ${JSON.stringify(projectFlowMap, null, 2)};
+const projectChapterMap = ${JSON.stringify(projectChapterMap, null, 2)};
 
-// For each project, patch or insert the flows[] array.
-Object.entries(projectFlowMap).forEach(([project, flows]) => {
-  const flowsStr = JSON.stringify(flows);
-  // Try to replace an existing flows: [...] for this project.
-  const replaced = src.replace(
-    new RegExp('(\\\\b' + project + '\\\\b[\\\\s\\\\S]*?flows\\\\s*:\\\\s*)\\\\[[^\\\\]]*\\\\]'),
-    '$1' + flowsStr
+// For each project, patch or insert the chapters[] array.
+Object.entries(projectChapterMap).forEach(([project, chapters]) => {
+  const chaptersStr = JSON.stringify(chapters);
+  // Try to replace an existing chapters: [...], flows: [...], or modules: [...] for this project.
+  let replaced = src.replace(
+    new RegExp('(\\\\b' + project + '\\\\b[\\\\s\\\\S]*?chapters\\\\s*:\\\\s*)\\\\[[^\\\\]]*\\\\]'),
+    '$1' + chaptersStr
   );
+  if (replaced === src) {
+    replaced = src.replace(
+      new RegExp('(\\\\b' + project + '\\\\b[\\\\s\\\\S]*?flows\\\\s*:\\\\s*)\\\\[[^\\\\]]*\\\\]'),
+      '$1' + chaptersStr
+    );
+  }
+  if (replaced === src) {
+    replaced = src.replace(
+      new RegExp('(\\\\b' + project + '\\\\b[\\\\s\\\\S]*?modules\\\\s*:\\\\s*)\\\\[[^\\\\]]*\\\\]'),
+      '$1' + chaptersStr
+    );
+  }
   if (replaced !== src) {
     src = replaced;
   } else {
-    // Insert the projects block if absent — append before closing brace of defineConfig arg.
+    // Insert the projects block if absent.
     console.warn('Could not auto-patch ' + project + '. Edit workspace.ts manually:');
-    console.warn('  ' + project + ': { flows: ' + flowsStr + ' }');
+    console.warn('  ' + project + ': { chapters: ' + chaptersStr + ' }');
   }
 });
 fs.writeFileSync(configPath, src, 'utf8');
-console.log('Flow order updated in ' + configPath);
-FLOWKIT_FLOW_ORDER`
+console.log('Chapter order updated in ' + configPath);
+FLOWKIT_CHAPTER_ORDER`
 
-  return { label: 'Copy flow order script', script }
+  return { label: 'Copy chapter order script', script }
 }

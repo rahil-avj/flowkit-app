@@ -1,4 +1,4 @@
-import type { CompiledFlowplan, CompiledStep } from '@flowkit-features/flowplan/compileFlowplan'
+import type { CompiledFlowplan, CompiledStep } from '@flowkit-features/flowStory/compileFlowStory'
 import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
 import { useFlowLensModeOptional } from '@flowkit-shared/contexts/FlowLensModeContext'
 import { useSessionRecorderShared } from '@flowkit-shared/contexts/SessionRecorderContext'
@@ -12,8 +12,8 @@ import React, { createContext, useCallback, useContext, useMemo, useRef, useStat
 // Phase 2 (visual editor) keep extending.
 //
 // Responsibilities:
-//   • Track the active compiled flowplan + current step + gating flag.
-//   • Inject the flowplan's deep-copied baseline db on enter (silent — via
+//   • Track the active compiled flowStory + current step + gating flag.
+//   • Inject the flowStory's deep-copied baseline db on enter (silent — via
 //     DashboardContext.flowPlaySetDb, so recordings aren't polluted).
 //   • Apply per-step db patches as the flow navigates (Phase 4 calls applyStepByPageId).
 //   • Restore the workspace db on exit (resetDb).
@@ -22,18 +22,18 @@ import React, { createContext, useCallback, useContext, useMemo, useRef, useStat
 // setters must not fight).
 
 export interface FlowPlaybackValue {
-  /** The compiled flowplan currently playing, or null. */
+  /** The compiled flowStory currently playing, or null. */
   activeFlowplan: CompiledFlowplan | null
   /** Index into __flowplan.steps of the current step, or -1. */
   currentStepIndex: number
   /** The current step's metadata (db patch, actionNote, …), or null. */
   currentStep: CompiledStep | null
-  /** True while a flowplan is playing — gating is active (Phase 4 reads this). */
+  /** True while a flowStory is playing — gating is active (Phase 4 reads this). */
   isGating: boolean
   /** Whether playback is allowed (false during FlowLens replay). */
   canPlay: boolean
 
-  /** Begin playback of a compiled flowplan: inject its baseline db, gate on. */
+  /** Begin playback of a compiled flowStory: inject its baseline db, gate on. */
   enter: (compiled: CompiledFlowplan, rawDb: Record<string, unknown>) => void
   /** End playback: restore workspace db, clear state. */
   exit: () => void
@@ -43,7 +43,7 @@ export interface FlowPlaybackValue {
    * without FlowPlaybackContext needing to reach into the engine directly.
    */
   restartSignal: number
-  /** Restart the active flowplan from step 0 — re-injects the baseline db and signals FlowMaster to reset the engine. No-op when no flowplan is active. */
+  /** Restart the active flowStory from step 0 — re-injects the baseline db and signals FlowMaster to reset the engine. No-op when no flowStory is active. */
   restart: () => void
   /**
    * Called by FlowMaster when the flow navigates to a step. Sets currentStepIndex
@@ -82,7 +82,7 @@ export function FlowPlaybackProvider({ children }: { children: React.ReactNode }
   const enter = useCallback(
     (compiled: CompiledFlowplan, rawDb: Record<string, unknown>) => {
       if (replayActive) return // RB4: don't fight FlowLens replay.
-      // Inject a deep copy of the baseline db (source flowplan is never mutated).
+      // Inject a deep copy of the baseline db (source flowStory is never mutated).
       // Step 0's patch is NOT applied here — FlowMaster's per-screen effect fires
       // applyStepByPageId for the first screen on mount, so every step's patch
       // (including step 0) flows through ONE code path (no double-application).

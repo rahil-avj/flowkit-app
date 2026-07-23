@@ -24,11 +24,11 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
 }
 
 export default function MetricsView({ metrics }: Props) {
-  const topScreens = [...metrics.screenMetrics]
+  const topPages = [...metrics.pageMetrics]
     .sort((a, b) => b.visitCount - a.visitCount)
     .slice(0, 8)
 
-  const topFrustrated = [...metrics.screenMetrics]
+  const topFrustrated = [...metrics.pageMetrics]
     .filter(s => s.frustratedClickCount > 0)
     .sort((a, b) => b.frustratedClickCount - a.frustratedClickCount)
     .slice(0, 5)
@@ -39,29 +39,29 @@ export default function MetricsView({ metrics }: Props) {
       <div className="grid grid-cols-2 gap-2 mb-4">
         <StatCard label="Duration" value={formatMs(metrics.totalDuration)} />
         <StatCard label="Events" value={String(metrics.eventCount)} />
-        <StatCard label="Screens visited" value={String(metrics.uniqueScreensVisited)} />
+        <StatCard label="Pages visited" value={String(metrics.uniquePagesVisited)} />
         <StatCard label="Remarks" value={String(metrics.remarksCount)} />
         <StatCard
-          label="Flows completed"
-          value={`${metrics.flowsCompleted.length} / ${metrics.flowsEntered.length}`}
+          label="Chapters completed"
+          value={`${metrics.chaptersCompleted.length} / ${metrics.chaptersEntered.length}`}
           sub={
-            metrics.flowsEntered.length > 0
-              ? `${Math.round((metrics.flowsCompleted.length / metrics.flowsEntered.length) * 100)}% completion`
+            metrics.chaptersEntered.length > 0
+              ? `${Math.round((metrics.chaptersCompleted.length / metrics.chaptersEntered.length) * 100)}% completion`
               : undefined
           }
         />
         <StatCard label="Quality" value={`${metrics.qualityScore}%`} />
       </div>
 
-      {/* Screen visit breakdown */}
-      <Section title="Screen visits">
-        {topScreens.map(s => (
+      {/* Page visit breakdown */}
+      <Section title="Page visits">
+        {topPages.map(s => (
           <Row
             key={s.pageId}
             label={s.pageId}
             value={`${s.visitCount}×`}
             sub={`avg ${formatMs(s.avgDwellMs)}`}
-            bar={topScreens[0].visitCount > 0 ? s.visitCount / topScreens[0].visitCount : 0}
+            bar={topPages[0].visitCount > 0 ? s.visitCount / topPages[0].visitCount : 0}
             barColor={FLOWLENS_ACCENT}
           />
         ))}

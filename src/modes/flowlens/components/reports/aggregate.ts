@@ -100,9 +100,9 @@ export interface RollupMetrics {
   avgQuality: number
   completionRate: number // sessions with a flow.completed / total
   frustrationRate: number // frustrated clicks per session
-  avgScreensPerSession: number
-  topFrustratedScreens: Array<{ pageId: string; count: number }>
-  screenPopularity: Array<{ pageId: string; visits: number; avgDwellMs: number }>
+  avgPagesPerSession: number
+  topFrustratedPages: Array<{ pageId: string; count: number }>
+  pagePopularity: Array<{ pageId: string; visits: number; avgDwellMs: number }>
 }
 
 export function rollup(sessions: SessionExport[]): RollupMetrics {
@@ -115,9 +115,9 @@ export function rollup(sessions: SessionExport[]): RollupMetrics {
       avgQuality: 0,
       completionRate: 0,
       frustrationRate: 0,
-      avgScreensPerSession: 0,
-      topFrustratedScreens: [],
-      screenPopularity: [],
+      avgPagesPerSession: 0,
+      topFrustratedPages: [],
+      pagePopularity: [],
     }
   }
 
@@ -136,9 +136,9 @@ export function rollup(sessions: SessionExport[]): RollupMetrics {
     totalEvents += m.eventCount
     totalDuration += m.totalDuration
     totalQuality += m.qualityScore
-    totalScreens += m.uniqueScreensVisited
-    if (m.flowsCompleted.length > 0) completed += 1
-    for (const sm of m.screenMetrics) {
+    totalScreens += m.uniquePagesVisited
+    if (m.chaptersCompleted.length > 0) completed += 1
+    for (const sm of m.pageMetrics) {
       totalFrustrated += sm.frustratedClickCount
       if (sm.frustratedClickCount > 0)
         frustratedByScreen[sm.pageId] =
@@ -155,12 +155,12 @@ export function rollup(sessions: SessionExport[]): RollupMetrics {
     avgQuality: Math.round(totalQuality / n),
     completionRate: completed / n,
     frustrationRate: totalFrustrated / n,
-    avgScreensPerSession: Math.round((totalScreens / n) * 10) / 10,
-    topFrustratedScreens: Object.entries(frustratedByScreen)
+    avgPagesPerSession: Math.round((totalScreens / n) * 10) / 10,
+    topFrustratedPages: Object.entries(frustratedByScreen)
       .map(([pageId, count]) => ({ pageId, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10),
-    screenPopularity: Object.entries(visitsByScreen)
+    pagePopularity: Object.entries(visitsByScreen)
       .map(([pageId, visits]) => ({
         pageId,
         visits,

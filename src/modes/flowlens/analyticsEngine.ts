@@ -1,13 +1,13 @@
 import {
   computeSessionMetrics,
   type FlowMetrics,
-  type ScreenMetrics,
+  type PageMetrics,
   type SessionMetrics,
 } from '@flowkit-features/flowTracer/sessionMetrics'
 import type { SessionEvent, SessionExport, SessionMeta } from '@flowkit-features/flowTracer/types'
 
 // Re-export for backward compat of other files within this module.
-export type { FlowMetrics, ScreenMetrics, SessionMetrics }
+export type { FlowMetrics, PageMetrics as ScreenMetrics, SessionMetrics }
 export { computeSessionMetrics }
 
 export interface FunnelStep {
@@ -48,7 +48,7 @@ export function aggregateSessions(
 
   for (const session of filtered) {
     const metrics = computeSessionMetrics(session)
-    for (const sm of metrics.screenMetrics) {
+    for (const sm of metrics.pageMetrics) {
       screenVisits[sm.pageId] = (screenVisits[sm.pageId] ?? 0) + sm.visitCount
       screenDwells[sm.pageId] = screenDwells[sm.pageId] ?? []
       if (sm.avgDwellMs > 0) screenDwells[sm.pageId].push(sm.avgDwellMs)

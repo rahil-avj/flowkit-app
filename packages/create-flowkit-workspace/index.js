@@ -301,7 +301,7 @@ full reference — see the table below.
 | ---------------------------------------------- | -------------------- |
 | Full CLI command reference (every flag)        | \`docs/CLI.md\`        |
 | Platform architecture, mock DB, kits, theming  | \`docs/FLOWKIT.md\`    |
-| Flow engine / playback / flowplan anatomy      | \`docs/FLOWMASTER.md\` |
+| Flow engine / playback / flowStory anatomy      | \`docs/FLOWMASTER.md\` |
 | Recorded sessions & analytics (FlowLens)       | \`docs/FLOWLENS.md\`   |
 | Agent workflow recipes (this file, expanded)   | \`docs/AGENTS.md\`     |
 
@@ -330,7 +330,7 @@ workspace with its own:
   shape.
 - \`<workspace>/lib/data/db.ts\` — that workspace's mock database: plain named exports, the
   initial state only. A page never mutates it directly — mutation happens via
-  \`ctx.updateDb(db => { ... })\` inside a flowplan's \`interactions[id].do\`, never as a
+  \`ctx.updateDb(db => { ... })\` inside a flowStory's \`interactions[id].do\`, never as a
   module-level singleton edit.
 - \`<workspace>/lib/design-system/tokens.css\` — CSS custom properties for theming. Starts
   **empty** per workspace (no UI kit pre-installed) even though scaffolded demo pages
@@ -367,14 +367,14 @@ fuller written reference.
 npx flowkit status                                          # health snapshot
 npx flowkit check                                           # validate authored content, exits 1 on error
 npx flowkit create:page --workspace:<ws> --flow:<id> --name:<page-id>
-npx flowkit add:step --workspace:<ws> --flowplan:<id> --screen:<page-id> [--on:<element-id>]
+npx flowkit add:step --workspace:<ws> --flowStory:<id> --screen:<page-id> [--on:<element-id>]
 npx flowkit sessions:ls                                     # list recorded sessions
 npx flowkit export                                          # build standalone HTML viewer → dist/
 \`\`\`
 
 Two CLI behaviors worth knowing before you rely on them:
-- \`add:step\` rewrites a flowplan's \`steps: [...]\` via a non-greedy regex — re-check the
-  file by hand after running it on a flowplan whose steps include \`forks[].steps[...]\`.
+- \`add:step\` rewrites a flowStory's \`steps: [...]\` via a non-greedy regex — re-check the
+  file by hand after running it on a flowStory whose steps include \`forks[].steps[...]\`.
 - \`remove:step\` silently removes index 0 if \`--index\` is omitted — no error, no prompt.
   Always pass \`--index\` explicitly.
 
@@ -387,7 +387,7 @@ a common task — check here before improvising.
 - **NEVER** edit \`node_modules/flowkit/\` — that's the platform engine, not workspace content.
 - **NEVER** mutate \`db\` from inside a page component — there is no mutate function on
   \`PageProps\`; \`db\` there is read-only. Mutation only happens via \`ctx.updateDb()\`
-  inside a flowplan's \`interactions[id].do\`.
+  inside a flowStory's \`interactions[id].do\`.
 - **NEVER** hand-write a new flow/page file from scratch — copy an existing page's
   boilerplate (or use \`flowkit create:page\`) so exports stay consistent with what the
   Vite plugin expects.
@@ -399,24 +399,24 @@ a common task — check here before improvising.
   during flow playback.
 - **ALWAYS** use Tailwind utility classes for static styling; reach for \`style={{}}\` only
   for runtime-computed values.
-- **ALWAYS** route structural changes (new page, new flowplan step, new workspace) through
+- **ALWAYS** route structural changes (new page, new flowStory step, new workspace) through
   the \`flowkit\` CLI rather than hand-editing generated wiring.
 - **ALWAYS** pass \`--workspace:<name>\` explicitly on authoring commands once more than one
   workspace exists — don't assume the default target.
 - **TO** add a page **→** \`flowkit create:page --workspace:<ws> --flow:<id> --name:<page-id>\`,
-  then \`flowkit add:step --workspace:<ws> --flowplan:<id> --screen:<page-id>\` to wire it
+  then \`flowkit add:step --workspace:<ws> --flowStory:<id> --screen:<page-id>\` to wire it
   into playback.
 - **TO** wire a tap interaction **→** give the element a plain DOM \`id\` and add a matching
-  \`{ pageId, on: '<id>' }\` step in that workspace's flowplan (no \`onClick\` needed) — or,
+  \`{ pageId, on: '<id>' }\` step in that workspace's flowStory (no \`onClick\` needed) — or,
   for conditional/db-mutating logic, add an \`interactions['<id>']\` entry with \`goTo\`/\`do\`
-  in the flowplan instead.
+  in the flowStory instead.
 - **TO** navigate imperatively from inside a page (async/state-driven, not a tap) **→**
   call the injected \`onAction?.('name')\` / \`onNext?.()\` / \`onBack?.()\` — these only fire
   during flow playback (\`isChapter\` is true); they're safely no-ops (undefined) otherwise.
 - **TO** gate access to a page **→** export \`canEnter\`/\`canNotEnter\` on \`pageMeta\`:
   \`({ db }) => boolean\`.
 - **TO** add a reviewer-facing toggle **→** add a \`SimulatorControl\` object
-  (\`{ label, path, type, ... }\`) to that flowplan's \`simulator.controls\` array — this is
+  (\`{ label, path, type, ... }\`) to that flowStory's \`simulator.controls\` array — this is
   plain data, not a JSX component.
 - **TO** check workspace health **→** \`npx flowkit status\` / \`npx flowkit check\`.
 - **TO** find anything not listed here **→** \`npx flowkit -h\`, then \`docs/CLI.md\`.
