@@ -278,7 +278,7 @@ Add imports and dispatch blocks for all new command groups. Pattern matches exis
 
 ```js
 import { cmdFileRead, cmdFileCreate, ... } from './agent/disk.js'
-import { cmdCreateScreen, cmdRemoveScreen, ... } from './agent/screens.js'
+import { cmdCreatePage, cmdRemovePage, ... } from './agent/screens.js'
 // ... etc
 
 // In route():
@@ -290,7 +290,7 @@ import { cmdCreateScreen, cmdRemoveScreen, ... } from './agent/screens.js'
   // ...
 } else if (p.cmd === 'create') {
   const sub = p.val.split(':')[0]
-  if (sub === 'screen') await cmdCreateScreen('', rest)  // passes --name, --flow from rest
+  if (sub === 'screen') await cmdCreatePage('', rest)  // passes --name, --flow from rest
   // ...
 ```
 

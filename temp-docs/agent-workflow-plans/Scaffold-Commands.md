@@ -494,8 +494,8 @@ Add at top of file (after existing imports):
 ```js
 import { cmdCreateFlow, cmdRemoveFlow, cmdListFlows } from './agent/flows.js'
 import {
-  cmdCreateScreen,
-  cmdRemoveScreen,
+  cmdCreatePage,
+  cmdRemovePage,
   cmdRenameScreen,
   cmdMoveScreen,
   cmdListScreens,
@@ -526,7 +526,7 @@ Add dispatch blocks (after existing commands, before the final `else` unknown co
 } else if (p.cmd === 'create') {
   const sub = p.val
   if (sub === 'flow' || sub === 'flow') await cmdCreateFlow('', rest)
-  else if (sub === 'screen') await cmdCreateScreen('', rest)
+  else if (sub === 'screen') await cmdCreatePage('', rest)
   else if (sub === 'flowplan') await cmdCreateFlowplan('', rest)
   else if (sub === 'component') await cmdCreateComponent('', rest)
   else { console.error(r(`✗ Unknown: create:${sub}`)); process.exit(1) }
@@ -534,7 +534,7 @@ Add dispatch blocks (after existing commands, before the final `else` unknown co
 } else if (p.cmd === 'remove') {
   const sub = p.val
   if (sub === 'flow') await cmdRemoveFlow('', rest)
-  else if (sub === 'screen') await cmdRemoveScreen('', rest)
+  else if (sub === 'screen') await cmdRemovePage('', rest)
   else if (sub === 'flowplan') await cmdRemoveFlowplan('', rest)
   else if (sub === 'component') await cmdRemoveComponent('', rest)
   else { console.error(r(`✗ Unknown: remove:${sub}`)); process.exit(1) }

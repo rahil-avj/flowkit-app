@@ -51,8 +51,8 @@ Status: approved, not yet implemented.
 | `parseScreenSegments`                                                             | `parsePageSegments`       |
 | `pickScreenFile`                                                                  | `pickPageFile`            |
 | `parseScreenPath`                                                                 | `parsePagePath`           |
-| `deriveScreenLabel`                                                               | `derivePageLabel`         |
-| `cmdCreateScreen`/`Remove`/`Rename`/`Move`/`Info`                                 | `cmdCreatePage`/etc.      |
+| `derivePageLabel`                                                                 | `derivePageLabel`         |
+| `cmdCreatePage`/`Remove`/`Rename`/`Move`/`Info`                                   | `cmdCreatePage`/etc.      |
 | `cmdListScreens`                                                                  | `cmdListPages`            |
 | `isHiddenPageId`                                                                  | `isHiddenPageId`          |
 | `checkScreens`                                                                    | `checkPages`              |

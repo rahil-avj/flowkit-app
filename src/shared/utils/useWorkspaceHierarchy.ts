@@ -140,7 +140,7 @@ function parsePagePath(filePath: string, wsPrefix: string, wsName: string): Page
   }
 }
 
-function deriveScreenLabel(folderOrName: string): string {
+function derivePageLabel(folderOrName: string): string {
   return folderOrName
     .replace(/[-_]/g, ' ')
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
@@ -232,7 +232,7 @@ function buildFlatHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   for (const entry of _virtualScreenList) {
     const { flow, pageId, loader } = entry
     const meta = _virtualScreenMeta[entry.key]
-    const label = meta?.label ?? deriveScreenLabel(pageId)
+    const label = meta?.label ?? derivePageLabel(pageId)
     const component = buildLazyComponent(loader)
     const id = makePageId(flow, pageId)
     const filePath = `flowBook/${flow}/${pageId}`
@@ -392,7 +392,7 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
     const [flow, screen] = screenKey.split('::')
     const pageId = makePageId(flow, screen)
     const def = files.find(f => f.serial === 'default') ?? files[0]
-    const label = deriveScreenLabel(screen)
+    const label = derivePageLabel(screen)
     const variants = files
       .slice()
       .sort((a, b) => {
