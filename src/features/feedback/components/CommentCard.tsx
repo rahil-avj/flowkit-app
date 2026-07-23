@@ -44,7 +44,7 @@ function formatCommentTime(iso: string): string {
 
 interface CommentCardProps {
   comment: FeedbackComment
-  screenExists: boolean
+  pageExists: boolean
   onDelete: (id: string) => void
 }
 
@@ -57,7 +57,7 @@ const TAG_COLORS: Record<string, 'red' | 'amber' | 'blue' | 'green' | 'purple'> 
   '#needs-revision': 'red',
 }
 
-export default function CommentCard({ comment, screenExists, onDelete }: CommentCardProps) {
+export default function CommentCard({ comment, pageExists, onDelete }: CommentCardProps) {
   const { theme, scale } = useTheme()
   const { editComment } = useFeedback()
 
@@ -99,7 +99,7 @@ export default function CommentCard({ comment, screenExists, onDelete }: Comment
         border: `1px solid ${isEditing ? theme.accent.blue + '55' : theme.bg.border}`,
         borderRadius: scale.radius.md,
         padding: scale.space.sm,
-        opacity: screenExists ? 1 : 0.55,
+        opacity: pageExists ? 1 : 0.55,
         transition: 'border-color 0.15s, background-color 0.15s',
       }}
     >
@@ -297,7 +297,7 @@ export default function CommentCard({ comment, screenExists, onDelete }: Comment
           {comment.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {comment.tags.map(tag => (
-                <Badge key={tag} color={screenExists ? (TAG_COLORS[tag] ?? 'blue') : 'amber'}>
+                <Badge key={tag} color={pageExists ? (TAG_COLORS[tag] ?? 'blue') : 'amber'}>
                   {tag}
                 </Badge>
               ))}

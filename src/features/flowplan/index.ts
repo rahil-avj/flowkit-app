@@ -3,8 +3,8 @@
 export type {
   CompiledFlowplan,
   CompiledStep,
-  ResolvedPage,
   PageResolver,
+  ResolvedPage,
 } from './compileFlowplan'
 export { compileFlowplan, FlowplanCompileError } from './compileFlowplan'
 export { default as MobilePlaybackBar } from './components/MobilePlaybackBar'

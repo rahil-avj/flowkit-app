@@ -3,7 +3,11 @@
     {
       "name": "game-zone",
       "label": "Game Zone"
+    },
+    {
+      "name": "test",
+      "label": "Test"
     }
   ],
-  "active": "game-zone"
+  "active": "test"
 }

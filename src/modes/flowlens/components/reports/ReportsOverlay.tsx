@@ -148,9 +148,9 @@ export default function ReportsOverlay({ entries, views, onClose }: Props) {
               value={filters.minQuality}
               onChange={e => set('minQuality', Number(e.target.value))}
               style={{ accentColor: FLOWLENS_ACCENT }}
-              className="w-[90px]"
+              className="w-22.5"
             />
-            <span className="min-w-[28px] tabular-nums">{filters.minQuality}%</span>
+            <span className="min-w-7 tabular-nums">{filters.minQuality}%</span>
           </label>
           <label className="flex items-center gap-1.25 text-ui-2xs text-theme-text-secondary">
             <input
@@ -211,7 +211,7 @@ export default function ReportsOverlay({ entries, views, onClose }: Props) {
                             minWidth: pct > 0 ? 2 : 0,
                           }}
                         />
-                        <span className="absolute left-2 top-0 leading-[22px] text-ui-2xs text-white font-semibold">
+                        <span className="absolute left-2 top-0 leading-5.5 text-ui-2xs text-white font-semibold">
                           {step.reached}
                         </span>
                       </div>
@@ -285,7 +285,7 @@ export default function ReportsOverlay({ entries, views, onClose }: Props) {
                   })}
                 </div>
                 {activeHeat && (
-                  <div className="h-[760px]">
+                  <div className="h-190">
                     <HeatmapView
                       views={views}
                       pageId={activeHeat.pageId}
@@ -326,7 +326,7 @@ function Select({
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="bg-theme-elevated border border-theme-border rounded-[5px] text-theme-text-primary text-ui-2xs py-1 px-1.5 cursor-pointer max-w-[150px] outline-none"
+        className="bg-theme-elevated border border-theme-border rounded-[5px] text-theme-text-primary text-ui-2xs py-1 px-1.5 cursor-pointer max-w-37.5 outline-none"
       >
         <option value="">{anyLabel}</option>
         {options.map(o => (
@@ -368,7 +368,7 @@ function Section({
     <div>
       <div className="mb-2.5">
         <div className="text-sm font-semibold text-theme-text-primary">{title}</div>
-        {hint && <div className="text-ui-2xs text-theme-text-muted mt-0.25">{hint}</div>}
+        {hint && <div className="text-ui-2xs text-theme-text-muted mt-px">{hint}</div>}
       </div>
       {children}
     </div>

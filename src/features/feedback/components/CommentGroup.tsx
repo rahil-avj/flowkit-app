@@ -5,7 +5,7 @@ import React, { useState } from 'react'
 interface CommentGroupProps {
   pageId: string
   pageLabel: string
-  screenExists: boolean
+  pageExists: boolean
   isCurrentScreen: boolean
   isFirst?: boolean
   onNavigate: (id: string) => void
@@ -15,7 +15,7 @@ interface CommentGroupProps {
 export default function CommentGroup({
   pageId,
   pageLabel,
-  screenExists,
+  pageExists,
   isCurrentScreen,
   isFirst,
   onNavigate,
@@ -33,7 +33,7 @@ export default function CommentGroup({
           padding: `6px ${scale.space.sm}`,
           borderTop: isFirst
             ? 'none'
-            : `1px solid ${screenExists ? theme.bg.border : theme.accent.amber + '44'}`,
+            : `1px solid ${pageExists ? theme.bg.border : theme.accent.amber + '44'}`,
           backgroundColor: 'transparent',
           cursor: 'pointer',
         }}
@@ -44,7 +44,7 @@ export default function CommentGroup({
             {collapsed ? <ChevronRight size={11} /> : <ChevronDown size={11} />}
           </span>
 
-          {!screenExists && (
+          {!pageExists && (
             <MonitorX size={11} style={{ color: theme.accent.amber, flexShrink: 0 }} />
           )}
 
@@ -52,7 +52,7 @@ export default function CommentGroup({
             className="font-semibold truncate"
             style={{
               fontSize: scale.text.xxs,
-              color: screenExists ? theme.text.muted : theme.accent.amber,
+              color: pageExists ? theme.text.muted : theme.accent.amber,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
             }}
@@ -60,7 +60,7 @@ export default function CommentGroup({
             {pageLabel || pageId}
           </span>
 
-          {!screenExists && (
+          {!pageExists && (
             <span
               className="font-bold uppercase tracking-widest shrink-0"
               style={{
@@ -76,7 +76,7 @@ export default function CommentGroup({
           )}
         </div>
 
-        {screenExists && !isCurrentScreen && (
+        {pageExists && !isCurrentScreen && (
           <button
             onClick={(e: React.MouseEvent) => {
               e.stopPropagation()

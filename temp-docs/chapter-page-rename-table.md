@@ -45,24 +45,24 @@ Status: approved, not yet implemented.
 
 ## Functions/hooks
 
-| Current                                                                             | New                       |
-| ----------------------------------------------------------------------------------- | ------------------------- |
-| `makePageId`                                                                        | `makePageId`              |
-| `parseScreenSegments`                                                               | `parsePageSegments`       |
-| `pickScreenFile`                                                                    | `pickPageFile`            |
-| `parseScreenPath`                                                                   | `parsePagePath`           |
-| `deriveScreenLabel`                                                                 | `derivePageLabel`         |
-| `cmdCreateScreen`/`Remove`/`Rename`/`Move`/`Info`                                   | `cmdCreatePage`/etc.      |
-| `cmdListScreens`                                                                    | `cmdListPages`            |
-| `isHiddenPageId`                                                                    | `isHiddenPageId`          |
-| `checkScreens`                                                                      | `checkPages`              |
-| `addScreen`/`removeScreen`/`renameScreen`/`moveScreen`/`listScreens`/`screenExists` | `addPage`/etc.            |
-| `cmdCreateFlow`/`Remove`/`List`                                                     | `cmdCreateChapter`/etc.   |
-| `addFlow`/`removeFlow`/`flowExists`                                                 | `addChapter`/etc.         |
-| `cmdPromoteFlow`                                                                    | `cmdPromoteChapter`       |
-| `useFlowNav`                                                                        | `useNav`                  |
-| `useFlowEngine`                                                                     | **unchanged**             |
-| `buildFlatHierarchy`/`buildHierarchy`/`resolveConfigDefaults`                       | unchanged (generic names) |
+| Current                                                                           | New                       |
+| --------------------------------------------------------------------------------- | ------------------------- |
+| `makePageId`                                                                      | `makePageId`              |
+| `parseScreenSegments`                                                             | `parsePageSegments`       |
+| `pickScreenFile`                                                                  | `pickPageFile`            |
+| `parseScreenPath`                                                                 | `parsePagePath`           |
+| `deriveScreenLabel`                                                               | `derivePageLabel`         |
+| `cmdCreateScreen`/`Remove`/`Rename`/`Move`/`Info`                                 | `cmdCreatePage`/etc.      |
+| `cmdListScreens`                                                                  | `cmdListPages`            |
+| `isHiddenPageId`                                                                  | `isHiddenPageId`          |
+| `checkScreens`                                                                    | `checkPages`              |
+| `addScreen`/`removeScreen`/`renameScreen`/`moveScreen`/`listScreens`/`pageExists` | `addPage`/etc.            |
+| `cmdCreateFlow`/`Remove`/`List`                                                   | `cmdCreateChapter`/etc.   |
+| `addFlow`/`removeFlow`/`flowExists`                                               | `addChapter`/etc.         |
+| `cmdPromoteFlow`                                                                  | `cmdPromoteChapter`       |
+| `useNav`                                                                          | `useNav`                  |
+| `useFlowEngine`                                                                   | **unchanged**             |
+| `buildFlatHierarchy`/`buildHierarchy`/`resolveConfigDefaults`                     | unchanged (generic names) |
 
 ## CLI verbs
 
@@ -110,7 +110,7 @@ Status: approved, not yet implemented.
 | `scripts/authoring/flows.js`        | `scripts/authoring/chapters.js`        |
 | `scripts/authoring/promote-flow.js` | `scripts/authoring/promote-chapter.js` |
 | `scripts/checks/screens.js`         | `scripts/checks/pages.js`              |
-| `src/shared/utils/useFlowNav.ts`    | `src/shared/utils/useNav.ts`           |
+| `src/shared/utils/useNav.ts`        | `src/shared/utils/useNav.ts`           |
 
 ## Composite id shape
 

@@ -78,7 +78,7 @@ The current setup is genuinely strong in many areas:
 
 **The problem:** `platform.md` imports from `@platform/contexts/DashboardContext` but `CLAUDE.md` says `@platform/` is a old alias and `@shared/` is preferred. The `platformSurfaces()` function in `agentSpec.js` (line 239) hardcodes `@platform/contexts/DashboardContext` as the `from` field for the Data surface row.
 
-**Fix needed:** In `scripts/lib/agentSpec.js`, change the Data surface `from` field from `@platform/contexts/DashboardContext` to `@shared/contexts/DashboardContext`, and the Navigation surface from `@platform/lib/useFlowNav` to `@shared/utils/useFlowNav`. Then run `flowkit agent:sync` across all workspaces to regenerate. Two lines in one file.
+**Fix needed:** In `scripts/lib/agentSpec.js`, change the Data surface `from` field from `@platform/contexts/DashboardContext` to `@shared/contexts/DashboardContext`, and the Navigation surface from `@platform/lib/useNav` to `@shared/utils/useNav`. Then run `flowkit agent:sync` across all workspaces to regenerate. Two lines in one file.
 
 ---
 
@@ -127,7 +127,7 @@ This is a small change to `agentSpec.js` (the generator source) that propagates 
 **The problem:** CLAUDE.md and FLOWMASTER.md document screen props (`PageProps`, `onNext`, `onBack`, `db`, `flowState`, `isChapter`) in type tables but no narrative walkthrough exists showing:
 
 - Which props are always injected vs. conditionally present
-- When to use `onNext` vs. `goNext()` from `useFlowNav()` vs. id-wiring
+- When to use `onNext` vs. `goNext()` from `useNav()` vs. id-wiring
 - What `flowState` actually is (typed shape? `Record<string, unknown>`?) and when it's populated
 - Whether `pageMeta` is required or optional and what breaks without it
 

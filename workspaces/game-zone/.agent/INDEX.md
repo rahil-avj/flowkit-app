@@ -9,7 +9,7 @@ Read order for a cold start: **rules.md → this INDEX → platform.md** (depth 
 | Add a flow + screens             | create folder `flows/<F>/<Screen>/` + `<Screen>.tsx`                       | platform.md → CLI                                 |
 | Add a screen to an existing flow | create `flows/<F>/<S>/<S>.tsx`                                             | platform.md → CLI                                 |
 | Wire a tap / interaction         | add `interactions` map in the flowplan step (`flowplans/<f>.ts`)           | platform.md → Flows · Documentation/FLOWMASTER.md |
-| Navigate programmatically        | `useFlowNav()`                                                             | platform.md → Navigation                          |
+| Navigate programmatically        | `useNav()`                                                                 | platform.md → Navigation                          |
 | Read or change data              | `useDb()` → `get`/`has`/`set`/`remove`/`update`                            | platform.md → Data                                |
 | Gate a screen (access guard)     | `canEnter` / `canNotEnter` in `pageMeta` (exported from the screen `.tsx`) | platform.md → Guards                              |
 | Reorder flows                    | edit `workspace.ts` → `flows[]`, or use **Manage tab** in right panel      | platform.md → Flows                               |

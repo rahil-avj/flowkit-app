@@ -4,8 +4,8 @@ Terse map of the platform surfaces you can reach. Each ends in a pointer to the 
 
 ### Navigation
 
-- **Use:** `useFlowNav()` → `navigateTo(target)`, `goNext()`, `goBack()`, `isChapter`, `flowState`
-- **From:** `@flowkit-shared/utils/useFlowNav`
+- **Use:** `useNav()` → `navigateTo(target)`, `goNext()`, `goBack()`, `isChapter`, `flowState`
+- **From:** `@flowkit-shared/utils/useNav`
 - **Note:** target = a screen id, "next", "back", or "**complete**"
 - **Full detail:** `Documentation/FLOWMASTER.md`
 
@@ -13,7 +13,7 @@ Terse map of the platform surfaces you can reach. Each ends in a pointer to the 
 
 - **Use:** `useDashboard()` → `db`, `updateDb(fn)`, `resetDb()`, `navigateTo(id)`
 - **From:** `@flowkit-shared/contexts/DashboardContext`
-- **Note:** db/updateDb/resetDb always safe; for navigateTo() prefer `useAppNav()` (see Navigation group above) — it works standalone and during flow playback with no `isChapter` check needed; use useFlowNav() instead for flow-only screens
+- **Note:** db/updateDb/resetDb always safe; for navigateTo() prefer `useAppNav()` (see Navigation group above) — it works standalone and during flow playback with no `isChapter` check needed; use useNav() instead for flow-only screens
 - **Full detail:** `Documentation/FLOWKIT.md`
 
 ### Screen props

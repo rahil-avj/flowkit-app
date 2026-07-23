@@ -21,11 +21,11 @@ Screens live under `flows/<flow>/<screen>/`. Journeys are declared in `flowplans
 
 ## Navigation (two independent conventions — know which one you need)
 
-- **TO** navigate from screen logic during flow playback (state/async) **→** `const { navigateTo, goNext, goBack } = useFlowNav()`
+- **TO** navigate from screen logic during flow playback (state/async) **→** `const { navigateTo, goNext, goBack } = useNav()`
 - **TO** wire tap interactions declaratively during flow playback **→** add an `interactions` map in the flowplan step for the screen
-- **NEVER** call `useFlowNav()` unconditionally in a screen meant to also work standalone — it throws when there's no FlowMaster ancestor (i.e. viewed from the Screens tab, no flow active)
+- **NEVER** call `useNav()` unconditionally in a screen meant to also work standalone — it throws when there's no FlowMaster ancestor (i.e. viewed from the Screens tab, no flow active)
 - **TO** make a screen freely navigable from the Screens tab (no flow active) as well as during flow playback **→** `const { navigateTo } = useAppNav()` (from `@flowkit-shared/utils`), then call it unconditionally: `onClick={() => navigateTo(id)}`. `useAppNav()` picks FlowMaster's flow-aware navigateTo when the screen is rendered inside a flow, or DashboardContext's otherwise — no `isChapter` check needed in the screen's own code. See scripts/helpers/scaffold.js's demo screens for the pattern.
-- **NEVER** destructure `navigateTo` from `useDashboard()` directly and call it inside a screen that also relies on FlowMaster's guards/animations/session-replay during playback — use `useAppNav()` for a screen that needs to work both standalone and in-flow, or `useFlowNav()` if the screen is flow-only
+- **NEVER** destructure `navigateTo` from `useDashboard()` directly and call it inside a screen that also relies on FlowMaster's guards/animations/session-replay during playback — use `useAppNav()` for a screen that needs to work both standalone and in-flow, or `useNav()` if the screen is flow-only
 
 ## Data
 

@@ -12,7 +12,7 @@ export { useFlowLibrary } from './useFlowLibrary'
 export type {
   CompiledFlowplan,
   CompiledStep,
-  ResolvedPage,
   PageResolver,
+  ResolvedPage,
 } from '../flowplan/compileFlowplan'
 export { compileFlowplan, FlowplanCompileError } from '../flowplan/compileFlowplan'

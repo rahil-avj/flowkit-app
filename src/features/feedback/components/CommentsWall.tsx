@@ -84,14 +84,14 @@ export default function CommentsWall() {
   return (
     <div className="flex flex-col">
       {Object.entries(filteredGroupedComments).map(([pageId, screenComments], index) => {
-        const screenExists = views.some(v => v.id === pageId)
+        const pageExists = views.some(v => v.id === pageId)
         const isCurrentScreen = pageId === activeViewId.replace('-play', '')
         return (
           <CommentGroup
             key={pageId}
             pageId={pageId}
             pageLabel={screenComments[0].pageLabel}
-            screenExists={screenExists}
+            pageExists={pageExists}
             isCurrentScreen={isCurrentScreen}
             isFirst={index === 0}
             onNavigate={navigateTo}
@@ -100,7 +100,7 @@ export default function CommentsWall() {
               <CommentCard
                 key={comment.id}
                 comment={comment}
-                screenExists={screenExists}
+                pageExists={pageExists}
                 onDelete={deleteComment}
               />
             ))}

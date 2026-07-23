@@ -19,8 +19,8 @@
 
 import type {
   AnnotationTag,
-  FlowkitConfig,
   Chapter,
+  FlowkitConfig,
   FlowplanDef,
   PageMeta,
   WireframeView,
@@ -29,17 +29,17 @@ import type {
 import {
   type CompiledFlowplan,
   compileFlowplan,
-  type ResolvedPage,
   type PageResolver,
+  type ResolvedPage,
 } from '@flowkit-features/flowplan/compileFlowplan'
 import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
 import { DEVICE_PRESETS } from '@flowkit-shared/components/devices'
-import { getWorkspaceConfig } from '@flowkit-shared/utils/workspaceModules'
 import {
   makePageId,
   parsePageSegments,
   pickPageFile,
 } from '@flowkit-shared/utils/screenPathIdentity'
+import { getWorkspaceConfig } from '@flowkit-shared/utils/workspaceModules'
 import React, { useMemo } from 'react'
 
 // ─── Mode detection ───────────────────────────────────────────────────────────
@@ -50,8 +50,8 @@ const isSingle = import.meta.env.VITE_SINGLE_WORKSPACE === 'true'
 
 import { flowplans as _virtualFlowplans } from 'virtual:flowkit/flowplans'
 import {
-  screenList as _virtualScreenList,
   pageMeta as _virtualScreenMeta,
+  screenList as _virtualScreenList,
 } from 'virtual:flowkit/screens'
 
 // ─── Repo mode: Vite glob maps (string literals only) ────────────────────────

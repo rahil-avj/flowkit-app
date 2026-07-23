@@ -10,7 +10,7 @@ You are building a product inside a **FlowKit** workspace (screens = React compo
 
 - **NEVER** reference or edit `flows/router.tsx` or any `_playFlow.ts` — this workspace uses the Flowplan hierarchy format; those files do not exist here
 - **NEVER** edit any file outside `workspaces/game-zone/` — platform code in `src/` is read-only
-- **NEVER** destructure `navigateTo` from `useDashboard()` directly and call it inside a screen that also relies on FlowMaster's guards/animations/session-replay during playback — use `useAppNav()` for a screen that needs to work both standalone and in-flow, or `useFlowNav()` if the screen is flow-only
+- **NEVER** destructure `navigateTo` from `useDashboard()` directly and call it inside a screen that also relies on FlowMaster's guards/animations/session-replay during playback — use `useAppNav()` for a screen that needs to work both standalone and in-flow, or `useNav()` if the screen is flow-only
 - **ALWAYS** use path aliases: `@flowkit/` → `src/`, `@workspace/` → this workspace. Never relative `../../`
 - **NEVER** hardcode hex colors — use `design-system/tokens.css` variables or `useTheme()` tokens
 

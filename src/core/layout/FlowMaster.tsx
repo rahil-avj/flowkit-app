@@ -1,4 +1,4 @@
-import type { ChapterConfig, PageProps, Hotspot } from '@flowkit/types/index'
+import type { ChapterConfig, Hotspot,PageProps } from '@flowkit/types/index'
 import type { CompiledFlowplan } from '@flowkit-features/flow-library'
 import { useFlowplanSettings } from '@flowkit-features/flowplan/FlowplanSettingsContext'
 import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'

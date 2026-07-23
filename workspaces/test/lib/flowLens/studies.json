@@ -1,0 +1,14 @@
+{
+  "workspace": "test",
+  "activeStudyId": "initial-study",
+  "studies": [
+    {
+      "id": "initial-study",
+      "name": "Initial Study",
+      "status": "active",
+      "createdAt": "2026-07-23T20:13:48.004Z",
+      "archivedAt": null,
+      "description": ""
+    }
+  ]
+}

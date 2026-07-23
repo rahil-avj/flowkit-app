@@ -1,4 +1,4 @@
-// Authoring command: extracts a flowplan fork into its own standalone flowplan file.
+// Authoring command: extracts a flowStory fork into its own standalone flowStory file.
 import fs from 'fs'
 import path from 'path'
 import { parseStringFlag } from '../helpers/args.js'
@@ -12,8 +12,8 @@ import {
 } from '../helpers/validate.js'
 import { g, r, c, d } from '../helpers/colors.js'
 
-// Phase-1 "merge/slice" pipeline. Takes a flowplan file and a fork label; writes a
-// NEW flowplan whose steps are the fork's steps, and prints the exact one-line ref
+// Phase-1 "merge/slice" pipeline. Takes a flowStory file and a fork label; writes a
+// NEW flowStory whose steps are the fork's steps, and prints the exact one-line ref
 // edit to apply in the source. It does NOT rewrite the hand-authored source in place
 // (safe by design — see the plan).
 //
@@ -27,15 +27,15 @@ export async function cmdPromoteChapter(_val, args = []) {
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
 
-  const fileArg = parseStringFlag(args, 'flowplan')
+  const fileArg = parseStringFlag(args, 'flowStory')
   const forkLabel = parseStringFlag(args, 'fork')
   const newIdArg = parseStringFlag(args, 'as')
 
   if (!fileArg || !forkLabel) {
-    console.error(r('✗ --flowplan:<path> and --fork:"<Fork label>" are required'))
+    console.error(r('✗ --flowStory:<path> and --fork:"<Fork label>" are required'))
     console.error(
       d(
-        '  Example: flowkit promote:chapter --flowplan:flowplans/Checkout.ts --fork:"Empty cart" --as:empty-cart-flow'
+        '  Example: flowkit promote:chapter --flowStory:flowplans/Checkout.ts --fork:"Empty cart" --as:empty-cart-flow'
       )
     )
     process.exit(1)
@@ -46,7 +46,7 @@ export async function cmdPromoteChapter(_val, args = []) {
   // wsDir entirely for an absolute second argument, so the same check covers
   // both branches of the ternary below without needing to special-case either.
   try {
-    assertWithinWorkspace(wsDir, fileArg, '--flowplan')
+    assertWithinWorkspace(wsDir, fileArg, '--flowStory')
   } catch (e) {
     if (e instanceof ValidationError) {
       console.error(r(`✗ ${e.message}`))
@@ -135,7 +135,7 @@ export async function cmdPromoteChapter(_val, args = []) {
 
   const stepsBody = src.slice(openBracket + 1, end).trim()
 
-  // ── Derive the new flowplan id + file name ──────────────────────────────────
+  // ── Derive the new flowStory id + file name ──────────────────────────────────
 
   const slug = (newIdArg || forkLabel)
     .toLowerCase()
@@ -164,7 +164,7 @@ export async function cmdPromoteChapter(_val, args = []) {
     process.exit(1)
   }
 
-  // ── Write the new flowplan ────────────────────────────────────────────────────
+  // ── Write the new flowStory ────────────────────────────────────────────────────
 
   const forkLabelLiteral = asJsStringLiteral(forkLabel)
   const newFlow = `${resolveDefineImport('defineFlow')};

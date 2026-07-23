@@ -63,7 +63,7 @@ function GroupHeader({
       {!isFirst && <div className="h-px bg-theme-border mb-5" />}
       <div className="flex items-center gap-3">
         {/* Accent bar */}
-        <div className="w-[3px] h-4 rounded-full bg-theme-blue shrink-0" />
+        <div className="w-0.75 h-4 rounded-full bg-theme-blue shrink-0" />
         <span className="text-ui-sm font-bold text-theme-text-primary tracking-tight">{label}</span>
         {/* Count badge */}
         <span className="text-ui-2xs font-semibold px-1.5 py-0.5 rounded bg-theme-elevated border border-theme-border text-theme-text-muted">
@@ -161,7 +161,7 @@ function ScreenCell({
       {/* Label */}
       {!figmaMode && showLabels && (
         <div
-          className="flex flex-col gap-[2px]"
+          className="flex flex-col gap-0.5"
           style={{ minHeight: Math.round(LABEL_H * scale), paddingLeft: 2 }}
         >
           {labelFields.includes('label') && (
