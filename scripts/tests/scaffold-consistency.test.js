@@ -5,6 +5,7 @@ import { describe, it } from 'node:test'
 
 import { ROOT } from '../helpers/paths.js'
 import { workspaceScaffold } from '../helpers/scaffold.js'
+import { FLOW_BOOK_DIRNAME } from '../helpers/config-filenames.js'
 
 // scripts/helpers/scaffold.js (repo mode) and scripts/helpers/workspace-template.js
 // (the one shared source used by create-flowkit-app, create-flowkit-workspace,
@@ -15,6 +16,12 @@ import { workspaceScaffold } from '../helpers/scaffold.js'
 // structural shape — screen and flow counts — not exact ids or content. It
 // exists to catch someone adding/removing a demo screen or flow in one file
 // without the other, not full parity.
+//
+// scaffold.js returns one flat object-literal file map (keyed by
+// `${FLOW_BOOK_DIRNAME}/<flow>/<screen>/File.tsx`, no per-screen generator functions),
+// while workspace-template.js instead defines one `write*Screen(dir, language)` function per
+// demo screen. The extraction logic below is intentionally asymmetric to match each file's
+// actual current shape.
 
 const TEMPLATE_PATH = 'scripts/helpers/workspace-template.js'
 
@@ -23,7 +30,7 @@ describe('Suite N — scaffold.js / create-flowkit-app demo-content parity', () 
     const files = workspaceScaffold('demo')
     const flowIds = new Set(
       Object.keys(files)
-        .filter(p => p.startsWith('flows/') && p.endsWith('.tsx'))
+        .filter(p => p.startsWith(`${FLOW_BOOK_DIRNAME}/`) && p.endsWith('.tsx'))
         .map(p => p.split('/')[1])
     )
 
@@ -43,7 +50,7 @@ describe('Suite N — scaffold.js / create-flowkit-app demo-content parity', () 
   it('N2 — same number of demo screens in scaffold.js and create-flowkit-app', () => {
     const files = workspaceScaffold('demo')
     const screenCount = Object.keys(files).filter(
-      p => p.startsWith('flows/') && p.endsWith('.tsx')
+      p => p.startsWith(`${FLOW_BOOK_DIRNAME}/`) && p.endsWith('.tsx')
     ).length
 
     const templateSrc = fs.readFileSync(path.join(ROOT, TEMPLATE_PATH), 'utf8')

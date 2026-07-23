@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { readFlowkitManifest, isMultiMode, workspaceEntryPath } from './flowkit-manifest.js'
+import { FLOW_BOOK_DIRNAME } from './config-filenames.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export const ROOT = path.resolve(__dirname, '../..')
@@ -271,7 +272,7 @@ export function writeState(patch) {
  * existing scaffold's own default.
  */
 export function detectWorkspaceLanguage(wsDir) {
-  const flowsDir = path.join(wsDir, 'flows')
+  const flowsDir = path.join(wsDir, FLOW_BOOK_DIRNAME)
   if (!fs.existsSync(flowsDir)) return 'ts'
 
   const walk = dir => {

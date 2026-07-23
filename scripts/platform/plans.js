@@ -5,6 +5,7 @@ import path from 'path'
 import { workspacePath } from '../helpers/paths.js'
 import { b, d } from '../helpers/colors.js'
 import { resolveWorkspaceLoose as resolveWorkspace } from '../helpers/workspace-resolve.js'
+import { FLOW_STORIES_DIRNAME } from '../helpers/config-filenames.js'
 
 function findProjectsDir(ws) {
   return path.join(workspacePath(ws), 'projects')
@@ -26,7 +27,7 @@ function resolveFlowplans(ws, project) {
 
   // Flat layout — used by nClarity and all post-refactor workspaces
   if (!project) {
-    const flatDir = path.join(workspacePath(ws), 'flowplans')
+    const flatDir = path.join(workspacePath(ws), FLOW_STORIES_DIRNAME)
     if (fs.existsSync(flatDir)) {
       for (const f of fs.readdirSync(flatDir)) {
         if (!f.endsWith('.ts') && !f.endsWith('.js')) continue
@@ -41,7 +42,7 @@ function resolveFlowplans(ws, project) {
   if (!fs.existsSync(projectsDir)) return results
   const projects = project ? [project] : listProjects(ws)
   for (const proj of projects) {
-    const plansDir = path.join(projectsDir, proj, 'flowplans')
+    const plansDir = path.join(projectsDir, proj, FLOW_STORIES_DIRNAME)
     if (!fs.existsSync(plansDir)) continue
     for (const f of fs.readdirSync(plansDir)) {
       if (!f.endsWith('.ts') && !f.endsWith('.js')) continue
@@ -67,14 +68,16 @@ export function cmdPlanLs(val, args) {
   console.log(d(' ────────────────────────────────────────────'))
 
   if (plans.length === 0) {
-    console.log(d('  No flowplans found. Drop a .ts file into flowplans/ to add one.'))
+    console.log(
+      d(`  No flowplans found. Drop a .ts file into ${FLOW_STORIES_DIRNAME}/ to add one.`)
+    )
     console.log('')
     return
   }
 
   for (const { project, file, fullPath, flat } of plans) {
     const rel = path.relative(workspacePath(ws), fullPath)
-    const loc = flat ? d(`  · flowplans/${file}`) : d(`  · ${project}  · ${rel}`)
+    const loc = flat ? d(`  · ${FLOW_STORIES_DIRNAME}/${file}`) : d(`  · ${project}  · ${rel}`)
     console.log('  ' + b(file.replace(/\.(ts|js)$/, '')) + loc)
   }
   console.log(d(' ────────────────────────────────────────────'))
@@ -98,7 +101,7 @@ export function cmdProjectLs(val) {
     if (plans.length > 0 && plans[0].flat) {
       console.log(
         d(
-          `  Flat workspace — no projects layer. ${plans.length} flowplan${plans.length !== 1 ? 's' : ''} in flowplans/`
+          `  Flat workspace — no projects layer. ${plans.length} flowplan${plans.length !== 1 ? 's' : ''} in ${FLOW_STORIES_DIRNAME}/`
         )
       )
     } else {
@@ -109,7 +112,7 @@ export function cmdProjectLs(val) {
   }
 
   for (const proj of projects) {
-    const plansDir = path.join(projectsDir, proj, 'flowplans')
+    const plansDir = path.join(projectsDir, proj, FLOW_STORIES_DIRNAME)
     const planCount = fs.existsSync(plansDir)
       ? fs.readdirSync(plansDir).filter(f => f.endsWith('.ts') || f.endsWith('.js')).length
       : 0

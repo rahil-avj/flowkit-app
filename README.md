@@ -40,7 +40,7 @@ flowkit nw:my-app    # create workspace
 
 Switch active workspace from the browser UI — select a workspace in the canvas shell and your choice is saved automatically.
 
-Flowplans live at `workspaces/<name>/flowplans/`. Add a new `.ts` file there and it is picked up automatically on next dev server hot reload.
+Flowplans live at `workspaces/<name>/flowStories/`. Add a new `.ts` file there and it is picked up automatically on next dev server hot reload.
 
 ---
 
@@ -50,7 +50,7 @@ Flowplans live at `workspaces/<name>/flowplans/`. Add a new `.ts` file there and
 
 Outside this repo, FlowKit ships as installable packages rather than a checkout:
 
-**Single-workspace project** — scaffold via `create-flowkit-app`. Your project root _is_ the one workspace: `flowkit.config.ts`, `flows/`, `flowplans/`, `lib/` sit directly at root, and `flowkit` is a `devDependency` in `node_modules/`.
+**Single-workspace project** — scaffold via `create-flowkit-app`. Your project root _is_ the one workspace: `flowkit.config.ts`, `flowBook/`, `flowStories/`, `lib/` sit directly at root, and `flowkit` is a `devDependency` in `node_modules/`.
 
 ```bash
 npm create flowkit-app@latest my-app
@@ -122,7 +122,7 @@ or inside a flow — safe to call unconditionally, unlike wiring `useDashboard()
 
 ## Flow config
 
-Flows are defined as **flowplans** under `workspaces/<name>/flowplans/` (repo mode) or `flowplans/` at the workspace root (consumer mode). Each flowplan is a `FlowplanDef` — a typed, ordered sequence of steps with optional db patches, forks, and entry guards:
+Flows are defined as **flowplans** under `workspaces/<name>/flowStories/` (repo mode) or `flowStories/` at the workspace root (consumer mode) — directory renamed from `flowplans/`; the CLI verb `check:flowplans` keeps its existing spelling regardless. Each flowplan is a `FlowplanDef` — a typed, ordered sequence of steps with optional db patches, forks, and entry guards. Step `screenId` values use the composite `${flowId}-${screenId}` form:
 
 ```ts
 // this repo (repo mode)
@@ -136,9 +136,9 @@ export default defineFlow({
   name: 'Onboarding',
   canEnter: ({ db }) => !db.auth.isLoggedIn,
   steps: [
-    { screenId: 'WelcomeScreen' },
-    { screenId: 'SignupScreen', db: { 'auth.started': true } },
-    { screenId: 'SuccessScreen' },
+    { screenId: 'onboarding-welcome' },
+    { screenId: 'onboarding-signup', db: { 'auth.started': true } },
+    { screenId: 'onboarding-success' },
   ],
 })
 ```

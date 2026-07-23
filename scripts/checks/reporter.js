@@ -10,6 +10,10 @@ import { g, r, d, b } from '../helpers/colors.js'
  * @property {string} message    human-readable description of the problem
  * @property {string} [fix]      manual fix description
  * @property {string} [clifix]   exact CLI command that fixes it, if one exists
+ * @property {boolean} [requiresAcknowledgment]  when true, this finding is surfaced in its
+ *   own clearly-headed section (in addition to the normal flat list) so it can't be missed
+ *   or silently scrolled past — e.g. screen/ambiguous-folder. Never affects errorCount/
+ *   exit code by itself; a finding still needs severity: 'error' to fail the build.
  */
 
 export function createReport() {
@@ -57,6 +61,35 @@ export function printReport(report, workspaceName, label) {
   if (warningCount) parts.push(d(`${warningCount} warning${warningCount !== 1 ? 's' : ''}`))
   console.log('  ' + parts.join(', '))
   console.log('')
+
+  printAcknowledgmentSection(findings)
+}
+
+/**
+ * Findings marked `requiresAcknowledgment: true` (e.g. screen/ambiguous-folder) get a
+ * second, visually distinct pass here — a boxed, all-caps-headed section printed after the
+ * normal flat list — so an author can't just scroll past them as one more line among many.
+ * This is presentation only: it does not change errorCount/exit-code behavior; a finding
+ * still needs severity: 'error' to fail the build. Not a full interactive prompt (no
+ * blocking/input handling) — that's a larger UX investment out of scope for this pass.
+ */
+function printAcknowledgmentSection(findings) {
+  const needsAck = findings.filter(f => f.requiresAcknowledgment)
+  if (needsAck.length === 0) return
+
+  const line = '═'.repeat(48)
+  console.log(r(line))
+  console.log(r(`  ⚠ REQUIRES ACKNOWLEDGMENT (${needsAck.length})`))
+  console.log(r(line))
+  for (const f of needsAck) {
+    console.log(`  [${f.ruleId}] ${f.file}`)
+    console.log(`    ${f.message}`)
+    if (f.fix) console.log(d(`    Fix: ${f.fix}`))
+    if (f.clifix) console.log(d(`    Or:  ${f.clifix}`))
+    console.log('')
+  }
+  console.log(r(line))
+  console.log('')
 }
 
 /** Prints a report as machine-readable JSON. */
@@ -68,6 +101,7 @@ export function printReportJson(report, workspaceName) {
         errors: report.errorCount,
         warnings: report.warningCount,
         results: report.findings,
+        requiresAcknowledgment: report.findings.filter(f => f.requiresAcknowledgment),
       },
       null,
       2

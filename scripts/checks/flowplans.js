@@ -12,9 +12,16 @@
 import fs from 'fs'
 import path from 'path'
 import { readFlowplanModule } from './config.js'
+import { FLOW_BOOK_DIRNAME, FLOW_STORIES_DIRNAME } from '../helpers/config-filenames.js'
+import {
+  isNonExistent,
+  resolveVisibility,
+  parseScreenSegments,
+  makeScreenId,
+} from '../../src/shared/utils/screenPathIdentity.js'
 
 function listFlowplanFiles(wsDir) {
-  const dir = path.join(wsDir, 'flowplans')
+  const dir = path.join(wsDir, FLOW_STORIES_DIRNAME)
   if (!fs.existsSync(dir)) return []
   return fs
     .readdirSync(dir)
@@ -27,16 +34,41 @@ function isScreenStep(entry) {
   return entry && typeof entry === 'object' && typeof entry.screenId === 'string'
 }
 
+const SCREEN_EXTS = ['.tsx', '.jsx']
+
+/**
+ * Recursively walks the flow-designs root collecting every real screen-candidate file at
+ * any depth ≥1, mirroring checks/screens.js's walk. `__`-prefixed folders/files are pruned
+ * from traversal entirely (never included, as if they don't exist) — so a flowplan step
+ * referencing a `__`-hidden screen naturally fails flowplan/invalid-screen below with no
+ * special-casing needed.
+ */
+function walkScreenFiles(dir, segments) {
+  const results = []
+  for (const entry of fs.readdirSync(dir)) {
+    if (isNonExistent(entry)) continue
+    const full = path.join(dir, entry)
+    const nextSegments = [...segments, entry]
+    if (fs.statSync(full).isDirectory()) {
+      results.push(...walkScreenFiles(full, nextSegments))
+    } else if (SCREEN_EXTS.some(ext => entry.endsWith(ext))) {
+      results.push(nextSegments)
+    }
+  }
+  return results
+}
+
+/** Collects every known screen id, in the collision-proof `flow-screen` composite form
+ * (makeScreenId), across the whole workspace. `__`-hidden screens are never included. */
 function collectAllScreenIds(wsDir) {
-  const flowsDir = path.join(wsDir, 'flows')
+  const flowsDir = path.join(wsDir, FLOW_BOOK_DIRNAME)
   const ids = new Set()
   if (!fs.existsSync(flowsDir)) return ids
-  for (const flowId of fs.readdirSync(flowsDir)) {
-    const flowDir = path.join(flowsDir, flowId)
-    if (!fs.statSync(flowDir).isDirectory()) continue
-    for (const screenId of fs.readdirSync(flowDir)) {
-      if (fs.statSync(path.join(flowDir, screenId)).isDirectory()) ids.add(screenId)
-    }
+  for (const segments of walkScreenFiles(flowsDir, [])) {
+    if (resolveVisibility(segments) === 'non-existent') continue // belt-and-suspenders
+    const parsed = parseScreenSegments(segments)
+    if (!parsed) continue
+    ids.add(makeScreenId(parsed.flow, parsed.screen))
   }
   return ids
 }
@@ -45,15 +77,15 @@ function collectAllScreenIds(wsDir) {
 export async function checkFlowplans(wsDir, report) {
   const files = listFlowplanFiles(wsDir)
   if (files.length === 0) {
-    // A flowplans/ dir that exists but is empty is suspicious enough to fail the
+    // A flowStories/ dir that exists but is empty is suspicious enough to fail the
     // prebuild gate rather than silently pass — mirrors plan:check's old behavior
     // (the naive string-check command this rule module supersedes).
-    if (fs.existsSync(path.join(wsDir, 'flowplans'))) {
+    if (fs.existsSync(path.join(wsDir, FLOW_STORIES_DIRNAME))) {
       report.add({
         ruleId: 'flowplan/empty-workspace',
         severity: 'error',
-        file: 'flowplans/',
-        message: 'flowplans/ directory exists but contains no .ts/.js plans.',
+        file: `${FLOW_STORIES_DIRNAME}/`,
+        message: `${FLOW_STORIES_DIRNAME}/ directory exists but contains no .ts/.js plans.`,
         fix: 'flowkit create:flowplan --name:<id>',
       })
     }
@@ -106,9 +138,8 @@ export async function checkFlowplans(wsDir, report) {
           ruleId: 'flowplan/invalid-screen',
           severity: 'error',
           file: relPath,
-          message: `step[${i}]'s screenId '${step.screenId}' is not a real screen in this workspace.`,
-          fix: 'Update the step to reference a real screenId.',
-          clifix: `flowkit create:screen --flow:<flow> --name:${step.screenId}`,
+          message: `step[${i}]'s screenId '${step.screenId}' is not a real screen in this workspace. Expected the 'flow-screen' composite id form (see makeScreenId).`,
+          fix: 'Update the step to reference a real, composite flow-screen id.',
         })
       }
 

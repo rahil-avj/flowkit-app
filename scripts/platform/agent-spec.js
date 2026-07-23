@@ -55,7 +55,7 @@ export function directives(ctx) {
       },
       {
         kind: 'never',
-        text: 'reference or edit `flows/router.tsx` or any `_playFlow.ts` — this workspace uses the Flowplan hierarchy format; those files do not exist here',
+        text: 'reference or edit `flowBook/router.tsx` or any `_playFlow.ts` — this workspace uses the Flowplan hierarchy format; those files do not exist here',
       },
       {
         kind: 'always',
@@ -67,23 +67,23 @@ export function directives(ctx) {
   const flowsGroup = {
     group: 'Flows & screens — Flowplan hierarchy',
     preamble:
-      'Screens live under `flows/<flow>/<screen>/`. Journeys are declared in `flowplans/<flow>.ts` using `defineFlow`. There is no `_playFlow.ts` and no `flows/router.tsx`.',
+      "Screens live under `flowBook/<flow>/.../<screen>/` (any number of organizational folders between flow and screen are allowed — only the first and last segments count for identity). Journeys are declared in `flowStories/<flow>.ts` using `defineFlow`. There is no `_playFlow.ts` and no `flowBook/router.tsx`. Registered screen ids are the composite `<flow>-<screen>` form (e.g. `onboarding-flow-welcome-screen`) everywhere EXCEPT `workspace.ts`'s `screenOrder` map, which stays bare/flow-scoped.",
     rules: [
       {
         kind: 'to',
         task: 'add a flow with screens',
         action:
-          'create the folder `flows/<FlowName>/<ScreenName>/` and add a `<ScreenName>.tsx` component',
+          'create the folder `flowBook/<FlowName>/<ScreenName>/` and add a `<ScreenName>.tsx` component',
       },
       {
         kind: 'to',
         task: 'add a screen to an existing flow',
-        action: 'create `flows/<FlowName>/<ScreenName>/<ScreenName>.tsx`',
+        action: 'create `flowBook/<FlowName>/<ScreenName>/<ScreenName>.tsx`',
       },
       {
         kind: 'to',
         task: 'remove a flow or screen',
-        action: 'delete the folder: `rm -rf workspaces/<ws>/flows/<flow>/`',
+        action: 'delete the folder: `rm -rf workspaces/<ws>/flowBook/<flow>/`',
       },
       {
         kind: 'to',
@@ -92,12 +92,22 @@ export function directives(ctx) {
           'edit the `flows[]` array in `workspace.ts`, or use the **Manage tab** (right panel) to copy a terminal patch script',
       },
       {
+        kind: 'to',
+        task: 'hide a screen or flow from the Screens tab without deleting it',
+        action:
+          'prefix its folder (or file) name with a single `_` — it stays fully real/playable/referenceable, just hidden from default browsing. Prefix with `__` instead to make it practically non-existent (excluded from checks, flowplan references, and status counts). Use `flowkit list:screens --hidden`/`--gone`/`--all` to see them.',
+      },
+      {
         kind: 'never',
         text: 'hand-write new flow/screen files from scratch — copy an existing screen boilerplate, then fill the body',
       },
       {
         kind: 'always',
-        text: "a screen's function name ends in `Screen` and matches its filename; it exports `screenMeta` with at least `desc`",
+        text: "a screen exports `screenMeta` with at least `desc`. The default-exported function's name no longer needs to end in `Screen` or match the filename — identity comes from the folder, not the filename — but following that convention is still recommended for readability.",
+      },
+      {
+        kind: 'never',
+        text: 'put more than one real (non-`_`/`__`-prefixed) screen component file in a single screen folder — if this happens, the alphabetically-first file silently wins and `flowkit check:screens` reports a non-blocking `screen/ambiguous-folder` warning',
       },
     ],
   }
@@ -200,17 +210,17 @@ export function indexRows(_ctx) {
     },
     {
       task: 'Add a flow + screens',
-      action: 'create folder `flows/<F>/<Screen>/` + `<Screen>.tsx`',
+      action: 'create folder `flowBook/<F>/<Screen>/` + `<Screen>.tsx`',
       detail: 'platform.md → CLI',
     },
     {
       task: 'Add a screen to an existing flow',
-      action: 'create `flows/<F>/<S>/<S>.tsx`',
+      action: 'create `flowBook/<F>/<S>/<S>.tsx`',
       detail: 'platform.md → CLI',
     },
     {
       task: 'Wire a tap / interaction',
-      action: 'add `interactions` map in the flowplan step (`flowplans/<f>.ts`)',
+      action: 'add `interactions` map in the flowplan step (`flowStories/<f>.ts`)',
       detail: 'platform.md → Flows · Documentation/FLOWMASTER.md',
     },
     {
@@ -262,9 +272,9 @@ export function indexRows(_ctx) {
 export function platformSurfaces(ctx) {
   const flowsSurface = {
     area: 'Flows (Flowplan hierarchy)',
-    api: '`defineFlow({ id, name, steps[], homeScreen? })` — authored in `flowplans/<flow>.ts`',
+    api: '`defineFlow({ id, name, steps[], homeScreen? })` — authored in `flowStories/<flow>.ts`',
     from: '`@flowkit-core/config` → `defineFlow`',
-    note: 'Screen folders: `flows/<flow>/<screen>/`. Ordering declared in `workspace.ts` → `projects.<proj>.flows[]`. `homeScreen` overrides the device home button while that plan is playing; workspace-level default is `workspace.ts` → `startScreen`.',
+    note: "Screen folders: `flowBook/<flow>/.../<screen>/` (variable depth — first/last segment count for identity, anything between is cosmetic). Flowplan step `screenId` values use the composite `<flow>-<screen>` id form; `workspace.ts`'s `screenOrder` stays bare. Ordering declared in `workspace.ts` → `projects.<proj>.flows[]`. `homeScreen` overrides the device home button while that plan is playing; workspace-level default is `workspace.ts` → `startScreen`.",
     doc: 'FLOWMASTER.md',
   }
 

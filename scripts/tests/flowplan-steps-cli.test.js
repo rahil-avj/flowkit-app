@@ -7,6 +7,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { after, before, describe, it } from 'node:test'
 
+import { FLOW_STORIES_DIRNAME } from '../helpers/config-filenames.js'
 import {
   backupRegistry,
   cleanupWorkspace,
@@ -18,7 +19,11 @@ import {
 
 const WS = 'twsfpsteps'
 const NW_FLAGS = ['--lang:ts', '--kit:none']
-const FORKED_PLAN_PATH = path.join(ROOT, 'workspaces', WS, 'flowplans', 'forked-plan.ts')
+const FORKED_PLAN_PATH = path.join(ROOT, 'workspaces', WS, FLOW_STORIES_DIRNAME, 'forked-plan.ts')
+// F3 needs a fork-free flowplan — the real scaffolded 'onboarding-flow' plan already has
+// steps wired for the fork guard tests above, so a second, separate fixture plan is written
+// alongside forked-plan.ts to isolate F3's add:step assertion from F1/F2's fork-guard fixture.
+const FORKFREE_PLAN_PATH = path.join(ROOT, 'workspaces', WS, FLOW_STORIES_DIRNAME, 'forkfree-plan.ts')
 
 const FORKED_PLAN_SRC = `import { defineFlow } from '@flowkit-core/config'
 
@@ -38,6 +43,17 @@ export default defineFlow({
 })
 `
 
+const FORKFREE_PLAN_SRC = `import { defineFlow } from '@flowkit-core/config'
+
+export default defineFlow({
+  id: 'forkfree-plan',
+  name: 'Forkfree Plan',
+  steps: [
+    { screenId: 'welcome-screen', on: 'get-started' },
+  ],
+})
+`
+
 describe('Suite F — flowkit add:step / remove:step', () => {
   let snapshot
 
@@ -47,7 +63,11 @@ describe('Suite F — flowkit add:step / remove:step', () => {
     cleanupWorkspace(WS)
     const result = await spawnCLI([`-nw:${WS}`, ...NW_FLAGS])
     assert.equal(result.code, 0, `workspace ${WS} creation failed: ${result.stderr}`)
+    // scaffold.js already creates flowStories/ with the demo onboarding-flow/home-flow plans;
+    // these two extra fixture plans are added alongside them for the fork-guard tests below.
+    fs.mkdirSync(path.dirname(FORKED_PLAN_PATH), { recursive: true })
     fs.writeFileSync(FORKED_PLAN_PATH, FORKED_PLAN_SRC)
+    fs.writeFileSync(FORKFREE_PLAN_PATH, FORKFREE_PLAN_SRC)
   })
 
   after(() => {
@@ -86,7 +106,7 @@ describe('Suite F — flowkit add:step / remove:step', () => {
   it('F3 — add:step on a fork-free flowplan still succeeds', async () => {
     const result = await spawnCLI([
       'add:step',
-      '--flowplan:onboarding-flow',
+      '--flowplan:forkfree-plan',
       '--screen:ready-screen',
       '--action:test step',
       `--workspace:${WS}`,

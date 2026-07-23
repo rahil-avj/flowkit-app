@@ -17,11 +17,11 @@ No `src/`, no `workspaces/`. Your project root is just your work.
 
 ```
 my-project/
-├── flows/
+├── flowBook/
 │   └── onboarding/
 │       └── welcome/
 │           └── WelcomeScreen.tsx
-├── flowplans/
+├── flowStories/
 │   └── onboarding.ts
 ├── lib/
 │   ├── data/db.ts
@@ -56,12 +56,12 @@ import { flowkit } from 'flowkit/vite'
 export default defineConfig({ plugins: [flowkit()] })
 ```
 
-The plugin reads your config, generates the screen/config virtual modules, and enables HMR for `./flows/**`. You don't touch glob patterns or aliases — that's all internal to the plugin.
+The plugin reads your config, generates the screen/config virtual modules, and enables HMR for `./flowBook/**`. You don't touch glob patterns or aliases — that's all internal to the plugin.
 
 ## Adding a screen
 
-1. `flows/<flow>/<screen-id>/<ScreenName>.tsx`
-2. Add the screen id to `screenOrder.<flow>` in `flowkit.config.ts`
+1. `flowBook/<flow>/<screen-id>/<ScreenName>.tsx` — the filename doesn't need a `Screen` suffix, and you can nest extra cosmetic folders between `<flow>` and `<screen-id>` if you want; only the first and last path segments matter for identity
+2. Add the bare screen id to `screenOrder.<flow>` in `flowkit.config.ts` (screenOrder stays bare/flow-scoped — it's the flowplan step `screenId` that uses the composite `<flow>-<screen-id>` form, see below)
 3. Save — dev server picks it up via HMR, no restart
 
 Screens only ever import from React and the platform-injected props:
@@ -76,11 +76,13 @@ export default function WelcomeScreen({ onNext, db }: FlowScreenProps) {
 
 ## Adding a flowplan step
 
-Edit `flowplans/<flow>.ts`, append to `steps[]`:
+Edit `flowStories/<flow>.ts`, append to `steps[]`:
 
 ```ts
-{ screenId: 'welcome', on: 'next', actionNote: 'user taps continue' }
+{ screenId: 'onboarding-welcome', on: 'next', actionNote: 'user taps continue' }
 ```
+
+(`screenId` is the composite `<flow>-<screen-id>` form here, not the bare id used in `screenOrder`.)
 
 ## CLI
 

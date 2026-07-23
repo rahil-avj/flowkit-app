@@ -25,6 +25,8 @@ declare module 'virtual:flowkit/screens' {
     flow: string
     screenId: string
     loader: () => Promise<{ default: React.ComponentType; screenMeta?: ScreenMeta }>
+    /** '__'-prefixed entries are filtered out before reaching this list entirely. */
+    visibility?: 'normal' | 'hidden'
   }>
 }
 
@@ -34,7 +36,6 @@ declare module 'virtual:flowkit/flowplans' {
 }
 
 declare module 'virtual:flowkit/workspace' {
-  import type { AnnotationTag } from '@flowkit/types/index'
   import type React from 'react'
 
   export const workspaceName: string
@@ -42,6 +43,27 @@ declare module 'virtual:flowkit/workspace' {
   export const logo: string | null
   export const loadSimulator: (() => Promise<{ default: React.ComponentType }>) | null
   export const loadTokens: (() => Promise<string>) | null
-  export const tags: Record<string, AnnotationTag[]>
   export const sessions: Record<string, unknown>
+}
+
+declare module '@flowkit-shared/utils/screenPathIdentity' {
+  export const MISC_FLOW_ID: string
+  export function isNonExistent(segment: string): boolean
+  export function isHidden(segment: string): boolean
+  export function resolveVisibility(segments: string[]): 'normal' | 'hidden' | 'non-existent'
+  export function parseVariant(stem: string): { componentName: string; variant: string }
+  export interface ParsedScreenSegments {
+    flow: string
+    screen: string
+    variant: string
+    componentName: string
+    visibility: 'normal' | 'hidden' | 'non-existent'
+    cosmeticSegments: string[]
+  }
+  export function parseScreenSegments(segments: string[]): ParsedScreenSegments | null
+  export function makeScreenId(flow: string, screen: string): string
+  export function pickScreenFile(candidateFilenames: string[]): {
+    chosen: string | null
+    ambiguous: boolean
+  }
 }

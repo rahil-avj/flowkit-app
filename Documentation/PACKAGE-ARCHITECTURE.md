@@ -11,7 +11,7 @@
 FlowKit ships two ways from one repo:
 
 - **Repo mode** — this repo, checked out normally. `workspaces/<name>/` holds author content, platform code lives in `src/`, multiple workspaces can coexist, switched via a browser UI.
-- **Flat / author mode** — someone runs `npm create flowkit-app@latest my-project`, gets a project with just `flows/`, `flowplans/`, `lib/`, `flowkit.config.ts`, plus `flowkit` installed in `node_modules/`. There is no `workspaces/` directory. There is exactly one implicit workspace: the whole project.
+- **Flat / author mode** — someone runs `npm create flowkit-app@latest my-project`, gets a project with just `flowBook/`, `flowStories/`, `lib/`, `flowkit.config.ts`, plus `flowkit` installed in `node_modules/`. There is no `workspaces/` directory. There is exactly one implicit workspace: the whole project.
 
 The two modes share **all** the same platform source (`src/`) and CLI code (`scripts/platform/`, `scripts/helpers/`). The only difference is _where things resolve from_ — a workspace-shaped subdirectory of this repo, vs. the author's own project root. Almost every bug found this session was a place where that distinction leaked: code written assuming repo-mode's directory shape broke silently (or destructively) when run in flat mode.
 
@@ -120,7 +120,7 @@ This is the part that makes flat mode actually work at dev-server time. Header c
  *   virtual:flowkit/config      — parsed FlowkitConfig object
  *   virtual:flowkit/screens     — lazy screen import map
  *   virtual:flowkit/flowplans   — eager flowplan import map
- *   virtual:flowkit/workspace   — db, simulator, tokens, logos, tags, sessions
+ *   virtual:flowkit/workspace   — db, simulator, tokens, logos, sessions
  */
 ```
 
@@ -158,9 +158,9 @@ async load(id) {
 ```
 
 - **`virtual:flowkit/config`** — trivial: `export const config = ${JSON.stringify(config)}`.
-- **`virtual:flowkit/screens`** — globs `flows/<flow>/**/*.tsx` per flow in `screenOrder`, generates a lazy-import map keyed by `"flow/screenId"`, plus a parallel `screenMeta` map (imports each screen's named `screenMeta` export) and a `lazyScreens` map wrapping each loader in `React.lazy()`.
-- **`virtual:flowkit/flowplans`** — globs `flowplans/*.ts`, eagerly imports each (flowplans are small, no need for lazy-loading).
-- **`virtual:flowkit/workspace`** — the catch-all: `db`, `loadSimulator`, `loadTokens`, `logo`, `tags`, `sessions`. Each is independently optional (checks `fs.existsSync` on a small list of candidate paths per feature before deciding whether to generate a real loader or a stub).
+- **`virtual:flowkit/screens`** — globs `flowBook/**/*.tsx` (variable depth — any number of cosmetic folders between the flow and screen segments are allowed, not just the fixed `<flow>/<screen>/` two levels), resolves each file's identity via `parseScreenSegments()`/`pickScreenFile()` (`src/shared/utils/screenPathIdentity.js`), and generates a lazy-import map keyed by the **composite id** `makeScreenId(flow, screen)` → `` `${flow}-${screen}` `` (not the older `"flow/screenId"` slash form), plus a parallel `screenMeta` map (imports each screen's named `screenMeta` export) and a `lazyScreens` map wrapping each loader in `React.lazy()`.
+- **`virtual:flowkit/flowplans`** — globs `flowStories/*.ts`, eagerly imports each (flowplans are small, no need for lazy-loading).
+- **`virtual:flowkit/workspace`** — the catch-all: `db`, `loadSimulator`, `loadTokens`, `logo`, `sessions`. (The old `tags` loader for the retired `_tags.ts` sidecar file is gone — annotation tags now live inline on each screen via `screenMeta.annotations`, not a separate workspace-level file, so there's nothing left for this virtual module to generate for tags.) Each remaining field is independently optional (checks `fs.existsSync` on a small list of candidate paths per feature before deciding whether to generate a real loader or a stub).
 
 **`db` resolution — named exports win over default:**
 

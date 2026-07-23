@@ -13,7 +13,7 @@ import {
   flowExists,
 } from '../authoring-support/config-patch.js'
 import { prompt, selectFromList } from '../helpers/prompt.js'
-import { WORKSPACE_CONFIG_FILENAME } from '../helpers/config-filenames.js'
+import { WORKSPACE_CONFIG_FILENAME, FLOW_BOOK_DIRNAME } from '../helpers/config-filenames.js'
 
 export async function cmdCreateFlow(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
@@ -46,12 +46,12 @@ export async function cmdCreateFlow(_val, args = []) {
     process.exit(1)
   }
 
-  const flowDir = path.join(wsDir, 'flows', flowId)
+  const flowDir = path.join(wsDir, FLOW_BOOK_DIRNAME, flowId)
 
   try {
     fs.mkdirSync(flowDir, { recursive: true })
     addFlow(wsDir, flowId)
-    console.log(g(`✓ Flow created:  flows/${flowId}/`))
+    console.log(g(`✓ Flow created:  ${FLOW_BOOK_DIRNAME}/${flowId}/`))
     console.log(g(`✓ Registered:    ${WORKSPACE_CONFIG_FILENAME} → flows[] + screenOrder`))
     console.log('')
     console.log(
@@ -88,7 +88,7 @@ export async function cmdRemoveFlow(_val, args = []) {
     process.exit(1)
   }
 
-  const flowDir = path.join(wsDir, 'flows', flowId)
+  const flowDir = path.join(wsDir, FLOW_BOOK_DIRNAME, flowId)
   if (fs.existsSync(flowDir)) {
     const screens = fs
       .readdirSync(flowDir)
@@ -103,7 +103,7 @@ export async function cmdRemoveFlow(_val, args = []) {
 
   removeFlow(wsDir, flowId)
   if (fs.existsSync(flowDir)) fs.rmSync(flowDir, { recursive: true, force: true })
-  console.log(g(`✓ Flow removed:  flows/${flowId}/`))
+  console.log(g(`✓ Flow removed:  ${FLOW_BOOK_DIRNAME}/${flowId}/`))
   console.log(g(`✓ Unregistered:  ${WORKSPACE_CONFIG_FILENAME}`))
 }
 

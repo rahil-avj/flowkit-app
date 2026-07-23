@@ -15,7 +15,11 @@ import {
   spawnCLI,
   WORKSPACES_DIR,
 } from './helpers.js'
-import { WORKSPACE_CONFIG_FILENAME } from '../helpers/config-filenames.js'
+import {
+  WORKSPACE_CONFIG_FILENAME,
+  FLOW_BOOK_DIRNAME,
+  FLOW_STORIES_DIRNAME,
+} from '../helpers/config-filenames.js'
 
 const WS_ONE = 'twsone'
 const WS_TWO = 'twstwo'
@@ -55,13 +59,13 @@ describe('Suite B — Workspace CLI lifecycle', () => {
       path.join(base, 'lib/data/db.ts'),
       path.join(base, 'lib/data/simulator.tsx'),
       path.join(base, 'lib/design-system/tokens.css'),
-      path.join(base, 'flowplans/onboarding-flow.ts'),
-      path.join(base, 'flowplans/home-flow.ts'),
-      path.join(base, 'flows/onboarding-flow/welcome-screen/WelcomeScreen.tsx'),
-      path.join(base, 'flows/onboarding-flow/setup-screen/SetupScreen.tsx'),
-      path.join(base, 'flows/onboarding-flow/ready-screen/ReadyScreen.tsx'),
-      path.join(base, 'flows/home-flow/home-screen/HomeScreen.tsx'),
-      path.join(base, 'flows/home-flow/detail-screen/DetailScreen.tsx'),
+      path.join(base, `${FLOW_STORIES_DIRNAME}/onboarding-flow.ts`),
+      path.join(base, `${FLOW_STORIES_DIRNAME}/home-flow.ts`),
+      path.join(base, `${FLOW_BOOK_DIRNAME}/onboarding-flow/welcome-screen/WelcomeScreen.tsx`),
+      path.join(base, `${FLOW_BOOK_DIRNAME}/onboarding-flow/setup-screen/SetupScreen.tsx`),
+      path.join(base, `${FLOW_BOOK_DIRNAME}/onboarding-flow/ready-screen/ReadyScreen.tsx`),
+      path.join(base, `${FLOW_BOOK_DIRNAME}/home-flow/home-screen/HomeScreen.tsx`),
+      path.join(base, `${FLOW_BOOK_DIRNAME}/home-flow/detail-screen/DetailScreen.tsx`),
       path.join(base, 'lib/docs/overview.md'),
       path.join(base, 'lib/flowLens/studies.json'),
       path.join(base, 'lib/flowLens/sessions/initial-study'),
@@ -80,12 +84,12 @@ describe('Suite B — Workspace CLI lifecycle', () => {
   })
 
   it('B4 — WelcomeScreen passes ESLint', () => {
-    const target = `workspaces/${WS_ONE}/flows/onboarding-flow/welcome-screen/WelcomeScreen.tsx`
+    const target = `workspaces/${WS_ONE}/${FLOW_BOOK_DIRNAME}/onboarding-flow/welcome-screen/WelcomeScreen.tsx`
     assert.equal(runLint(target), 0, 'ESLint failed on WelcomeScreen.tsx')
   })
 
   it('B5 — WelcomeScreen passes Prettier', () => {
-    const target = `workspaces/${WS_ONE}/flows/onboarding-flow/welcome-screen/WelcomeScreen.tsx`
+    const target = `workspaces/${WS_ONE}/${FLOW_BOOK_DIRNAME}/onboarding-flow/welcome-screen/WelcomeScreen.tsx`
     assert.equal(runFormatCheck(target), 0, 'Prettier failed on WelcomeScreen.tsx')
   })
 

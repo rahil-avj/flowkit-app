@@ -3,13 +3,15 @@
  *
  * Workspace reader — supports two layouts:
  *
- *   New (flat):  workspaces/<ws>/flowplans/<Name>.ts
- *                workspaces/<ws>/flows/<flow>/<screen>/<Name>Screen.tsx
+ *   New (flat):  workspaces/<ws>/flowStories/<Name>.ts
+ *                workspaces/<ws>/flowBook/<flow>/.../<screen>/<File>.tsx (variable depth)
  *
- *   Old (nested): workspaces/<ws>/projects/<proj>/flowplans/<Name>.ts
- *                 workspaces/<ws>/projects/<proj>/flows/<flow>/<screen>/<Name>Screen.tsx
+ *   Old (nested): workspaces/<ws>/projects/<proj>/flowStories/<Name>.ts
+ *                 workspaces/<ws>/projects/<proj>/flowBook/<flow>/.../<screen>/<File>.tsx
  *
  * Both layouts are detected automatically. Existing workspaces keep working unchanged.
+ * Screen identity (flow/screen/variant/visibility) is derived by the shared,
+ * mode-agnostic screenPathIdentity module — see that file for the folder-depth rules.
  *
  * WHY a separate file: import.meta.glob patterns MUST be string literals (Vite
  * resolves them at build time). All globs live here, inline.
@@ -33,7 +35,12 @@ import {
 import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
 import { DEVICE_PRESETS } from '@flowkit-shared/components/devices'
 import { getWorkspaceConfig } from '@flowkit-shared/utils/workspaceModules'
-import React, { useEffect, useMemo, useState } from 'react'
+import {
+  makeScreenId,
+  parseScreenSegments,
+  pickScreenFile,
+} from '@flowkit-shared/utils/screenPathIdentity'
+import React, { useMemo } from 'react'
 
 // ─── Mode detection ───────────────────────────────────────────────────────────
 
@@ -46,7 +53,6 @@ import {
   screenList as _virtualScreenList,
   screenMeta as _virtualScreenMeta,
 } from 'virtual:flowkit/screens'
-import { tags as _virtualTags } from 'virtual:flowkit/workspace'
 
 // ─── Repo mode: Vite glob maps (string literals only) ────────────────────────
 //
@@ -60,41 +66,44 @@ type ScreenGlobMap = Record<
   () => Promise<{ default: React.ComponentType; screenMeta?: ScreenMeta }>
 >
 
-const flowplanModules = import.meta.glob('/workspaces/**/flowplans/*.ts', {
+const flowplanModules = import.meta.glob('/workspaces/**/flowStories/*.ts', {
   eager: true,
 }) as FlowplanGlobMap
 
-const projectScreenModules = import.meta.glob('/workspaces/**/flows/**/*.tsx') as ScreenGlobMap
+const projectScreenModules = import.meta.glob(
+  '/workspaces/**/flowBook/**/*.tsx'
+) as ScreenGlobMap
 
 // Eager named-import of screenMeta only — zero cost for files that don't export it.
-const screenMetaModules = import.meta.glob('/workspaces/**/flows/**/*.tsx', {
+const screenMetaModules = import.meta.glob('/workspaces/**/flowBook/**/*.tsx', {
   eager: true,
   import: 'screenMeta',
 }) as Record<string, ScreenMeta | undefined>
 
-type TagsModule = { default: AnnotationTag[] }
-type TagsGlobMap = Record<string, () => Promise<TagsModule>>
-const tagsModules = import.meta.glob('/workspaces/**/flows/_tags.ts') as TagsGlobMap
-
 // ─── Path parsing — handles both flat and nested layouts ─────────────────────────
 
 interface ScreenPathInfo {
-  /** "default" for the base file, else the .variant.<serial> token. */
+  /** "default" for the base file, else the .variant-<serial>/.v-<serial> token. */
   variant: string
   flow: string
-  screen: string // the <screen> folder name — THIS is the screen id
-  componentName: string // e.g. "CartScreen"
+  screen: string // the <screen> folder name (last folder) — combined with flow for the id
+  componentName: string // whatever the file itself is named, no suffix required
   /** The project segment, or the workspace name for flat-layout workspaces. */
   project: string
+  visibility: 'normal' | 'hidden' | 'non-existent'
+  fileName: string // for alphabetical tie-break among ambiguous candidates in one folder
 }
 
 /**
- * Parse a screen file path. Returns null if invalid (not a *Screen.tsx at a
- * screen-folder root, buried in a components/ subfolder, or wrong shape).
+ * Parse a screen file path. Returns null if it's not a recognized screen-file
+ * extension at all (not a *.tsx/*.jsx). Delegates the actual flow/screen/variant/
+ * visibility derivation to the shared, mode-agnostic screenPathIdentity module —
+ * see that file for the folder-depth/identity rules (variable depth, first folder =
+ * flow, last folder = screen, misc fallback, _/__ visibility).
  *
  * Handles two layouts:
- *   Flat:   flows/<flow>/<screen>/<Name>Screen[.variant.<x>].tsx
- *   Nested: projects/<proj>/flows/<flow>/<screen>/<Name>Screen[.variant.<x>].tsx
+ *   Flat:   flowBook/<flow>/.../<screen>/<File>[.variant-<x>|.v-<x>].tsx
+ *   Nested: projects/<proj>/flowBook/<flow>/.../<screen>/<File>[...].tsx
  */
 function parseScreenPath(
   filePath: string,
@@ -105,14 +114,11 @@ function parseScreenPath(
   const rest = filePath.slice(wsPrefix.length)
   const parts = rest.split('/')
 
-  // Find the 'flows' segment — works for both flat (idx 0) and nested (idx >= 1) layouts
-  const flowsIdx = parts.indexOf('flows')
+  // Find the 'flowBook' segment — works for both flat (idx 0) and nested (idx >= 1) layouts
+  const flowsIdx = parts.indexOf('flowBook')
   if (flowsIdx === -1) return null
 
-  // Exactly 3 segments after 'flows': <flow>, <screen>, <File>.tsx
-  if (parts.length !== flowsIdx + 4) return null // deeper = components/ subfolder → private
-
-  // Project: everything before 'flows' (excluding 'projects/' prefix), or wsName for flat
+  // Project: everything before 'flowBook' (excluding 'projects/' prefix), or wsName for flat
   const beforeFlows = parts.slice(0, flowsIdx)
   let project: string
   if (beforeFlows[0] === 'projects') {
@@ -123,18 +129,19 @@ function parseScreenPath(
     return null // unexpected prefix — not a recognized layout
   }
 
-  const [flow, screen, file] = parts.slice(flowsIdx + 1)
-  if (!flow || !screen || !file) return null
-  if (file.startsWith('_')) return null
+  const segments = parts.slice(flowsIdx + 1)
+  const info = parseScreenSegments(segments)
+  if (!info) return null
 
-  const stem = file.replace(/\.(tsx|jsx)$/, '')
-  const vMatch = stem.match(/^(.*)\.variant\.([^.]+)$/)
-  const componentName = vMatch ? vMatch[1] : stem
-  const variant = vMatch ? vMatch[2] : 'default'
-
-  if (!componentName.endsWith('Screen')) return null
-
-  return { project, flow, screen, variant, componentName }
+  return {
+    project,
+    flow: info.flow,
+    screen: info.screen,
+    variant: info.variant,
+    componentName: info.componentName,
+    visibility: info.visibility,
+    fileName: segments[segments.length - 1],
+  }
 }
 
 function deriveScreenLabel(folderOrName: string): string {
@@ -221,29 +228,35 @@ function resolveConfigDefaults(
 function buildFlatHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   const config = getWorkspaceConfig(activeWorkspace)
 
-  // 1. Build screens from virtual:flowkit/screens screenList
+  // 1. Build screens from virtual:flowkit/screens screenList. genScreens() (flat-mode's
+  //    vite-plugin.js) already derives flow/screenId via the same shared screenPathIdentity
+  //    module used here, and pre-filters '__' (non-existent) entries before they ever reach
+  //    this list — so no visibility check needed here, only the id/path construction.
   const screensById = new Map<string, ScreenRec>()
   for (const entry of _virtualScreenList) {
     const { flow, screenId, loader } = entry
     const meta = _virtualScreenMeta[entry.key]
     const label = meta?.label ?? deriveScreenLabel(screenId)
     const component = buildLazyComponent(loader)
+    const id = makeScreenId(flow, screenId)
+    const filePath = `flowBook/${flow}/${screenId}`
     const view: WireframeView = {
-      id: screenId,
+      id,
       label,
       component,
-      filePath: `flows/${flow}/${screenId}`,
-      variants: [{ serial: 'default', label, component, filePath: `flows/${flow}/${screenId}` }],
+      filePath,
+      variants: [{ serial: 'default', label, component, filePath }],
       flow,
       project: activeWorkspace,
     }
-    screensById.set(screenId, {
-      id: screenId,
+    screensById.set(id, {
+      id,
       label,
       project: activeWorkspace,
       flow,
       component,
       view,
+      visibility: entry.visibility ?? 'normal',
     })
   }
 
@@ -289,13 +302,20 @@ function buildFlatHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   // 6. Tree
   const tree = buildTree([...screensById.values()], config, activeWorkspace)
 
+  // 7. Tags — sourced directly from each screen's own screenMeta.annotations.
+  const metaByScreenId = new Map<string, ScreenMeta | undefined>()
+  for (const entry of _virtualScreenList) {
+    metaByScreenId.set(makeScreenId(entry.flow, entry.screenId), _virtualScreenMeta[entry.key])
+  }
+  const tagsByScreen = buildTagsMap(metaByScreenId)
+
   return {
     flows,
     views,
     tree,
     registry,
     hasHierarchy,
-    tagsByScreen: new Map(),
+    tagsByScreen,
     ...resolveConfigDefaults(config, screensById),
   }
 }
@@ -303,12 +323,13 @@ function buildFlatHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
 // ─── Builder (pure given the globs) ─────────────────────────────────────────────
 
 interface ScreenRec {
-  id: string // = the <screen> folder name
+  id: string // = `${flow}-${screen}` — collision-proof across flows
   label: string
   project: string
   flow: string
   component: React.ComponentType // default variant
   view: WireframeView // includes variants[]
+  visibility: 'normal' | 'hidden' | 'non-existent'
 }
 
 function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
@@ -316,37 +337,66 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   const wsPrefix = `/workspaces/${activeWorkspace}/`
   const config = getWorkspaceConfig(activeWorkspace)
 
-  // 1. Group screen files by their <screen> folder id, collecting variants.
+  // 1. Group screen files by their (flow, screen) folder pair, collecting variants.
+  //    Keying by flow+screen together (not screen alone) is what makes two different
+  //    flows' same-named screen folders (e.g. both having a "confirm" folder) resolve
+  //    to two distinct screens instead of silently colliding into one.
   interface VariantFile {
     serial: string
     component: React.ComponentType
     filePath: string
     project: string
     flow: string
+    screen: string
     componentName: string
+    fileName: string
+    visibility: 'normal' | 'hidden' | 'non-existent'
   }
-  const variantsByScreen = new Map<string, VariantFile[]>()
+  const variantsByScreenKey = new Map<string, VariantFile[]>()
 
   for (const [path, loader] of Object.entries(projectScreenModules)) {
     const info = parseScreenPath(path, wsPrefix, activeWorkspace)
     if (!info) continue
-    const list = variantsByScreen.get(info.screen) ?? []
+    if (info.visibility === 'non-existent') continue // '__' — practically non-existent, skip entirely
+    const key = `${info.flow}::${info.screen}::${info.variant}`
+    const list = variantsByScreenKey.get(key) ?? []
     list.push({
       serial: info.variant,
       component: buildLazyComponent(loader),
       filePath: path.slice(wsPrefix.length),
       project: info.project,
       flow: info.flow,
+      screen: info.screen,
       componentName: info.componentName,
+      fileName: info.fileName,
+      visibility: info.visibility,
     })
-    variantsByScreen.set(info.screen, list)
+    variantsByScreenKey.set(key, list)
   }
 
-  // 2. Build a ScreenRec per screen folder.
+  // 1b. Within each (flow, screen, variant) bucket, more than one candidate file means
+  //     an ambiguous folder (two unprefixed .tsx files claiming the same screen/variant
+  //     slot) — deterministically pick the alphabetically-first file. The soft
+  //     screen/ambiguous-folder warning for this case is raised by `flowkit check:screens`,
+  //     not here; this hook only needs a stable, working screen to render.
+  const variantsByScreen = new Map<string, VariantFile[]>()
+  for (const [key, candidates] of variantsByScreenKey) {
+    const { chosen } = pickScreenFile(candidates.map(c => c.fileName))
+    const winner = candidates.find(c => c.fileName === chosen) ?? candidates[0]
+    const [flow, screen] = key.split('::')
+    const screenKey = `${flow}::${screen}`
+    const list = variantsByScreen.get(screenKey) ?? []
+    list.push(winner)
+    variantsByScreen.set(screenKey, list)
+  }
+
+  // 2. Build a ScreenRec per (flow, screen) pair.
   const screensById = new Map<string, ScreenRec>()
-  for (const [screenId, files] of variantsByScreen) {
+  for (const [screenKey, files] of variantsByScreen) {
+    const [flow, screen] = screenKey.split('::')
+    const screenId = makeScreenId(flow, screen)
     const def = files.find(f => f.serial === 'default') ?? files[0]
-    const label = deriveScreenLabel(screenId)
+    const label = deriveScreenLabel(screen)
     const variants = files
       .slice()
       .sort((a, b) => {
@@ -385,6 +435,7 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
       flow: def.flow,
       component: def.component,
       view,
+      visibility: def.visibility,
     })
   }
 
@@ -433,13 +484,24 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   // 7. Tree: project → flow → screen.
   const tree = buildTree([...screensById.values()], config, activeWorkspace)
 
+  // 8. Tags — sourced directly from each screen's own screenMeta.annotations
+  //    (screenMetaModules is already eagerly globbed above, keyed by full workspace path).
+  const metaByScreenId = new Map<string, ScreenMeta | undefined>()
+  for (const [screenKey, files] of variantsByScreen) {
+    const [flow, screen] = screenKey.split('::')
+    const def = files.find(f => f.serial === 'default') ?? files[0]
+    const metaKey = `${wsPrefix}${def.filePath}`
+    metaByScreenId.set(makeScreenId(flow, screen), screenMetaModules[metaKey])
+  }
+  const tagsByScreen = buildTagsMap(metaByScreenId)
+
   return {
     flows,
     views,
     tree,
     registry,
     hasHierarchy,
-    tagsByScreen: new Map(),
+    tagsByScreen,
     ...resolveConfigDefaults(config, screensById),
   }
 }
@@ -566,45 +628,22 @@ function makeFlowplanRunner(
 
 // ─── Hook ────────────────────────────────────────────────────────────────────────
 
-function buildTagsMap(allTags: AnnotationTag[]): Map<string, AnnotationTag[]> {
+/**
+ * Builds screenId → active annotations (expiresAt filtered) directly from each screen's
+ * own screenMeta.annotations — replaces the old workspace-level `_tags.ts` sidecar file.
+ * `metaByScreenId` maps a screen's final id (flowname-screenname) to its parsed ScreenMeta.
+ */
+function buildTagsMap(metaByScreenId: Map<string, ScreenMeta | undefined>): Map<string, AnnotationTag[]> {
   const today = new Date().toISOString().slice(0, 10)
-  const filtered = allTags.filter(t => !t.expiresAt || t.expiresAt > today)
   const map = new Map<string, AnnotationTag[]>()
-  for (const t of filtered) {
-    for (const screenId of t.screens ?? []) {
-      const existing = map.get(screenId) ?? []
-      map.set(screenId, [...existing, t])
-    }
+  for (const [screenId, meta] of metaByScreenId) {
+    const active = (meta?.annotations ?? []).filter(t => !t.expiresAt || t.expiresAt > today)
+    if (active.length > 0) map.set(screenId, active)
   }
   return map
 }
 
 export function useWorkspaceHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   const hierarchy = useMemo(() => buildHierarchy(activeWorkspace), [activeWorkspace])
-
-  // virtual:flowkit/workspace tags are keyed by flow name; flatten to one array
-  const singleTagsByScreen = useMemo(
-    () => (isSingle ? buildTagsMap(Object.values(_virtualTags).flat()) : null),
-    []
-  )
-
-  const [tagsByScreen, setTagsByScreen] = useState<Map<string, AnnotationTag[]>>(new Map())
-
-  useEffect(() => {
-    if (isSingle) return
-
-    const prefix = `/workspaces/${activeWorkspace}/flows/_tags.ts`
-    const loader = tagsModules[prefix]
-    if (!loader) return
-    let cancelled = false
-    loader().then(mod => {
-      if (cancelled) return
-      setTagsByScreen(buildTagsMap(mod.default ?? []))
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [activeWorkspace])
-
-  return { ...hierarchy, tagsByScreen: singleTagsByScreen ?? tagsByScreen }
+  return hierarchy
 }

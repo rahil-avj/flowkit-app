@@ -80,6 +80,13 @@ export interface ScreenMeta {
    * Only meaningful on `.variant.<serial>.tsx` files.
    */
   variantOrder?: number
+  /**
+   * Annotation badges shown for this screen in the Screens panel (ephemeral review
+   * markers — replaces the old workspace-level `_tags.ts` sidecar file; each screen
+   * now declares its own annotations directly). Distinct from `tags` above, which is
+   * freeform filter/group strings, not visual badges.
+   */
+  annotations?: AnnotationTag[]
 }
 
 export interface FlowMeta {

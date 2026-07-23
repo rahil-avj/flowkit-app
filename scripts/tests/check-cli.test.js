@@ -14,6 +14,7 @@ import {
   ROOT,
   spawnCLI,
 } from './helpers.js'
+import { FLOW_STORIES_DIRNAME } from '../helpers/config-filenames.js'
 
 const WS = 'twscheck'
 const NW_FLAGS = ['--lang:ts', '--kit:none']
@@ -64,10 +65,13 @@ describe('Suite C — flowkit check', () => {
   })
 
   it('C5 — check:flowplans catches a step referencing a nonexistent screenId → exit 1', async () => {
-    const fpPath = path.join(ROOT, 'workspaces', WS, 'flowplans', 'home-flow.ts')
+    const fpPath = path.join(ROOT, 'workspaces', WS, FLOW_STORIES_DIRNAME, 'home-flow.ts')
     const original = fs.readFileSync(fpPath, 'utf8')
     try {
-      const broken = original.replace(/screenId: 'home-screen'/, "screenId: 'nonexistent-screen'")
+      const broken = original.replace(
+        /screenId: 'home-flow-home-screen'/,
+        "screenId: 'nonexistent-screen'"
+      )
       assert.notEqual(broken, original, 'fixture setup failed — pattern not found in home-flow.ts')
       fs.writeFileSync(fpPath, broken)
 
@@ -79,9 +83,9 @@ describe('Suite C — flowkit check', () => {
     }
   })
 
-  it('C6 — check:flowplans flags an existing-but-empty flowplans/ dir → exit 1', async () => {
-    const fpDir = path.join(ROOT, 'workspaces', WS, 'flowplans')
-    const backupDir = path.join(ROOT, 'workspaces', WS, 'flowplans.bak')
+  it('C6 — check:flowplans flags an existing-but-empty flowStories/ dir → exit 1', async () => {
+    const fpDir = path.join(ROOT, 'workspaces', WS, FLOW_STORIES_DIRNAME)
+    const backupDir = path.join(ROOT, 'workspaces', WS, `${FLOW_STORIES_DIRNAME}.bak`)
     fs.renameSync(fpDir, backupDir)
     fs.mkdirSync(fpDir)
     try {

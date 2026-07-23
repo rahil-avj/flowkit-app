@@ -7,6 +7,8 @@ import { workspacePath, resolveDefineImport, assertScopedWorkspaceDir } from '..
 import { assertKebab } from '../helpers/validate.js'
 import { g, r, b, d, c } from '../helpers/colors.js'
 import { readWorkspaceConfig } from '../authoring-support/config-patch.js'
+import { FLOW_STORIES_DIRNAME } from '../helpers/config-filenames.js'
+import { makeScreenId } from '../../src/shared/utils/screenPathIdentity.js'
 
 function toDisplayName(kebab) {
   return kebab
@@ -16,7 +18,7 @@ function toDisplayName(kebab) {
 }
 
 function flowplanPath(wsDir, id) {
-  return path.join(wsDir, 'flowplans', `${id}.ts`)
+  return path.join(wsDir, FLOW_STORIES_DIRNAME, `${id}.ts`)
 }
 
 /** Parse a flowplan .ts file into a plain object. Returns null on failure. */
@@ -105,17 +107,17 @@ export async function cmdCreateFlowplan(_val, args = []) {
 
   const fpPath = flowplanPath(wsDir, id)
   if (fs.existsSync(fpPath)) {
-    console.error(r(`✗ Flowplan '${id}' already exists: flowplans/${id}.ts`))
+    console.error(r(`✗ Flowplan '${id}' already exists: ${FLOW_STORIES_DIRNAME}/${id}.ts`))
     process.exit(1)
   }
 
-  const fpDir = path.join(wsDir, 'flowplans')
+  const fpDir = path.join(wsDir, FLOW_STORIES_DIRNAME)
   if (!fs.existsSync(fpDir)) fs.mkdirSync(fpDir, { recursive: true })
 
   const displayName = toDisplayName(id)
   fs.writeFileSync(fpPath, flowplanTemplate(id, displayName))
 
-  console.log(g(`✓ Flowplan: flowplans/${id}.ts`))
+  console.log(g(`✓ Flowplan: ${FLOW_STORIES_DIRNAME}/${id}.ts`))
   console.log('')
   console.log(d(`Next:`))
   console.log(d(`  flowkit add:step --flowplan:${id} --screen:<screenId> --action:"User arrives"`))
@@ -136,17 +138,17 @@ export async function cmdRemoveFlowplan(_val, args = []) {
 
   const fpPath = flowplanPath(wsDir, id)
   if (!fs.existsSync(fpPath)) {
-    console.error(r(`✗ Flowplan not found: flowplans/${id}.ts`))
+    console.error(r(`✗ Flowplan not found: ${FLOW_STORIES_DIRNAME}/${id}.ts`))
     process.exit(1)
   }
 
   if (!force) {
-    console.error(r(`✗ Add --force to confirm deletion of flowplans/${id}.ts`))
+    console.error(r(`✗ Add --force to confirm deletion of ${FLOW_STORIES_DIRNAME}/${id}.ts`))
     process.exit(1)
   }
 
   fs.unlinkSync(fpPath)
-  console.log(g(`✓ Removed: flowplans/${id}.ts`))
+  console.log(g(`✓ Removed: ${FLOW_STORIES_DIRNAME}/${id}.ts`))
 }
 
 export async function cmdAddStep(_val, args = []) {
@@ -164,31 +166,39 @@ export async function cmdAddStep(_val, args = []) {
     process.exit(1)
   }
 
-  // Validate screenId exists in workspace
+  // Validate the bare screenId exists in some flow's screenOrder (screenOrder is
+  // flow-scoped/bare, per config-patch.js), then build the collision-proof composite
+  // id (flow-screen) from whichever flow it's actually registered under — a flowplan's
+  // own id is a separate authored concept, not necessarily the same as the target
+  // screen's flow folder, so this can't be assumed from fpId.
   const config = readWorkspaceConfig(wsDir)
-  const allScreens = Object.values(config.screenOrder).flat()
-  if (!allScreens.includes(screenId)) {
+  const owningFlow = Object.entries(config.screenOrder).find(([, screens]) =>
+    screens.includes(screenId)
+  )?.[0]
+  if (!owningFlow) {
+    const allScreens = Object.values(config.screenOrder).flat()
     console.error(r(`✗ screenId '${screenId}' not found in workspace flows`))
     const close = allScreens.filter(s => s.startsWith(screenId.split('-')[0]))
     if (close.length > 0) console.error(d(`  Did you mean: ${close.join(', ')}`))
     console.error(d(`  Available screens: ${allScreens.join(', ')}`))
     process.exit(1)
   }
+  const compositeScreenId = makeScreenId(owningFlow, screenId)
 
   const fpPath = flowplanPath(wsDir, fpId)
   if (!fs.existsSync(fpPath)) {
-    console.error(r(`✗ Flowplan not found: flowplans/${fpId}.ts`))
+    console.error(r(`✗ Flowplan not found: ${FLOW_STORIES_DIRNAME}/${fpId}.ts`))
     console.error(d(`  Create it first: flowkit create:flowplan --name:${fpId}`))
     process.exit(1)
   }
 
-  const step = { screenId }
+  const step = { screenId: compositeScreenId }
   if (on) step.on = on
   if (actionNote) step.actionNote = actionNote
 
   const fp = parseFlowplan(fpPath)
   if (!fp) {
-    console.error(r(`✗ Failed to parse flowplans/${fpId}.ts — check for syntax errors`))
+    console.error(r(`✗ Failed to parse ${FLOW_STORIES_DIRNAME}/${fpId}.ts — check for syntax errors`))
     process.exit(1)
   }
 
@@ -207,7 +217,7 @@ export async function cmdAddStep(_val, args = []) {
     process.exit(1)
   }
 
-  console.log(g(`✓ Step added to flowplans/${fpId}.ts`))
+  console.log(g(`✓ Step added to ${FLOW_STORIES_DIRNAME}/${fpId}.ts`))
   console.log(
     `  ${d('screen:')} ${screenId}${on ? `  ${d('on:')} ${on}` : ''}${actionNote ? `  ${d('action:')} ${actionNote}` : ''}`
   )
@@ -229,13 +239,13 @@ export async function cmdRemoveStep(_val, args = []) {
 
   const fpPath = flowplanPath(wsDir, fpId)
   if (!fs.existsSync(fpPath)) {
-    console.error(r(`✗ Flowplan not found: flowplans/${fpId}.ts`))
+    console.error(r(`✗ Flowplan not found: ${FLOW_STORIES_DIRNAME}/${fpId}.ts`))
     process.exit(1)
   }
 
   const fp = parseFlowplan(fpPath)
   if (!fp) {
-    console.error(r(`✗ Failed to parse flowplans/${fpId}.ts`))
+    console.error(r(`✗ Failed to parse ${FLOW_STORIES_DIRNAME}/${fpId}.ts`))
     process.exit(1)
   }
 
@@ -273,13 +283,13 @@ export async function cmdListSteps(_val, args = []) {
 
   const fpPath = flowplanPath(wsDir, fpId)
   if (!fs.existsSync(fpPath)) {
-    console.error(r(`✗ Flowplan not found: flowplans/${fpId}.ts`))
+    console.error(r(`✗ Flowplan not found: ${FLOW_STORIES_DIRNAME}/${fpId}.ts`))
     process.exit(1)
   }
 
   const fp = parseFlowplan(fpPath)
   if (!fp) {
-    console.error(r(`✗ Failed to parse flowplans/${fpId}.ts — check for syntax errors`))
+    console.error(r(`✗ Failed to parse ${FLOW_STORIES_DIRNAME}/${fpId}.ts — check for syntax errors`))
     process.exit(1)
   }
 
@@ -315,13 +325,13 @@ export async function cmdFlowplanInfo(_val, args = []) {
 
   const fpPath = flowplanPath(wsDir, fpId)
   if (!fs.existsSync(fpPath)) {
-    console.error(r(`✗ Flowplan not found: flowplans/${fpId}.ts`))
+    console.error(r(`✗ Flowplan not found: ${FLOW_STORIES_DIRNAME}/${fpId}.ts`))
     process.exit(1)
   }
 
   const fp = parseFlowplan(fpPath)
   if (!fp) {
-    console.error(r(`✗ Failed to parse flowplans/${fpId}.ts — check for syntax errors`))
+    console.error(r(`✗ Failed to parse ${FLOW_STORIES_DIRNAME}/${fpId}.ts — check for syntax errors`))
     process.exit(1)
   }
 

@@ -27,7 +27,11 @@ import {
   writeWorkspaceContent,
   writeMultiWorkspaceViteConfig,
 } from '../helpers/workspace-template.js'
-import { WORKSPACE_CONFIG_FILENAME } from '../helpers/config-filenames.js'
+import {
+  WORKSPACE_CONFIG_FILENAME,
+  FLOW_BOOK_DIRNAME,
+  FLOW_STORIES_DIRNAME,
+} from '../helpers/config-filenames.js'
 
 /**
  * Validate a workspace name at the point it's first accepted, before it
@@ -58,8 +62,8 @@ function validateWorkspaceName(name, label) {
 const WORKSPACE_ENTRIES = [
   WORKSPACE_CONFIG_FILENAME,
   'index.ts',
-  'flows',
-  'flowplans',
+  FLOW_BOOK_DIRNAME,
+  FLOW_STORIES_DIRNAME,
   'lib',
   '.flowkit',
   '.agent',

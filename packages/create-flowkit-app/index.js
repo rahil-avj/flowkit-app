@@ -12,6 +12,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // the monorepo (see the standalone-prompt-helpers comment below). If flowkit's
 // own WORKSPACE_CONFIG_FILENAME ever changes again, update this too.
 const WORKSPACE_CONFIG_FILENAME = 'workspace.ts'
+// Same rationale as WORKSPACE_CONFIG_FILENAME above — mirrors
+// scripts/helpers/config-filenames.js's FLOW_BOOK_DIRNAME/FLOW_STORIES_DIRNAME.
+// Update these if those ever change.
+const FLOW_BOOK_DIRNAME = 'flowBook'
+const FLOW_STORIES_DIRNAME = 'flowStories'
 
 const RESET = '\x1b[0m'
 const BOLD = '\x1b[1m'
@@ -282,7 +287,13 @@ function writeTsConfig(dir) {
           skipLibCheck: true,
           noEmit: true,
         },
-        include: ['flows', 'flowplans', 'lib', WORKSPACE_CONFIG_FILENAME, 'vite.config.ts'],
+        include: [
+          FLOW_BOOK_DIRNAME,
+          FLOW_STORIES_DIRNAME,
+          'lib',
+          WORKSPACE_CONFIG_FILENAME,
+          'vite.config.ts',
+        ],
       },
       null,
       2
@@ -329,14 +340,14 @@ guessing from adjacent code.
 
 ## Project layout
 
-- \`flows/<flow>/<screen-id>/<ScreenName>.tsx\` — one component per screen, default-exports
+- \`${FLOW_BOOK_DIRNAME}/<flow>/<screen-id>/<ScreenName>.tsx\` — one component per screen, default-exports
   the screen and a named \`screenMeta\` (\`{ id, label, desc? }\`, optional
   \`canEnter\`/\`canNotEnter\`: \`({ db }) => boolean\`). Receives \`FlowScreenProps\` from
   \`'flowkit'\` — \`onAction?\`, \`onNext?\`, \`onBack?\`, \`isFlow?\`, \`flowState?\`, and a
   **read-only** \`db?\`. **All of these are \`undefined\` when the screen is previewed
   standalone** (outside an active flow) — always optional-chain (\`db?.user?.name\`), never
   assume they're present.
-- \`flowplans/<flow>.ts\` — playback scripts authored with \`defineFlow()\` from \`'flowkit'\`:
+- \`${FLOW_STORIES_DIRNAME}/<flow>.ts\` — playback scripts authored with \`defineFlow()\` from \`'flowkit'\`:
   an ordered \`steps[]\` of \`{ screenId, on?, actionNote? }\` (\`on\` matches a DOM element id
   in the screen, wired via event delegation — no \`onClick\` needed on that element), or a
   richer \`interactions\` map keyed by element id (\`{ trigger, goTo, do?, animation?, delay? }\`).
@@ -356,7 +367,7 @@ guessing from adjacent code.
 
 The Vite plugin (\`flowkit/vite\`) generates virtual modules
 (\`virtual:flowkit/config|screens|flowplans|workspace\`) from \`${WORKSPACE_CONFIG_FILENAME}\` plus
-filesystem globs over \`flows/\`/\`flowplans/\` — this is what makes screens discoverable
+filesystem globs over \`${FLOW_BOOK_DIRNAME}/\`/\`${FLOW_STORIES_DIRNAME}/\` — this is what makes screens discoverable
 without a hand-written router. \`INEFFECTIVE_DYNAMIC_IMPORT\` build warnings are expected and
 suppressed deliberately in \`vite.config.ts\` (screens are both statically listed for
 type-checking and dynamically imported for code-splitting).
@@ -498,8 +509,8 @@ npm run build    # production build
 
 ## Project layout
 
-- \`flows/\` — screen components, organized by flow then screen name
-- \`flowplans/\` — playback scripts (sequences of screens with interaction definitions)
+- \`${FLOW_BOOK_DIRNAME}/\` — screen components, organized by flow then screen name
+- \`${FLOW_STORIES_DIRNAME}/\` — playback scripts (sequences of screens with interaction definitions)
 - \`lib/\` — shared data, components, and utilities
 - \`${WORKSPACE_CONFIG_FILENAME}\` — flow and screen registration
 

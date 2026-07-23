@@ -20,6 +20,7 @@ import {
 } from '../helpers/registry.js'
 import { prompt, selectFromList } from '../helpers/prompt.js'
 import { assertKebab, ValidationError } from '../helpers/validate.js'
+import { FLOW_BOOK_DIRNAME } from '../helpers/config-filenames.js'
 import { specContext } from './agent-spec.js'
 import { renderAgentFiles, renderProjectStub, writeAgentMeta, MEMORY_FILE } from './agent-sync.js'
 
@@ -342,7 +343,7 @@ export async function cmdRemoveWorkspace(val) {
 export async function cmdWatch(val) {
   requireRepoMode(
     'flowkit watch',
-    '`npm run dev` already watches your flows/ — no separate watcher needed.'
+    `\`npm run dev\` already watches your ${FLOW_BOOK_DIRNAME}/ — no separate watcher needed.`
   )
 
   const existing = listWorkspaceDirs()
@@ -369,8 +370,8 @@ export async function cmdWatch(val) {
   console.log(g('✓') + ' Active workspace: ' + b(wsName))
   restartVite()
 
-  const watchDir = path.join(workspacePath(wsName), 'flows')
-  console.log(d(`  Watching ${b(`workspaces/${wsName}/flows/`)} for changes…`))
+  const watchDir = path.join(workspacePath(wsName), FLOW_BOOK_DIRNAME)
+  console.log(d(`  Watching ${b(`workspaces/${wsName}/${FLOW_BOOK_DIRNAME}/`)} for changes…`))
   console.log(d('  Vite handles hot reload — save any screen file to trigger a refresh.'))
   fs.watch(watchDir, { recursive: true }, (_event, filename) => {
     if (!filename || (!filename.endsWith('.ts') && !filename.endsWith('.tsx'))) return

@@ -30,7 +30,11 @@
 // navigation conventions are independent, and this demo only shows one.
 import fs from 'fs'
 import path from 'path'
-import { WORKSPACE_CONFIG_FILENAME } from './config-filenames.js'
+import {
+  WORKSPACE_CONFIG_FILENAME,
+  FLOW_BOOK_DIRNAME,
+  FLOW_STORIES_DIRNAME,
+} from './config-filenames.js'
 
 export function writeFlowkitConfig(dir, workspaceName) {
   fs.writeFileSync(
@@ -50,9 +54,9 @@ export default defineConfig({
 }
 
 export function writeFlowplans(dir) {
-  fs.mkdirSync(path.join(dir, 'flowplans'), { recursive: true })
+  fs.mkdirSync(path.join(dir, FLOW_STORIES_DIRNAME), { recursive: true })
   fs.writeFileSync(
-    path.join(dir, 'flowplans', 'onboarding.ts'),
+    path.join(dir, FLOW_STORIES_DIRNAME, 'onboarding.ts'),
     `import { defineFlow } from 'flowkit'
 
 export default defineFlow({
@@ -60,15 +64,15 @@ export default defineFlow({
   name: 'Onboarding',
   description: 'Guides the user through welcome, profile setup, and into the app.',
   steps: [
-    { screenId: 'welcome', on: 'get-started', actionNote: 'Taps Get Started' },
-    { screenId: 'setup', on: 'continue', actionNote: 'Confirms profile and continues' },
-    { screenId: 'ready', on: 'go-to-home', actionNote: 'Proceeds to home' },
+    { screenId: 'onboarding-welcome', on: 'get-started', actionNote: 'Taps Get Started' },
+    { screenId: 'onboarding-setup', on: 'continue', actionNote: 'Confirms profile and continues' },
+    { screenId: 'onboarding-ready', on: 'go-to-home', actionNote: 'Proceeds to home' },
   ],
 })
 `
   )
   fs.writeFileSync(
-    path.join(dir, 'flowplans', 'home.ts'),
+    path.join(dir, FLOW_STORIES_DIRNAME, 'home.ts'),
     `import { defineFlow } from 'flowkit'
 
 export default defineFlow({
@@ -76,8 +80,8 @@ export default defineFlow({
   name: 'Home',
   description: 'Browse the item list and view a detail page.',
   steps: [
-    { screenId: 'home', on: 'item-1', actionNote: 'Taps the first item' },
-    { screenId: 'detail', on: 'back', actionNote: 'Goes back to list' },
+    { screenId: 'home-home', on: 'item-1', actionNote: 'Taps the first item' },
+    { screenId: 'home-detail', on: 'back', actionNote: 'Goes back to list' },
   ],
 })
 `
@@ -92,7 +96,7 @@ function screenFile(isJs, typeImport, propsType, body) {
 }
 
 function writeScreen(dir, flow, id, filename, isJs, content) {
-  const screenDir = path.join(dir, 'flows', flow, id)
+  const screenDir = path.join(dir, FLOW_BOOK_DIRNAME, flow, id)
   fs.mkdirSync(screenDir, { recursive: true })
   fs.writeFileSync(path.join(screenDir, `${filename}.${isJs ? 'jsx' : 'tsx'}`), content)
 }
@@ -131,7 +135,12 @@ export function writeWelcomeScreen(dir, language) {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const screenMeta = { id: 'welcome', label: 'Welcome Screen' }
+export const screenMeta = {
+  id: 'welcome',
+  label: 'Welcome Screen',
+  // Annotation badges (ephemeral review markers shown in the Screens panel):
+  // annotations: [{ label: 'new', color: 'green', icon: 'Star' }],
+}
 `
   )
   writeScreen(dir, 'onboarding', 'welcome', 'WelcomeScreen', isJs, content)

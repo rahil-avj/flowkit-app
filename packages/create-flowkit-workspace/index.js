@@ -12,6 +12,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // the monorepo (see the standalone-prompt-helpers comment below). If flowkit's
 // own WORKSPACE_CONFIG_FILENAME ever changes again, update this too.
 const WORKSPACE_CONFIG_FILENAME = 'workspace.ts'
+// Same rationale as WORKSPACE_CONFIG_FILENAME above — mirrors
+// scripts/helpers/config-filenames.js's FLOW_BOOK_DIRNAME/FLOW_STORIES_DIRNAME.
+// Update these if those ever change.
+const FLOW_BOOK_DIRNAME = 'flowBook'
+const FLOW_STORIES_DIRNAME = 'flowStories'
 
 const RESET = '\x1b[0m'
 const BOLD = '\x1b[1m'
@@ -259,11 +264,11 @@ function writeTsConfig(dir) {
           skipLibCheck: true,
           noEmit: true,
         },
-        // Multi-workspace mode: every workspace folder's flows/flowplans/lib
+        // Multi-workspace mode: every workspace folder's flowBook/flowStories/lib
         // need type coverage, not just one implicit root workspace's.
         include: [
-          '*/flows',
-          '*/flowplans',
+          `*/${FLOW_BOOK_DIRNAME}`,
+          `*/${FLOW_STORIES_DIRNAME}`,
           '*/lib',
           `*/${WORKSPACE_CONFIG_FILENAME}`,
           'vite.config.ts',
@@ -309,14 +314,14 @@ guessing from adjacent code.
 Each top-level folder (starting with \`${DEFAULT_WORKSPACE_NAME}/\`) is an independent
 workspace with its own:
 
-- \`<workspace>/flows/<flow>/<screen-id>/<ScreenName>.tsx\` — one component per screen,
+- \`<workspace>/${FLOW_BOOK_DIRNAME}/<flow>/<screen-id>/<ScreenName>.tsx\` — one component per screen,
   default-exports the screen and a named \`screenMeta\` (\`{ id, label, desc? }\`, optional
   \`canEnter\`/\`canNotEnter\`: \`({ db }) => boolean\`). Receives \`FlowScreenProps\` from
   \`'flowkit'\` — \`onAction?\`, \`onNext?\`, \`onBack?\`, \`isFlow?\`, \`flowState?\`, and a
   **read-only** \`db?\`. **All of these are \`undefined\` when the screen is previewed
   standalone** (outside an active flow) — always optional-chain (\`db?.user?.name\`), never
   assume they're present.
-- \`<workspace>/flowplans/<flow>.ts\` — playback scripts authored with \`defineFlow()\` from
+- \`<workspace>/${FLOW_STORIES_DIRNAME}/<flow>.ts\` — playback scripts authored with \`defineFlow()\` from
   \`'flowkit'\`: an ordered \`steps[]\` of \`{ screenId, on?, actionNote? }\` (\`on\` matches a DOM
   element id in the screen, wired via event delegation — no \`onClick\` needed on that
   element), or a richer \`interactions\` map keyed by element id
@@ -473,7 +478,7 @@ npm run build    # production build
 ## Workspaces
 
 This project starts with one workspace, \`${DEFAULT_WORKSPACE_NAME}/\`. Each workspace
-folder is independent, with its own \`flows/\`, \`flowplans/\`, and \`lib/\`.
+folder is independent, with its own \`${FLOW_BOOK_DIRNAME}/\`, \`${FLOW_STORIES_DIRNAME}/\`, and \`lib/\`.
 
 \`\`\`bash
 npx flowkit create:workspace <name>          # add a workspace

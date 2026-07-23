@@ -22,7 +22,16 @@ import path from 'path'
 import { fileURLToPath, pathToFileURL } from 'url'
 
 import { handleSaveSession } from './flowlens-session.js'
-import { WORKSPACE_CONFIG_FILENAME } from './config-filenames.js'
+import {
+  WORKSPACE_CONFIG_FILENAME,
+  FLOW_BOOK_DIRNAME,
+  FLOW_STORIES_DIRNAME,
+} from './config-filenames.js'
+import {
+  makeScreenId,
+  parseScreenSegments,
+  pickScreenFile,
+} from '../../src/shared/utils/screenPathIdentity.js'
 
 // src/ directory of the flowkit package — resolved relative to this plugin file.
 // In flat mode (author project) all @flowkit/* aliases point here.
@@ -105,27 +114,54 @@ function genConfig(config) {
 
 async function genScreens(config, cwd) {
   const screenOrder = config.screenOrder ?? {}
-  const flows = config.flows ?? Object.keys(screenOrder)
 
-  // Collect structured screen entries
-  const entries = [] // { key, flow, screenId, abs }
+  // Scan the whole flowBook/ tree — flow id is now derived from path position
+  // (via the shared screenPathIdentity module), not assumed from config.flows/
+  // screenOrder keys. Node's fs/promises glob() matches both depth-0
+  // (flowBook/File.tsx) and deeper nesting with a single `**/*.tsx` pattern —
+  // verified directly, no `{*,**/*}` workaround needed.
+  const found = await globFiles(`${FLOW_BOOK_DIRNAME}/**/*.tsx`, cwd)
 
-  for (const flow of flows) {
-    const order = screenOrder[flow] ?? []
-    const found = await globFiles(`flows/${flow}/**/*.tsx`, cwd)
-    const sorted = [
-      ...order
-        .map(s => found.find(f => f.includes(`/${s}/`) || f.includes(`\\${s}\\`)))
-        .filter(Boolean),
-      ...found.filter(f => !order.some(s => f.includes(`/${s}/`) || f.includes(`\\${s}\\`))),
-    ]
-    for (const rel of sorted) {
-      const abs = path.resolve(cwd, rel)
-      const screenId = path.basename(path.dirname(abs))
-      const key = `${flow}/${screenId}`
-      entries.push({ key, flow, screenId, abs })
-    }
+  // Parse every candidate file via the shared identity module, drop non-existent
+  // ('__') entries entirely, and group by (flow, screen, variant) so ambiguous
+  // folders (multiple real candidate files for the same slot) can be resolved
+  // deterministically via pickScreenFile — same as repo mode.
+  const bySlot = new Map() // `${flow}::${screen}::${variant}` -> [{ rel, abs, fileName, info }]
+  for (const rel of found) {
+    const segments = rel.split(/[/\\]/).slice(1) // drop the flowBook/ root segment
+    const info = parseScreenSegments(segments)
+    if (!info) continue // not a recognized screen-file extension
+    if (info.visibility === 'non-existent') continue // '__' — excluded entirely
+
+    const fileName = segments[segments.length - 1]
+    const slotKey = `${info.flow}::${info.screen}::${info.variant}`
+    const list = bySlot.get(slotKey) ?? []
+    list.push({ rel, abs: path.resolve(cwd, rel), fileName, info })
+    bySlot.set(slotKey, list)
   }
+
+  // Collect structured screen entries — one per resolved (flow, screen, variant) slot.
+  const entries = [] // { key, flow, screenId, abs, visibility }
+  for (const [, candidates] of bySlot) {
+    const { chosen } = pickScreenFile(candidates.map(c => c.fileName))
+    const winner = candidates.find(c => c.fileName === chosen) ?? candidates[0]
+    const { flow, screen, visibility } = winner.info
+    const key = makeScreenId(flow, screen)
+    entries.push({ key, flow, screenId: screen, abs: winner.abs, visibility })
+  }
+
+  // Apply declared screenOrder (per flow) as a display-order hint, same convention
+  // as before — screens not mentioned keep their discovery order, appended after.
+  entries.sort((a, b) => {
+    if (a.flow !== b.flow) return 0
+    const order = screenOrder[a.flow] ?? []
+    const ai = order.indexOf(a.screenId)
+    const bi = order.indexOf(b.screenId)
+    if (ai === -1 && bi === -1) return 0
+    if (ai === -1) return 1
+    if (bi === -1) return -1
+    return ai - bi
+  })
 
   const loaderLines = entries.map(
     e => `  ${JSON.stringify(e.key)}: () => import(${JSON.stringify(e.abs)})`
@@ -136,7 +172,7 @@ async function genScreens(config, cwd) {
   const metaLines = entries.map((e, i) => `  ${JSON.stringify(e.key)}: _meta${i}`)
   const listLines = entries.map(
     e =>
-      `  { key: ${JSON.stringify(e.key)}, flow: ${JSON.stringify(e.flow)}, screenId: ${JSON.stringify(e.screenId)}, loader: screens[${JSON.stringify(e.key)}] }`
+      `  { key: ${JSON.stringify(e.key)}, flow: ${JSON.stringify(e.flow)}, screenId: ${JSON.stringify(e.screenId)}, loader: screens[${JSON.stringify(e.key)}]${e.visibility === 'hidden' ? `, visibility: 'hidden'` : ''} }`
   )
 
   return `import { lazy } from 'react'
@@ -160,7 +196,7 @@ ${listLines.join(',\n')}
 }
 
 async function genFlowplans(cwd) {
-  const files = await globFiles('flowplans/*.ts', cwd)
+  const files = await globFiles(`${FLOW_STORIES_DIRNAME}/*.ts`, cwd)
   const lines = files.map((rel, i) => {
     const abs = path.resolve(cwd, rel)
     return `import _fp${i} from ${JSON.stringify(abs)}\nexports.push(_fp${i})`
@@ -195,9 +231,6 @@ async function genWorkspace(config, cwd) {
   const logoFile = logoExts
     .map(e => path.join(cwd, `lib/assets/logo.${e}`))
     .find(p => fs.existsSync(p))
-
-  // tags
-  const tagsFiles = await globFiles('flows/**/_tags.ts', cwd)
 
   // sessions
   const sessionFiles = await globFiles('lib/flowLens/sessions/**/*.json', cwd)
@@ -238,18 +271,6 @@ async function genWorkspace(config, cwd) {
     parts.push(`import _logo from ${JSON.stringify(logoFile + '?url')}\nexport const logo = _logo`)
   } else {
     parts.push(`export const logo = null`)
-  }
-
-  if (tagsFiles.length) {
-    const tagImports = tagsFiles.map((f, i) => {
-      const abs = path.resolve(cwd, f)
-      // derive flow name from path
-      const flow = f.split(/[/\\]/)[1]
-      return `import _tags${i} from ${JSON.stringify(abs)}\ntags[${JSON.stringify(flow)}] = _tags${i}`
-    })
-    parts.push(`const tags = {}\n${tagImports.join('\n')}\nexport { tags }`)
-  } else {
-    parts.push(`export const tags = {}`)
   }
 
   if (sessionFiles.length) {
@@ -409,8 +430,8 @@ export function flowkit(options = {}) {
     configureServer(server) {
       // Watch author project files — invalidate virtuals on any change
       const watchDirs = [
-        path.join(cwd, 'flows'),
-        path.join(cwd, 'flowplans'),
+        path.join(cwd, FLOW_BOOK_DIRNAME),
+        path.join(cwd, FLOW_STORIES_DIRNAME),
         path.join(cwd, 'lib'),
         path.join(cwd, WORKSPACE_CONFIG_FILENAME),
       ]
@@ -435,8 +456,8 @@ export function flowkit(options = {}) {
 
     async handleHotUpdate({ file, server }) {
       const watchDirs = [
-        path.join(cwd, 'flows'),
-        path.join(cwd, 'flowplans'),
+        path.join(cwd, FLOW_BOOK_DIRNAME),
+        path.join(cwd, FLOW_STORIES_DIRNAME),
         path.join(cwd, 'lib'),
       ]
       const isRelevant =

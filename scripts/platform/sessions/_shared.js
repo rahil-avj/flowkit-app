@@ -2,7 +2,12 @@
 import fs from 'fs'
 import path from 'path'
 import { workspacePath } from '../../helpers/paths.js'
-import { toId } from '../../helpers/strings.js'
+import { FLOW_BOOK_DIRNAME } from '../../helpers/config-filenames.js'
+import {
+  isNonExistent,
+  parseScreenSegments,
+  makeScreenId,
+} from '../../../src/shared/utils/screenPathIdentity.js'
 
 // ── Path helpers ─────────────────────────────────────────────────────────────
 
@@ -128,19 +133,43 @@ export function readSession(file) {
 
 // ── Screen id helpers ─────────────────────────────────────────────────────────
 
-/** Screen ids the workspace actually defines (mirrors the app's deriveScreenId). */
+/**
+ * Recursively walks a flow-designs folder (variable depth), collecting real screen-candidate
+ * files. Mirrors scripts/checks/screens.js's walkScreenFiles — `__`-prefixed segments are
+ * pruned entirely (never descended into), matching "as if it doesn't exist".
+ */
+function walkScreenFiles(dir, segments) {
+  const results = []
+  for (const entry of fs.readdirSync(dir)) {
+    if (isNonExistent(entry)) continue
+    const full = path.join(dir, entry)
+    const nextSegments = [...segments, entry]
+    if (fs.statSync(full).isDirectory()) {
+      results.push(...walkScreenFiles(full, nextSegments))
+    } else if (/\.(tsx|jsx)$/.test(entry)) {
+      results.push({ segments: nextSegments, fullPath: full })
+    }
+  }
+  return results
+}
+
+/**
+ * Screen ids the workspace actually defines, in the same composite `${flow}-${screen}`
+ * form produced by the app's makeScreenId/useWorkspaceHierarchy — this is what
+ * sessionScreenIds() extracts from recorded session events (payload.screenId/.to), so
+ * the two sets must use the same id shape to compare correctly. Hidden (`_`-prefixed)
+ * screens are still included here (a session may legitimately reference one); only
+ * non-existent (`__`-prefixed) segments are excluded, via walkScreenFiles' pruning.
+ */
 export function workspaceScreenIds(ws) {
-  const flowsDir = path.join(workspacePath(ws), 'flows')
+  const flowsDir = path.join(workspacePath(ws), FLOW_BOOK_DIRNAME)
   const ids = new Set()
   if (!fs.existsSync(flowsDir)) return ids
-  for (const folder of fs.readdirSync(flowsDir)) {
-    const full = path.join(flowsDir, folder)
-    if (!fs.statSync(full).isDirectory()) continue
-    for (const f of fs.readdirSync(full)) {
-      if (/\.(tsx|jsx)$/.test(f) && !f.startsWith('_') && f !== 'router.tsx') {
-        ids.add(toId(f.replace(/\.(tsx|jsx)$/, '')))
-      }
-    }
+  for (const { segments } of walkScreenFiles(flowsDir, [])) {
+    if (segments[segments.length - 1] === 'router.tsx') continue
+    const parsed = parseScreenSegments(segments)
+    if (!parsed) continue
+    ids.add(makeScreenId(parsed.flow, parsed.screen))
   }
   return ids
 }

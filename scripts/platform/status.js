@@ -4,6 +4,8 @@ import path from 'path'
 import { workspacePath, isRepoMode, ROOT, getActiveWorkspaceName } from '../helpers/paths.js'
 import { b, c, d, g, r } from '../helpers/colors.js'
 import { flowLensModuleExists } from './sessions/index.js'
+import { FLOW_BOOK_DIRNAME, FLOW_STORIES_DIRNAME } from '../helpers/config-filenames.js'
+import { isHidden, isNonExistent } from '../../src/shared/utils/screenPathIdentity.js'
 
 export function cmdStatus(wsArg) {
   const ws = (wsArg || '').trim() || getActiveWorkspaceName()
@@ -18,29 +20,45 @@ export function cmdStatus(wsArg) {
     process.exit(1)
   }
 
-  const flowsDir = path.join(wsDir, 'flows')
+  const flowsDir = path.join(wsDir, FLOW_BOOK_DIRNAME)
   console.log('')
   console.log(b(` Status — ${ws}`))
   console.log(d(' ────────────────────────────────────────────'))
 
-  const flatPlansDir = path.join(wsDir, 'flowplans')
+  const flatPlansDir = path.join(wsDir, FLOW_STORIES_DIRNAME)
 
-  // Flows + screens: flows/<flow>/<screen>/<Screen>.tsx
+  // Recursively walks a flow folder (variable depth, mirroring
+  // scripts/checks/screens.js's walkScreenFiles) counting real screen files.
+  // `__`-prefixed segments are pruned entirely (never descended into); `_`-prefixed
+  // segments are still counted here (status counts total authored screens, not just
+  // visible ones) — excluded only when non-existent.
+  function countScreenFiles(dir) {
+    let count = 0
+    for (const entry of fs.readdirSync(dir)) {
+      if (isNonExistent(entry)) continue
+      const full = path.join(dir, entry)
+      if (fs.statSync(full).isDirectory()) {
+        count += countScreenFiles(full)
+      } else if (
+        (entry.endsWith('.tsx') || entry.endsWith('.jsx')) &&
+        !isHidden(entry) &&
+        !isNonExistent(entry)
+      ) {
+        count++
+      }
+    }
+    return count
+  }
+
+  // Flows + screens: flowBook/<flow>/.../<screen>/<Screen>.tsx (variable depth)
   let flowCount = 0,
     screenCount = 0
   if (fs.existsSync(flowsDir)) {
     for (const folder of fs.readdirSync(flowsDir)) {
+      if (isNonExistent(folder)) continue
       const full = path.join(flowsDir, folder)
       if (!fs.statSync(full).isDirectory()) continue
-      const screenFolders = fs.readdirSync(full).filter(sf => {
-        const sfPath = path.join(full, sf)
-        if (!fs.statSync(sfPath).isDirectory()) return false
-        return fs.readdirSync(sfPath).some(f => f.endsWith('.tsx') || f.endsWith('.jsx'))
-      })
-      const directScreens = fs
-        .readdirSync(full)
-        .filter(f => (f.endsWith('.tsx') || f.endsWith('.jsx')) && !f.startsWith('_'))
-      const total = screenFolders.length + directScreens.length
+      const total = countScreenFiles(full)
       if (total > 0) {
         flowCount++
         screenCount += total
