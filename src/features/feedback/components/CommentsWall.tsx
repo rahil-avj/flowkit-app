@@ -44,7 +44,7 @@ export default function CommentsWall() {
           subtitle="No one has left feedback on this page yet. Be the first to share your thoughts."
           cta={
             <div className="flex flex-col items-center gap-2">
-               <Button size="sm" variant="primary" onClick={() => setViewMode('add-comment')}>
+              <Button size="sm" variant="primary" onClick={() => setViewMode('add-comment')}>
                 Add comment
               </Button>
               <Button

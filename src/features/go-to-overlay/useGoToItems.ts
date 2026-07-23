@@ -94,7 +94,8 @@ export function useGoToItems({ chapters, activeViewId, query }: Options): Palett
 
         const matched = q
           ? pages.filter(
-              (s: WireframeView) => s.label.toLowerCase().includes(q) || chapter.label.toLowerCase().includes(q)
+              (s: WireframeView) =>
+                s.label.toLowerCase().includes(q) || chapter.label.toLowerCase().includes(q)
             )
           : pages
         for (const s of matched) {

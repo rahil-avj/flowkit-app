@@ -136,18 +136,15 @@ export default function FlowLibrary({
       )}
 
       {pageFilter && (
-          <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg flex items-center justify-between shrink-0 bg-theme-blue-dim border border-theme-blue/20">
-            <span className="text-ui-2xs text-theme-blue">
-              Flows with <code className="font-mono">{pageFilter}</code>
-            </span>
-            <button
-              onClick={onClearPageFilter}
-              className="font-semibold text-ui-2xs text-theme-blue"
-            >
-              clear
-            </button>
-          </div>
-        )}
+        <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg flex items-center justify-between shrink-0 bg-theme-blue-dim border border-theme-blue/20">
+          <span className="text-ui-2xs text-theme-blue">
+            Flows with <code className="font-mono">{pageFilter}</code>
+          </span>
+          <button onClick={onClearPageFilter} className="font-semibold text-ui-2xs text-theme-blue">
+            clear
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto px-2 pb-3 flex flex-col gap-1.5 pt-1">
         {pageGroups ? (

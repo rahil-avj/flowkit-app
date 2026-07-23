@@ -24,9 +24,7 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
 }
 
 export default function MetricsView({ metrics }: Props) {
-  const topPages = [...metrics.pageMetrics]
-    .sort((a, b) => b.visitCount - a.visitCount)
-    .slice(0, 8)
+  const topPages = [...metrics.pageMetrics].sort((a, b) => b.visitCount - a.visitCount).slice(0, 8)
 
   const topFrustrated = [...metrics.pageMetrics]
     .filter(s => s.frustratedClickCount > 0)

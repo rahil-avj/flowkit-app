@@ -44,7 +44,9 @@ export function shouldShowControl(
   onlyForPage?: string | string[]
 ): boolean {
   if (onlyForChapter) {
-    const currentStoryId = activeViewId?.endsWith('-play') ? activeViewId.replace('-play', '') : null
+    const currentStoryId = activeViewId?.endsWith('-play')
+      ? activeViewId.replace('-play', '')
+      : null
     const stories = Array.isArray(onlyForChapter) ? onlyForChapter : [onlyForChapter]
     if (!currentStoryId || !stories.includes(currentStoryId)) {
       return false

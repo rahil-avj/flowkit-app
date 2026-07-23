@@ -1,4 +1,4 @@
-import type { PageMetaPatchEntry,PatchScript } from './types'
+import type { PageMetaPatchEntry, PatchScript } from './types'
 
 // ─── Page Meta Patch ────────────────────────────────────────────────────────
 // Migrated from DevModeContext.generateScript / generateRestoreScript.

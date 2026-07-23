@@ -4,4 +4,4 @@ export {
   generatePageMetaPatch,
   generateWorkspaceOrderPatch,
 } from './generators'
-export type { PageMetaPatchEntry,PatchScript } from './types'
+export type { PageMetaPatchEntry, PatchScript } from './types'

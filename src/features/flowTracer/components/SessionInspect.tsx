@@ -103,9 +103,7 @@ export default function SessionInspect({ sessionId, onBack }: Props) {
 
   const pagePath: { id: string; dwell: number | null }[] = []
   for (let i = 0; i < pageVisits.length; i++) {
-    const id = (pageVisits[i].payload.pageId ??
-      pageVisits[i].payload.viewId ??
-      'unknown') as string
+    const id = (pageVisits[i].payload.pageId ?? pageVisits[i].payload.viewId ?? 'unknown') as string
     const next = pageVisits[i + 1]
     const dwell = next ? next.timestamp - pageVisits[i].timestamp : null
     pagePath.push({ id, dwell })

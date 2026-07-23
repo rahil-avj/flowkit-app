@@ -96,7 +96,9 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
   // compiled step list (FlowMaster is the source of truth for the active screen;
   // the context never looks the step up itself). Used by the patch effect, the
   // gating handler, and the actionNote caption.
-  const currentStepIndex = flowStory ? flowStory.steps.findIndex(s => s.pageId === activePageId) : -1
+  const currentStepIndex = flowStory
+    ? flowStory.steps.findIndex(s => s.pageId === activePageId)
+    : -1
   const currentStep =
     flowStory && currentStepIndex >= 0 ? flowStory.steps[currentStepIndex] : undefined
 

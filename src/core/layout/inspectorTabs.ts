@@ -5,7 +5,14 @@ import type React from 'react'
 export type { InspectorTab } from '@flowkit-shared/constants/tabs'
 export type InspectorMode = 'fixed' | 'floating'
 
-export const ALL_TABS: InspectorTab[] = ['feedback', 'info', 'simulator', 'chapter', 'db', 'sessions']
+export const ALL_TABS: InspectorTab[] = [
+  'feedback',
+  'info',
+  'simulator',
+  'chapter',
+  'db',
+  'sessions',
+]
 
 /** Returns the tabs that should be visible given the current feature flags. */
 export function getVisibleTabs(sessionsEnabled: boolean): InspectorTab[] {

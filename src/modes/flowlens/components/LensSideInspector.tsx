@@ -336,9 +336,7 @@ function OverviewTab({
   replayScreen: string
   onViewAll: () => void
 }) {
-  const topPages = [...metrics.pageMetrics]
-    .sort((a, b) => b.visitCount - a.visitCount)
-    .slice(0, 5)
+  const topPages = [...metrics.pageMetrics].sort((a, b) => b.visitCount - a.visitCount).slice(0, 5)
   const maxVisit = Math.max(1, ...topPages.map(s => s.visitCount))
   const frustrated = metrics.pageMetrics.reduce((n, s) => n + s.frustratedClickCount, 0)
   const dbKeys = Object.keys(db ?? {})

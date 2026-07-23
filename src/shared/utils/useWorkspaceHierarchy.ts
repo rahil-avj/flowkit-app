@@ -34,11 +34,7 @@ import {
 } from '@flowkit-features/flowStory/compileFlowStory'
 import { useFlowPlaybackOptional } from '@flowkit-features/flowStory/FlowPlaybackContext'
 import { DEVICE_PRESETS } from '@flowkit-shared/components/devices'
-import {
-  makePageId,
-  parsePageSegments,
-  pickPageFile,
-} from '@flowkit-shared/utils/pagePathIdentity'
+import { makePageId, parsePageSegments, pickPageFile } from '@flowkit-shared/utils/pagePathIdentity'
 import { getWorkspaceConfig } from '@flowkit-shared/utils/workspaceModules'
 import React, { useMemo } from 'react'
 
@@ -49,10 +45,7 @@ const isSingle = import.meta.env.VITE_SINGLE_WORKSPACE === 'true'
 // ─── Flat mode: virtual module imports ────────────────────────────────────────
 
 import { flowStories as _virtualFlowplans } from 'virtual:flowkit/flowStories'
-import {
-  pageMeta as _virtualPageMeta,
-  screenList as _virtualPageList,
-} from 'virtual:flowkit/pages'
+import { pageMeta as _virtualPageMeta, screenList as _virtualPageList } from 'virtual:flowkit/pages'
 
 // ─── Repo mode: Vite glob maps (string literals only) ────────────────────────
 //

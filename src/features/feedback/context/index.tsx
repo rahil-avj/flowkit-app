@@ -245,14 +245,7 @@ export function FeedbackTabProvider({
       }
     }
 
-    addComment(
-      selectedPage,
-      selectedPageLabel,
-      selectedTags,
-      textInput.trim(),
-      'Me',
-      screenshotUrl
-    )
+    addComment(selectedPage, selectedPageLabel, selectedTags, textInput.trim(), 'Me', screenshotUrl)
     setTextInput('')
     setSelectedTags([])
     setTagInput('')

@@ -61,13 +61,7 @@ function Sequence({
           <div key={i} className="flex flex-col items-start">
             <Connector theme={theme} hide={i === 0 && depth === 0} active={isActive} />
             <div className="flex items-start gap-3">
-              <PageNode
-                step={step}
-                theme={theme}
-                scale={scale}
-                depth={depth}
-                isActive={isActive}
-              />
+              <PageNode step={step} theme={theme} scale={scale} depth={depth} isActive={isActive} />
               {forks.length > 0 && (
                 <div className="flex flex-col gap-2 pt-1.5">
                   {forks.map((fork, fi) => (
