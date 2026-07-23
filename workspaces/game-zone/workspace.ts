@@ -4,7 +4,7 @@ export default defineConfig({
   workspace: { name: 'game-zone' },
   // Screen loaded by default (cold load, device home button, reset-to-first)
   // when no flowplan is active. Falls back to the first declared screen when unset.
-  startScreen: 'hub-screen',
+  startPage: 'hub-screen',
   // Default device shell shown on load. Must match a DevicePreset.label from
   // src/shared/components/devices (e.g. "iPhone 16 Pro"). Falls back to the
   // platform default when unset or unrecognized.
@@ -20,7 +20,7 @@ export default defineConfig({
     'memory-match-flow',
     'math-quiz-flow',
   ],
-  screenOrder: {
+  pageOrder: {
     'intro-flow': ['splash-screen', 'welcome-screen', 'hub-screen'],
     'tic-tac-toe-flow': ['tic-tac-toe-how-to-play-screen', 'tic-tac-toe-game-screen'],
     'dice-flow': ['dice-how-to-play-screen', 'dice-game-screen'],

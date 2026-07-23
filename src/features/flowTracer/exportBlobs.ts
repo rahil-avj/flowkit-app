@@ -92,7 +92,7 @@ export function markdownSummaryBlob(sessions: SessionExport[]): Blob {
       lines.push('')
       for (const sm of topScreens) {
         lines.push(
-          `- **${sm.screenId}**: ${Math.round(sm.avgDwellMs)}ms avg (${sm.visitCount} visit${sm.visitCount !== 1 ? 's' : ''})`
+          `- **${sm.pageId}**: ${Math.round(sm.avgDwellMs)}ms avg (${sm.visitCount} visit${sm.visitCount !== 1 ? 's' : ''})`
         )
       }
       lines.push('')

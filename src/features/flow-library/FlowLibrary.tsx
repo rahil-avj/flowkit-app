@@ -285,7 +285,7 @@ function FlowDetail({ summary, onBack, onPlay, onStop }: FlowDetailProps) {
   const playback = useFlowPlaybackOptional()
 
   // Resolve the active sourceScreenId when this summary's flowplan is playing.
-  // compiledSteps[currentStepIndex].screenId is the compiled (possibly namespaced) id;
+  // compiledSteps[currentStepIndex].pageId is the compiled (possibly namespaced) id;
   // sourceScreenId is the authored id that matches def.steps entries.
   const activeSourceScreenId = useMemo(() => {
     if (!playback?.isGating) return null
@@ -447,11 +447,11 @@ function StepList({ steps, depth, index, activeSourceScreenId }: StepListProps) 
         const step = entry as FlowStep
         stepNum++
         const num = depth === 0 ? stepNum : null
-        const isActive = activeSourceScreenId !== null && step.screenId === activeSourceScreenId
+        const isActive = activeSourceScreenId !== null && step.pageId === activeSourceScreenId
 
         return (
           <StepRow
-            key={`${step.screenId}-${index.join('-')}-${_i}`}
+            key={`${step.pageId}-${index.join('-')}-${_i}`}
             step={step}
             num={num}
             depth={depth}
@@ -522,7 +522,7 @@ function StepRow({
           </span>
         )}
         <span className={`font-mono font-semibold text-ui-xs ${isActive ? 'text-theme-blue' : ''}`}>
-          {step.screenId}
+          {step.pageId}
         </span>
         {step.on && (
           <span className="font-mono self-start px-1.5 py-0.5 rounded text-[10px] text-theme-text-muted bg-theme-base">

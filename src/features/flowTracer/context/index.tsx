@@ -57,7 +57,7 @@ interface SessionRecorderValue {
     y: number,
     screenW: number,
     screenH: number,
-    screenId: string
+    pageId: string
   ) => void
   takeSnapshot: (snap: Omit<SessionSnapshot, 'sessionId' | 'sequenceId'>) => void
   addRemark: (text: string) => void
@@ -333,7 +333,7 @@ export function SessionRecorderProvider({
       if (type === 'flow.entered') flowEntryCountRef.current += 1
       if (type === 'screen.visited') {
         screenCountRef.current += 1
-        setCurrentScreenId((payload.screenId as string) ?? (payload.viewId as string) ?? null)
+        setCurrentScreenId((payload.pageId as string) ?? (payload.viewId as string) ?? null)
       }
       if (type === 'session.remark') {
         remarksRef.current.push({ text: (payload.text as string) ?? '', timestamp: Date.now() })
@@ -503,8 +503,8 @@ export function SessionRecorderProvider({
   )
 
   const logCursorSampleXY = useCallback(
-    (x: number, y: number, screenW: number, screenH: number, screenId: string) => {
-      logCursorSample({ x, y, screenW, screenH, screenId, timestamp: performance.now() })
+    (x: number, y: number, screenW: number, screenH: number, pageId: string) => {
+      logCursorSample({ x, y, screenW, screenH, pageId, timestamp: performance.now() })
     },
     [logCursorSample]
   )

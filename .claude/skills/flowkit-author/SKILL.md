@@ -46,7 +46,7 @@ lib/data/db.ts                                   # mock db — named exports bec
 lib/data/simulator.tsx                           # simulator control panel for this workspace
 lib/design-system/tokens.css
 flows/_tags.ts                                   # annotation tag defs
-workspace.ts                                      # defineConfig() — flows[], screenOrder{}, startScreen
+workspace.ts                                      # defineConfig() — flows[], pageOrder{}, startPage
 .flowkit/components.json                         # empty array — component registry
 flowplans/onboarding-flow.ts
 flowplans/home-flow.ts
@@ -61,11 +61,11 @@ lib/docs/overview.md
 Also registers the workspace in `src/workspaces.json` and runs `flowkit agent:sync` to generate
 `CLAUDE.md`/`AGENTS.md`/`.cursor/rules/flowkit.mdc` for the new workspace. Has rollback on failure.
 
-Demo screens import `ScreenMeta` from `@flowkit/types` and `useAppNav` from `@flowkit-shared/utils`
+Demo screens import `PageMeta` from `@flowkit/types` and `useAppNav` from `@flowkit-shared/utils`
 for navigation (plus `useDashboard` from `@flowkit-shared/contexts` too, on screens that also read
-`db`) — **not** `FlowScreenProps`. They use the direct-navigation convention (see Screen navigation
+`db`) — **not** `PageProps`. They use the direct-navigation convention (see Screen navigation
 conventions below), not the FlowMaster-injected-props convention. Don't assume every scaffolded
-screen uses `FlowScreenProps` — the demo ones deliberately don't.
+screen uses `PageProps` — the demo ones deliberately don't.
 
 ## Flow
 
@@ -74,7 +74,7 @@ flowkit create:flow --name:checkout [--workspace:<name>]
 ```
 
 `--name:` required, kebab-case (enforced by `assertKebab`). Creates `flows/<name>/` and registers
-it in `workspace.ts`'s `flows[]` + initializes `screenOrder[name] = []`
+it in `workspace.ts`'s `flows[]` + initializes `pageOrder[name] = []`
 (`scripts/authoring/flows.js`).
 
 ## Screen
@@ -86,15 +86,15 @@ flowkit create:screen --flow:checkout --name:payment-form [--label:"Payment Form
 `--flow:` and `--name:` required (both kebab-case). `--label:` optional, defaults to title-cased
 name. Fails if the flow doesn't exist yet, or the screen id is already taken.
 
-**Exact output path**: `flows/<flowId>/<screenId>/<PascalName>Screen.{tsx|jsx}` — one directory per
+**Exact output path**: `flows/<flowId>/<pageId>/<PascalName>Screen.{tsx|jsx}` — one directory per
 screen, file suffixed `Screen` (`scripts/authoring/screens.js:118-119`). Confirmed against the real
 scaffold (`WelcomeScreen.tsx` lives at `flows/onboarding-flow/welcome-screen/WelcomeScreen.tsx`) —
 do not assume a flat `flows/<flow>/screens/*.tsx` layout.
 
-Registration into `workspace.ts`'s `screenOrder.<flowId>[]` is **automatic** — no manual config
+Registration into `workspace.ts`'s `pageOrder.<flowId>[]` is **automatic** — no manual config
 edit needed after `create:screen`.
 
-Generated template (TS mode) imports `FlowScreenProps` via the mode-aware helper (see Import
+Generated template (TS mode) imports `PageProps` via the mode-aware helper (see Import
 correctness below) and destructures `{ onNext: _onNext, db: _db }` — underscore-prefixed because
 the placeholder body doesn't use them yet and this repo's `tsconfig` has `noUnusedLocals: true`.
 Rename the `_`-prefixed bindings back to real names as you wire up the screen; the underscore is
@@ -130,7 +130,7 @@ flowkit add:step --flowplan:checkout-flow --screen:payment-form \
 ```
 
 `--flowplan:` and `--screen:` required. `--screen:` is validated against the union of all
-`screenOrder` values — fails with a "did you mean" suggestion if not found. No `--force` flag on
+`pageOrder` values — fails with a "did you mean" suggestion if not found. No `--force` flag on
 this command (unlike some others).
 
 **How the mutation actually works** (`scripts/authoring/flowplans.js`):
@@ -143,7 +143,7 @@ this command (unlike some others).
    comments) is left untouched, but the regex only matches up to the _first_ `]`.
 
 **Consequence — do not use `add:step`/`remove:step` on a flowplan that has `forks`.** The step
-formatter (`formatStep()`) only emits `screenId`/`on`/`actionNote`/`decisionNote`/`annotation` — it
+formatter (`formatStep()`) only emits `pageId`/`on`/`actionNote`/`decisionNote`/`annotation` — it
 has no serialization path for a step's `forks: [...]` array, and the non-greedy regex will match the
 first closing bracket, not the true end of the array, once forks are present. The source comment
 confirms this ("works for simple step arrays (no fork nesting)"). If a flowplan has forks, either
@@ -161,11 +161,11 @@ Forks aren't created via CLI — author them directly in the flowplan file:
 
 ```ts
 {
-  screenId: 'cart-screen',
+  pageId: 'cart-screen',
   on: 'checkout-btn',
   forks: [
-    { label: 'Empty cart', steps: [{ screenId: 'empty-cart-screen' }] },              // terminal
-    { label: 'Payment fails', steps: [{ screenId: 'error-screen' }], mergesTo: 'next' }, // rejoins
+    { label: 'Empty cart', steps: [{ pageId: 'empty-cart-screen' }] },              // terminal
+    { label: 'Payment fails', steps: [{ pageId: 'error-screen' }], mergesTo: 'next' }, // rejoins
   ],
 }
 ```
@@ -190,20 +190,20 @@ you must manually add at the fork site referencing the new flowplan.
 
 ```ts
 steps: [
-  { screenId: 'welcome' },
+  { pageId: 'welcome' },
   { ref: 'shared-auth-flow' }, // FlowplanRef — inlines that flowplan's steps here, namespaced
 ]
 ```
 
 `isFlowplanRef()` type-guards on presence of `ref`. The compiler (`compileFlowplan.ts`) inlines the
-referenced plan's steps at this position when building the runtime `FlowConfig`.
+referenced plan's steps at this position when building the runtime `ChapterConfig`.
 
 ---
 
 # Import correctness — don't hardcode either mode's import path
 
 Any authoring command that generates a **brand-new file** must not hardcode `'flowkit'` or
-`'@flowkit-core/config'` for its `defineFlow`/`defineConfig`/`FlowScreenProps` import — the correct
+`'@flowkit-core/config'` for its `defineFlow`/`defineConfig`/`PageProps` import — the correct
 one depends on repo vs. flat/multi mode. Two helpers in `scripts/helpers/paths.js` exist specifically
 because this was gotten wrong twice before (`create:flowplan` hardcoded `'flowkit'`, breaking repo
 mode; `promote-flow.js` hardcoded `'@flowkit-core/config'`, breaking consumer mode):
@@ -211,7 +211,7 @@ mode; `promote-flow.js` hardcoded `'@flowkit-core/config'`, breaking consumer mo
 ```js
 resolveDefineImport('defineFlow') // → `import { defineFlow } from '@flowkit-core/config'` (repo)
 // → `import { defineFlow } from 'flowkit'`               (flat/multi)
-resolveTypeImport('FlowScreenProps') // same branch, for type-only imports
+resolveTypeImport('PageProps') // same branch, for type-only imports
 ```
 
 If you ever write a new file-generating authoring command, use these — don't inline the import
@@ -224,7 +224,7 @@ mode-awareness requirement.)
 # Screen navigation conventions — two, don't mix
 
 1. **Direct nav — use `useAppNav()`** (`@flowkit-shared/utils`):
-   `const { navigateTo } = useAppNav(); onClick={() => navigateTo(id)}`. No `isFlow` prop, no manual
+   `const { navigateTo } = useAppNav(); onClick={() => navigateTo(id)}`. No `isChapter` prop, no manual
    guard. The hook reads `FlowNavCtx` non-throwing (unlike `useFlowNav()`, which throws outside a
    flow) and picks FlowMaster's flow-aware `navigateTo` (routes through `commitNavigation` — guards,
    animations, debugger, recording) when this screen is rendered inside a flow, or `DashboardContext`'s
@@ -232,7 +232,7 @@ mode-awareness requirement.)
    wrong navigation state machine fires. `scripts/helpers/scaffold.js`'s demo screens use this.
 
    A screen may instead call `useDashboard().navigateTo(id)` directly, guarded with
-   `onClick={() => !isFlow && navigateTo(id)}`. This works, but the guard must be written by hand on
+   `onClick={() => !isChapter && navigateTo(id)}`. This works, but the guard must be written by hand on
    every call site, and forgetting it doesn't throw — it silently _also_ fires during flow playback,
    pushing onto `DashboardContext`'s view history and desyncing it from `FlowEngine`'s step index.
    `useAppNav()` avoids this by never requiring the guard in the first place. `useAppNav()` does not
@@ -240,7 +240,7 @@ mode-awareness requirement.)
    `SetupScreen`/`ReadyScreen`/`HomeScreen`/`DetailScreen` templates for the two-hooks-together
    pattern).
 
-2. **FlowMaster-injected props** (`FlowScreenProps`: `onAction`/`onNext`/`onBack`,
+2. **FlowMaster-injected props** (`PageProps`: `onAction`/`onNext`/`onBack`,
    `src/types/index.ts:413-439`): only non-`undefined` during active flowplan playback. FlowMaster
    also does DOM-`id`-based event delegation independent of any `onClick` — `handleContainerClick`
    (`src/core/layout/FlowMaster.tsx:293-361`) walks up from the click target looking for an
@@ -362,7 +362,7 @@ interface FlowplanDef {
 }
 
 interface FlowStep {
-  screenId: string
+  pageId: string
   on?: string // element id whose tap advances; omit = tap-anywhere
   db?: DotPathPatch
   actionNote?: string // playback overlay caption
@@ -383,15 +383,15 @@ interface FlowplanRef {
   ref: string
 }
 
-interface FlowScreenProps<TState = Record<string, unknown>, TDb = Record<string, unknown>> {
+interface PageProps<TState = Record<string, unknown>, TDb = Record<string, unknown>> {
   onAction?: (actionName: string, payload?: unknown) => void
   onNext?: () => void
   onBack?: () => void
-  isFlow?: boolean
+  isChapter?: boolean
   flowState?: TState
   db?: TDb
 }
 ```
 
-All fields on `FlowScreenProps` are `undefined` when the screen is previewed standalone — check
-`isFlow` to branch, don't assume `onNext` exists.
+All fields on `PageProps` are `undefined` when the screen is previewed standalone — check
+`isChapter` to branch, don't assume `onNext` exists.

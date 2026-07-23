@@ -31,7 +31,7 @@ export default function CursorGhost({ session, currentSequenceId, activeScreenId
     if (samples.length === 0) return null
     const before = samples.filter(s => s.sequenceId <= currentSequenceId)
     const sample = before.length ? before[before.length - 1] : samples[0]
-    if (sample.screenId !== activeScreenId) return null
+    if (sample.pageId !== activeScreenId) return null
     return { x: sample.x / sample.screenW, y: sample.y / sample.screenH }
   }, [session.cursorSamples, currentSequenceId, activeScreenId])
 

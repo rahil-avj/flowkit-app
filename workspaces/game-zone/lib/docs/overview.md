@@ -11,11 +11,11 @@ session tallies) persists to `db` at runtime via `useDb()`.
 ## File organization
 
 ```
-workspace.ts                 # flows[], screenOrder{}, startScreen: 'hub-screen'
+workspace.ts                 # flows[], pageOrder{}, startPage: 'hub-screen'
 flowplans/                   # defineFlow() files — one per named journey
 flows/
   <flow-name>/
-    <screen-name>/<ScreenName>.tsx   # default-exported component + screenMeta
+    <screen-name>/<ScreenName>.tsx   # default-exported component + pageMeta
 lib/
   components/ui/              # shared, reused across every game screen
   game-logic/                 # pure logic, zero React — one file per game (+ deck.ts, shared)
@@ -30,7 +30,7 @@ lib/
 
 Each screen lives in its own folder under its flow (`flows/<flow>/<screen>/`),
 one `.tsx` file per folder, matching the platform's own convention — this is
-what lets `flowkit check`/`plan:ls` discover screens and flowplan `screenId`s
+what lets `flowkit check`/`plan:ls` discover screens and flowplan `pageId`s
 by folder name. Screens import shared code via the `@workspace/lib/...` alias,
 never relative `../../` paths, and only ever import `@flowkit/*` (read-only
 platform code) or plain React — `db`/`navigateTo` are pulled in via hooks
@@ -137,5 +137,5 @@ separate confirmation screen.
 flowkit create:screen --flow:<flow> --name:<screen>   # add a screen
 flowkit create:flow --name:<flow>                     # add a flow
 flowkit create:component --name:<Name> --path:lib/components/ui
-flowkit add:step --flowplan:<id> --screen:<screenId> --action:"description"
+flowkit add:step --flowplan:<id> --screen:<pageId> --action:"description"
 ```

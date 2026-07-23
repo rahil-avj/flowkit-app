@@ -156,7 +156,7 @@ function walkScreenFiles(dir, segments) {
 /**
  * Screen ids the workspace actually defines, in the same composite `${flow}-${screen}`
  * form produced by the app's makeScreenId/useWorkspaceHierarchy — this is what
- * sessionScreenIds() extracts from recorded session events (payload.screenId/.to), so
+ * sessionScreenIds() extracts from recorded session events (payload.pageId/.to), so
  * the two sets must use the same id shape to compare correctly. Hidden (`_`-prefixed)
  * screens are still included here (a session may legitimately reference one); only
  * non-existent (`__`-prefixed) segments are excluded, via walkScreenFiles' pruning.
@@ -169,7 +169,7 @@ export function workspaceScreenIds(ws) {
     if (segments[segments.length - 1] === 'router.tsx') continue
     const parsed = parseScreenSegments(segments)
     if (!parsed) continue
-    ids.add(makeScreenId(parsed.flow, parsed.screen))
+    ids.add(makeScreenId(parsed.flow, parsed.page))
   }
   return ids
 }
@@ -178,7 +178,7 @@ export function workspaceScreenIds(ws) {
 export function sessionScreenIds(session) {
   const ids = new Set()
   for (const e of session.events) {
-    const id = e.payload?.screenId ?? e.payload?.to
+    const id = e.payload?.pageId ?? e.payload?.to
     if (typeof id === 'string') ids.add(id)
   }
   return ids

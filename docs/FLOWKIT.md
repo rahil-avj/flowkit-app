@@ -105,10 +105,10 @@ flowBook/<File>.tsx                          ← 0 folders: flow = "misc", scree
 
 ### Composite screen ids
 
-The registered, cross-flow-unique screen id is `${flowId}-${screenId}` (built by `makeScreenId()`). This makes ids collision-proof: two different flows can each have a screen folder literally named the same thing without colliding, since the flow id is baked into the composite.
+The registered, cross-flow-unique screen id is `${flowId}-${pageId}` (built by `makeScreenId()`). This makes ids collision-proof: two different flows can each have a screen folder literally named the same thing without colliding, since the flow id is baked into the composite.
 
-- **Flowplan step `screenId` values, and any other global/cross-flow reference, use the composite form** (e.g. `onboarding-flow-welcome-screen`).
-- **`workspace.ts`'s `screenOrder` map is the one exception — it stays bare.** Since `screenOrder` is already keyed per-flow (`screenOrder['onboarding-flow'] = ['welcome-screen', ...]`), no composite prefix is needed there to avoid collisions.
+- **Flowplan step `pageId` values, and any other global/cross-flow reference, use the composite form** (e.g. `onboarding-flow-welcome-screen`).
+- **`workspace.ts`'s `pageOrder` map is the one exception — it stays bare.** Since `pageOrder` is already keyed per-flow (`pageOrder['onboarding-flow'] = ['welcome-screen', ...]`), no composite prefix is needed there to avoid collisions.
 
 ### One real screen per folder
 
@@ -118,7 +118,7 @@ If a screen folder contains 2+ unprefixed candidate `.tsx`/`.jsx` files, the sys
 
 A single underscore prefix on a file or folder segment (`_name`) marks it **Hidden**: fully real — parsed, compiled, checked, playable, referenceable by flowplans — just excluded from the default Screens-tab browsing UI. A double underscore prefix (`__name`) marks it **non-existent**: excluded from everything — parsing, checks, flowplan reference resolution, and `flowkit status` counts.
 
-Visibility resolves across the whole path with **parent dominance**: if any ancestor segment in the chain has a `__` prefix, the entire subtree is non-existent regardless of what's inside it; otherwise, if any ancestor has a single `_`, the whole subtree is hidden. `flowkit list:screens` exposes this via `--hidden` (include hidden), `--all` (show every tier, labeled), and `--gone` (show only non-existent items — the one listing mode that scans disk directly, since non-existent items are excluded from `workspace.ts`'s `screenOrder` by definition).
+Visibility resolves across the whole path with **parent dominance**: if any ancestor segment in the chain has a `__` prefix, the entire subtree is non-existent regardless of what's inside it; otherwise, if any ancestor has a single `_`, the whole subtree is hidden. `flowkit list:screens` exposes this via `--hidden` (include hidden), `--all` (show every tier, labeled), and `--gone` (show only non-existent items — the one listing mode that scans disk directly, since non-existent items are excluded from `workspace.ts`'s `pageOrder` by definition).
 
 ### Variant filenames
 
@@ -126,7 +126,7 @@ A screen (or shared component) file can declare variants via a filename suffix: 
 
 ### Annotation tags
 
-Per-screen review badges are declared directly on the screen via `screenMeta.annotations?: AnnotationTag[]` — e.g. `annotations: [{ label: 'new', color: 'green', icon: 'Star' }]`. This replaces the old workspace-level (repo mode) / per-flow (flat mode) `_tags.ts` sidecar file, which has been fully retired with no backward compatibility. `screenMeta.annotations` is distinct from the pre-existing `screenMeta.tags?: string[]` — `tags` is an unrelated freeform filter/grouping-string concept; the two fields coexist and mean different things.
+Per-screen review badges are declared directly on the screen via `pageMeta.annotations?: AnnotationTag[]` — e.g. `annotations: [{ label: 'new', color: 'green', icon: 'Star' }]`. This replaces the old workspace-level (repo mode) / per-flow (flat mode) `_tags.ts` sidecar file, which has been fully retired with no backward compatibility. `pageMeta.annotations` is distinct from the pre-existing `pageMeta.tags?: string[]` — `tags` is an unrelated freeform filter/grouping-string concept; the two fields coexist and mean different things.
 
 ---
 
@@ -151,7 +151,7 @@ Path aliases keep workspace code isolated from platform code and enforce the lay
 **Common imports in screen files:**
 
 ```ts
-import type { FlowScreenProps } from '@flowkit/types'
+import type { PageProps } from '@flowkit/types'
 import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
 import '@workspace/lib/design-system/tokens.css'
 ```
@@ -282,7 +282,7 @@ export default function HomeScreen({ db }) {
 For screen props:
 
 ```js
-/** @param {import('@flowkit/types').FlowScreenProps} props */
+/** @param {import('@flowkit/types').PageProps} props */
 export default function HomeScreen({ db }) { ... }
 ```
 
@@ -498,10 +498,10 @@ A button that calls a function with the full dashboard context:
 
 ## Entry guards
 
-Screens declare access rules in `screenMeta` — evaluated against the live `db`:
+Screens declare access rules in `pageMeta` — evaluated against the live `db`:
 
 ```ts
-export const screenMeta = {
+export const pageMeta = {
   desc: 'Pro feature',
   canEnter: ({ db }) => db.user.plan === 'pro',
   canNotEnter: ({ db }) => !db.auth.isLoggedIn,

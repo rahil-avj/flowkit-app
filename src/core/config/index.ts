@@ -9,7 +9,7 @@ export type {
   FlowplanDef,
   FlowplanRef,
   FlowplanStepEntry,
-  FlowScreenProps,
+  PageProps,
   FlowStep,
   Fork,
   SimulatorControl,

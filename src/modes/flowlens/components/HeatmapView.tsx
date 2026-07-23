@@ -8,7 +8,7 @@ import CursorHeatmap, { heatColor } from './CursorHeatmap'
 
 interface Props {
   views: WireframeView[]
-  screenId: string
+  pageId: string
   samples: CursorSample[]
   width: number
   height: number
@@ -20,16 +20,16 @@ interface Props {
  * Heatmap viewer: the real recorded screen behind, the cursor heat on top, each
  * independently toggleable (bare screen / heat-only / both), plus a color legend.
  */
-export default function HeatmapView({ views, screenId, samples, width, height, caption }: Props) {
+export default function HeatmapView({ views, pageId, samples, width, height, caption }: Props) {
   const [showScreen, setShowScreen] = useState(true)
   const [showHeat, setShowHeat] = useState(true)
 
-  const view = useMemo(() => views.find(v => v.id === screenId), [views, screenId])
+  const view = useMemo(() => views.find(v => v.id === pageId), [views, pageId])
   const ScreenComponent = view?.component
 
   const sampleCount = useMemo(
-    () => samples.filter(s => s.screenId === screenId).length,
-    [samples, screenId]
+    () => samples.filter(s => s.pageId === pageId).length,
+    [samples, pageId]
   )
 
   // Fit the captured-size frame into the available space.
@@ -89,14 +89,14 @@ export default function HeatmapView({ views, screenId, samples, width, height, c
             </div>
           ) : showScreen ? (
             <div className="absolute inset-0 flex items-center justify-center text-theme-text-disabled text-xs">
-              {screenId}{' '}
+              {pageId}{' '}
               <span className="ml-1.5 text-theme-border">(screen not in this workspace)</span>
             </div>
           ) : null}
 
           {/* Heat on top */}
           {showHeat && (
-            <CursorHeatmap samples={samples} screenId={screenId} width={width} height={height} />
+            <CursorHeatmap samples={samples} pageId={pageId} width={width} height={height} />
           )}
 
           {!showScreen && !showHeat && (

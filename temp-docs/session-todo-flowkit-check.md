@@ -18,7 +18,7 @@ Stopped mid-verification. Log of exact state and what's left, so this can be pic
 - `scripts/platform/router.js`, `scripts/platform/plans.js`, `eslint.config.js` — all confirmed
   byte-identical to git HEAD (fully reverted from the earlier detour).
 - `package.json` — `eslint-plugin-boundaries` back to `^6.0.2`, resolver package uninstalled.
-- `scripts/helpers/vite-plugin.d.ts` + `FlowScreenProps` export fix — unrelated, earlier
+- `scripts/helpers/vite-plugin.d.ts` + `PageProps` export fix — unrelated, earlier
   session fix (not part of check-activation work), should stay.
 - Mid-session incident: `scripts/platform/` was accidentally deleted, then restored via
   `git restore` — confirmed fully recovered, CLI works again.

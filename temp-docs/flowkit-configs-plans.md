@@ -73,7 +73,7 @@ interface ExportConfig {
 {
   workspace: {...},
   flows: [...],
-  screenOrder: {...},
+  pageOrder: {...},
   export?: ExportConfig,
 }
 ```
@@ -144,7 +144,7 @@ from this section.
 Continued brainstorming surfaced three problems with the original design:
 
 1. Putting `export` settings inside `flowkit.config.ts` mixed two unrelated
-   concerns — per-workspace content registration (`flows`, `screenOrder`)
+   concerns — per-workspace content registration (`flows`, `pageOrder`)
    and export/build settings — in one file.
 2. The user wanted export settings to live at the **project root**, shared
    across all workspaces in multi-workspace mode, not per-workspace.
@@ -163,7 +163,7 @@ infra hardening, not deferred.
 ### Final decision: two files, two concerns, no overlap
 
 - **`workspace.ts`** (renamed from `flowkit.config.ts`) — unchanged role,
-  still per-workspace (`workspace`/`flows`/`screenOrder`), still
+  still per-workspace (`workspace`/`flows`/`pageOrder`), still
   TypeScript, still read via the existing `esbuild`-based reader in
   `vite-plugin.js`. Lives at project root in flat mode, inside each
   `workspace-N/` folder in multi mode — same location convention as
@@ -356,7 +356,7 @@ checkout`. Flagging here since this directory is explicitly
    memory-tagged as "not stale, don't archive."
 5. **Scaffolded flat-mode demo screens (`HomeScreen`/`DetailScreen`/
    `SetupScreen`/`ReadyScreen`) fail `tsc --noEmit`** in every fresh
-   scaffold — `db?.items ?? []` against `FlowScreenProps`'s `db: Record<string,
+   scaffold — `db?.items ?? []` against `PageProps`'s `db: Record<string,
 unknown>` hits a TS quirk where `unknown` narrowed through `??` becomes
    `{}`, incompatible with an explicit array type annotation. Repo mode's
    own templates (`scaffold.js`) don't hit this because `useDashboard()`

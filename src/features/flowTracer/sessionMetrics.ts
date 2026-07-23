@@ -3,7 +3,7 @@ import type { SessionExport } from './types'
 // ─── Core metric types ────────────────────────────────────────────────────────
 
 export interface ScreenMetrics {
-  screenId: string
+  pageId: string
   visitCount: number
   totalDwellMs: number
   avgDwellMs: number
@@ -62,21 +62,21 @@ export function computeSessionMetrics(session: SessionExport): SessionMetrics {
         screenDwells[currentScreenId] =
           (screenDwells[currentScreenId] ?? 0) + (ev.timestamp - currentScreenEnterTime)
       }
-      const sid = ev.payload.screenId as string
+      const sid = ev.payload.pageId as string
       currentScreenId = sid
       currentScreenEnterTime = ev.timestamp
       screenVisits[sid] = screenVisits[sid] ?? []
       screenVisits[sid].push(ev.timestamp)
     } else if (ev.type === 'screen.dwell-end') {
-      const sid = ev.payload.screenId as string
+      const sid = ev.payload.pageId as string
       const dwell = (ev.payload.dwellMs as number) ?? 0
       screenDwells[sid] = (screenDwells[sid] ?? 0) + dwell
     } else if (ev.type === 'interaction.tap' || ev.type === 'interaction.double-tap') {
-      const sid = ev.payload.screenId as string
+      const sid = ev.payload.pageId as string
       if (sid) screenTaps[sid] = (screenTaps[sid] ?? 0) + 1
       interactionBreakdown[ev.type] = (interactionBreakdown[ev.type] ?? 0) + 1
     } else if (ev.type === 'interaction.frustrated-click') {
-      const sid = ev.payload.screenId as string
+      const sid = ev.payload.pageId as string
       if (sid) screenFrustrated[sid] = (screenFrustrated[sid] ?? 0) + 1
       interactionBreakdown[ev.type] = (interactionBreakdown[ev.type] ?? 0) + 1
     } else if (ev.type.startsWith('interaction.')) {
@@ -108,7 +108,7 @@ export function computeSessionMetrics(session: SessionExport): SessionMetrics {
     const visits = screenVisits[sid].length
     const total = screenDwells[sid] ?? 0
     return {
-      screenId: sid,
+      pageId: sid,
       visitCount: visits,
       totalDwellMs: total,
       avgDwellMs: visits > 0 ? Math.round(total / visits) : 0,

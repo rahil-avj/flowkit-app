@@ -28,7 +28,7 @@ export default function FilterPanel() {
             setFilter(prev => ({
               ...prev,
               filterForCurrentScreen: e.target.checked,
-              screenId: e.target.checked ? prev.screenId : null,
+              pageId: e.target.checked ? prev.pageId : null,
             }))
           }
         />
@@ -47,14 +47,14 @@ export default function FilterPanel() {
       </div>
       {!filter.filterForCurrentScreen && (
         <Select
-          value={filter.screenId || ''}
-          onChange={e => setFilter(prev => ({ ...prev, screenId: e.target.value || null }))}
+          value={filter.pageId || ''}
+          onChange={e => setFilter(prev => ({ ...prev, pageId: e.target.value || null }))}
         >
           <option value="">All screens</option>
-          {Array.from(new Set(comments.map(c => c.screenId))).map(screenId => {
-            const label = comments.find(c => c.screenId === screenId)?.screenLabel || screenId
+          {Array.from(new Set(comments.map(c => c.pageId))).map(pageId => {
+            const label = comments.find(c => c.pageId === pageId)?.screenLabel || pageId
             return (
-              <option key={screenId} value={screenId}>
+              <option key={pageId} value={pageId}>
                 {label}
               </option>
             )
@@ -101,7 +101,7 @@ export default function FilterPanel() {
       </div>
       {hasActiveFilters && (
         <button
-          onClick={() => setFilter(prev => ({ ...prev, screenId: null, tags: new Set() }))}
+          onClick={() => setFilter(prev => ({ ...prev, pageId: null, tags: new Set() }))}
           className="font-bold transition-all border-none bg-transparent cursor-pointer"
           style={{ fontSize: scale.text.xs, color: theme.text.muted, minHeight: scale.minTap }}
           onMouseEnter={e => (e.currentTarget.style.color = theme.accent.red)}

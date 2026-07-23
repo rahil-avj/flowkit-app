@@ -313,8 +313,8 @@ function SessionContent({
         {tab === 'funnel' && <FunnelTab metrics={metrics} onViewAll={() => onViewAll('funnel')} />}
         {tab === 'heatmap' && (
           <HeatmapTab
-            screenId={replayScreen}
-            count={session.cursorSamples?.filter(s => s.screenId === replayScreen).length ?? 0}
+            pageId={replayScreen}
+            count={session.cursorSamples?.filter(s => s.pageId === replayScreen).length ?? 0}
             onViewAll={() => onViewAll('heatmap')}
           />
         )}
@@ -390,7 +390,7 @@ function OverviewTab({
         ) : (
           <div className="flex flex-col gap-1.5">
             {topScreens.map(s => (
-              <MiniBarRow key={s.screenId} label={s.screenId} value={s.visitCount} max={maxVisit} />
+              <MiniBarRow key={s.pageId} label={s.pageId} value={s.visitCount} max={maxVisit} />
             ))}
           </div>
         )}
@@ -425,7 +425,7 @@ function PathsTab({
       ) : (
         <div className="flex flex-col gap-1.5">
           {top.map(n => (
-            <MiniBarRow key={n.screenId} label={n.screenId} value={n.count} max={maxCount} />
+            <MiniBarRow key={n.pageId} label={n.pageId} value={n.count} max={maxCount} />
           ))}
         </div>
       )}
@@ -480,16 +480,16 @@ function FunnelTab({
 }
 
 function HeatmapTab({
-  screenId,
+  pageId,
   count,
   onViewAll,
 }: {
-  screenId: string
+  pageId: string
   count: number
   onViewAll: () => void
 }) {
   return (
-    <TabBody title="Heatmap" hint={`Current screen · ${screenId || '—'}`} onViewAll={onViewAll}>
+    <TabBody title="Heatmap" hint={`Current screen · ${pageId || '—'}`} onViewAll={onViewAll}>
       <QuickStatGrid>
         <QuickStat label="Samples here" value={String(count)} accent />
       </QuickStatGrid>

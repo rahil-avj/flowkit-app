@@ -46,7 +46,7 @@ FlowKit is a browser-based UI prototyping platform built around three values:
 > The creator. May be a designer, PM, or researcher — not necessarily a developer. Directs AI agents (e.g. Claude Code) to author workspace files within the platform's defined conventions. The value proposition: get a working, navigable, data-connected prototype without writing code yourself. The platform's structure is what makes this possible — it gives the agent a predictable lane to work in.
 
 - As a workspace author, I want a scaffolded workspace structure (`flowkit nw`) so an AI agent has an unambiguous starting point and knows exactly what to create and where.
-- As a workspace author, I want the platform to define strict file and code conventions (`FlowScreenProps`, `defineFlow`, `screenMeta`) so agents produce consistent, correct output every time — not improvised variations.
+- As a workspace author, I want the platform to define strict file and code conventions (`PageProps`, `defineFlow`, `pageMeta`) so agents produce consistent, correct output every time — not improvised variations.
 - As a workspace author, I want `flowkit watch` to hot-reload workspace changes so I can see agent-authored screens appear in real time without restarting anything.
 - As a workspace author, I want platform files locked in the `deployment` environment so agents I direct cannot accidentally edit the engine — only workspace files are in play.
 - As a workspace author, I want `flowkit status` and `flowkit plan:ls` so I can understand what exists in my workspace at a glance, without reading code.

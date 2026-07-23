@@ -11,7 +11,7 @@
 //
 // Ported from scripts/helpers/scaffold.js's repo-mode workspaceScaffold() — same
 // flows/screens/content, adapted from the useDashboard() hook (repo mode) to the
-// FlowScreenProps convention (flat mode's documented public API). If you
+// PageProps convention (flat mode's documented public API). If you
 // add/remove a demo screen or flow here, update scaffold.js too —
 // scripts/tests/scaffold-consistency.test.js checks screen/flow counts match,
 // not exact ids (naming conventions already differ: this file omits
@@ -19,7 +19,7 @@
 //
 // NOTE on onAction?.('id') below only working during flow playback: FlowMaster
 // injects onAction/onNext/onBack into a screen only while it's rendered inside
-// an active flowplan (see FlowScreenProps' own JSDoc in src/types/index.ts —
+// an active flowplan (see PageProps' own JSDoc in src/types/index.ts —
 // "automatically injected... by FlowMaster"). These demo screens are correctly
 // inert when viewed standalone (e.g. flat mode's Screens-tab-equivalent
 // preview) — that's not a bug. A screen author wanting the same interactivity
@@ -44,7 +44,7 @@ export function writeFlowkitConfig(dir, workspaceName) {
 export default defineConfig({
   workspace: { name: '${workspaceName}' },
   flows: ['onboarding', 'home'],
-  screenOrder: {
+  pageOrder: {
     onboarding: ['welcome', 'setup', 'ready'],
     home: ['home', 'detail'],
   },
@@ -64,9 +64,9 @@ export default defineFlow({
   name: 'Onboarding',
   description: 'Guides the user through welcome, profile setup, and into the app.',
   steps: [
-    { screenId: 'onboarding-welcome', on: 'get-started', actionNote: 'Taps Get Started' },
-    { screenId: 'onboarding-setup', on: 'continue', actionNote: 'Confirms profile and continues' },
-    { screenId: 'onboarding-ready', on: 'go-to-home', actionNote: 'Proceeds to home' },
+    { pageId: 'onboarding-welcome', on: 'get-started', actionNote: 'Taps Get Started' },
+    { pageId: 'onboarding-setup', on: 'continue', actionNote: 'Confirms profile and continues' },
+    { pageId: 'onboarding-ready', on: 'go-to-home', actionNote: 'Proceeds to home' },
   ],
 })
 `
@@ -80,8 +80,8 @@ export default defineFlow({
   name: 'Home',
   description: 'Browse the item list and view a detail page.',
   steps: [
-    { screenId: 'home-home', on: 'item-1', actionNote: 'Taps the first item' },
-    { screenId: 'home-detail', on: 'back', actionNote: 'Goes back to list' },
+    { pageId: 'home-home', on: 'item-1', actionNote: 'Taps the first item' },
+    { pageId: 'home-detail', on: 'back', actionNote: 'Goes back to list' },
   ],
 })
 `
@@ -105,8 +105,8 @@ export function writeWelcomeScreen(dir, language) {
   const isJs = language === 'js'
   const content = screenFile(
     isJs,
-    `import type { FlowScreenProps } from 'flowkit'`,
-    'FlowScreenProps',
+    `import type { PageProps } from 'flowkit'`,
+    'PageProps',
     `export default function WelcomeScreen({ onAction }__PROPS__) {
   return (
     <div className="flex flex-col h-full bg-theme-base">
@@ -135,7 +135,7 @@ export function writeWelcomeScreen(dir, language) {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const screenMeta = {
+export const pageMeta = {
   id: 'welcome',
   label: 'Welcome Screen',
   // Annotation badges (ephemeral review markers shown in the Screens panel):
@@ -150,10 +150,10 @@ export function writeSetupScreen(dir, language) {
   const isJs = language === 'js'
   const content = screenFile(
     isJs,
-    `import type { FlowScreenProps } from 'flowkit'`,
-    'FlowScreenProps',
+    `import type { PageProps } from 'flowkit'`,
+    'PageProps',
     `export default function SetupScreen({ onAction, db }__PROPS__) {
-  // db is typed Record<string, unknown> in FlowScreenProps — loosen it here,
+  // db is typed Record<string, unknown> in PageProps — loosen it here,
   // same convention repo-mode's useDashboard() hook already uses (db: Record<string, any>).
   const anyDb = ${isJs ? 'db' : 'db as any // eslint-disable-line @typescript-eslint/no-explicit-any'}
 
@@ -194,7 +194,7 @@ export function writeSetupScreen(dir, language) {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const screenMeta = { id: 'setup', label: 'Setup Screen' }
+export const pageMeta = { id: 'setup', label: 'Setup Screen' }
 `
   )
   writeScreen(dir, 'onboarding', 'setup', 'SetupScreen', isJs, content)
@@ -204,10 +204,10 @@ export function writeReadyScreen(dir, language) {
   const isJs = language === 'js'
   const content = screenFile(
     isJs,
-    `import type { FlowScreenProps } from 'flowkit'`,
-    'FlowScreenProps',
+    `import type { PageProps } from 'flowkit'`,
+    'PageProps',
     `export default function ReadyScreen({ onAction, db }__PROPS__) {
-  // db is typed Record<string, unknown> in FlowScreenProps — loosen it here,
+  // db is typed Record<string, unknown> in PageProps — loosen it here,
   // same convention repo-mode's useDashboard() hook already uses (db: Record<string, any>).
   const anyDb = ${isJs ? 'db' : 'db as any // eslint-disable-line @typescript-eslint/no-explicit-any'}
 
@@ -233,7 +233,7 @@ export function writeReadyScreen(dir, language) {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const screenMeta = { id: 'ready', label: 'Ready Screen' }
+export const pageMeta = { id: 'ready', label: 'Ready Screen' }
 `
   )
   writeScreen(dir, 'onboarding', 'ready', 'ReadyScreen', isJs, content)
@@ -247,10 +247,10 @@ export function writeHomeScreen(dir, language) {
   const dbCast = isJs ? 'db' : 'db as any // eslint-disable-line @typescript-eslint/no-explicit-any'
   const content = screenFile(
     isJs,
-    `import type { FlowScreenProps } from 'flowkit'`,
-    'FlowScreenProps',
+    `import type { PageProps } from 'flowkit'`,
+    'PageProps',
     `export default function HomeScreen({ onAction, db }__PROPS__) {
-  // db is typed Record<string, unknown> in FlowScreenProps — loosen it here,
+  // db is typed Record<string, unknown> in PageProps — loosen it here,
   // same convention repo-mode's useDashboard() hook already uses (db: Record<string, any>).
   const anyDb = ${dbCast}
   const items${itemsType} = anyDb?.items ?? []
@@ -289,7 +289,7 @@ export function writeHomeScreen(dir, language) {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const screenMeta = { id: 'home', label: 'Home Screen' }
+export const pageMeta = { id: 'home', label: 'Home Screen' }
 `
   )
   writeScreen(dir, 'home', 'home', 'HomeScreen', isJs, content)
@@ -300,10 +300,10 @@ export function writeDetailScreen(dir, language) {
   const dbCast = isJs ? 'db' : 'db as any // eslint-disable-line @typescript-eslint/no-explicit-any'
   const content = screenFile(
     isJs,
-    `import type { FlowScreenProps } from 'flowkit'`,
-    'FlowScreenProps',
+    `import type { PageProps } from 'flowkit'`,
+    'PageProps',
     `export default function DetailScreen({ onAction, db }__PROPS__) {
-  // db is typed Record<string, unknown> in FlowScreenProps — loosen it here,
+  // db is typed Record<string, unknown> in PageProps — loosen it here,
   // same convention repo-mode's useDashboard() hook already uses (db: Record<string, any>).
   const anyDb = ${dbCast}
   const item = anyDb?.items?.[0]
@@ -341,7 +341,7 @@ export function writeDetailScreen(dir, language) {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const screenMeta = { id: 'detail', label: 'Detail Screen' }
+export const pageMeta = { id: 'detail', label: 'Detail Screen' }
 `
   )
   writeScreen(dir, 'home', 'detail', 'DetailScreen', isJs, content)

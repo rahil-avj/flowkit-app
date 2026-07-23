@@ -37,7 +37,7 @@ const ANNOTATION_ICONS: Record<string, React.ElementType> = {
 
 interface Props {
   /** Called when ▶ on a screen jumps to the Flow Library filtered by that screen. */
-  onFindInLibrary: (screenId: string) => void
+  onFindInLibrary: (pageId: string) => void
   /** Lifted search query from the parent panel header. When provided, hides the internal search bar. */
   search?: string
   /** Lifted tag filter state from the parent panel header. */
@@ -57,7 +57,7 @@ export default function ScreensHierarchy({
   const { tree, tagsByScreen } = useWorkspaceHierarchy(activeWorkspace)
 
   const { comments } = useFeedback()
-  const commentedScreenIds = useMemo(() => new Set(comments.map(c => c.screenId)), [comments])
+  const commentedScreenIds = useMemo(() => new Set(comments.map(c => c.pageId)), [comments])
 
   const [internalSearch, setInternalSearch] = useState('')
   const search = searchProp ?? internalSearch
@@ -170,7 +170,7 @@ function TreeNode({
   screenMatches: (v: WireframeView) => boolean
   commentedScreens: Set<string>
   tagsByScreen: Map<string, AnnotationTag[]>
-  onFindInLibrary: (screenId: string) => void
+  onFindInLibrary: (pageId: string) => void
 }) {
   const { theme, scale } = useTheme()
 

@@ -81,7 +81,7 @@ export interface DashboardContextValue extends DashboardState {
   workspaceConfig: WorkspaceConfig
   /** Active flowplan's declared home screen (FlowplanDef.homeScreen), or null when unset/no flow active. */
   activeFlowHomeScreen: string | null
-  setActiveFlowHomeScreen: (screenId: string | null) => void
+  setActiveFlowHomeScreen: (pageId: string | null) => void
   activeFlowDebugInfo: FlowDebugInfo | null
   setActiveFlowDebugInfo: (info: FlowDebugInfo | null) => void
   flowAutoPlayOverride: Partial<AutoPlayConfig> | null

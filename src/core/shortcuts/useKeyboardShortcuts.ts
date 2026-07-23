@@ -1,4 +1,4 @@
-import type { FlowNode } from '@flowkit/types/index'
+import type { Chapter } from '@flowkit/types/index'
 import { DEBUG_SUB_TABS, type DebugSubTab } from '@flowkit-features/flow-debugger/debugSubTabs'
 import { SIM_SUB_TABS, type SimSubTab } from '@flowkit-features/simulator/simSubTabs'
 import { type Dispatch, type SetStateAction, useEffect, useMemo } from 'react'
@@ -102,7 +102,7 @@ interface SidebarShortcutActions {
 //   Shift+ArrowLeft / Right    Previous / next flow (lands on its first screen)
 
 interface NavigationShortcutActions {
-  flows: FlowNode[]
+  flows: Chapter[]
   activeViewId: string
   navigateTo: (id: string) => void
 }

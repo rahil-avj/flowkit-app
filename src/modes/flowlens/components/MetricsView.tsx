@@ -57,8 +57,8 @@ export default function MetricsView({ metrics }: Props) {
       <Section title="Screen visits">
         {topScreens.map(s => (
           <Row
-            key={s.screenId}
-            label={s.screenId}
+            key={s.pageId}
+            label={s.pageId}
             value={`${s.visitCount}×`}
             sub={`avg ${formatMs(s.avgDwellMs)}`}
             bar={topScreens[0].visitCount > 0 ? s.visitCount / topScreens[0].visitCount : 0}
@@ -88,8 +88,8 @@ export default function MetricsView({ metrics }: Props) {
         <Section title="Frustrated clicks">
           {topFrustrated.map(s => (
             <Row
-              key={s.screenId}
-              label={s.screenId}
+              key={s.pageId}
+              label={s.pageId}
               value={String(s.frustratedClickCount)}
               bar={
                 topFrustrated[0].frustratedClickCount > 0

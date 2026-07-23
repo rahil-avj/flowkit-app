@@ -57,7 +57,7 @@ const [sortDir, setSortDir] = useState<SortDir>('desc')
 
 Add a `toDateInput(ms: number): string` helper alongside `fmtDur`.
 
-Add `activeFilterCount` memo: count of non-default filter fields (screenId, device, connection, minQuality>0, maxQuality<100, tags.length, startAfter, startBefore, completion!='any', source!='any').
+Add `activeFilterCount` memo: count of non-default filter fields (pageId, device, connection, minQuality>0, maxQuality<100, tags.length, startAfter, startBefore, completion!='any', source!='any').
 
 ---
 

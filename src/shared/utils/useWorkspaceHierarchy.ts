@@ -20,25 +20,25 @@
 import type {
   AnnotationTag,
   FlowkitConfig,
-  FlowNode,
+  Chapter,
   FlowplanDef,
-  ScreenMeta,
+  PageMeta,
   WireframeView,
   WorkspaceHierarchyNode,
 } from '@flowkit/types/index'
 import {
   type CompiledFlowplan,
   compileFlowplan,
-  type ResolvedScreen,
+  type ResolvedPage,
   type ScreenResolver,
 } from '@flowkit-features/flowplan/compileFlowplan'
 import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
 import { DEVICE_PRESETS } from '@flowkit-shared/components/devices'
 import { getWorkspaceConfig } from '@flowkit-shared/utils/workspaceModules'
 import {
-  makeScreenId,
-  parseScreenSegments,
-  pickScreenFile,
+  makePageId,
+  parsePageSegments,
+  pickPageFile,
 } from '@flowkit-shared/utils/screenPathIdentity'
 import React, { useMemo } from 'react'
 
@@ -51,7 +51,7 @@ const isSingle = import.meta.env.VITE_SINGLE_WORKSPACE === 'true'
 import { flowplans as _virtualFlowplans } from 'virtual:flowkit/flowplans'
 import {
   screenList as _virtualScreenList,
-  screenMeta as _virtualScreenMeta,
+  pageMeta as _virtualScreenMeta,
 } from 'virtual:flowkit/screens'
 
 // ─── Repo mode: Vite glob maps (string literals only) ────────────────────────
@@ -63,7 +63,7 @@ type FlowplanModule = { default: FlowplanDef }
 type FlowplanGlobMap = Record<string, FlowplanModule>
 type ScreenGlobMap = Record<
   string,
-  () => Promise<{ default: React.ComponentType; screenMeta?: ScreenMeta }>
+  () => Promise<{ default: React.ComponentType; pageMeta?: PageMeta }>
 >
 
 const flowplanModules = import.meta.glob('/workspaces/**/flowStories/*.ts', {
@@ -74,19 +74,19 @@ const projectScreenModules = import.meta.glob(
   '/workspaces/**/flowBook/**/*.tsx'
 ) as ScreenGlobMap
 
-// Eager named-import of screenMeta only — zero cost for files that don't export it.
+// Eager named-import of pageMeta only — zero cost for files that don't export it.
 const screenMetaModules = import.meta.glob('/workspaces/**/flowBook/**/*.tsx', {
   eager: true,
-  import: 'screenMeta',
-}) as Record<string, ScreenMeta | undefined>
+  import: 'pageMeta',
+}) as Record<string, PageMeta | undefined>
 
 // ─── Path parsing — handles both flat and nested layouts ─────────────────────────
 
-interface ScreenPathInfo {
+interface PagePathInfo {
   /** "default" for the base file, else the .variant-<serial>/.v-<serial> token. */
   variant: string
-  flow: string
-  screen: string // the <screen> folder name (last folder) — combined with flow for the id
+  chapter: string
+  page: string // the <page> folder name (last folder) — combined with chapter for the id
   componentName: string // whatever the file itself is named, no suffix required
   /** The project segment, or the workspace name for flat-layout workspaces. */
   project: string
@@ -95,21 +95,17 @@ interface ScreenPathInfo {
 }
 
 /**
- * Parse a screen file path. Returns null if it's not a recognized screen-file
- * extension at all (not a *.tsx/*.jsx). Delegates the actual flow/screen/variant/
+ * Parse a page file path. Returns null if it's not a recognized page-file
+ * extension at all (not a *.tsx/*.jsx). Delegates the actual chapter/page/variant/
  * visibility derivation to the shared, mode-agnostic screenPathIdentity module —
  * see that file for the folder-depth/identity rules (variable depth, first folder =
- * flow, last folder = screen, misc fallback, _/__ visibility).
+ * chapter, last folder = page, misc fallback, _/__ visibility).
  *
  * Handles two layouts:
- *   Flat:   flowBook/<flow>/.../<screen>/<File>[.variant-<x>|.v-<x>].tsx
- *   Nested: projects/<proj>/flowBook/<flow>/.../<screen>/<File>[...].tsx
+ *   Flat:   flowBook/<chapter>/.../<page>/<File>[.variant-<x>|.v-<x>].tsx
+ *   Nested: projects/<proj>/flowBook/<chapter>/.../<page>/<File>[...].tsx
  */
-function parseScreenPath(
-  filePath: string,
-  wsPrefix: string,
-  wsName: string
-): ScreenPathInfo | null {
+function parsePagePath(filePath: string, wsPrefix: string, wsName: string): PagePathInfo | null {
   if (!filePath.startsWith(wsPrefix)) return null
   const rest = filePath.slice(wsPrefix.length)
   const parts = rest.split('/')
@@ -130,13 +126,13 @@ function parseScreenPath(
   }
 
   const segments = parts.slice(flowsIdx + 1)
-  const info = parseScreenSegments(segments)
+  const info = parsePageSegments(segments)
   if (!info) return null
 
   return {
     project,
-    flow: info.flow,
-    screen: info.screen,
+    chapter: info.chapter,
+    page: info.page,
     variant: info.variant,
     componentName: info.componentName,
     visibility: info.visibility,
@@ -158,7 +154,7 @@ function titleCase(s: string): string {
 // ─── Lazy screen wrapper ─────────────────────────────────────────────────────────
 
 function buildLazyComponent(
-  loader: () => Promise<{ default: React.ComponentType; screenMeta?: ScreenMeta }>
+  loader: () => Promise<{ default: React.ComponentType; pageMeta?: PageMeta }>
 ): React.ComponentType {
   const LazyScreen = React.lazy(async () => {
     const mod = await loader()
@@ -176,8 +172,8 @@ function buildLazyComponent(
 // ─── Result shape ───────────────────────────────────────────────────────────────
 
 export interface WorkspaceHierarchyResult {
-  /** Flow library: one FlowNode per Flowplan (with a `-play` runner child). */
-  flows: FlowNode[]
+  /** Flow library: one Chapter per Flowplan (with a `-play` runner child). */
+  flows: Chapter[]
   /** All screens as flat views (merged into ALL_VIEWS by App). */
   views: WireframeView[]
   /** Project → flow → screen tree for the Screens tab. */
@@ -186,9 +182,9 @@ export interface WorkspaceHierarchyResult {
   registry: Map<string, FlowplanDef>
   /** Whether this workspace uses the hierarchy at all. */
   hasHierarchy: boolean
-  /** screenId → active annotation tags (expiresAt filtered). */
+  /** pageId → active annotation tags (expiresAt filtered). */
   tagsByScreen: Map<string, AnnotationTag[]>
-  /** Author-set default screen id from workspace.ts (`startScreen`), if any. */
+  /** Author-set default screen id from workspace.ts (`startPage`), if any. */
   startScreenId?: string
   /** Author-set default device preset label from workspace.ts (`defaultDevice`), if valid. */
   defaultDeviceLabel?: string
@@ -196,7 +192,7 @@ export interface WorkspaceHierarchyResult {
   defaultOrientation?: 'portrait' | 'landscape'
 }
 
-/** Resolves the author-set startScreen/defaultDevice/defaultOrientation config fields
+/** Resolves the author-set startPage/defaultDevice/defaultOrientation config fields
  *  against real screens/device presets. Shared by both the flat and nested builders. */
 function resolveConfigDefaults(
   config: FlowkitConfig,
@@ -207,7 +203,7 @@ function resolveConfigDefaults(
   defaultOrientation?: 'portrait' | 'landscape'
 } {
   const startScreenId =
-    config.startScreen && screensById.has(config.startScreen) ? config.startScreen : undefined
+    config.startPage && screensById.has(config.startPage) ? config.startPage : undefined
 
   const resolvedDevicePreset = config.defaultDevice
     ? DEVICE_PRESETS.find(p => p.label === config.defaultDevice)
@@ -229,17 +225,17 @@ function buildFlatHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   const config = getWorkspaceConfig(activeWorkspace)
 
   // 1. Build screens from virtual:flowkit/screens screenList. genScreens() (flat-mode's
-  //    vite-plugin.js) already derives flow/screenId via the same shared screenPathIdentity
+  //    vite-plugin.js) already derives flow/pageId via the same shared screenPathIdentity
   //    module used here, and pre-filters '__' (non-existent) entries before they ever reach
   //    this list — so no visibility check needed here, only the id/path construction.
   const screensById = new Map<string, ScreenRec>()
   for (const entry of _virtualScreenList) {
-    const { flow, screenId, loader } = entry
+    const { flow, pageId, loader } = entry
     const meta = _virtualScreenMeta[entry.key]
-    const label = meta?.label ?? deriveScreenLabel(screenId)
+    const label = meta?.label ?? deriveScreenLabel(pageId)
     const component = buildLazyComponent(loader)
-    const id = makeScreenId(flow, screenId)
-    const filePath = `flowBook/${flow}/${screenId}`
+    const id = makePageId(flow, pageId)
+    const filePath = `flowBook/${flow}/${pageId}`
     const view: WireframeView = {
       id,
       label,
@@ -269,13 +265,13 @@ function buildFlatHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   const hasHierarchy = screensById.size > 0 || registry.size > 0
 
   // 3. Screen resolver
-  const resolve: ScreenResolver = (screenId: string): ResolvedScreen | undefined => {
-    const rec = screensById.get(screenId)
+  const resolve: ScreenResolver = (pageId: string): ResolvedPage | undefined => {
+    const rec = screensById.get(pageId)
     if (!rec) return undefined
     return { id: rec.id, label: rec.label, component: rec.component }
   }
 
-  // 4. Flow library FlowNodes
+  // 4. Flow library Chapters
   const declaredIds =
     config.flows ?? Object.values(config.projects ?? {}).flatMap(p => p.flows ?? p.modules ?? [])
   const allDefs = [...registry.values()]
@@ -283,7 +279,7 @@ function buildFlatHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
     ...declaredIds.filter(id => registry.has(id)).map(id => registry.get(id)!),
     ...allDefs.filter(d => !declaredIds.includes(d.id)),
   ]
-  const flows: FlowNode[] = []
+  const flows: Chapter[] = []
   for (const def of orderedDefs) {
     const playNode: WireframeView = {
       id: `${def.id}-play`,
@@ -302,10 +298,10 @@ function buildFlatHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   // 6. Tree
   const tree = buildTree([...screensById.values()], config, activeWorkspace)
 
-  // 7. Tags — sourced directly from each screen's own screenMeta.annotations.
-  const metaByScreenId = new Map<string, ScreenMeta | undefined>()
+  // 7. Tags — sourced directly from each screen's own pageMeta.annotations.
+  const metaByScreenId = new Map<string, PageMeta | undefined>()
   for (const entry of _virtualScreenList) {
-    metaByScreenId.set(makeScreenId(entry.flow, entry.screenId), _virtualScreenMeta[entry.key])
+    metaByScreenId.set(makePageId(entry.flow, entry.pageId), _virtualScreenMeta[entry.key])
   }
   const tagsByScreen = buildTagsMap(metaByScreenId)
 
@@ -337,10 +333,10 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   const wsPrefix = `/workspaces/${activeWorkspace}/`
   const config = getWorkspaceConfig(activeWorkspace)
 
-  // 1. Group screen files by their (flow, screen) folder pair, collecting variants.
-  //    Keying by flow+screen together (not screen alone) is what makes two different
-  //    flows' same-named screen folders (e.g. both having a "confirm" folder) resolve
-  //    to two distinct screens instead of silently colliding into one.
+  // 1. Group page files by their (chapter, page) folder pair, collecting variants.
+  //    Keying by chapter+page together (not page alone) is what makes two different
+  //    chapters' same-named page folders (e.g. both having a "confirm" folder) resolve
+  //    to two distinct pages instead of silently colliding into one.
   interface VariantFile {
     serial: string
     component: React.ComponentType
@@ -355,18 +351,18 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   const variantsByScreenKey = new Map<string, VariantFile[]>()
 
   for (const [path, loader] of Object.entries(projectScreenModules)) {
-    const info = parseScreenPath(path, wsPrefix, activeWorkspace)
+    const info = parsePagePath(path, wsPrefix, activeWorkspace)
     if (!info) continue
     if (info.visibility === 'non-existent') continue // '__' — practically non-existent, skip entirely
-    const key = `${info.flow}::${info.screen}::${info.variant}`
+    const key = `${info.chapter}::${info.page}::${info.variant}`
     const list = variantsByScreenKey.get(key) ?? []
     list.push({
       serial: info.variant,
       component: buildLazyComponent(loader),
       filePath: path.slice(wsPrefix.length),
       project: info.project,
-      flow: info.flow,
-      screen: info.screen,
+      flow: info.chapter,
+      screen: info.page,
       componentName: info.componentName,
       fileName: info.fileName,
       visibility: info.visibility,
@@ -374,14 +370,14 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
     variantsByScreenKey.set(key, list)
   }
 
-  // 1b. Within each (flow, screen, variant) bucket, more than one candidate file means
-  //     an ambiguous folder (two unprefixed .tsx files claiming the same screen/variant
+  // 1b. Within each (chapter, page, variant) bucket, more than one candidate file means
+  //     an ambiguous folder (two unprefixed .tsx files claiming the same page/variant
   //     slot) — deterministically pick the alphabetically-first file. The soft
-  //     screen/ambiguous-folder warning for this case is raised by `flowkit check:screens`,
-  //     not here; this hook only needs a stable, working screen to render.
+  //     page/ambiguous-folder warning for this case is raised by `flowkit check:pages`,
+  //     not here; this hook only needs a stable, working page to render.
   const variantsByScreen = new Map<string, VariantFile[]>()
   for (const [key, candidates] of variantsByScreenKey) {
-    const { chosen } = pickScreenFile(candidates.map(c => c.fileName))
+    const { chosen } = pickPageFile(candidates.map(c => c.fileName))
     const winner = candidates.find(c => c.fileName === chosen) ?? candidates[0]
     const [flow, screen] = key.split('::')
     const screenKey = `${flow}::${screen}`
@@ -390,11 +386,11 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
     variantsByScreen.set(screenKey, list)
   }
 
-  // 2. Build a ScreenRec per (flow, screen) pair.
+  // 2. Build a ScreenRec per (chapter, page) pair.
   const screensById = new Map<string, ScreenRec>()
   for (const [screenKey, files] of variantsByScreen) {
     const [flow, screen] = screenKey.split('::')
-    const screenId = makeScreenId(flow, screen)
+    const pageId = makePageId(flow, screen)
     const def = files.find(f => f.serial === 'default') ?? files[0]
     const label = deriveScreenLabel(screen)
     const variants = files
@@ -420,7 +416,7 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
         }
       })
     const view: WireframeView = {
-      id: screenId,
+      id: pageId,
       label,
       component: def.component,
       filePath: def.filePath,
@@ -428,8 +424,8 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
       flow: def.flow,
       project: def.project,
     }
-    screensById.set(screenId, {
-      id: screenId,
+    screensById.set(pageId, {
+      id: pageId,
       label,
       project: def.project,
       flow: def.flow,
@@ -450,13 +446,13 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   const hasHierarchy = screensById.size > 0 || registry.size > 0
 
   // 4. Screen resolver injected into the compiler.
-  const resolve: ScreenResolver = (screenId: string): ResolvedScreen | undefined => {
-    const rec = screensById.get(screenId)
+  const resolve: ScreenResolver = (pageId: string): ResolvedPage | undefined => {
+    const rec = screensById.get(pageId)
     if (!rec) return undefined
     return { id: rec.id, label: rec.label, component: rec.component }
   }
 
-  // 5. Flow library FlowNodes — one per flowplan, with a `-play` runner child.
+  // 5. Flow library Chapters — one per flowplan, with a `-play` runner child.
   //    Flat layout: order from config.flows[]. Nested: from config.projects[*].flows[].
   const declaredIds =
     config.flows ?? Object.values(config.projects ?? {}).flatMap(p => p.flows ?? p.modules ?? [])
@@ -465,7 +461,7 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
     ...declaredIds.filter(id => registry.has(id)).map(id => registry.get(id)!),
     ...allDefs.filter(d => !declaredIds.includes(d.id)),
   ]
-  const flows: FlowNode[] = []
+  const flows: Chapter[] = []
   for (const def of orderedDefs) {
     const playNode: WireframeView = {
       id: `${def.id}-play`,
@@ -484,14 +480,14 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   // 7. Tree: project → flow → screen.
   const tree = buildTree([...screensById.values()], config, activeWorkspace)
 
-  // 8. Tags — sourced directly from each screen's own screenMeta.annotations
+  // 8. Tags — sourced directly from each screen's own pageMeta.annotations
   //    (screenMetaModules is already eagerly globbed above, keyed by full workspace path).
-  const metaByScreenId = new Map<string, ScreenMeta | undefined>()
+  const metaByScreenId = new Map<string, PageMeta | undefined>()
   for (const [screenKey, files] of variantsByScreen) {
     const [flow, screen] = screenKey.split('::')
     const def = files.find(f => f.serial === 'default') ?? files[0]
     const metaKey = `${wsPrefix}${def.filePath}`
-    metaByScreenId.set(makeScreenId(flow, screen), screenMetaModules[metaKey])
+    metaByScreenId.set(makePageId(flow, screen), screenMetaModules[metaKey])
   }
   const tagsByScreen = buildTagsMap(metaByScreenId)
 
@@ -521,8 +517,8 @@ function buildTree(
 
   const projectNodes: WorkspaceHierarchyNode[] = []
   for (const [project, flowsMap] of projects) {
-    // Flat layout: top-level config.flows + config.screenOrder (project === wsName)
-    // Nested layout: config.projects[project].flows + .screenOrder
+    // Flat layout: top-level config.flows + config.pageOrder (project === wsName)
+    // Nested layout: config.projects[project].flows + .pageOrder
     const projCfg = config.projects?.[project]
     const declaredOrder: string[] =
       (project === wsName ? config.flows : undefined) ?? projCfg?.flows ?? projCfg?.modules ?? []
@@ -536,8 +532,8 @@ function buildTree(
     const flowNodes: WorkspaceHierarchyNode[] = []
     for (const [flow, flowViews] of orderedFlows) {
       const declaredScreens: string[] =
-        (project === wsName ? config.screenOrder?.[flow] : undefined) ??
-        projCfg?.screenOrder?.[flow] ??
+        (project === wsName ? config.pageOrder?.[flow] : undefined) ??
+        projCfg?.pageOrder?.[flow] ??
         []
       const sortedViews =
         declaredScreens.length === 0
@@ -629,16 +625,16 @@ function makeFlowplanRunner(
 // ─── Hook ────────────────────────────────────────────────────────────────────────
 
 /**
- * Builds screenId → active annotations (expiresAt filtered) directly from each screen's
- * own screenMeta.annotations — replaces the old workspace-level `_tags.ts` sidecar file.
- * `metaByScreenId` maps a screen's final id (flowname-screenname) to its parsed ScreenMeta.
+ * Builds pageId → active annotations (expiresAt filtered) directly from each screen's
+ * own pageMeta.annotations — replaces the old workspace-level `_tags.ts` sidecar file.
+ * `metaByScreenId` maps a screen's final id (flowname-screenname) to its parsed PageMeta.
  */
-function buildTagsMap(metaByScreenId: Map<string, ScreenMeta | undefined>): Map<string, AnnotationTag[]> {
+function buildTagsMap(metaByScreenId: Map<string, PageMeta | undefined>): Map<string, AnnotationTag[]> {
   const today = new Date().toISOString().slice(0, 10)
   const map = new Map<string, AnnotationTag[]>()
-  for (const [screenId, meta] of metaByScreenId) {
+  for (const [pageId, meta] of metaByScreenId) {
     const active = (meta?.annotations ?? []).filter(t => !t.expiresAt || t.expiresAt > today)
-    if (active.length > 0) map.set(screenId, active)
+    if (active.length > 0) map.set(pageId, active)
   }
   return map
 }

@@ -103,7 +103,7 @@ export default function SessionInspect({ sessionId, onBack }: Props) {
 
   const screenPath: { id: string; dwell: number | null }[] = []
   for (let i = 0; i < screenVisits.length; i++) {
-    const id = (screenVisits[i].payload.screenId ??
+    const id = (screenVisits[i].payload.pageId ??
       screenVisits[i].payload.viewId ??
       'unknown') as string
     const next = screenVisits[i + 1]

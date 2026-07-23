@@ -1,6 +1,6 @@
 import type { PatchScript, ScreenMetaPatchEntry } from './types'
 
-// ─── Screen Meta Patch ────────────────────────────────────────────────────────
+// ─── Page Meta Patch ────────────────────────────────────────────────────────
 // Migrated from DevModeContext.generateScript / generateRestoreScript.
 
 export function generateScreenMetaPatch(
@@ -39,7 +39,7 @@ console.log('Backup saved to .flowkit-backup.json');
 
 patches.forEach(({ filePath, desc, devNotes, isStandalone, hasTag, tags, label }) => {
   let src = fs.readFileSync(filePath, 'utf8');
-  const lines = ['export const screenMeta: ScreenMeta = {'];
+  const lines = ['export const pageMeta: PageMeta = {'];
   if (desc) lines.push('  desc: ' + JSON.stringify(desc) + ',');
   if (devNotes) lines.push('  devNotes: ' + JSON.stringify(devNotes) + ',');
   if (isStandalone) lines.push('  isStandalone: true,');
@@ -47,8 +47,8 @@ patches.forEach(({ filePath, desc, devNotes, isStandalone, hasTag, tags, label }
   if (tags && tags.length > 0) lines.push('  tags: ' + JSON.stringify(tags) + ',');
   lines.push('};');
   const newMeta = lines.join('\\n');
-  if (/export const screenMeta/.test(src)) {
-    src = src.replace(/export const screenMeta[^=]*=\\s*\\{[\\s\\S]*?\\n\\};/, newMeta);
+  if (/export const pageMeta/.test(src)) {
+    src = src.replace(/export const pageMeta[^=]*=\\s*\\{[\\s\\S]*?\\n\\};/, newMeta);
   } else {
     src = src.trimEnd() + '\\n\\n' + newMeta + '\\n';
   }

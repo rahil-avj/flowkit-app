@@ -36,14 +36,14 @@ my-project/
 
 ## Config
 
-`flowkit.config.ts` — your flows and screen order:
+`flowkit.config.ts` — your flows and page order:
 
 ```ts
 import { defineConfig } from 'flowkit'
 
 export default defineConfig({
   flows: ['onboarding'],
-  screenOrder: { onboarding: ['welcome'] },
+  pageOrder: { onboarding: ['welcome'] },
 })
 ```
 
@@ -61,15 +61,15 @@ The plugin reads your config, generates the screen/config virtual modules, and e
 ## Adding a screen
 
 1. `flowBook/<flow>/<screen-id>/<ScreenName>.tsx` — the filename doesn't need a `Screen` suffix, and you can nest extra cosmetic folders between `<flow>` and `<screen-id>` if you want; only the first and last path segments matter for identity
-2. Add the bare screen id to `screenOrder.<flow>` in `flowkit.config.ts` (screenOrder stays bare/flow-scoped — it's the flowplan step `screenId` that uses the composite `<flow>-<screen-id>` form, see below)
+2. Add the bare screen id to `pageOrder.<flow>` in `flowkit.config.ts` (pageOrder stays bare/flow-scoped — it's the flowplan step `pageId` that uses the composite `<flow>-<screen-id>` form, see below)
 3. Save — dev server picks it up via HMR, no restart
 
 Screens only ever import from React and the platform-injected props:
 
 ```tsx
-import type { FlowScreenProps } from 'flowkit'
+import type { PageProps } from 'flowkit'
 
-export default function WelcomeScreen({ onNext, db }: FlowScreenProps) {
+export default function WelcomeScreen({ onNext, db }: PageProps) {
   return <button onClick={onNext}>Hello {db?.user?.name}</button>
 }
 ```
@@ -79,10 +79,10 @@ export default function WelcomeScreen({ onNext, db }: FlowScreenProps) {
 Edit `flowStories/<flow>.ts`, append to `steps[]`:
 
 ```ts
-{ screenId: 'onboarding-welcome', on: 'next', actionNote: 'user taps continue' }
+{ pageId: 'onboarding-welcome', on: 'next', actionNote: 'user taps continue' }
 ```
 
-(`screenId` is the composite `<flow>-<screen-id>` form here, not the bare id used in `screenOrder`.)
+(`pageId` is the composite `<flow>-<screen-id>` form here, not the bare id used in `pageOrder`.)
 
 ## CLI
 

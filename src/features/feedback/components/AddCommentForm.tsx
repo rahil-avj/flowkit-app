@@ -70,12 +70,12 @@ export default function AddCommentForm() {
         }}
       >
         <option value="|">Choose a screen...</option>
-        {Array.from(new Set(comments.map(c => c.screenId)))
+        {Array.from(new Set(comments.map(c => c.pageId)))
           .concat(views.filter(v => !v.id.endsWith('-play')).map(v => v.id))
           .filter((id, idx, arr) => arr.indexOf(id) === idx)
           .map(id => {
             const label =
-              comments.find(c => c.screenId === id)?.screenLabel ||
+              comments.find(c => c.pageId === id)?.screenLabel ||
               views.find(v => v.id === id)?.label ||
               id
             return (

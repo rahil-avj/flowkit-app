@@ -36,7 +36,7 @@ workspaces/<ws>/
         ConfirmationScreen.tsx
 ```
 
-Screens are discovered at runtime by `useWorkspaceHierarchy()` via Vite glob — no router file is generated or needed. Screen folders can nest to any depth under `flowBook/<flow>/` (extra cosmetic folders in between are ignored for identity), and the registered, cross-flow-unique screen id is the composite `${flowId}-${screenId}` — see [FLOWKIT.md](FLOWKIT.md#screen-authoring-folders-identity-and-visibility) for the full identity/visibility rules. The step examples below use bare ids for brevity; in a real flowplan, `screenId` values are the composite form.
+Screens are discovered at runtime by `useWorkspaceHierarchy()` via Vite glob — no router file is generated or needed. Screen folders can nest to any depth under `flowBook/<flow>/` (extra cosmetic folders in between are ignored for identity), and the registered, cross-flow-unique screen id is the composite `${flowId}-${pageId}` — see [FLOWKIT.md](FLOWKIT.md#screen-authoring-folders-identity-and-visibility) for the full identity/visibility rules. The step examples below use bare ids for brevity; in a real flowplan, `pageId` values are the composite form.
 
 ---
 
@@ -68,7 +68,7 @@ export default defineFlow({
 
   steps: [
     {
-      screenId: 'cart', // required — id of the screen to show
+      pageId: 'cart', // required — id of the screen to show
       on: 'checkout-btn', // element id whose tap advances this step (omit = tap-anywhere)
       actionNote: 'Taps Checkout', // what the user does (shown during playback)
       decisionNote: 'Entry point.',
@@ -76,20 +76,20 @@ export default defineFlow({
       db: { 'cart.count': 1 }, // step-level db patch applied when this step activates
     },
     {
-      screenId: 'payment',
+      pageId: 'payment',
       on: 'submit-btn',
       actionNote: 'Reviews cart, submits payment',
       forks: [
         {
           label: 'Empty cart',
           db: { 'cart.count': 0 },
-          steps: [{ screenId: 'cart-empty', actionNote: 'Sees empty state' }],
+          steps: [{ pageId: 'cart-empty', actionNote: 'Sees empty state' }],
           // mergesTo: 'next',  // rejoin the main flow after the fork; omit = terminal branch
         },
       ],
     },
     {
-      screenId: 'confirmation',
+      pageId: 'confirmation',
       actionNote: 'Sees confirmation',
       decisionNote: 'End of happy path.',
     },
@@ -102,16 +102,16 @@ export default defineFlow({
 
 ### Step fields
 
-| Field          | Purpose                                                        |
-| -------------- | -------------------------------------------------------------- |
-| `screenId`     | Composite `${flowId}-${screenId}` id of the screen to show (required) |
-| `on`           | Element id whose tap advances this step; omit for tap-anywhere |
-| `actionNote`   | What the user does — shown as caption during playback          |
-| `decisionNote` | Narrative note shown in the step list                          |
-| `annotation`   | Free-text sticky note shown on canvas node and step list       |
-| `db`           | Dot-path patch applied to the flow db when this step activates |
-| `simulator`    | Per-step simulator control visibility (add/hide/exclusive)     |
-| `forks`        | Inline conditional branches (see below)                        |
+| Field          | Purpose                                                             |
+| -------------- | ------------------------------------------------------------------- |
+| `pageId`       | Composite `${flowId}-${pageId}` id of the screen to show (required) |
+| `on`           | Element id whose tap advances this step; omit for tap-anywhere      |
+| `actionNote`   | What the user does — shown as caption during playback               |
+| `decisionNote` | Narrative note shown in the step list                               |
+| `annotation`   | Free-text sticky note shown on canvas node and step list            |
+| `db`           | Dot-path patch applied to the flow db when this step activates      |
+| `simulator`    | Per-step simulator control visibility (add/hide/exclusive)          |
+| `forks`        | Inline conditional branches (see below)                             |
 
 ### Fork fields
 
@@ -133,14 +133,14 @@ export default defineFlow({
 Screens render UI and give elements ids. Navigation is wired in the flowplan — screens never import routing logic.
 
 ```tsx
-import type { FlowScreenProps } from '@flowkit/types'
+import type { PageProps } from '@flowkit/types'
 
 interface MyDb {
   auth: { isLoggedIn: boolean }
   user: { name: string }
 }
 
-export default function CartScreen({ db }: FlowScreenProps<unknown, MyDb>) {
+export default function CartScreen({ db }: PageProps<unknown, MyDb>) {
   return (
     <div>
       <p>Hello, {db?.user?.name}</p>
@@ -150,7 +150,7 @@ export default function CartScreen({ db }: FlowScreenProps<unknown, MyDb>) {
   )
 }
 
-export const screenMeta = {
+export const pageMeta = {
   desc: 'Shopping cart view',
   isStandalone: true, // entry point — not reached via back-nav
   canEnter: ({ db }) => db.auth.isLoggedIn,
@@ -158,11 +158,11 @@ export const screenMeta = {
 }
 ```
 
-### `FlowScreenProps` fields
+### `PageProps` fields
 
 | Prop        | Type                       | Description                                                                  |
 | ----------- | -------------------------- | ---------------------------------------------------------------------------- |
-| `isFlow`    | `boolean`                  | `true` when rendered inside FlowMaster                                       |
+| `isChapter` | `boolean`                  | `true` when rendered inside FlowMaster                                       |
 | `flowState` | `TState`                   | Local sandbox state for this flow                                            |
 | `db`        | `TDb`                      | Global mock db (live reference)                                              |
 | `onAction`  | `(name, payload?) => void` | Trigger a named interaction programmatically (form submits, async callbacks) |
@@ -171,9 +171,9 @@ export const screenMeta = {
 
 > Prefer element `id` + flowplan `on:` over `onAction`/`onNext`/`onBack` for simple taps — it keeps screens free of routing logic.
 
-> **Screens tab vs. Flows tab:** `onAction`/`onNext`/`onBack` are only wired up during flowplan playback (Flows tab / FlowMaster) — those callbacks are `undefined` when a screen is viewed standalone from the **Screens tab**, so `onClick={() => onNext?.()}`-style handlers no-op silently there. That's by design, not a bug. If a screen should also be freely clickable from the Screens tab, use `useAppNav()` instead: `const { navigateTo } = useAppNav(); onClick={() => navigateTo(id)}` (see "Navigate from screen logic" below). `useAppNav()` picks the flow-aware `navigateTo` automatically when the screen is rendered inside a flow, so it's always safe to call unconditionally — no `isFlow` check needed in the screen's own code.
+> **Screens tab vs. Flows tab:** `onAction`/`onNext`/`onBack` are only wired up during flowplan playback (Flows tab / FlowMaster) — those callbacks are `undefined` when a screen is viewed standalone from the **Screens tab**, so `onClick={() => onNext?.()}`-style handlers no-op silently there. That's by design, not a bug. If a screen should also be freely clickable from the Screens tab, use `useAppNav()` instead: `const { navigateTo } = useAppNav(); onClick={() => navigateTo(id)}` (see "Navigate from screen logic" below). `useAppNav()` picks the flow-aware `navigateTo` automatically when the screen is rendered inside a flow, so it's always safe to call unconditionally — no `isChapter` check needed in the screen's own code.
 
-### `screenMeta` fields
+### `pageMeta` fields
 
 | Field          | Type                  | Purpose                                                                         |
 | -------------- | --------------------- | ------------------------------------------------------------------------------- |
@@ -196,7 +196,7 @@ export const screenMeta = {
 Guards receive the live `db` and return a boolean. Both can coexist — if either blocks, the guard fails.
 
 ```ts
-export const screenMeta = {
+export const pageMeta = {
   desc: 'Pro feature',
   canEnter: ({ db }) => db.user.plan === 'pro',
   canNotEnter: ({ db }) => !db.auth.isLoggedIn,
@@ -226,7 +226,7 @@ Targets: a screen id, `"next"`, `"back"`, or `"complete"`.
 
 > **During flow playback**, use `useFlowNav()`, not `useDashboard()`'s `navigateTo` — guards, animations, and session replay only fire through FlowMaster's `commitNavigation`. `useFlowNav()` itself throws if called from a screen with no `FlowMaster` ancestor (i.e. previewed standalone from the Screens tab), so it isn't a drop-in replacement there.
 >
-> A screen that should **also** be freely clickable from the Screens tab (no flow active) should call `useAppNav()` (`@flowkit-shared/utils`) instead of `useFlowNav()` or `useDashboard()` directly: `const { navigateTo } = useAppNav(); onClick={() => navigateTo(id)}`. `useAppNav()` reads whichever navigation context actually applies — FlowMaster's flow-aware one when rendered inside a flow, `DashboardContext`'s otherwise — so the same call is correct in both places with no `isFlow` check written by the screen. See `scripts/helpers/scaffold.js`'s demo screens for the pattern.
+> A screen that should **also** be freely clickable from the Screens tab (no flow active) should call `useAppNav()` (`@flowkit-shared/utils`) instead of `useFlowNav()` or `useDashboard()` directly: `const { navigateTo } = useAppNav(); onClick={() => navigateTo(id)}`. `useAppNav()` reads whichever navigation context actually applies — FlowMaster's flow-aware one when rendered inside a flow, `DashboardContext`'s otherwise — so the same call is correct in both places with no `isChapter` check written by the screen. See `scripts/helpers/scaffold.js`'s demo screens for the pattern.
 
 ---
 

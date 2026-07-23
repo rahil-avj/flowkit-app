@@ -16,7 +16,7 @@ export interface FlowNavContextValue {
   /** Go back to the previous screen. */
   goBack: () => void
   /** True when this screen is rendered inside a FlowMaster. */
-  isFlow: boolean
+  isChapter: boolean
   /** Flow-local sandbox state. */
   flowState: Record<string, unknown>
 }

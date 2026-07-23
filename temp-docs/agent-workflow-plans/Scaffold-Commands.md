@@ -12,7 +12,7 @@
 >   hardcoded `@platform/core/config` shown in this doc's templates.
 > - Screen files land at `flows/<flow>/<screen-id>/<PascalName>Screen.tsx` (one directory per screen,
 >   `Screen`-suffixed filename) — matches what this doc describes, but the screen template itself
->   imports `useDashboard` from `@flowkit-shared/contexts` and `ScreenMeta`/`FlowScreenProps` from
+>   imports `useDashboard` from `@flowkit-shared/contexts` and `PageMeta`/`PageProps` from
 >   `@flowkit/types`, not `@platform/shared/contexts`/`@platform/types`.
 > - `add:step`/`remove:step` now refuse (exit 1, file untouched) on a flowplan containing `forks` —
 >   the non-greedy regex rewrite this doc describes can't safely serialize nested fork structures.
@@ -76,45 +76,45 @@ The foundation for all scaffold commands that touch `flowkit.config.ts`. The con
 
 ```js
 readConfig(wsDir)
-// Returns parsed { workspace, flows: string[], screenOrder: Record<string, string[]> }
+// Returns parsed { workspace, flows: string[], pageOrder: Record<string, string[]> }
 // Uses dynamic import via jiti/eval on the .ts file
 
 addFlow(configPath, flowId)
 // Inserts flowId into flows[] array
-// Adds flowId: [] entry into screenOrder
+// Adds flowId: [] entry into pageOrder
 // Writes back; preserves formatting
 
 removeFlow(configPath, flowId)
 // Removes flowId from flows[]
-// Removes flowId: [...] from screenOrder
+// Removes flowId: [...] from pageOrder
 // Writes back
 
-addScreen(configPath, flowId, screenId, position)
-// Appends screenId to screenOrder[flowId][]
+addScreen(configPath, flowId, pageId, position)
+// Appends pageId to pageOrder[flowId][]
 // Optionally inserts at position N instead of end
 
-removeScreen(configPath, flowId, screenId)
-// Removes screenId from screenOrder[flowId][]
+removeScreen(configPath, flowId, pageId)
+// Removes pageId from pageOrder[flowId][]
 
 renameScreen(configPath, flowId, oldId, newId)
-// Replaces screenId string in screenOrder[flowId][]
+// Replaces pageId string in pageOrder[flowId][]
 
-moveScreen(configPath, screenId, fromFlowId, toFlowId)
-// Removes from one flow's screenOrder, appends to other
+moveScreen(configPath, pageId, fromFlowId, toFlowId)
+// Removes from one flow's pageOrder, appends to other
 ```
 
 **Implementation approach — regex-based patching on stable format:**
 
 ```js
 // Example: addScreen
-function addScreen(configPath, flowId, screenId) {
+function addScreen(configPath, flowId, pageId) {
   let src = fs.readFileSync(configPath, 'utf8')
   // Find the flow's array and append before its closing ]
   const flowPattern = new RegExp(`(${flowId}:\\s*\\[)([^\\]]*)(\\])`, 's')
   src = src.replace(flowPattern, (_, open, inner, close) => {
     const trimmed = inner.trimEnd()
     const sep = trimmed.length ? ',\n    ' : '\n    '
-    return `${open}${inner.trimEnd()}${sep}'${screenId}',\n  ${close}`
+    return `${open}${inner.trimEnd()}${sep}'${pageId}',\n  ${close}`
   })
   fs.writeFileSync(configPath, src)
 }
@@ -201,14 +201,14 @@ flowkit create:screen --flow:<flow> --name:<screen-id> [--label:"Display Name"] 
 1. Validate flow exists in config, screen ID doesn't already exist
 2. `mkdir workspaces/<ws>/flows/<flow>/<screen-id>/`
 3. Write `<PascalName>Screen.tsx` (template below)
-4. `config-patch.addScreen(configPath, flow, screenId)`
+4. `config-patch.addScreen(configPath, flow, pageId)`
 5. Print success + file path
 
 **Screen TSX template:**
 
 ```tsx
 import { useDashboard } from '@platform/shared/contexts'
-import type { ScreenMeta } from '@platform/types'
+import type { PageMeta } from '@platform/types'
 
 export default function ${PascalName}Screen() {
   // useDashboard gives you: navigateTo, db, and simulator state
@@ -224,7 +224,7 @@ export default function ${PascalName}Screen() {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const screenMeta: ScreenMeta = {
+export const pageMeta: PageMeta = {
   label: '${label}',
   desc: '',   // one-sentence description of what this screen does
 }
@@ -235,7 +235,7 @@ export const screenMeta: ScreenMeta = {
 ```
 ✓ Directory:  flows/auth/sign-in/
 ✓ Screen:     flows/auth/sign-in/SignInScreen.tsx
-✓ Registered: flowkit.config.ts → screenOrder.auth[]
+✓ Registered: flowkit.config.ts → pageOrder.auth[]
 
 Next: flowkit create:flowplan --name:auth  (to script this flow)
 ```
@@ -246,7 +246,7 @@ Next: flowkit create:flowplan --name:auth  (to script this flow)
 flowkit remove:screen --flow:<flow> --name:<screen-id> [--workspace:<ws>]
 ```
 
-Removes directory + unregisters from config. Warns if any flowplan step references this screenId (does not block, just warns).
+Removes directory + unregisters from config. Warns if any flowplan step references this pageId (does not block, just warns).
 
 ### `rename:screen`
 
@@ -270,7 +270,7 @@ Moves directory, updates both flows in config.
 flowkit list:screens [--flow:<flow>] [--workspace:<ws>]
 ```
 
-Reads config, prints screenId list per flow (or for one flow).
+Reads config, prints pageId list per flow (or for one flow).
 
 ### `screen:info`
 
@@ -278,7 +278,7 @@ Reads config, prints screenId list per flow (or for one flow).
 flowkit screen:info --flow:<flow> --name:<screen-id> [--workspace:<ws>]
 ```
 
-Reads the screen file, extracts and prints: component name, screenMeta fields, imports used.
+Reads the screen file, extracts and prints: component name, pageMeta fields, imports used.
 
 ---
 
@@ -305,7 +305,7 @@ import { defineFlow } from '@platform/core/config'
 
 // Flowplan: ${name}
 // This script sequences screens in the '${id}' flow for guided playback.
-// Add steps with: flowkit add:step --flowplan:${id} --screen:<screenId> --action:"description"
+// Add steps with: flowkit add:step --flowplan:${id} --screen:<pageId> --action:"description"
 
 export default defineFlow({
   id: '${id}',
@@ -313,7 +313,7 @@ export default defineFlow({
   description: '',
 
   steps: [
-    // { screenId: 'screen-id', on: 'button-element-id', actionNote: 'What the user does' },
+    // { pageId: 'screen-id', on: 'button-element-id', actionNote: 'What the user does' },
   ],
 })
 ```
@@ -338,15 +338,15 @@ Requires `--force` to confirm deletion. No config update needed (flowplans are a
 ### `add:step`
 
 ```
-flowkit add:step --flowplan:<id> --screen:<screenId> [--on:<element-id>] [--action:"note"] [--position:<n>] [--workspace:<ws>]
+flowkit add:step --flowplan:<id> --screen:<pageId> [--on:<element-id>] [--action:"note"] [--position:<n>] [--workspace:<ws>]
 ```
 
-**Validation:** Checks that `screenId` exists in the workspace before writing. This is the first piece of flowlint-style checking built into the CLI.
+**Validation:** Checks that `pageId` exists in the workspace before writing. This is the first piece of flowlint-style checking built into the CLI.
 
 Reads current flowplan file, finds `steps: [` array, appends (or inserts at position N):
 
 ```ts
-{ screenId: 'sign-in', on: 'submit-btn', actionNote: 'User taps Sign In' },
+{ pageId: 'sign-in', on: 'submit-btn', actionNote: 'User taps Sign In' },
 ```
 
 ### `remove:step`
@@ -361,7 +361,7 @@ flowkit remove:step --flowplan:<id> --index:<n> [--workspace:<ws>]
 flowkit list:steps --flowplan:<id> [--workspace:<ws>]
 ```
 
-Imports/evaluates the flowplan file, prints each step as a numbered list with screenId + actionNote.
+Imports/evaluates the flowplan file, prints each step as a numbered list with pageId + actionNote.
 
 ### `flowplan:info`
 
@@ -590,17 +590,17 @@ Build in dependency order — each step can be tested before starting the next:
 # 1. Flow scaffold
 flowkit create:flow --name:test-flow
 # → creates workspaces/<active>/flows/test-flow/
-# → flowkit.config.ts has 'test-flow' in flows[] and screenOrder.test-flow: []
+# → flowkit.config.ts has 'test-flow' in flows[] and pageOrder.test-flow: []
 
 # 2. Screen scaffold
 flowkit create:screen --flow:test-flow --name:home --label:"Home Screen"
 # → creates flows/test-flow/home/HomeScreen.tsx with correct template
-# → flowkit.config.ts screenOrder.test-flow: ['home']
+# → flowkit.config.ts pageOrder.test-flow: ['home']
 
 # 3. Second screen
 flowkit create:screen --flow:test-flow --name:detail --label:"Detail"
 # → creates flows/test-flow/detail/DetailScreen.tsx
-# → screenOrder.test-flow: ['home', 'detail']
+# → pageOrder.test-flow: ['home', 'detail']
 
 # 4. List
 flowkit list:screens --flow:test-flow
@@ -612,7 +612,7 @@ flowkit create:flowplan --name:test-flow
 
 # 6. Add steps (with validation)
 flowkit add:step --flowplan:test-flow --screen:nonexistent
-# → ✗ Error: screenId 'nonexistent' not found in workspace flows
+# → ✗ Error: pageId 'nonexistent' not found in workspace flows
 
 flowkit add:step --flowplan:test-flow --screen:home --action:"User views home"
 flowkit add:step --flowplan:test-flow --screen:detail --on:card --action:"Taps a card"

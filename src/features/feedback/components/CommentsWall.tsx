@@ -71,7 +71,7 @@ export default function CommentsWall() {
           <Button
             size="sm"
             variant="secondary"
-            onClick={() => setFilter(prev => ({ ...prev, screenId: null, tags: new Set() }))}
+            onClick={() => setFilter(prev => ({ ...prev, pageId: null, tags: new Set() }))}
             style={{ color: theme.accent.red }}
           >
             Clear filters
@@ -83,13 +83,13 @@ export default function CommentsWall() {
 
   return (
     <div className="flex flex-col">
-      {Object.entries(filteredGroupedComments).map(([screenId, screenComments], index) => {
-        const screenExists = views.some(v => v.id === screenId)
-        const isCurrentScreen = screenId === activeViewId.replace('-play', '')
+      {Object.entries(filteredGroupedComments).map(([pageId, screenComments], index) => {
+        const screenExists = views.some(v => v.id === pageId)
+        const isCurrentScreen = pageId === activeViewId.replace('-play', '')
         return (
           <CommentGroup
-            key={screenId}
-            screenId={screenId}
+            key={pageId}
+            pageId={pageId}
             screenLabel={screenComments[0].screenLabel}
             screenExists={screenExists}
             isCurrentScreen={isCurrentScreen}

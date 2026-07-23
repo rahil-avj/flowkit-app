@@ -1,4 +1,4 @@
-import type { FlowConfig, FlowScreenProps, Hotspot } from '@flowkit/types/index'
+import type { ChapterConfig, PageProps, Hotspot } from '@flowkit/types/index'
 import type { CompiledFlowplan } from '@flowkit-features/flow-library'
 import { useFlowplanSettings } from '@flowkit-features/flowplan/FlowplanSettingsContext'
 import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
@@ -19,7 +19,7 @@ const WRONG_CLICK_HEX: Record<string, string> = {
   yellow: '#eab308',
 }
 
-export default function FlowMaster({ flow }: { flow: FlowConfig }) {
+export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
   const { theme } = useTheme()
 
   // ─── Flowplan playback integration ───────────────────────────────────────────
@@ -97,7 +97,7 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
   // the context never looks the step up itself). Used by the patch effect, the
   // gating handler, and the actionNote caption.
   const currentStepIndex = flowplan
-    ? flowplan.steps.findIndex(s => s.screenId === activeScreenId)
+    ? flowplan.steps.findIndex(s => s.pageId === activeScreenId)
     : -1
   const currentStep =
     flowplan && currentStepIndex >= 0 ? flowplan.steps[currentStepIndex] : undefined
@@ -119,7 +119,7 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
   const { missing: elementCheckMissing } = useFlowplanElementCheck(screenContainerRef, {
     flowplanId: flowplan?.flowplanId,
     stepIndex: currentStepIndex,
-    screenId: activeScreenId,
+    pageId: activeScreenId,
     on: currentOn,
   })
 
@@ -236,13 +236,13 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
   // containing every fork branch's steps concatenated, so there is no single
   // canonical "planned sequence" to diff history against once forks exist. For
   // each consecutive pair in the actual recorded history, verify some step
-  // with that screenId resolves (fresh, at verdict time) to the next screenId.
+  // with that pageId resolves (fresh, at verdict time) to the next pageId.
   const blindModeVerdict = useMemo(() => {
     if (!flowplan || !blindMode) return null
     for (let i = 0; i < history.length - 1; i++) {
       const from = history[i]
       const to = history[i + 1]
-      const step = flowplan.steps.find(s => s.screenId === from)
+      const step = flowplan.steps.find(s => s.pageId === from)
       if (!step) return { pass: false, reason: `"${from}" is not a step in this flowplan.` }
       const resolved =
         typeof step.next === 'function'
@@ -280,7 +280,7 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
         const timestamp = new Date().toLocaleTimeString()
         commitNavigation('back', 'none', timestamp, 'goBack()', [])
       },
-      isFlow: true,
+      isChapter: true,
       flowState: localState,
     }),
     [commitNavigation, localState]
@@ -354,7 +354,7 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
       recorderOpt?.logEvent('interaction.frustrated-click', {
         x: e.clientX,
         y: e.clientY,
-        screenId: activeScreenId,
+        pageId: activeScreenId,
         flowId: flow.id,
         ...(nearestFkId ? { elementId: nearestFkId } : {}),
       })
@@ -456,7 +456,7 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
         y,
         screenW: rect.width,
         screenH: rect.height,
-        screenId: activeScreenId,
+        pageId: activeScreenId,
         timestamp: performance.now(),
       })
     }
@@ -467,18 +467,18 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
   // ─── Guard / null checks ──────────────────────────────────────────────────
   if (!isAllowed || !activeScreen) return null
 
-  const screenProps: FlowScreenProps = {
+  const screenProps: PageProps = {
     onAction,
     onNext: () => onAction('next'),
     onBack: () => onAction('back'),
-    isFlow: true,
-    flowState: localState,
+    isChapter: true,
+    state: localState,
     db: engine.buildCtx().db,
   }
 
   const isFirst = activeScreenIndex === 0
-  const isLast = activeScreenIndex === flow.screens.length - 1
-  const ScreenComp = activeScreen.component as React.ComponentType<FlowScreenProps>
+  const isLast = activeScreenIndex === flow.pages.length - 1
+  const ScreenComp = activeScreen.component as React.ComponentType<PageProps>
   const hotspots: Hotspot[] = activeScreen.hotspots ?? []
 
   return (
@@ -561,7 +561,7 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
                 stack: error.stack,
                 componentStack: info.componentStack,
                 boundary: 'panel:screen',
-                screenId: activeScreenId,
+                pageId: activeScreenId,
               })
             }
           >
@@ -614,14 +614,14 @@ export default function FlowMaster({ flow }: { flow: FlowConfig }) {
         )}
 
         {/* Progress dots — sequential mode only */}
-        {!flow.interactions && flow.screens.length > 1 && (
+        {!flow.interactions && flow.pages.length > 1 && (
           <div
             className="absolute bottom-6 flex justify-center gap-1.5 pointer-events-none inset-x-0"
             role="status"
             aria-live="polite"
-            aria-label={`Step ${activeScreenIndex + 1} of ${flow.screens.length}`}
+            aria-label={`Step ${activeScreenIndex + 1} of ${flow.pages.length}`}
           >
-            {flow.screens.map((screen, i) => (
+            {flow.pages.map((screen, i) => (
               <div
                 key={screen.id}
                 className="rounded-full transition-all"

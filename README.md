@@ -84,12 +84,12 @@ Screens are plain React components. Props are injected automatically — no cont
 
 ```tsx
 // this repo (repo mode)
-import type { FlowScreenProps } from '@flowkit/types'
+import type { PageProps } from '@flowkit/types'
 
 // scaffolded consumer project (flat/multi-workspace mode)
-import type { FlowScreenProps } from 'flowkit'
+import type { PageProps } from 'flowkit'
 
-export default function WelcomeScreen({ onNext, onBack, db }: FlowScreenProps) {
+export default function WelcomeScreen({ onNext, onBack, db }: PageProps) {
   return (
     <div>
       <p>Hello, {db?.user?.name}</p>
@@ -99,12 +99,12 @@ export default function WelcomeScreen({ onNext, onBack, db }: FlowScreenProps) {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const screenMeta = { id: 'welcome', label: 'Welcome' }
+export const pageMeta = { id: 'welcome', label: 'Welcome' }
 ```
 
-`FlowScreenProps` is one of two navigation conventions and only populated during active flowplan
+`PageProps` is one of two navigation conventions and only populated during active flowplan
 playback. For a screen that should also be freely explorable in the Screens tab (no flow active),
-navigate by screen id via `useAppNav()` instead — no `isFlow` prop, no manual guard needed:
+navigate by screen id via `useAppNav()` instead — no `isChapter` prop, no manual guard needed:
 
 ```tsx
 import { useAppNav } from '@flowkit-shared/utils' // repo mode; 'flowkit' in a scaffolded project
@@ -122,7 +122,7 @@ or inside a flow — safe to call unconditionally, unlike wiring `useDashboard()
 
 ## Flow config
 
-Flows are defined as **flowplans** under `workspaces/<name>/flowStories/` (repo mode) or `flowStories/` at the workspace root (consumer mode) — directory renamed from `flowplans/`; the CLI verb `check:flowplans` keeps its existing spelling regardless. Each flowplan is a `FlowplanDef` — a typed, ordered sequence of steps with optional db patches, forks, and entry guards. Step `screenId` values use the composite `${flowId}-${screenId}` form:
+Flows are defined as **flowplans** under `workspaces/<name>/flowStories/` (repo mode) or `flowStories/` at the workspace root (consumer mode) — directory renamed from `flowplans/`; the CLI verb `check:flowplans` keeps its existing spelling regardless. Each flowplan is a `FlowplanDef` — a typed, ordered sequence of steps with optional db patches, forks, and entry guards. Step `pageId` values use the composite `${flowId}-${pageId}` form:
 
 ```ts
 // this repo (repo mode)
@@ -136,14 +136,14 @@ export default defineFlow({
   name: 'Onboarding',
   canEnter: ({ db }) => !db.auth.isLoggedIn,
   steps: [
-    { screenId: 'onboarding-welcome' },
-    { screenId: 'onboarding-signup', db: { 'auth.started': true } },
-    { screenId: 'onboarding-success' },
+    { pageId: 'onboarding-welcome' },
+    { pageId: 'onboarding-signup', db: { 'auth.started': true } },
+    { pageId: 'onboarding-success' },
   ],
 })
 ```
 
-The flowplan compiler (`compileFlowplan.ts`) converts this at runtime into a `FlowConfig` with gating, step sequencing, and db patch application. Press **F4** to enter flowplan playback mode, **F5** to restart.
+The flowplan compiler (`compileFlowplan.ts`) converts this at runtime into a `ChapterConfig` with gating, step sequencing, and db patch application. Press **F4** to enter flowplan playback mode, **F5** to restart.
 
 ---
 

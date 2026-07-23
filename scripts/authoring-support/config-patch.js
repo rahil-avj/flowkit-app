@@ -46,7 +46,7 @@ function readConfig(wsDir) {
   return {
     workspace: raw.workspace || { name: path.basename(wsDir) },
     flows: raw.flows || [],
-    screenOrder: raw.screenOrder || {},
+    pageOrder: raw.pageOrder || {},
     _importLine: importLine,
   }
 }
@@ -56,7 +56,7 @@ function quoteKey(key) {
   return /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key) ? key : `'${key}'`
 }
 
-/** Format a screenOrder entry — inline for ≤4 screens, multiline for ≥5. */
+/** Format a pageOrder entry — inline for ≤4 screens, multiline for ≥5. */
 function formatScreenArray(screens) {
   if (!screens || screens.length === 0) return '[]'
   if (screens.length <= 4) {
@@ -72,8 +72,8 @@ function writeConfig(wsDir, config) {
   const flowsStr = config.flows.map(f => `    '${f}',`).join('\n')
 
   let soEntries = ''
-  if (Object.keys(config.screenOrder).length > 0) {
-    soEntries = Object.entries(config.screenOrder)
+  if (Object.keys(config.pageOrder).length > 0) {
+    soEntries = Object.entries(config.pageOrder)
       .map(([flow, screens]) => `    ${quoteKey(flow)}: ${formatScreenArray(screens)},`)
       .join('\n')
   }
@@ -89,7 +89,7 @@ function writeConfig(wsDir, config) {
   ]
 
   if (soEntries) {
-    lines.push(`  screenOrder: {`)
+    lines.push(`  pageOrder: {`)
     lines.push(soEntries)
     lines.push(`  },`)
   }
@@ -108,62 +108,62 @@ export function addFlow(wsDir, flowId) {
   const config = readConfig(wsDir)
   if (config.flows.includes(flowId)) throw new Error(`Flow '${flowId}' already exists`)
   config.flows.push(flowId)
-  config.screenOrder[flowId] = []
+  config.pageOrder[flowId] = []
   writeConfig(wsDir, config)
 }
 
 export function removeFlow(wsDir, flowId) {
   const config = readConfig(wsDir)
   config.flows = config.flows.filter(f => f !== flowId)
-  delete config.screenOrder[flowId]
+  delete config.pageOrder[flowId]
   writeConfig(wsDir, config)
 }
 
-export function addScreen(wsDir, flowId, screenId, position) {
+export function addScreen(wsDir, flowId, pageId, position) {
   const config = readConfig(wsDir)
-  if (!config.screenOrder[flowId]) config.screenOrder[flowId] = []
-  if (config.screenOrder[flowId].includes(screenId)) {
-    throw new Error(`Screen '${screenId}' already exists in flow '${flowId}'`)
+  if (!config.pageOrder[flowId]) config.pageOrder[flowId] = []
+  if (config.pageOrder[flowId].includes(pageId)) {
+    throw new Error(`Screen '${pageId}' already exists in flow '${flowId}'`)
   }
   if (position !== undefined && position !== null && position >= 0) {
-    config.screenOrder[flowId].splice(position, 0, screenId)
+    config.pageOrder[flowId].splice(position, 0, pageId)
   } else {
-    config.screenOrder[flowId].push(screenId)
+    config.pageOrder[flowId].push(pageId)
   }
   writeConfig(wsDir, config)
 }
 
-export function removeScreen(wsDir, flowId, screenId) {
+export function removeScreen(wsDir, flowId, pageId) {
   const config = readConfig(wsDir)
-  if (!config.screenOrder[flowId]) return
-  config.screenOrder[flowId] = config.screenOrder[flowId].filter(s => s !== screenId)
+  if (!config.pageOrder[flowId]) return
+  config.pageOrder[flowId] = config.pageOrder[flowId].filter(s => s !== pageId)
   writeConfig(wsDir, config)
 }
 
 export function renameScreen(wsDir, flowId, oldId, newId) {
   const config = readConfig(wsDir)
-  const screens = config.screenOrder[flowId]
+  const screens = config.pageOrder[flowId]
   if (!screens) throw new Error(`Flow '${flowId}' not found in config`)
   const idx = screens.indexOf(oldId)
   if (idx === -1) throw new Error(`Screen '${oldId}' not found in flow '${flowId}'`)
-  config.screenOrder[flowId][idx] = newId
+  config.pageOrder[flowId][idx] = newId
   writeConfig(wsDir, config)
 }
 
-export function moveScreen(wsDir, screenId, fromFlowId, toFlowId) {
+export function moveScreen(wsDir, pageId, fromFlowId, toFlowId) {
   if (fromFlowId === toFlowId) {
-    throw new Error(`Screen '${screenId}' is already in flow '${fromFlowId}'`)
+    throw new Error(`Screen '${pageId}' is already in flow '${fromFlowId}'`)
   }
   const config = readConfig(wsDir)
-  const fromScreens = config.screenOrder[fromFlowId] || []
-  const fromIdx = fromScreens.indexOf(screenId)
-  if (fromIdx === -1) throw new Error(`Screen '${screenId}' not found in flow '${fromFlowId}'`)
-  if (config.screenOrder[toFlowId]?.includes(screenId)) {
-    throw new Error(`Screen '${screenId}' already exists in flow '${toFlowId}'`)
+  const fromScreens = config.pageOrder[fromFlowId] || []
+  const fromIdx = fromScreens.indexOf(pageId)
+  if (fromIdx === -1) throw new Error(`Screen '${pageId}' not found in flow '${fromFlowId}'`)
+  if (config.pageOrder[toFlowId]?.includes(pageId)) {
+    throw new Error(`Screen '${pageId}' already exists in flow '${toFlowId}'`)
   }
-  config.screenOrder[fromFlowId].splice(fromIdx, 1)
-  if (!config.screenOrder[toFlowId]) config.screenOrder[toFlowId] = []
-  config.screenOrder[toFlowId].push(screenId)
+  config.pageOrder[fromFlowId].splice(fromIdx, 1)
+  if (!config.pageOrder[toFlowId]) config.pageOrder[toFlowId] = []
+  config.pageOrder[toFlowId].push(pageId)
   writeConfig(wsDir, config)
 }
 
@@ -171,15 +171,15 @@ export function moveScreen(wsDir, screenId, fromFlowId, toFlowId) {
 export function listScreens(wsDir, flowId) {
   const config = readConfig(wsDir)
   if (flowId) {
-    return { [flowId]: config.screenOrder[flowId] || [] }
+    return { [flowId]: config.pageOrder[flowId] || [] }
   }
-  return config.screenOrder
+  return config.pageOrder
 }
 
-/** Check if a screenId exists anywhere in the workspace config. */
-export function screenExists(wsDir, screenId) {
+/** Check if a pageId exists anywhere in the workspace config. */
+export function screenExists(wsDir, pageId) {
   const config = readConfig(wsDir)
-  return Object.values(config.screenOrder).some(screens => screens.includes(screenId))
+  return Object.values(config.pageOrder).some(screens => screens.includes(pageId))
 }
 
 /** Check if a flowId exists in the workspace config. */

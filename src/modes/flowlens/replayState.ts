@@ -74,11 +74,11 @@ export function replayFromSnapshot(session: SessionExport, targetSeq: number): R
   // to the first navigation-ish event so the canvas isn't blank.
   if (!base.activeScreenId) {
     const firstScreen = events.find(
-      e => typeof e.payload.screenId === 'string' || typeof e.payload.to === 'string'
+      e => typeof e.payload.pageId === 'string' || typeof e.payload.to === 'string'
     )
     if (firstScreen) {
       base.activeScreenId =
-        (firstScreen.payload.screenId as string) ?? (firstScreen.payload.to as string) ?? ''
+        (firstScreen.payload.pageId as string) ?? (firstScreen.payload.to as string) ?? ''
     }
   }
 
@@ -88,14 +88,14 @@ export function replayFromSnapshot(session: SessionExport, targetSeq: number): R
 function applyEvent(base: ReplayState, ev: SessionEvent) {
   switch (ev.type) {
     case 'screen.visited':
-      if (typeof ev.payload.screenId === 'string') base.activeScreenId = ev.payload.screenId
+      if (typeof ev.payload.pageId === 'string') base.activeScreenId = ev.payload.pageId
       break
     case 'navigation.programmatic':
     case 'navigation.sidebar-click':
     case 'navigation.flow-map-click':
-    case 'sidebar.screen-clicked':
+    case 'sidebar.page-clicked':
       if (typeof ev.payload.to === 'string') base.activeScreenId = ev.payload.to
-      else if (typeof ev.payload.screenId === 'string') base.activeScreenId = ev.payload.screenId
+      else if (typeof ev.payload.pageId === 'string') base.activeScreenId = ev.payload.pageId
       break
     case 'state.db-init':
       if (ev.payload.db && typeof ev.payload.db === 'object') {

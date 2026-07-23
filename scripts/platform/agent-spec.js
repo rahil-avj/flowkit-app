@@ -8,9 +8,9 @@
 // `flowkit agent:sync` after platform changes to re-emit.
 //
 // Every fact below was verified against the platform source — keep it that way:
-//   nav      → src/shared/utils/useFlowNav.ts (navigateTo/goNext/goBack/isFlow/flowState)
+//   nav      → src/shared/utils/useFlowNav.ts (navigateTo/goNext/goBack/isChapter/flowState)
 //   data     → src/shared/contexts/DashboardContext.tsx (db, updateDb, resetDb)
-//   screens  → src/types.ts FlowScreenProps / ScreenMeta
+//   screens  → src/types.ts PageProps / PageMeta
 //   flows    → src/types.ts FlowDef + OnMapEntry; declared in flowplans/*.ts
 //   flowplan → src/features/flow-library/compileFlowplan.ts + src/types FlowkitConfig
 //   sim      → src/core/layout/ (ControlAccordion, SimControl, SimAction, etc.)
@@ -67,7 +67,7 @@ export function directives(ctx) {
   const flowsGroup = {
     group: 'Flows & screens — Flowplan hierarchy',
     preamble:
-      "Screens live under `flowBook/<flow>/.../<screen>/` (any number of organizational folders between flow and screen are allowed — only the first and last segments count for identity). Journeys are declared in `flowStories/<flow>.ts` using `defineFlow`. There is no `_playFlow.ts` and no `flowBook/router.tsx`. Registered screen ids are the composite `<flow>-<screen>` form (e.g. `onboarding-flow-welcome-screen`) everywhere EXCEPT `workspace.ts`'s `screenOrder` map, which stays bare/flow-scoped.",
+      "Screens live under `flowBook/<flow>/.../<screen>/` (any number of organizational folders between flow and screen are allowed — only the first and last segments count for identity). Journeys are declared in `flowStories/<flow>.ts` using `defineFlow`. There is no `_playFlow.ts` and no `flowBook/router.tsx`. Registered screen ids are the composite `<flow>-<screen>` form (e.g. `onboarding-flow-welcome-screen`) everywhere EXCEPT `workspace.ts`'s `pageOrder` map, which stays bare/flow-scoped.",
     rules: [
       {
         kind: 'to',
@@ -103,7 +103,7 @@ export function directives(ctx) {
       },
       {
         kind: 'always',
-        text: "a screen exports `screenMeta` with at least `desc`. The default-exported function's name no longer needs to end in `Screen` or match the filename — identity comes from the folder, not the filename — but following that convention is still recommended for readability.",
+        text: "a screen exports `pageMeta` with at least `desc`. The default-exported function's name no longer needs to end in `Screen` or match the filename — identity comes from the folder, not the filename — but following that convention is still recommended for readability.",
       },
       {
         kind: 'never',
@@ -133,7 +133,7 @@ export function directives(ctx) {
         kind: 'to',
         task: 'make a screen freely navigable from the Screens tab (no flow active) as well as during flow playback',
         action:
-          "`const { navigateTo } = useAppNav()` (from `@flowkit-shared/utils`), then call it unconditionally: `onClick={() => navigateTo(id)}`. `useAppNav()` picks FlowMaster's flow-aware navigateTo when the screen is rendered inside a flow, or DashboardContext's otherwise — no `isFlow` check needed in the screen's own code. See scripts/helpers/scaffold.js's demo screens for the pattern.",
+          "`const { navigateTo } = useAppNav()` (from `@flowkit-shared/utils`), then call it unconditionally: `onClick={() => navigateTo(id)}`. `useAppNav()` picks FlowMaster's flow-aware navigateTo when the screen is rendered inside a flow, or DashboardContext's otherwise — no `isChapter` check needed in the screen's own code. See scripts/helpers/scaffold.js's demo screens for the pattern.",
       },
       {
         kind: 'never',
@@ -235,7 +235,7 @@ export function indexRows(_ctx) {
     },
     {
       task: 'Gate a screen (access guard)',
-      action: '`canEnter` / `canNotEnter` in `screenMeta` (exported from the screen `.tsx`)',
+      action: '`canEnter` / `canNotEnter` in `pageMeta` (exported from the screen `.tsx`)',
       detail: 'platform.md → Guards',
     },
     {
@@ -274,14 +274,14 @@ export function platformSurfaces(ctx) {
     area: 'Flows (Flowplan hierarchy)',
     api: '`defineFlow({ id, name, steps[], homeScreen? })` — authored in `flowStories/<flow>.ts`',
     from: '`@flowkit-core/config` → `defineFlow`',
-    note: "Screen folders: `flowBook/<flow>/.../<screen>/` (variable depth — first/last segment count for identity, anything between is cosmetic). Flowplan step `screenId` values use the composite `<flow>-<screen>` id form; `workspace.ts`'s `screenOrder` stays bare. Ordering declared in `workspace.ts` → `projects.<proj>.flows[]`. `homeScreen` overrides the device home button while that plan is playing; workspace-level default is `workspace.ts` → `startScreen`.",
+    note: "Screen folders: `flowBook/<flow>/.../<screen>/` (variable depth — first/last segment count for identity, anything between is cosmetic). Flowplan step `pageId` values use the composite `<flow>-<screen>` id form; `workspace.ts`'s `pageOrder` stays bare. Ordering declared in `workspace.ts` → `projects.<proj>.flows[]`. `homeScreen` overrides the device home button while that plan is playing; workspace-level default is `workspace.ts` → `startPage`.",
     doc: 'FLOWMASTER.md',
   }
 
   const guardsSurface = {
     area: 'Guards',
     api: '`canEnter`/`canNotEnter`: `({ db }) => boolean`',
-    from: '`screenMeta` exported from the screen `.tsx` file',
+    from: '`pageMeta` exported from the screen `.tsx` file',
     note: 'Screen-level guards only',
     doc: 'FLOWMASTER.md',
   }
@@ -289,7 +289,7 @@ export function platformSurfaces(ctx) {
   return [
     {
       area: 'Navigation',
-      api: '`useFlowNav()` → `navigateTo(target)`, `goNext()`, `goBack()`, `isFlow`, `flowState`',
+      api: '`useFlowNav()` → `navigateTo(target)`, `goNext()`, `goBack()`, `isChapter`, `flowState`',
       from: '`@flowkit-shared/utils/useFlowNav`',
       note: 'target = a screen id, "next", "back", or "__complete__"',
       doc: 'FLOWMASTER.md',
@@ -298,12 +298,12 @@ export function platformSurfaces(ctx) {
       area: 'Data',
       api: '`useDashboard()` → `db`, `updateDb(fn)`, `resetDb()`, `navigateTo(id)`',
       from: '`@flowkit-shared/contexts/DashboardContext`',
-      note: 'db/updateDb/resetDb always safe; for navigateTo() prefer `useAppNav()` (see Navigation group above) — it works standalone and during flow playback with no `isFlow` check needed; use useFlowNav() instead for flow-only screens',
+      note: 'db/updateDb/resetDb always safe; for navigateTo() prefer `useAppNav()` (see Navigation group above) — it works standalone and during flow playback with no `isChapter` check needed; use useFlowNav() instead for flow-only screens',
       doc: 'FLOWKIT.md',
     },
     {
       area: 'Screen props',
-      api: '`FlowScreenProps` → `onAction?`, `onNext?`, `onBack?`, `isFlow?`, `flowState?`, `db?`',
+      api: '`PageProps` → `onAction?`, `onNext?`, `onBack?`, `isChapter?`, `flowState?`, `db?`',
       from: '`@flowkit/types`',
       note: 'screens are pure markup with element `id`s',
       doc: 'FLOWMASTER.md',

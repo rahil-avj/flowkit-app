@@ -1,4 +1,4 @@
-import type { ScreenMeta } from '@flowkit/types'
+import type { PageMeta } from '@flowkit/types'
 import { useAppNav } from '@flowkit-shared/utils'
 import GameCard from '@workspace/lib/components/ui/GameCard'
 import Grid from '@workspace/lib/components/ui/Grid'
@@ -8,7 +8,7 @@ interface GameEntry {
   title: string
   icon: string
   blurb: string
-  screenId: string
+  pageId: string
 }
 
 const GAMES: GameEntry[] = [
@@ -17,42 +17,42 @@ const GAMES: GameEntry[] = [
     title: 'Blackjack',
     icon: '🃏',
     blurb: 'Beat the dealer to 21',
-    screenId: 'blackjack-game-screen',
+    pageId: 'blackjack-game-screen',
   },
   {
     id: 'game-dice',
     title: 'Dice',
     icon: '🎲',
     blurb: 'Roll for the point',
-    screenId: 'dice-game-screen',
+    pageId: 'dice-game-screen',
   },
   {
     id: 'game-tic-tac-toe',
     title: 'Tic-Tac-Toe',
     icon: '⭕',
     blurb: '2-player pass and play',
-    screenId: 'tic-tac-toe-game-screen',
+    pageId: 'tic-tac-toe-game-screen',
   },
   {
     id: 'game-2048',
     title: '2048',
     icon: '🔢',
     blurb: 'Slide to the target tile',
-    screenId: '2048-game-screen',
+    pageId: '2048-game-screen',
   },
   {
     id: 'game-memory-match',
     title: 'Memory Match',
     icon: '🧠',
     blurb: 'Find every pair',
-    screenId: 'memory-match-game-screen',
+    pageId: 'memory-match-game-screen',
   },
   {
     id: 'game-math-quiz',
     title: 'Math Quiz',
     icon: '➗',
     blurb: 'Beat the clock on speed math',
-    screenId: 'math-quiz-difficulty-screen',
+    pageId: 'math-quiz-difficulty-screen',
   },
 ]
 
@@ -74,7 +74,7 @@ export default function HubScreen() {
               title={game.title}
               icon={game.icon}
               blurb={game.blurb}
-              onClick={() => navigateTo(game.screenId)}
+              onClick={() => navigateTo(game.pageId)}
             />
           )}
         />
@@ -83,7 +83,7 @@ export default function HubScreen() {
   )
 }
 
-export const screenMeta: ScreenMeta = {
+export const pageMeta: PageMeta = {
   label: 'Hub Screen',
   desc: 'Grid of all 6 games — free navigation via useAppNav(), no flowplan required.',
 }

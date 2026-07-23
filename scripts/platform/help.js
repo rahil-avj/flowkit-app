@@ -58,7 +58,7 @@ ${b('Scaffold (authoring):')}
   ${c('promote:flow')} ${d('--flowplan:<path> --fork:"<label>" [--as:<new-id>]')}   Extract a fork into its own flowplan
 
   ${d('All scaffold commands accept --workspace:<name> to target a non-active workspace.')}
-  ${d('screenOrder in workspace.ts controls display order; scaffold commands keep it in sync.')}
+  ${d('pageOrder in workspace.ts controls display order; scaffold commands keep it in sync.')}
 
 ${b('Projects:')}
   ${c('project:ls')} / ${c('pj:ls')}          List projects + plan counts

@@ -94,7 +94,7 @@ export function resolveDefineImport(exportName) {
 /**
  * Same mode-branch as resolveDefineImport(), for type-only imports whose
  * repo-mode home is @flowkit/types rather than @flowkit-core/config (e.g.
- * FlowScreenProps) — both resolve to the published 'flowkit' package's own
+ * PageProps) — both resolve to the published 'flowkit' package's own
  * public entry point in flat/multi-workspace consumer mode.
  */
 export function resolveTypeImport(typeName) {

@@ -120,15 +120,15 @@ Boilerplate (copy from an existing screen, then fill the body):
 
 ```tsx
 // repo mode
-import type { FlowScreenProps } from '@flowkit/types'
+import type { PageProps } from '@flowkit/types'
 // consumer mode (flat/multi-workspace)
-import type { FlowScreenProps } from 'flowkit'
+import type { PageProps } from 'flowkit'
 
-export const screenMeta = {
+export const pageMeta = {
   desc: 'Short description of what this screen does',
 }
 
-export default function <ScreenName>Screen({ db }: FlowScreenProps) {
+export default function <ScreenName>Screen({ db }: PageProps) {
   return (
     <div className="flex flex-col h-full">
       {/* screen content */}
@@ -141,10 +141,10 @@ export default function <ScreenName>Screen({ db }: FlowScreenProps) {
 2. Add a step to `flowStories/<flow>.ts`:
 
 ```ts
-{ screenId: '<flow>-<screen-slug>', on: 'primary-cta', actionNote: 'Taps Continue' },
+{ pageId: '<flow>-<screen-slug>', on: 'primary-cta', actionNote: 'Taps Continue' },
 ```
 
-(`screenId` here is the composite `${flowId}-${screenId}` form — see FLOWKIT.md's screen-authoring section. `workspace.ts`'s `screenOrder` map, by contrast, stores the bare `<screen-slug>`.)
+(`pageId` here is the composite `${flowId}-${pageId}` form — see FLOWKIT.md's screen-authoring section. `workspace.ts`'s `pageOrder` map, by contrast, stores the bare `<screen-slug>`.)
 
 Or use the CLI, which handles both steps and works in all three modes: `flowkit create:screen --flow:<flow-id> --name:<screen-slug>` then `flowkit add:step --flowplan:<flow-id> --screen:<screen-slug> --action:"..."`.
 
@@ -158,14 +158,14 @@ Drop a `.ts` file into `flowStories/` using `defineFlow()`, or run `flowkit crea
 
 ```ts
 {
-  screenId: 'cart',
+  pageId: 'cart',
   on: 'checkout',
   actionNote: 'Taps Checkout',
   forks: [
     {
       label: 'Empty cart',
       db: { 'cart.count': 0 },
-      steps: [{ screenId: 'cart-empty', actionNote: 'Sees empty state' }],
+      steps: [{ pageId: 'cart-empty', actionNote: 'Sees empty state' }],
       // mergesTo: 'next',  // rejoin the main flow; omit = terminal branch
     },
   ],
@@ -197,7 +197,7 @@ export default function HomeScreen() {
 
 `useAppNav()` reads whichever navigation context actually applies — FlowMaster's flow-aware
 `navigateTo` when this screen is rendered inside a flow, `DashboardContext`'s otherwise — so calling
-it unconditionally is correct in both places. No `isFlow` prop, no guard. `@flowkit-shared/utils`
+it unconditionally is correct in both places. No `isChapter` prop, no guard. `@flowkit-shared/utils`
 is a repo-mode-only path alias — not exported from the public `flowkit` package.
 
 ### Navigate from a screen — consumer mode (flat/multi-workspace)
@@ -207,7 +207,7 @@ There is no navigation hook. A screen receives `onAction?`, `onNext?`, `onBack?`
 them):
 
 ```ts
-export default function HomeScreen({ onAction }: FlowScreenProps) {
+export default function HomeScreen({ onAction }: PageProps) {
   return <button onClick={() => onAction?.('open-detail')}>Open</button>
 }
 ```
@@ -234,7 +234,7 @@ Seed data lives in `lib/data/db.ts`. → FLOWKIT.md (Mock database)
 
 ### Read / mutate data — consumer mode (flat/multi-workspace)
 
-A screen's `db` prop (`FlowScreenProps.db`) is **read-only** and `undefined` outside flow
+A screen's `db` prop (`PageProps.db`) is **read-only** and `undefined` outside flow
 playback — there is no `useDashboard()`/`updateDb` hook here. Mutation happens in the
 flowplan, not the screen: give the interactive element an `id`, then add a
 `ctx.updateDb()` call in that flowplan's `interactions[id].do`:
@@ -253,7 +253,7 @@ interactions: {
 ### Gate access (entry guards)
 
 ```ts
-// in screenMeta:
+// in pageMeta:
 canEnter:    ({ db }) => db.auth.isLoggedIn,
 canNotEnter: ({ db }) => db.auth.isGuestUser,
 ```

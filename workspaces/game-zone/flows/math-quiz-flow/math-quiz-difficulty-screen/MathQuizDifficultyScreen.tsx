@@ -1,4 +1,4 @@
-import type { ScreenMeta } from '@flowkit/types'
+import type { PageMeta } from '@flowkit/types'
 import { useAppNav, useDb } from '@flowkit-shared/utils'
 import DifficultyPicker, { type Difficulty } from '@workspace/lib/components/ui/DifficultyPicker'
 import PrimaryButton from '@workspace/lib/components/ui/PrimaryButton'
@@ -38,7 +38,7 @@ export default function MathQuizDifficultyScreen() {
   )
 }
 
-export const screenMeta: ScreenMeta = {
+export const pageMeta: PageMeta = {
   label: 'Math Quiz · Difficulty',
   desc: 'Difficulty picker for Math Quiz — persists the choice to db.',
 }

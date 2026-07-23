@@ -1,7 +1,7 @@
 import { tag as _tag } from '@flowkit-core/config'
 
 // Annotation tags — ephemeral review markers shown as badges in the Screens panel.
-// Use screenIds from screenMeta.id (same strings used in flowplan steps).
+// Use screenIds from pageMeta.id (same strings used in flowplan steps).
 //
 // _tag('label', { color, icon, note, expiresAt, pulse, screens, flows })
 //

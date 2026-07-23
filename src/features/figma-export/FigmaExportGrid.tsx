@@ -8,7 +8,7 @@ import type { GroupBy, LabelField } from './FigmaExportSidebar'
 export interface GroupedSection {
   key: string
   label: string
-  screens: WireframeView[]
+  pages: WireframeView[]
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ const LABEL_H = 36
 // ─── Grouping ─────────────────────────────────────────────────────────────────
 
 export function groupScreens(screens: WireframeView[], groupBy: GroupBy): GroupedSection[] {
-  if (groupBy === 'flat') return [{ key: '__flat__', label: '', screens }]
+  if (groupBy === 'flat') return [{ key: '__flat__', label: '', pages: screens }]
 
   const UNGROUPED = '(Ungrouped)'
   const map = new Map<string, WireframeView[]>()
@@ -41,7 +41,7 @@ export function groupScreens(screens: WireframeView[], groupBy: GroupBy): Groupe
 
   return [...map.entries()]
     .sort(([a], [b]) => (a === UNGROUPED ? 1 : b === UNGROUPED ? -1 : a.localeCompare(b)))
-    .map(([key, sectionScreens]) => ({ key, label: key, screens: sectionScreens }))
+    .map(([key, sectionScreens]) => ({ key, label: key, pages: sectionScreens }))
 }
 
 // ─── GroupHeader ──────────────────────────────────────────────────────────────
@@ -255,7 +255,7 @@ export default function FigmaExportGrid({
           {groupBy !== 'flat' && section.label && (
             <GroupHeader
               label={section.label}
-              count={section.screens.length}
+              count={section.pages.length}
               width={gridW}
               isFirst={i === 0}
             />
@@ -268,7 +268,7 @@ export default function FigmaExportGrid({
               width: gridW,
             }}
           >
-            {section.screens.map(view => (
+            {section.pages.map(view => (
               <ScreenCell
                 key={view.id}
                 view={view}

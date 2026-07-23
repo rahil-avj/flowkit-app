@@ -14,9 +14,9 @@ The three existing tools catch:
 
 - **TSC**: type errors, missing imports, wrong prop shapes
 - **ESLint**: boundary violations, unused vars, import order
-- **plan:check**: flowplan-level step/screenId validity (already exists)
+- **plan:check**: flowplan-level step/pageId validity (already exists)
 
-FlowLint catches the gap between them: **the workspace is TypeScript-valid but FlowKit-structurally broken**. A screen missing `screenMeta` compiles fine. A `screenOrder` entry pointing to a non-existent directory compiles fine. A flowplan step referencing a deleted screen compiles fine. These all fail silently at runtime — FlowLint is what catches them.
+FlowLint catches the gap between them: **the workspace is TypeScript-valid but FlowKit-structurally broken**. A screen missing `pageMeta` compiles fine. A `pageOrder` entry pointing to a non-existent directory compiles fine. A flowplan step referencing a deleted screen compiles fine. These all fail silently at runtime — FlowLint is what catches them.
 
 ---
 
@@ -63,12 +63,12 @@ For Claude Code users the post-write hook is configured in `.claude/settings.jso
 
 Files: `workspaces/<ws>/flows/<flow>/<screen>/<ScreenName>.tsx`
 
-| Rule ID                     | Check                                                    | Severity |
-| --------------------------- | -------------------------------------------------------- | -------- |
-| `screen/no-default-export`  | File has no default export (React component)             | Error    |
-| `screen/missing-meta`       | No `export const screenMeta`                             | Error    |
-| `screen/meta-missing-label` | `screenMeta` has no `label` field                        | Warning  |
-| `screen/meta-id-mismatch`   | `screenMeta.id` present but doesn't match directory name | Error    |
+| Rule ID                     | Check                                                  | Severity |
+| --------------------------- | ------------------------------------------------------ | -------- |
+| `screen/no-default-export`  | File has no default export (React component)           | Error    |
+| `screen/missing-meta`       | No `export const pageMeta`                             | Error    |
+| `screen/meta-missing-label` | `pageMeta` has no `label` field                        | Warning  |
+| `screen/meta-id-mismatch`   | `pageMeta.id` present but doesn't match directory name | Error    |
 
 > **Forbidden cross-layer imports are NOT a FlowKit-check rule** — resolved during
 > implementation planning: `eslint-plugin-boundaries` (already configured in `eslint.config.js`
@@ -81,12 +81,12 @@ Files: `workspaces/<ws>/flows/<flow>/<screen>/<ScreenName>.tsx`
 
 File: `workspaces/<ws>/flowkit.config.ts`
 
-| Rule ID                | Check                                               | Severity |
-| ---------------------- | --------------------------------------------------- | -------- |
-| `config/orphaned-id`   | screenId in `screenOrder` has no matching directory | Error    |
-| `config/orphaned-dir`  | Screen directory exists but not in `screenOrder`    | Warning  |
-| `config/flow-mismatch` | Flow in `screenOrder` not listed in `flows[]`       | Error    |
-| `config/empty-flow`    | Flow in `flows[]` has no screens in `screenOrder`   | Warning  |
+| Rule ID                | Check                                           | Severity |
+| ---------------------- | ----------------------------------------------- | -------- |
+| `config/orphaned-id`   | pageId in `pageOrder` has no matching directory | Error    |
+| `config/orphaned-dir`  | Screen directory exists but not in `pageOrder`  | Warning  |
+| `config/flow-mismatch` | Flow in `pageOrder` not listed in `flows[]`     | Error    |
+| `config/empty-flow`    | Flow in `flows[]` has no screens in `pageOrder` | Warning  |
 
 ### Domain: FLOWPLANS
 
@@ -94,11 +94,11 @@ Files: `workspaces/<ws>/flowplans/*.ts`
 
 | Rule ID                         | Check                                        | Severity |
 | ------------------------------- | -------------------------------------------- | -------- |
-| `flowplan/invalid-screen`       | Step `screenId` not found in workspace flows | Error    |
+| `flowplan/invalid-screen`       | Step `pageId` not found in workspace flows   | Error    |
 | `flowplan/id-filename-mismatch` | `defineFlow({ id })` doesn't match filename  | Error    |
 | `flowplan/empty-steps`          | Flowplan has zero steps                      | Warning  |
 | `flowplan/weak-step`            | Step has no `actionNote` and no `on` handler | Warning  |
-| `flowplan/invalid-fork-screen`  | Fork step references a non-existent screenId | Error    |
+| `flowplan/invalid-fork-screen`  | Fork step references a non-existent pageId   | Error    |
 
 ### Domain: COMPONENTS
 
@@ -130,21 +130,21 @@ Output is designed for agent consumption: every error includes the exact fix, no
 FLOWLINT: 3 errors, 2 warnings  [workspaces/nClarity]
 
 ERROR [screen/missing-meta] flows/auth/login/LoginScreen.tsx
-  Missing: export const screenMeta
+  Missing: export const pageMeta
   Fix: add at bottom of file →
-    export const screenMeta = { label: 'Login', desc: '' }
+    export const pageMeta = { label: 'Login', desc: '' }
   Or:  flowkit fix:screen --flow:auth --name:login
 
-ERROR [config/orphaned-id] flowkit.config.ts → screenOrder.auth
-  screenId 'register' has no matching directory
+ERROR [config/orphaned-id] flowkit.config.ts → pageOrder.auth
+  pageId 'register' has no matching directory
   Expected: flows/auth/register/
   Fix: flowkit create:screen --flow:auth --name:register
   Or:  flowkit config:remove-screen --flow:auth --screen:register
 
 ERROR [flowplan/invalid-screen] flowplans/auth.ts step[3]
-  screenId 'sso-complete' not found in any flow
+  pageId 'sso-complete' not found in any flow
   Available auth screens: sign-in · sign-up · forgot-password · two-fa-verification
-  Fix: update step screenId or run flowkit create:screen --flow:auth --name:sso-complete
+  Fix: update step pageId or run flowkit create:screen --flow:auth --name:sso-complete
 
 WARNING [components/unregistered] lib/components/ui/StatusBadge.tsx
   Component exists but not in .flowkit/components.json
@@ -167,8 +167,8 @@ WARNING [flowplan/weak-step] flowplans/onboarding.ts step[2]
       "ruleId": "screen/missing-meta",
       "severity": "error",
       "file": "flows/auth/login/LoginScreen.tsx",
-      "message": "Missing export const screenMeta",
-      "fix": "add `export const screenMeta = { label: 'Login', desc: '' }` at end of file",
+      "message": "Missing export const pageMeta",
+      "fix": "add `export const pageMeta = { label: 'Login', desc: '' }` at end of file",
       "clifix": "flowkit fix:screen --flow:auth --name:login"
     }
   ]
@@ -183,7 +183,7 @@ Some errors are safe to auto-fix. Others require human/agent intent.
 
 | Rule ID                     | Auto-fixable | Fix action                                             |
 | --------------------------- | ------------ | ------------------------------------------------------ |
-| `screen/missing-meta`       | Yes          | Append `screenMeta` stub to file                       |
+| `screen/missing-meta`       | Yes          | Append `pageMeta` stub to file                         |
 | `components/unregistered`   | Yes          | Add to `components.json` with empty desc               |
 | `components/stale-registry` | Yes          | Remove stale entry from `components.json`              |
 | `components/barrel-gap`     | Yes          | Add export to `index.ts`                               |
@@ -204,7 +204,7 @@ FlowLint does not run `tsc`. It uses targeted parsing:
 - **Export detection**: `@typescript-eslint/parser` to parse TSX/TS to AST, then walk for `ExportNamedDeclaration` and `ExportDefaultDeclaration` nodes. Fast and accurate for known patterns.
 - **Import detection**: Same AST walk for `ImportDeclaration` nodes, check `source.value` against forbidden prefixes.
 - **Config cross-referencing**: `fs.readdirSync` for directory existence checks; read `flowkit.config.ts` as text and extract `defineConfig({...})` object via regex + JSON-safe parsing (the config format is stable).
-- **Flowplan validation**: Import and evaluate the flowplan `.ts` file at runtime using `tsx` or `jiti` (already available as a dependency candidate) to get the `FlowplanDef` object, then cross-reference `step.screenId` against workspace screen directories.
+- **Flowplan validation**: Import and evaluate the flowplan `.ts` file at runtime using `tsx` or `jiti` (already available as a dependency candidate) to get the `FlowplanDef` object, then cross-reference `step.pageId` against workspace screen directories.
 - **Barrel validation**: Read `index.ts` lines, extract named exports via regex; compare to files in directory.
 
 ### Performance Targets
@@ -226,7 +226,7 @@ scripts/platform/check.js        command handlers: cmdCheck, cmdCheckScreens, cm
                                   cmdCheckPlans, cmdCheckComponents, cmdCheckDb — dispatched
                                   from router.js's p.cmd === 'check' branch
 scripts/checks/                  (sibling to scripts/authoring-support/, scripts/helpers/)
-  ├── screens.js                 screen file rules (default-export + screenMeta shape only —
+  ├── screens.js                 screen file rules (default-export + pageMeta shape only —
                                   forbidden-import checks live in eslint.config.js instead)
   ├── config.js                  flowkit.config.ts rules
   ├── flowplans.js                flowplan rules — plan:check's cmdPlanCheck becomes a thin
@@ -242,7 +242,7 @@ scripts/checks/                  (sibling to scripts/authoring-support/, scripts
 Corrected — checked `scripts/platform/plans.js`'s `cmdPlanCheck` directly rather than assume:
 today it only does crude string-presence checks (`src.includes('id:')` / `.includes('name:')` /
 `.includes('steps:')`), not real parsing. It does **not** currently validate that step
-`screenId`s reference real screens, or check `defineFlow`'s id against the filename, despite
+`pageId`s reference real screens, or check `defineFlow`'s id against the filename, despite
 this doc previously describing it that way. There is not substantial existing logic to
 "extract" — `check:plans`'s rule module in `scripts/checks/flowplans.js` is written close to
 from scratch, and `plan:check`/`fp:check` become a thin wrapper delegating to it (kept as

@@ -11,16 +11,16 @@ export type { FlowMetrics, ScreenMetrics, SessionMetrics }
 export { computeSessionMetrics }
 
 export interface FunnelStep {
-  screenId: string
+  pageId: string
   reachedCount: number
   dropOffCount: number
   dropOffRate: number // 0–1
 }
 
 export interface PathNode {
-  screenId: string
+  pageId: string
   count: number
-  nextScreens: Record<string, number> // screenId → transition count
+  nextScreens: Record<string, number> // pageId → transition count
 }
 
 // ─── Multi-session aggregation ────────────────────────────────────────────────
@@ -28,9 +28,9 @@ export interface PathNode {
 export interface AggregateMetrics {
   sessionCount: number
   totalEvents: number
-  screenPopularity: Array<{ screenId: string; totalVisits: number; avgDwell: number }>
+  screenPopularity: Array<{ pageId: string; totalVisits: number; avgDwell: number }>
   flowCompletionRates: Array<{ flowId: string; rate: number; sessions: number }>
-  topFrustratedScreens: Array<{ screenId: string; count: number }>
+  topFrustratedScreens: Array<{ pageId: string; count: number }>
 }
 
 export function aggregateSessions(
@@ -49,10 +49,10 @@ export function aggregateSessions(
   for (const session of filtered) {
     const metrics = computeSessionMetrics(session)
     for (const sm of metrics.screenMetrics) {
-      screenVisits[sm.screenId] = (screenVisits[sm.screenId] ?? 0) + sm.visitCount
-      screenDwells[sm.screenId] = screenDwells[sm.screenId] ?? []
-      if (sm.avgDwellMs > 0) screenDwells[sm.screenId].push(sm.avgDwellMs)
-      screenFrustrated[sm.screenId] = (screenFrustrated[sm.screenId] ?? 0) + sm.frustratedClickCount
+      screenVisits[sm.pageId] = (screenVisits[sm.pageId] ?? 0) + sm.visitCount
+      screenDwells[sm.pageId] = screenDwells[sm.pageId] ?? []
+      if (sm.avgDwellMs > 0) screenDwells[sm.pageId].push(sm.avgDwellMs)
+      screenFrustrated[sm.pageId] = (screenFrustrated[sm.pageId] ?? 0) + sm.frustratedClickCount
     }
     for (const fm of metrics.flowMetrics) {
       flowEntries[fm.flowId] = (flowEntries[fm.flowId] ?? 0) + fm.entryCount
@@ -63,12 +63,12 @@ export function aggregateSessions(
   }
 
   const screenPopularity = Object.entries(screenVisits)
-    .map(([screenId, totalVisits]) => ({
-      screenId,
+    .map(([pageId, totalVisits]) => ({
+      pageId,
       totalVisits,
-      avgDwell: screenDwells[screenId]?.length
+      avgDwell: screenDwells[pageId]?.length
         ? Math.round(
-            screenDwells[screenId].reduce((a, b) => a + b, 0) / screenDwells[screenId].length
+            screenDwells[pageId].reduce((a, b) => a + b, 0) / screenDwells[pageId].length
           )
         : 0,
     }))
@@ -82,7 +82,7 @@ export function aggregateSessions(
 
   const topFrustratedScreens = Object.entries(screenFrustrated)
     .filter(([, count]) => count > 0)
-    .map(([screenId, count]) => ({ screenId, count }))
+    .map(([pageId, count]) => ({ pageId, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 10)
 
@@ -97,19 +97,19 @@ export function aggregateSessions(
 
 // ─── Funnel analysis ──────────────────────────────────────────────────────────
 
-export function computeFunnel(session: SessionExport, screenOrder: string[]): FunnelStep[] {
+export function computeFunnel(session: SessionExport, pageOrder: string[]): FunnelStep[] {
   const screenVisitSet = new Set(
-    session.events.filter(e => e.type === 'screen.visited').map(e => e.payload.screenId as string)
+    session.events.filter(e => e.type === 'screen.visited').map(e => e.payload.pageId as string)
   )
 
   const steps: FunnelStep[] = []
   let prevReached = 1
 
-  for (let i = 0; i < screenOrder.length; i++) {
-    const reached = screenVisitSet.has(screenOrder[i]) ? prevReached : 0
+  for (let i = 0; i < pageOrder.length; i++) {
+    const reached = screenVisitSet.has(pageOrder[i]) ? prevReached : 0
     const dropOff = prevReached - reached
     steps.push({
-      screenId: screenOrder[i],
+      pageId: pageOrder[i],
       reachedCount: reached,
       dropOffCount: dropOff,
       dropOffRate: prevReached > 0 ? dropOff / prevReached : 0,
@@ -127,12 +127,12 @@ export function buildPathGraph(events: SessionEvent[]): PathNode[] {
   const nodes: Record<string, PathNode> = {}
 
   for (let i = 0; i < screenEvents.length; i++) {
-    const sid = screenEvents[i].payload.screenId as string
-    if (!nodes[sid]) nodes[sid] = { screenId: sid, count: 0, nextScreens: {} }
+    const sid = screenEvents[i].payload.pageId as string
+    if (!nodes[sid]) nodes[sid] = { pageId: sid, count: 0, nextScreens: {} }
     nodes[sid].count += 1
 
     if (i + 1 < screenEvents.length) {
-      const nextId = screenEvents[i + 1].payload.screenId as string
+      const nextId = screenEvents[i + 1].payload.pageId as string
       nodes[sid].nextScreens[nextId] = (nodes[sid].nextScreens[nextId] ?? 0) + 1
     }
   }

@@ -17,11 +17,11 @@ FlowMaster is the flow execution engine. Its job is to take an authored flow def
 #### Authoring formats (both compile to the same runtime)
 
 - **Old** (`_playFlow.ts`): `FlowDef` with `id`, `label`, `screens[]`, `on:` map, `interactions:`, `localData`, `canEnter/canNotEnter/canEnterFallback`, `meta`
-- **Flowplan** (`defineFlow`): `FlowplanDef` with `id`, `name`, `steps[]` (each with `screenId`, `on?`, `db?`, `actionNote?`, `forks?`), `simulator?`
+- **Flowplan** (`defineFlow`): `FlowplanDef` with `id`, `name`, `steps[]` (each with `pageId`, `on?`, `db?`, `actionNote?`, `forks?`), `simulator?`
 
 #### Compilation
 
-- `compileFlowplan.ts` — pure/testable; converts `FlowplanDef` → `FlowConfig` (runtime) + `CompiledStep[]` (playback gating + db patches)
+- `compileFlowplan.ts` — pure/testable; converts `FlowplanDef` → `ChapterConfig` (runtime) + `CompiledStep[]` (playback gating + db patches)
 - `normalizeOnMap()` — converts `on:` shorthand to verbose `interactions:` shape at runtime
 - Runtime never depends on the authoring format — `DevelopmentValues.md` Principle 2
 
@@ -39,7 +39,7 @@ FlowMaster is the flow execution engine. Its job is to take an authored flow def
 #### Guards
 
 - Flow-level: `canEnter`, `canNotEnter`, `canEnterFallback`
-- Screen-level: `canEnter`, `canNotEnter` in `screenMeta`
+- Screen-level: `canEnter`, `canNotEnter` in `pageMeta`
 - Both evaluated; either blocking = guard fails
 
 #### Screen features
@@ -47,7 +47,7 @@ FlowMaster is the flow execution engine. Its job is to take an authored flow def
 - `autoAdvanceDelay` — auto-advance to next screen after N ms
 - `enterAnimation` — animation played when navigating TO this screen
 - `hotspots` — clickable `{id, x, y, w, h}` regions in % of screen; wired via interactions map
-- `isStandalone` in `screenMeta` — marks a screen as an entry point (not reached via back-nav)
+- `isStandalone` in `pageMeta` — marks a screen as an entry point (not reached via back-nav)
 
 #### Flow-local state
 
@@ -92,7 +92,7 @@ Append-only. Most recent at top.
 ## 2026-06-26 — Flowplan format adopted as primary; old kept behind kill-switch
 
 **Decision:** `defineFlow()` / `projects/**/flowplans/*.ts` is the current authoring format. Old `_playFlow.ts` stays functional behind `removed` and is CLI-scaffolded under `flowkit arch <cmd>`.
-**Reason:** Flowplans are pure TypeScript data, compile to the same runtime `FlowConfig`, and support forks, db patches, and step-level simulator overrides that `_playFlow.ts` cannot express. The compiler boundary (Principle 3) means the runtime needed zero changes to support it.
+**Reason:** Flowplans are pure TypeScript data, compile to the same runtime `ChapterConfig`, and support forks, db patches, and step-level simulator overrides that `_playFlow.ts` cannot express. The compiler boundary (Principle 3) means the runtime needed zero changes to support it.
 **Source:** `src/features/flow-library/compileFlowplan.ts`; `src/types/index.ts:571–700`
 
 ---

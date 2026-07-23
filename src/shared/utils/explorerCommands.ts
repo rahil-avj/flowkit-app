@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 
 export type ExplorerCommand =
   | { type: 'switchTab'; tab: 'screens' | 'flows' }
-  | { type: 'expandAndHighlight'; flowId: string; screenId: string }
+  | { type: 'expandAndHighlight'; flowId: string; pageId: string }
   | { type: 'openFlowplanDetail'; flowplanId: string }
 
 const bus = new EventTarget()

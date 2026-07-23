@@ -315,14 +315,14 @@ Each top-level folder (starting with \`${DEFAULT_WORKSPACE_NAME}/\`) is an indep
 workspace with its own:
 
 - \`<workspace>/${FLOW_BOOK_DIRNAME}/<flow>/<screen-id>/<ScreenName>.tsx\` — one component per screen,
-  default-exports the screen and a named \`screenMeta\` (\`{ id, label, desc? }\`, optional
-  \`canEnter\`/\`canNotEnter\`: \`({ db }) => boolean\`). Receives \`FlowScreenProps\` from
-  \`'flowkit'\` — \`onAction?\`, \`onNext?\`, \`onBack?\`, \`isFlow?\`, \`flowState?\`, and a
+  default-exports the screen and a named \`pageMeta\` (\`{ id, label, desc? }\`, optional
+  \`canEnter\`/\`canNotEnter\`: \`({ db }) => boolean\`). Receives \`PageProps\` from
+  \`'flowkit'\` — \`onAction?\`, \`onNext?\`, \`onBack?\`, \`isChapter?\`, \`flowState?\`, and a
   **read-only** \`db?\`. **All of these are \`undefined\` when the screen is previewed
   standalone** (outside an active flow) — always optional-chain (\`db?.user?.name\`), never
   assume they're present.
 - \`<workspace>/${FLOW_STORIES_DIRNAME}/<flow>.ts\` — playback scripts authored with \`defineFlow()\` from
-  \`'flowkit'\`: an ordered \`steps[]\` of \`{ screenId, on?, actionNote? }\` (\`on\` matches a DOM
+  \`'flowkit'\`: an ordered \`steps[]\` of \`{ pageId, on?, actionNote? }\` (\`on\` matches a DOM
   element id in the screen, wired via event delegation — no \`onClick\` needed on that
   element), or a richer \`interactions\` map keyed by element id
   (\`{ trigger, goTo, do?, animation?, delay? }\`). Conditional forks (\`forks[]\`) and db
@@ -337,7 +337,7 @@ workspace with its own:
   already reference \`theme-*\` Tailwind classes — this is expected pre-kit state, not a bug.
   Resolve it in your first session (see below), not by inventing token values ad hoc.
 - \`<workspace>/${WORKSPACE_CONFIG_FILENAME}\` — that workspace's manifest (\`defineConfig()\`
-  from \`'flowkit'\`): flow/screen ordering, \`startScreen\`, \`defaultDevice\`/\`defaultOrientation\`.
+  from \`'flowkit'\`): flow/screen ordering, \`startPage\`, \`defaultDevice\`/\`defaultOrientation\`.
   Check this first when a flow or screen seems "missing" from the UI — it's usually an
   ordering/registration issue here, not a bug in the screen itself.
 
@@ -386,7 +386,7 @@ a common task — check here before improvising.
 
 - **NEVER** edit \`node_modules/flowkit/\` — that's the platform engine, not workspace content.
 - **NEVER** mutate \`db\` from inside a screen component — there is no mutate function on
-  \`FlowScreenProps\`; \`db\` there is read-only. Mutation only happens via \`ctx.updateDb()\`
+  \`PageProps\`; \`db\` there is read-only. Mutation only happens via \`ctx.updateDb()\`
   inside a flowplan's \`interactions[id].do\`.
 - **NEVER** hand-write a new flow/screen file from scratch — copy an existing screen's
   boilerplate (or use \`flowkit create:screen\`) so exports stay consistent with what the
@@ -407,13 +407,13 @@ a common task — check here before improvising.
   then \`flowkit add:step --workspace:<ws> --flowplan:<id> --screen:<screen-id>\` to wire it
   into playback.
 - **TO** wire a tap interaction **→** give the element a plain DOM \`id\` and add a matching
-  \`{ screenId, on: '<id>' }\` step in that workspace's flowplan (no \`onClick\` needed) — or,
+  \`{ pageId, on: '<id>' }\` step in that workspace's flowplan (no \`onClick\` needed) — or,
   for conditional/db-mutating logic, add an \`interactions['<id>']\` entry with \`goTo\`/\`do\`
   in the flowplan instead.
 - **TO** navigate imperatively from inside a screen (async/state-driven, not a tap) **→**
   call the injected \`onAction?.('name')\` / \`onNext?.()\` / \`onBack?.()\` — these only fire
-  during flow playback (\`isFlow\` is true); they're safely no-ops (undefined) otherwise.
-- **TO** gate access to a screen **→** export \`canEnter\`/\`canNotEnter\` on \`screenMeta\`:
+  during flow playback (\`isChapter\` is true); they're safely no-ops (undefined) otherwise.
+- **TO** gate access to a screen **→** export \`canEnter\`/\`canNotEnter\` on \`pageMeta\`:
   \`({ db }) => boolean\`.
 - **TO** add a reviewer-facing toggle **→** add a \`SimulatorControl\` object
   (\`{ label, path, type, ... }\`) to that flowplan's \`simulator.controls\` array — this is

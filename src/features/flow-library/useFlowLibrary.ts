@@ -25,7 +25,7 @@ export interface FlowSummary {
   forkCount: number
   /** Compiled screen ids this flow touches (Starts/Includes filtering). */
   screenIds: string[]
-  /** First step's screenId (for the "Starts" group). */
+  /** First step's pageId (for the "Starts" group). */
   firstScreenId?: string
   def: FlowplanDef
 }
@@ -35,7 +35,7 @@ function analyze(
   steps: FlowplanDef['steps'],
   registry: Map<string, FlowplanDef>,
   seen: Set<string>,
-  acc: { steps: number; forks: number; screens: Set<string> }
+  acc: { steps: number; forks: number; pages: Set<string> }
 ): void {
   for (const entry of steps) {
     if (isFlowplanRef(entry)) {
@@ -46,7 +46,7 @@ function analyze(
     }
     const step = entry as FlowStep
     acc.steps += 1
-    acc.screens.add(step.screenId)
+    acc.pages.add(step.pageId)
     if (step.forks) {
       for (const fork of step.forks as Fork[]) {
         acc.forks += 1
@@ -68,7 +68,7 @@ function firstScreenId(
     const ref = registry.get(first.ref)
     return ref ? firstScreenId(ref, registry, new Set([...seen, first.ref])) : undefined
   }
-  return (first as FlowStep).screenId
+  return (first as FlowStep).pageId
 }
 
 export interface FlowLibraryData {
@@ -97,10 +97,10 @@ export function useFlowLibrary(): FlowLibraryData {
     const coveredScreenIds = new Set<string>()
 
     for (const def of registry.values()) {
-      const acc = { steps: 0, forks: 0, screens: new Set<string>() }
+      const acc = { steps: 0, forks: 0, pages: new Set<string>() }
       analyze(def.steps, registry, new Set([def.id]), acc)
       ;(def.tags ?? []).forEach(t => tagSet.add(t))
-      acc.screens.forEach(id => coveredScreenIds.add(id))
+      acc.pages.forEach(id => coveredScreenIds.add(id))
       summaries.push({
         id: def.id,
         name: def.name,
@@ -108,7 +108,7 @@ export function useFlowLibrary(): FlowLibraryData {
         tags: def.tags ?? [],
         stepCount: acc.steps,
         forkCount: acc.forks,
-        screenIds: [...acc.screens],
+        screenIds: [...acc.pages],
         firstScreenId: firstScreenId(def, registry, new Set([def.id])),
         def,
       })

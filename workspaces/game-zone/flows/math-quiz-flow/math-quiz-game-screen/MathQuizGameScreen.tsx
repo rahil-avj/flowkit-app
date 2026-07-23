@@ -1,4 +1,4 @@
-import type { ScreenMeta } from '@flowkit/types'
+import type { PageMeta } from '@flowkit/types'
 import { cn } from '@flowkit-kit/lib/utils'
 import { useAppNav, useDb } from '@flowkit-shared/utils'
 import GameOverModal from '@workspace/lib/components/ui/GameOverModal'
@@ -143,7 +143,7 @@ export default function MathQuizGameScreen() {
   )
 }
 
-export const screenMeta: ScreenMeta = {
+export const pageMeta: PageMeta = {
   label: 'Math Quiz',
   desc: 'Speed math — equation difficulty scales with the chosen level, streak ends on a miss.',
   tags: ['type:trivia'],

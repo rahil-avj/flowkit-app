@@ -7,7 +7,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 type ViewMode = 'wall' | 'add-comment'
 
 export interface CommentFilter {
-  screenId: string | null
+  pageId: string | null
   tags: Set<FeedbackTag>
   filterForCurrentScreen: boolean
 }
@@ -182,7 +182,7 @@ export function FeedbackTabProvider({
   const [showImportModal, setShowImportModal] = useState(false)
   const [showFilterPanel, setShowFilterPanel] = useState(false)
   const [filter, setFilter] = useState<CommentFilter>({
-    screenId: null,
+    pageId: null,
     tags: new Set(),
     filterForCurrentScreen: false,
   })
@@ -331,17 +331,17 @@ export function FeedbackTabProvider({
   // Compute filters
   const effectiveScreenId = filter.filterForCurrentScreen
     ? activeViewId.replace('-play', '')
-    : filter.screenId
+    : filter.pageId
   const filteredComments = comments.filter(c => {
-    if (effectiveScreenId && c.screenId !== effectiveScreenId) return false
+    if (effectiveScreenId && c.pageId !== effectiveScreenId) return false
     if (filter.tags.size > 0) return c.tags.some(tag => filter.tags.has(tag))
     return true
   })
 
   const grouped = filteredComments.reduce(
     (acc, comment) => {
-      if (!acc[comment.screenId]) acc[comment.screenId] = []
-      acc[comment.screenId].push(comment)
+      if (!acc[comment.pageId]) acc[comment.pageId] = []
+      acc[comment.pageId].push(comment)
       return acc
     },
     {} as Record<string, typeof comments>
@@ -354,7 +354,7 @@ export function FeedbackTabProvider({
   )
 
   const allTags = new Set(comments.flatMap(c => c.tags))
-  const hasActiveFilters = !!filter.screenId || filter.tags.size > 0
+  const hasActiveFilters = !!filter.pageId || filter.tags.size > 0
 
   return (
     <FeedbackTabContext.Provider

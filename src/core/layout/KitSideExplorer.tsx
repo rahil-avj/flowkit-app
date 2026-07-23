@@ -1,4 +1,4 @@
-import type { FlowNode } from '@flowkit/types/index'
+import type { Chapter } from '@flowkit/types/index'
 import { ToolbarTooltipContent } from '@flowkit-core/canvas/ToolbarBtn'
 import PanelBody from '@flowkit-core/layout/PanelBody'
 import { FlowLibrary, ScreensHierarchy } from '@flowkit-features/flow-library'
@@ -58,7 +58,7 @@ const LEFT_TAB_META: Record<LeftTab, { label: string; icon: React.ElementType }>
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface Props {
-  flows: FlowNode[]
+  flows: Chapter[]
   /** Controlled open state — owned by the parent (DesktopCanvas via usePanelLayout). Required unless bare=true. */
   isOpen?: boolean
   onOpenChange?: (isOpen: boolean) => void
@@ -308,8 +308,8 @@ export default function KitSideExplorer({
           <ScreensHierarchy
             search={search}
             activeTags={activeTags}
-            onFindInLibrary={screenId => {
-              setScreenFilter(screenId)
+            onFindInLibrary={pageId => {
+              setScreenFilter(pageId)
               setTab('flows')
             }}
           />

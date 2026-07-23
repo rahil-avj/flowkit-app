@@ -82,7 +82,7 @@ export class FeedbackImageStore {
 interface FeedbackContextValue {
   comments: FeedbackComment[]
   addComment: (
-    screenId: string,
+    pageId: string,
     screenLabel: string,
     tags: FeedbackTag[],
     text: string,
@@ -168,7 +168,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
   }, [comments])
 
   const addComment = (
-    screenId: string,
+    pageId: string,
     screenLabel: string,
     tags: FeedbackTag[],
     text: string,
@@ -178,7 +178,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
     const id = Date.now().toString()
     const newComment: FeedbackComment = {
       id,
-      screenId,
+      pageId,
       screenLabel,
       tags,
       text,
@@ -209,7 +209,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
     FeedbackImageStore.clear().catch(() => {})
   }
 
-  const commentedScreenCount = new Set(comments.map(c => c.screenId)).size
+  const commentedScreenCount = new Set(comments.map(c => c.pageId)).size
   const totalCommentCount = comments.length
 
   const exportMarkdown = (
@@ -221,10 +221,10 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
     const screenComments: Record<string, FeedbackComment[]> = {}
 
     commentsList.forEach(comment => {
-      if (!screenComments[comment.screenId]) {
-        screenComments[comment.screenId] = []
+      if (!screenComments[comment.pageId]) {
+        screenComments[comment.pageId] = []
       }
-      screenComments[comment.screenId].push(comment)
+      screenComments[comment.pageId].push(comment)
     })
 
     const screenIds = Object.keys(screenComments).sort()
@@ -233,12 +233,12 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
     md += `Generated: ${generated} · ${totalCommentCount} comment${totalCommentCount !== 1 ? 's' : ''} across ${commentedScreenCount} screen${commentedScreenCount !== 1 ? 's' : ''}\n\n`
     md += `---\n\n`
 
-    screenIds.forEach(screenId => {
-      const screenComments_ = screenComments[screenId]
+    screenIds.forEach(pageId => {
+      const screenComments_ = screenComments[pageId]
       if (screenComments_.length === 0) return
 
       const firstComment = screenComments_[0]
-      md += `## ${screenId} — ${firstComment.screenLabel}\n\n`
+      md += `## ${pageId} — ${firstComment.screenLabel}\n\n`
 
       screenComments_.forEach((c, idx) => {
         const time = new Date(c.timestamp).toLocaleString()
@@ -248,7 +248,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
         }
         md += `${c.text}\n\n`
         if (includeScreenshots && c.screenshot) {
-          md += `![Screenshot of ${screenId}](${c.screenshot})\n\n`
+          md += `![Screenshot of ${pageId}](${c.screenshot})\n\n`
         }
       })
 
@@ -282,7 +282,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
       if (!headingLine) continue
       const headingMatch = headingLine.match(sectionRegex)
       if (!headingMatch) continue
-      const screenId = headingMatch[1].trim()
+      const pageId = headingMatch[1].trim()
       const screenLabel = headingMatch[2].trim()
 
       // Split section into individual comments by **Comment N** lines
@@ -331,7 +331,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
 
         comments.push({
           id: `md-import-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-          screenId,
+          pageId,
           screenLabel,
           tags,
           text,

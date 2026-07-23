@@ -1,4 +1,4 @@
-import type { ScreenMeta } from '@flowkit/types'
+import type { PageMeta } from '@flowkit/types'
 import { useAppNav, useDb } from '@flowkit-shared/utils'
 import ScoreBadge from '@workspace/lib/components/ui/ScoreBadge'
 import SectionHeader from '@workspace/lib/components/ui/SectionHeader'
@@ -40,7 +40,7 @@ function hasDotPath(db: Record<string, unknown>, path: string): boolean {
   return true
 }
 
-export const screenMeta: ScreenMeta = {
+export const pageMeta: PageMeta = {
   label: 'Memory Match · High Scores',
   desc: "Shows the player's best moves/time for Memory Match, live from db. Locked until first game.",
   canEnter: ({ db }) => hasDotPath(db, 'highScores.memoryMatch.bestMoves'),

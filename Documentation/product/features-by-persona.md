@@ -25,7 +25,7 @@
 | Flow engine                | Interaction state machine; handles screen transitions, hotspots, swipe gestures, off-script toasts          | U2, U4 |
 | FlowMaster renderer        | Single-flow playback; swipe navigation, presentation mode, step gating                                      | U2, U4 |
 | Flowplan system            | Scripted journey playback — `defineFlow()` steps with action notes, screen gating, DB patching at each step | U2, U4 |
-| Flowplan compiler          | Pure compiler: `FlowplanDef` → `FlowConfig` + `CompiledStep[]`; separates authoring format from runtime     | U1, U2 |
+| Flowplan compiler          | Pure compiler: `FlowplanDef` → `ChapterConfig` + `CompiledStep[]`; separates authoring format from runtime  | U1, U2 |
 | Keyboard shortcuts         | Full keyboard navigation — zoom, screen/flow switch, tab switching, Go-To, Action Center, flowplan playback | U2     |
 
 ---

@@ -52,7 +52,7 @@ export async function cmdCreateFlow(_val, args = []) {
     fs.mkdirSync(flowDir, { recursive: true })
     addFlow(wsDir, flowId)
     console.log(g(`✓ Flow created:  ${FLOW_BOOK_DIRNAME}/${flowId}/`))
-    console.log(g(`✓ Registered:    ${WORKSPACE_CONFIG_FILENAME} → flows[] + screenOrder`))
+    console.log(g(`✓ Registered:    ${WORKSPACE_CONFIG_FILENAME} → flows[] + pageOrder`))
     console.log('')
     console.log(
       d(`Next: flowkit create:screen --flow:${flowId} --name:<first-screen> --label:"Screen Name"`)
@@ -121,7 +121,7 @@ export async function cmdListFlows(_val, args = []) {
 
   console.log(b(`Flows  [${wsName}]\n`))
   for (const flowId of config.flows) {
-    const screens = config.screenOrder[flowId] || []
+    const screens = config.pageOrder[flowId] || []
     const count = String(screens.length).padStart(2)
     console.log(`  ${flowId.padEnd(28)} ${d(`${count} screen${screens.length !== 1 ? 's' : ''}`)}`)
   }

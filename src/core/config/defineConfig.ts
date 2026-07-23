@@ -21,7 +21,7 @@ import type { AnnotationTag, FlowkitConfig, FlowplanDef } from '../../types/inde
  * `workspace.ts` gets type inference at the call site without an explicit
  * type annotation; there is no runtime behavior or validation.
  *
- * @param config - The workspace manifest (flows, screenOrder, projects, etc.)
+ * @param config - The workspace manifest (flows, pageOrder, projects, etc.)
  * @returns The same `config` object, unmodified.
  *
  * @example

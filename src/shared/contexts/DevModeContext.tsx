@@ -12,7 +12,7 @@ interface DevModeCtx {
   devMode: boolean
   toggleDevMode: () => void
   pendingEdits: Map<string, ScreenEdit>
-  setEdit: (screenId: string, edit: ScreenEdit) => void
+  setEdit: (pageId: string, edit: ScreenEdit) => void
   clearEdits: () => void
 }
 
@@ -30,10 +30,10 @@ export function DevModeProvider({ children }: { children: ReactNode }) {
 
   const toggleDevMode = useCallback(() => setDevMode(v => !v), [])
 
-  const setEdit = useCallback((screenId: string, edit: ScreenEdit) => {
+  const setEdit = useCallback((pageId: string, edit: ScreenEdit) => {
     setPendingEdits(prev => {
       const next = new Map(prev)
-      next.set(screenId, edit)
+      next.set(pageId, edit)
       return next
     })
   }, [])

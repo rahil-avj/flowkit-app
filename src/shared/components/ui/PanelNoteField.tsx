@@ -6,7 +6,7 @@ export interface PanelNoteFieldProps {
   label: string
   /** Optional icon rendered before the label */
   icon?: React.ReactNode
-  /** Committed value from screenMeta */
+  /** Committed value from pageMeta */
   value?: string
   /**
    * In-progress edit buffer. Pass `undefined` when the field has not been

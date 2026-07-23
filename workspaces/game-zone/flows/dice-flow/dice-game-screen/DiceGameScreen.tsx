@@ -1,4 +1,4 @@
-import type { ScreenMeta } from '@flowkit/types'
+import type { PageMeta } from '@flowkit/types'
 import { useAppNav, useDb } from '@flowkit-shared/utils'
 import GameOverModal from '@workspace/lib/components/ui/GameOverModal'
 import IconButton from '@workspace/lib/components/ui/IconButton'
@@ -142,7 +142,7 @@ export default function DiceGameScreen() {
   )
 }
 
-export const screenMeta: ScreenMeta = {
+export const pageMeta: PageMeta = {
   label: 'Dice',
   desc: 'Simplified craps — come-out roll, establish a point, resolve on point or seven-out.',
   tags: ['type:dice'],

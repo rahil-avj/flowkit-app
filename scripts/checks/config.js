@@ -38,7 +38,10 @@ function findScreenDirNames(flowDir) {
       return
     }
     const hasScreenFile = entries.some(
-      e => !isNonExistent(e) && SCREEN_EXTS.some(ext => e.endsWith(ext)) && fs.statSync(path.join(dir, e)).isFile()
+      e =>
+        !isNonExistent(e) &&
+        SCREEN_EXTS.some(ext => e.endsWith(ext)) &&
+        fs.statSync(path.join(dir, e)).isFile()
     )
     if (hasScreenFile) {
       const visibility = resolveVisibility(segments)
@@ -109,53 +112,53 @@ export async function checkConfig(wsDir, report) {
   if (!config) return // no config file, or it doesn't parse — nothing to cross-reference
 
   const flows = config.flows ?? []
-  const screenOrder = config.screenOrder ?? {}
+  const pageOrder = config.pageOrder ?? {}
   const flowsDir = path.join(wsDir, FLOW_BOOK_DIRNAME)
 
-  for (const flowId of Object.keys(screenOrder)) {
+  for (const flowId of Object.keys(pageOrder)) {
     if (!flows.includes(flowId)) {
       report.add({
         ruleId: 'config/flow-mismatch',
         severity: 'error',
         file: WORKSPACE_CONFIG_FILENAME,
-        message: `screenOrder has an entry for flow '${flowId}', but it's not listed in flows[].`,
-        fix: `Add '${flowId}' to flows[], or remove its screenOrder entry.`,
+        message: `pageOrder has an entry for flow '${flowId}', but it's not listed in flows[].`,
+        fix: `Add '${flowId}' to flows[], or remove its pageOrder entry.`,
       })
       continue
     }
 
-    const screenIds = screenOrder[flowId] ?? []
+    const screenIds = pageOrder[flowId] ?? []
     if (screenIds.length === 0) {
       report.add({
         ruleId: 'config/empty-flow',
         severity: 'warning',
         file: WORKSPACE_CONFIG_FILENAME,
-        message: `Flow '${flowId}' has no screens in screenOrder.`,
+        message: `Flow '${flowId}' has no screens in pageOrder.`,
         fix: `flowkit create:screen --flow:${flowId} --name:<id>`,
       })
       continue
     }
 
     // Screen folders can now sit at any depth ≥1 under the flow dir (cosmetic
-    // folders in between are allowed) — screenOrder still stores bare, flow-scoped
+    // folders in between are allowed) — pageOrder still stores bare, flow-scoped
     // screen ids (the LAST folder segment), so find each one anywhere under flowDir.
     const flowDir = path.join(flowsDir, flowId)
     const screenDirNames = fs.existsSync(flowDir) ? findScreenDirNames(flowDir) : new Map()
 
-    for (const screenId of screenIds) {
-      if (!screenDirNames.has(screenId)) {
+    for (const pageId of screenIds) {
+      if (!screenDirNames.has(pageId)) {
         report.add({
           ruleId: 'config/orphaned-id',
           severity: 'error',
           file: WORKSPACE_CONFIG_FILENAME,
-          message: `screenOrder.${flowId} lists '${screenId}', which has no matching directory.`,
-          fix: `Expected: ${FLOW_BOOK_DIRNAME}/${flowId}/.../${screenId}/`,
-          clifix: `flowkit create:screen --flow:${flowId} --name:${screenId}`,
+          message: `pageOrder.${flowId} lists '${pageId}', which has no matching directory.`,
+          fix: `Expected: ${FLOW_BOOK_DIRNAME}/${flowId}/.../${pageId}/`,
+          clifix: `flowkit create:screen --flow:${flowId} --name:${pageId}`,
         })
       }
     }
 
-    // Directories present on disk but never registered in screenOrder. `_`/`__`-prefixed
+    // Directories present on disk but never registered in pageOrder. `_`/`__`-prefixed
     // folders (or any `_`/`__`-prefixed ancestor of the screen folder) are intentionally
     // author-hidden/non-existent, not orphaned — skip both.
     for (const [dirName, visibility] of screenDirNames) {
@@ -165,8 +168,8 @@ export async function checkConfig(wsDir, report) {
           ruleId: 'config/orphaned-dir',
           severity: 'warning',
           file: WORKSPACE_CONFIG_FILENAME,
-          message: `A screen directory named '${dirName}' exists under ${FLOW_BOOK_DIRNAME}/${flowId}/ but is not listed in screenOrder.${flowId}.`,
-          fix: `Add '${dirName}' to screenOrder.${flowId}, or remove the directory if unused.`,
+          message: `A screen directory named '${dirName}' exists under ${FLOW_BOOK_DIRNAME}/${flowId}/ but is not listed in pageOrder.${flowId}.`,
+          fix: `Add '${dirName}' to pageOrder.${flowId}, or remove the directory if unused.`,
         })
       }
     }

@@ -54,7 +54,7 @@ export default function FlowLensAnalyticsOverlays({
           nodes={pathNodes}
           onScreenClick={sid => {
             const ev = session.events.find(
-              e => e.type === 'screen.visited' && e.payload.screenId === sid
+              e => e.type === 'screen.visited' && e.payload.pageId === sid
             )
             if (ev) {
               onSeek(ev.sequenceId)
@@ -81,7 +81,7 @@ export default function FlowLensAnalyticsOverlays({
     <AnalyticsOverlay title="Cursor heatmap" subtitle={heatScreen} onClose={onClose}>
       <HeatmapView
         views={views}
-        screenId={heatScreen}
+        pageId={heatScreen}
         samples={session.cursorSamples}
         width={session.meta.capturedScreenW}
         height={session.meta.capturedScreenH}

@@ -17,14 +17,14 @@ Screens live under `flows/<flow>/<screen>/`. Journeys are declared in `flowplans
 - **TO** remove a flow or screen **→** delete the folder: `rm -rf workspaces/<ws>/flows/<flow>/`
 - **TO** reorder flows **→** edit the `flows[]` array in `workspace.ts`, or use the **Manage tab** (right panel) to copy a terminal patch script
 - **NEVER** hand-write new flow/screen files from scratch — copy an existing screen boilerplate, then fill the body
-- **ALWAYS** a screen's function name ends in `Screen` and matches its filename; it exports `screenMeta` with at least `desc`
+- **ALWAYS** a screen's function name ends in `Screen` and matches its filename; it exports `pageMeta` with at least `desc`
 
 ## Navigation (two independent conventions — know which one you need)
 
 - **TO** navigate from screen logic during flow playback (state/async) **→** `const { navigateTo, goNext, goBack } = useFlowNav()`
 - **TO** wire tap interactions declaratively during flow playback **→** add an `interactions` map in the flowplan step for the screen
 - **NEVER** call `useFlowNav()` unconditionally in a screen meant to also work standalone — it throws when there's no FlowMaster ancestor (i.e. viewed from the Screens tab, no flow active)
-- **TO** make a screen freely navigable from the Screens tab (no flow active) as well as during flow playback **→** `const { navigateTo } = useAppNav()` (from `@flowkit-shared/utils`), then call it unconditionally: `onClick={() => navigateTo(id)}`. `useAppNav()` picks FlowMaster's flow-aware navigateTo when the screen is rendered inside a flow, or DashboardContext's otherwise — no `isFlow` check needed in the screen's own code. See scripts/helpers/scaffold.js's demo screens for the pattern.
+- **TO** make a screen freely navigable from the Screens tab (no flow active) as well as during flow playback **→** `const { navigateTo } = useAppNav()` (from `@flowkit-shared/utils`), then call it unconditionally: `onClick={() => navigateTo(id)}`. `useAppNav()` picks FlowMaster's flow-aware navigateTo when the screen is rendered inside a flow, or DashboardContext's otherwise — no `isChapter` check needed in the screen's own code. See scripts/helpers/scaffold.js's demo screens for the pattern.
 - **NEVER** destructure `navigateTo` from `useDashboard()` directly and call it inside a screen that also relies on FlowMaster's guards/animations/session-replay during playback — use `useAppNav()` for a screen that needs to work both standalone and in-flow, or `useFlowNav()` if the screen is flow-only
 
 ## Data

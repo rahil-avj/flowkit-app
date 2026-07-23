@@ -1,4 +1,4 @@
-import type { ScreenMeta } from '@flowkit/types'
+import type { PageMeta } from '@flowkit/types'
 import { useAppNav } from '@flowkit-shared/utils'
 import HowToPlayList from '@workspace/lib/components/ui/HowToPlayList'
 import PrimaryButton from '@workspace/lib/components/ui/PrimaryButton'
@@ -34,7 +34,7 @@ export default function BlackjackHowToPlayScreen() {
   )
 }
 
-export const screenMeta: ScreenMeta = {
+export const pageMeta: PageMeta = {
   label: 'Blackjack · How to Play',
   desc: 'Rules explainer for Blackjack.',
 }

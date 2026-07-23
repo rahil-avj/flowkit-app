@@ -571,7 +571,7 @@ export function ScreenInfoContent({
           onChange={v => patch({ desc: v })}
           emptyHint={
             <>
-              No description. Export a <code className="not-italic font-mono">screenMeta</code> from
+              No description. Export a <code className="not-italic font-mono">pageMeta</code> from
               this screen&apos;s <code className="not-italic font-mono">.tsx</code>.
             </>
           }
@@ -590,7 +590,7 @@ export function ScreenInfoContent({
           emptyHint={
             <>
               Add a <code className="not-italic font-mono">devNotes</code> field to{' '}
-              <code className="not-italic font-mono">screenMeta</code>.
+              <code className="not-italic font-mono">pageMeta</code>.
             </>
           }
         />

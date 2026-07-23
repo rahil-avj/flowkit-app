@@ -158,9 +158,9 @@ async load(id) {
 ```
 
 - **`virtual:flowkit/config`** — trivial: `export const config = ${JSON.stringify(config)}`.
-- **`virtual:flowkit/screens`** — globs `flowBook/**/*.tsx` (variable depth — any number of cosmetic folders between the flow and screen segments are allowed, not just the fixed `<flow>/<screen>/` two levels), resolves each file's identity via `parseScreenSegments()`/`pickScreenFile()` (`src/shared/utils/screenPathIdentity.js`), and generates a lazy-import map keyed by the **composite id** `makeScreenId(flow, screen)` → `` `${flow}-${screen}` `` (not the older `"flow/screenId"` slash form), plus a parallel `screenMeta` map (imports each screen's named `screenMeta` export) and a `lazyScreens` map wrapping each loader in `React.lazy()`.
+- **`virtual:flowkit/screens`** — globs `flowBook/**/*.tsx` (variable depth — any number of cosmetic folders between the flow and screen segments are allowed, not just the fixed `<flow>/<screen>/` two levels), resolves each file's identity via `parseScreenSegments()`/`pickScreenFile()` (`src/shared/utils/screenPathIdentity.js`), and generates a lazy-import map keyed by the **composite id** `makeScreenId(flow, screen)` → `` `${flow}-${screen}` `` (not the older `"flow/pageId"` slash form), plus a parallel `pageMeta` map (imports each screen's named `pageMeta` export) and a `lazyScreens` map wrapping each loader in `React.lazy()`.
 - **`virtual:flowkit/flowplans`** — globs `flowStories/*.ts`, eagerly imports each (flowplans are small, no need for lazy-loading).
-- **`virtual:flowkit/workspace`** — the catch-all: `db`, `loadSimulator`, `loadTokens`, `logo`, `sessions`. (The old `tags` loader for the retired `_tags.ts` sidecar file is gone — annotation tags now live inline on each screen via `screenMeta.annotations`, not a separate workspace-level file, so there's nothing left for this virtual module to generate for tags.) Each remaining field is independently optional (checks `fs.existsSync` on a small list of candidate paths per feature before deciding whether to generate a real loader or a stub).
+- **`virtual:flowkit/workspace`** — the catch-all: `db`, `loadSimulator`, `loadTokens`, `logo`, `sessions`. (The old `tags` loader for the retired `_tags.ts` sidecar file is gone — annotation tags now live inline on each screen via `pageMeta.annotations`, not a separate workspace-level file, so there's nothing left for this virtual module to generate for tags.) Each remaining field is independently optional (checks `fs.existsSync` on a small list of candidate paths per feature before deciding whether to generate a real loader or a stub).
 
 **`db` resolution — named exports win over default:**
 
@@ -320,7 +320,7 @@ Same precedent as `index.html`'s `<script src="/node_modules/flowkit/src/main.ts
 
 ### 6.4 The 2-flow/5-screen starter
 
-Ported from `scripts/helpers/scaffold.js`'s repo-mode `workspaceScaffold()` — same content (onboarding: welcome → setup → ready; home: home → detail), adapted from repo mode's `useDashboard()` hook to flat mode's documented `FlowScreenProps` convention:
+Ported from `scripts/helpers/scaffold.js`'s repo-mode `workspaceScaffold()` — same content (onboarding: welcome → setup → ready; home: home → detail), adapted from repo mode's `useDashboard()` hook to flat mode's documented `PageProps` convention:
 
 ```tsx
 // repo mode (scripts/helpers/scaffold.js)
@@ -330,12 +330,12 @@ export default function WelcomeScreen() {
 }
 
 // flat mode (packages/create-flowkit-app/index.js)
-export default function WelcomeScreen({ onAction }: FlowScreenProps) {
+export default function WelcomeScreen({ onAction }: PageProps) {
   return <button onClick={() => onAction?.('get-started')}>Get Started</button> // explicit call
 }
 ```
 
-Repo mode's screens rely on the platform's internal id-based hotspot matching (a button's DOM `id` is matched against the active flowplan step's `on` field automatically — no click handler needed in the JSX at all). Flat mode's screens use the explicit `onAction(actionName)` call instead, since that's the documented public API surface in `FlowScreenProps`'s JSDoc (`src/types/index.ts`). Don't mix the two conventions when porting more repo-mode content — pick `onAction`/`onNext`/`onBack` explicit calls for anything author-facing.
+Repo mode's screens rely on the platform's internal id-based hotspot matching (a button's DOM `id` is matched against the active flowplan step's `on` field automatically — no click handler needed in the JSX at all). Flat mode's screens use the explicit `onAction(actionName)` call instead, since that's the documented public API surface in `PageProps`'s JSDoc (`src/types/index.ts`). Don't mix the two conventions when porting more repo-mode content — pick `onAction`/`onNext`/`onBack` explicit calls for anything author-facing.
 
 ---
 
@@ -347,9 +347,9 @@ Repo mode's screens rely on the platform's internal id-based hotspot matching (a
 {ActiveComponent ? <ActiveComponent /> : ...}
 ```
 
-No props at all. Repo-mode screens never noticed because they read `db` via the `useDashboard()` context hook, which works regardless of what rendered them. Flat-mode screens — which use `FlowScreenProps` (`db` as a _prop_) — saw `db` as permanently `undefined` in this view, only becoming real once you entered actual flowplan playback (which routes through `FlowMaster.tsx`, a completely different component that _does_ pass real props).
+No props at all. Repo-mode screens never noticed because they read `db` via the `useDashboard()` context hook, which works regardless of what rendered them. Flat-mode screens — which use `PageProps` (`db` as a _prop_) — saw `db` as permanently `undefined` in this view, only becoming real once you entered actual flowplan playback (which routes through `FlowMaster.tsx`, a completely different component that _does_ pass real props).
 
-Fixed by threading `db` through: `DesktopCanvas` (owns `useDashboard()`) → `CanvasContentProps` → `CanvasContent` (owns the actual `<ActiveComponent>` render) → `<ActiveComponent db={db} />`. If you add more `FlowScreenProps` fields that should be visible in the static preview (not just during playback), thread them the same way — through `CanvasContentProps`, not by trying to reach `useDashboard()` from inside `CanvasContent` directly (it's a different component; the hook call itself would work, but the _value_ the outer `DesktopCanvas` already computed wouldn't be reused, and you'd end up with two independent reads of the same context for no reason).
+Fixed by threading `db` through: `DesktopCanvas` (owns `useDashboard()`) → `CanvasContentProps` → `CanvasContent` (owns the actual `<ActiveComponent>` render) → `<ActiveComponent db={db} />`. If you add more `PageProps` fields that should be visible in the static preview (not just during playback), thread them the same way — through `CanvasContentProps`, not by trying to reach `useDashboard()` from inside `CanvasContent` directly (it's a different component; the hook call itself would work, but the _value_ the outer `DesktopCanvas` already computed wouldn't be reused, and you'd end up with two independent reads of the same context for no reason).
 
 ---
 

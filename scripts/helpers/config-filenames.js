@@ -4,7 +4,7 @@
  * retyping the string literal.
  */
 
-/** Per-workspace content registration (workspace identity, flows, screenOrder). */
+/** Per-workspace content registration (workspace identity, flows, pageOrder). */
 export const WORKSPACE_CONFIG_FILENAME = 'workspace.ts'
 
 /** Project-root export settings (exportDefaults, exportProfiles). Plain JSON. */

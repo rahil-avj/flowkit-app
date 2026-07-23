@@ -4,36 +4,36 @@ Status: approved, not yet implemented.
 
 ## Types (`src/types/index.ts` + a few others)
 
-| Current | New |
-|---|---|
-| `ScreenMeta` | `PageMeta` |
-| `ScreenVariant` | `PageVariant` |
-| `FlowMeta` | `ChapterMeta` |
-| `FlowNode` | `ChapterNode` |
-| `FlowConfig` | `ChapterConfig` |
-| `FlowConfig.screens` | `.pages` |
-| `FlowConfig.initialScreen` | `.initialPage` |
-| `FlowScreenProps` | `PageProps` |
-| `PageProps.isFlow` | `.isChapter` |
-| `PageProps.flowState` | `.chapterState` |
-| `WireframeView.flow` | `.chapter` |
-| `WireframeView.meta` / `.variants` | same field names, types become `PageMeta` / `PageVariant[]` |
-| `FlowStep.screenId` | `.pageId` |
-| `FlowkitConfig.flows` | `.chapters` |
-| `FlowkitConfig.screenOrder` | `.pageOrder` |
-| `FlowkitConfig.startScreen` | `.startPage` |
-| `FlowkitProjectConfig.flows` | `.chapters` |
-| `FlowkitProjectConfig.screenOrder` | `.pageOrder` |
-| `FlowkitProjectConfig.modules` | **unchanged** — deprecated legacy shim, left alone |
-| `WorkspaceHierarchyNode.kind: 'flow'|'screen'` | `'chapter'|'page'` |
-| `InteractionCtx.activeScreenId` | `.activePageId` |
-| `FeedbackComment.screenId` / `.screenLabel` | `.pageId` / `.pageLabel` |
-| `AnnotationTag.screens` / `.flows` | `.pages` / `.chapters` |
-| `FlowNavContextValue` | `NavContextValue` (matches `useNav`) |
-| `NavContextValue.isFlow` / `.flowState` | `.isChapter` / `.chapterState` |
-| `ScreenPathInfo`, `ScreenGlobMap`, `ScreenRec` (useWorkspaceHierarchy.ts) | `PagePathInfo`, `PageGlobMap`, `PageRec` |
-| `ResolvedScreen`, `ScreenResolver` (compileFlowplan.ts) | `ResolvedPage`, `PageResolver` |
-| `NoScreensProps` | `NoPagesProps` |
+| Current                                                                   | New                                                         |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `PageMeta`                                                                | `PageMeta`                                                  |
+| `PageVariant`                                                             | `PageVariant`                                               |
+| `PageMeta`                                                                | `ChapterMeta`                                               |
+| `FlowNode`                                                                | `ChapterNode`                                               |
+| `ChapterConfig`                                                           | `ChapterConfig`                                             |
+| `ChapterConfig.pages`                                                     | `.pages`                                                    |
+| `ChapterConfig.initialPage`                                               | `.initialPage`                                              |
+| `PageProps`                                                               | `PageProps`                                                 |
+| `PageProps.isChapter`                                                     | `.isChapter`                                                |
+| `PageProps.flowState`                                                     | `.chapterState`                                             |
+| `WireframeView.flow`                                                      | `.chapter`                                                  |
+| `WireframeView.meta` / `.variants`                                        | same field names, types become `PageMeta` / `PageVariant[]` |
+| `FlowStep.pageId`                                                         | `.pageId`                                                   |
+| `FlowkitConfig.flows`                                                     | `.chapters`                                                 |
+| `FlowkitConfig.pageOrder`                                                 | `.pageOrder`                                                |
+| `FlowkitConfig.startPage`                                                 | `.startPage`                                                |
+| `FlowkitProjectConfig.flows`                                              | `.chapters`                                                 |
+| `FlowkitProjectConfig.pageOrder`                                          | `.pageOrder`                                                |
+| `FlowkitProjectConfig.modules`                                            | **unchanged** — deprecated legacy shim, left alone          |
+| `WorkspaceHierarchyNode.kind: 'flow'                                      | 'screen'`                                                   | `'chapter' | 'page'` |
+| `InteractionCtx.activeScreenId`                                           | `.activePageId`                                             |
+| `FeedbackComment.pageId` / `.screenLabel`                                 | `.pageId` / `.pageLabel`                                    |
+| `AnnotationTag.pages` / `.flows`                                          | `.pages` / `.chapters`                                      |
+| `FlowNavContextValue`                                                     | `NavContextValue` (matches `useNav`)                        |
+| `NavContextValue.isChapter` / `.flowState`                                | `.isChapter` / `.chapterState`                              |
+| `ScreenPathInfo`, `ScreenGlobMap`, `ScreenRec` (useWorkspaceHierarchy.ts) | `PagePathInfo`, `PageGlobMap`, `PageRec`                    |
+| `ResolvedPage`, `ScreenResolver` (compileFlowplan.ts)                     | `ResolvedPage`, `PageResolver`                              |
+| `NoPagesProps`                                                            | `NoPagesProps`                                              |
 
 **Unchanged (Flowplan domain):** `FlowplanDef`, `FlowplanRef`, `FlowplanStepEntry`, `Fork`.
 
@@ -45,72 +45,72 @@ Status: approved, not yet implemented.
 
 ## Functions/hooks
 
-| Current | New |
-|---|---|
-| `makeScreenId` | `makePageId` |
-| `parseScreenSegments` | `parsePageSegments` |
-| `pickScreenFile` | `pickPageFile` |
-| `parseScreenPath` | `parsePagePath` |
-| `deriveScreenLabel` | `derivePageLabel` |
-| `cmdCreateScreen`/`Remove`/`Rename`/`Move`/`Info` | `cmdCreatePage`/etc. |
-| `cmdListScreens` | `cmdListPages` |
-| `isHiddenScreenId` | `isHiddenPageId` |
-| `checkScreens` | `checkPages` |
-| `addScreen`/`removeScreen`/`renameScreen`/`moveScreen`/`listScreens`/`screenExists` | `addPage`/etc. |
-| `cmdCreateFlow`/`Remove`/`List` | `cmdCreateChapter`/etc. |
-| `addFlow`/`removeFlow`/`flowExists` | `addChapter`/etc. |
-| `cmdPromoteFlow` | `cmdPromoteChapter` |
-| `useFlowNav` | `useNav` |
-| `useFlowEngine` | **unchanged** |
-| `buildFlatHierarchy`/`buildHierarchy`/`resolveConfigDefaults` | unchanged (generic names) |
+| Current                                                                             | New                       |
+| ----------------------------------------------------------------------------------- | ------------------------- |
+| `makeScreenId`                                                                      | `makePageId`              |
+| `parseScreenSegments`                                                               | `parsePageSegments`       |
+| `pickScreenFile`                                                                    | `pickPageFile`            |
+| `parseScreenPath`                                                                   | `parsePagePath`           |
+| `deriveScreenLabel`                                                                 | `derivePageLabel`         |
+| `cmdCreateScreen`/`Remove`/`Rename`/`Move`/`Info`                                   | `cmdCreatePage`/etc.      |
+| `cmdListScreens`                                                                    | `cmdListPages`            |
+| `isHiddenScreenId`                                                                  | `isHiddenPageId`          |
+| `checkScreens`                                                                      | `checkPages`              |
+| `addScreen`/`removeScreen`/`renameScreen`/`moveScreen`/`listScreens`/`screenExists` | `addPage`/etc.            |
+| `cmdCreateFlow`/`Remove`/`List`                                                     | `cmdCreateChapter`/etc.   |
+| `addFlow`/`removeFlow`/`flowExists`                                                 | `addChapter`/etc.         |
+| `cmdPromoteFlow`                                                                    | `cmdPromoteChapter`       |
+| `useFlowNav`                                                                        | `useNav`                  |
+| `useFlowEngine`                                                                     | **unchanged**             |
+| `buildFlatHierarchy`/`buildHierarchy`/`resolveConfigDefaults`                       | unchanged (generic names) |
 
 ## CLI verbs
 
-| Current | New |
-|---|---|
-| `create:screen` | `create:page` |
-| `remove:screen` | `remove:page` |
-| `rename:screen` | `rename:page` |
-| `move:screen` | `move:page` |
-| `list:screens` | `list:pages` |
-| `screen:info` | `page:info` |
-| `create:flow` | `create:chapter` |
-| `remove:flow` | `remove:chapter` |
-| `list:flows` | `list:chapters` |
-| `promote:flow` | `promote:chapter` |
+| Current         | New               |
+| --------------- | ----------------- |
+| `create:screen` | `create:page`     |
+| `remove:screen` | `remove:page`     |
+| `rename:screen` | `rename:page`     |
+| `move:screen`   | `move:page`       |
+| `list:screens`  | `list:pages`      |
+| `screen:info`   | `page:info`       |
+| `create:flow`   | `create:chapter`  |
+| `remove:flow`   | `remove:chapter`  |
+| `list:flows`    | `list:chapters`   |
+| `promote:flow`  | `promote:chapter` |
 
 **Unchanged (Flowplan domain):** `create:flowplan`, `remove:flowplan`, `add:step`, `remove:step`, `list:steps`, `flowplan:info`, `check:flowplans`, `plan:ls`.
 
 ## Check rule ids
 
-| Current | New |
-|---|---|
-| `screen/ambiguous-folder` | `page/ambiguous-folder` |
-| `screen/no-default-export` | `page/no-default-export` |
-| `screen/missing-meta` | `page/missing-meta` |
-| `screen/meta-id-mismatch` | `page/meta-id-mismatch` |
-| `screen/meta-missing-label` | `page/meta-missing-label` |
-| `config/flow-mismatch` | `config/chapter-mismatch` |
-| `config/empty-flow` | `config/empty-chapter` |
+| Current                               | New                         |
+| ------------------------------------- | --------------------------- |
+| `screen/ambiguous-folder`             | `page/ambiguous-folder`     |
+| `screen/no-default-export`            | `page/no-default-export`    |
+| `screen/missing-meta`                 | `page/missing-meta`         |
+| `screen/meta-id-mismatch`             | `page/meta-id-mismatch`     |
+| `screen/meta-missing-label`           | `page/meta-missing-label`   |
+| `config/flow-mismatch`                | `config/chapter-mismatch`   |
+| `config/empty-flow`                   | `config/empty-chapter`      |
 | `config/orphaned-id` / `orphaned-dir` | unchanged (already generic) |
-| `flowplan/invalid-screen` | `flowplan/invalid-page` |
+| `flowplan/invalid-screen`             | `flowplan/invalid-page`     |
 
 ## Filename convention
 
-| Current | New |
-|---|---|
+| Current                                        | New                                        |
+| ---------------------------------------------- | ------------------------------------------ |
 | `WelcomeScreen.tsx`, `${pascalName}Screen.tsx` | `WelcomePage.tsx`, `${pascalName}Page.tsx` |
-| `export default function WelcomeScreen()` | `export default function WelcomePage()` |
+| `export default function WelcomeScreen()`      | `export default function WelcomePage()`    |
 
 ## Directory/module renames
 
-| Current file | New file |
-|---|---|
-| `scripts/authoring/screens.js` | `scripts/authoring/pages.js` |
-| `scripts/authoring/flows.js` | `scripts/authoring/chapters.js` |
+| Current file                        | New file                               |
+| ----------------------------------- | -------------------------------------- |
+| `scripts/authoring/screens.js`      | `scripts/authoring/pages.js`           |
+| `scripts/authoring/flows.js`        | `scripts/authoring/chapters.js`        |
 | `scripts/authoring/promote-flow.js` | `scripts/authoring/promote-chapter.js` |
-| `scripts/checks/screens.js` | `scripts/checks/pages.js` |
-| `src/shared/utils/useFlowNav.ts` | `src/shared/utils/useNav.ts` |
+| `scripts/checks/screens.js`         | `scripts/checks/pages.js`              |
+| `src/shared/utils/useFlowNav.ts`    | `src/shared/utils/useNav.ts`           |
 
 ## Composite id shape
 

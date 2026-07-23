@@ -9,15 +9,15 @@ interface Props {
 }
 
 export default function FunnelView({ session }: Props) {
-  const [screenOrder, setScreenOrder] = useState<string>('')
+  const [pageOrder, setScreenOrder] = useState<string>('')
 
   const visitedScreens = Array.from(
     new Set(
-      session.events.filter(e => e.type === 'screen.visited').map(e => e.payload.screenId as string)
+      session.events.filter(e => e.type === 'screen.visited').map(e => e.payload.pageId as string)
     )
   )
 
-  const orderList = screenOrder
+  const orderList = pageOrder
     .split(',')
     .map(s => s.trim())
     .filter(Boolean)
@@ -28,10 +28,10 @@ export default function FunnelView({ session }: Props) {
     <div className="h-full overflow-y-auto p-3">
       <div className="mb-3">
         <label className="text-[10px] text-theme-text-muted block mb-1">
-          Screen order (comma-separated)
+          page order (comma-separated)
         </label>
         <input
-          value={screenOrder}
+          value={pageOrder}
           onChange={e => setScreenOrder(e.target.value)}
           placeholder="ScreenA, ScreenB, ScreenC"
           className="w-full bg-theme-elevated border border-theme-border rounded-md py-1.5 px-2 text-ui-2xs text-theme-text-primary outline-none"
@@ -41,7 +41,7 @@ export default function FunnelView({ session }: Props) {
             <button
               key={s}
               onClick={() => {
-                const current = screenOrder
+                const current = pageOrder
                   .split(',')
                   .map(x => x.trim())
                   .filter(Boolean)
@@ -58,14 +58,14 @@ export default function FunnelView({ session }: Props) {
       {steps.length >= 2 ? (
         <div className="flex flex-col gap-1">
           {steps.map((step, i) => (
-            <div key={step.screenId}>
+            <div key={step.pageId}>
               <div className="bg-theme-elevated border border-theme-border rounded-lg p-[8px_12px]">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-[10px] text-theme-text-disabled bg-theme-border rounded px-1.25 py-px shrink-0">
                     {i + 1}
                   </span>
                   <span className="text-ui-xs text-theme-text-primary flex-1 truncate">
-                    {step.screenId}
+                    {step.pageId}
                   </span>
                   <span
                     className={`text-ui-2xs shrink-0 ${step.reachedCount > 0 ? 'text-theme-green' : 'text-theme-red'}`}

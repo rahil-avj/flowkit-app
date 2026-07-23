@@ -113,11 +113,11 @@ function genConfig(config) {
 }
 
 async function genScreens(config, cwd) {
-  const screenOrder = config.screenOrder ?? {}
+  const pageOrder = config.pageOrder ?? {}
 
   // Scan the whole flowBook/ tree — flow id is now derived from path position
   // (via the shared screenPathIdentity module), not assumed from config.flows/
-  // screenOrder keys. Node's fs/promises glob() matches both depth-0
+  // pageOrder keys. Node's fs/promises glob() matches both depth-0
   // (flowBook/File.tsx) and deeper nesting with a single `**/*.tsx` pattern —
   // verified directly, no `{*,**/*}` workaround needed.
   const found = await globFiles(`${FLOW_BOOK_DIRNAME}/**/*.tsx`, cwd)
@@ -134,29 +134,29 @@ async function genScreens(config, cwd) {
     if (info.visibility === 'non-existent') continue // '__' — excluded entirely
 
     const fileName = segments[segments.length - 1]
-    const slotKey = `${info.flow}::${info.screen}::${info.variant}`
+    const slotKey = `${info.flow}::${info.page}::${info.variant}`
     const list = bySlot.get(slotKey) ?? []
     list.push({ rel, abs: path.resolve(cwd, rel), fileName, info })
     bySlot.set(slotKey, list)
   }
 
   // Collect structured screen entries — one per resolved (flow, screen, variant) slot.
-  const entries = [] // { key, flow, screenId, abs, visibility }
+  const entries = [] // { key, flow, pageId, abs, visibility }
   for (const [, candidates] of bySlot) {
     const { chosen } = pickScreenFile(candidates.map(c => c.fileName))
     const winner = candidates.find(c => c.fileName === chosen) ?? candidates[0]
     const { flow, screen, visibility } = winner.info
     const key = makeScreenId(flow, screen)
-    entries.push({ key, flow, screenId: screen, abs: winner.abs, visibility })
+    entries.push({ key, flow, pageId: screen, abs: winner.abs, visibility })
   }
 
-  // Apply declared screenOrder (per flow) as a display-order hint, same convention
+  // Apply declared pageOrder (per flow) as a display-order hint, same convention
   // as before — screens not mentioned keep their discovery order, appended after.
   entries.sort((a, b) => {
     if (a.flow !== b.flow) return 0
-    const order = screenOrder[a.flow] ?? []
-    const ai = order.indexOf(a.screenId)
-    const bi = order.indexOf(b.screenId)
+    const order = pageOrder[a.flow] ?? []
+    const ai = order.indexOf(a.pageId)
+    const bi = order.indexOf(b.pageId)
     if (ai === -1 && bi === -1) return 0
     if (ai === -1) return 1
     if (bi === -1) return -1
@@ -167,12 +167,12 @@ async function genScreens(config, cwd) {
     e => `  ${JSON.stringify(e.key)}: () => import(${JSON.stringify(e.abs)})`
   )
   const metaImports = entries.map(
-    (e, i) => `import { screenMeta as _meta${i} } from ${JSON.stringify(e.abs)}`
+    (e, i) => `import { pageMeta as _meta${i} } from ${JSON.stringify(e.abs)}`
   )
   const metaLines = entries.map((e, i) => `  ${JSON.stringify(e.key)}: _meta${i}`)
   const listLines = entries.map(
     e =>
-      `  { key: ${JSON.stringify(e.key)}, flow: ${JSON.stringify(e.flow)}, screenId: ${JSON.stringify(e.screenId)}, loader: screens[${JSON.stringify(e.key)}]${e.visibility === 'hidden' ? `, visibility: 'hidden'` : ''} }`
+      `  { key: ${JSON.stringify(e.key)}, flow: ${JSON.stringify(e.flow)}, pageId: ${JSON.stringify(e.pageId)}, loader: screens[${JSON.stringify(e.key)}]${e.visibility === 'hidden' ? `, visibility: 'hidden'` : ''} }`
   )
 
   return `import { lazy } from 'react'
@@ -186,7 +186,7 @@ export const lazyScreens = Object.fromEntries(
   Object.entries(screens).map(([k, loader]) => [k, lazy(loader)])
 )
 
-export const screenMeta = {
+export const pageMeta = {
 ${metaLines.join(',\n')}
 }
 
@@ -322,7 +322,7 @@ export function flowkit(options = {}) {
 
     if (id === VIRTUALS.config) {
       code = genConfig(cfg)
-    } else if (id === VIRTUALS.screens) {
+    } else if (id === VIRTUALS.pages) {
       code = await genScreens(cfg, cwd)
     } else if (id === VIRTUALS.flowplans) {
       code = await genFlowplans(cwd)

@@ -1,4 +1,4 @@
-import type { FlowNode } from '@flowkit/types/index'
+import type { Chapter } from '@flowkit/types/index'
 import type { PaletteItem } from '@flowkit-features/command-palette'
 import { CommandPalette } from '@flowkit-features/command-palette'
 import { dispatchExplorerCommand } from '@flowkit-shared/utils/explorerCommands'
@@ -9,7 +9,7 @@ import type { GoToItemMeta } from './types'
 import { useGoToItems } from './useGoToItems'
 
 interface Props {
-  flows: FlowNode[]
+  flows: Chapter[]
   activeViewId: string
   navigateTo: (id: string) => void
   onClose: () => void
@@ -30,7 +30,7 @@ function useGoToHandlers({ flows, activeViewId, navigateTo, onClose }: Props) {
           dispatchExplorerCommand({
             type: 'expandAndHighlight',
             flowId: meta.flowId,
-            screenId: item.id,
+            pageId: item.id,
           })
         }
       } else if (meta?.kind === 'flow') {
@@ -40,7 +40,7 @@ function useGoToHandlers({ flows, activeViewId, navigateTo, onClose }: Props) {
           dispatchExplorerCommand({
             type: 'expandAndHighlight',
             flowId: meta.flowId,
-            screenId: firstScreenId,
+            pageId: firstScreenId,
           })
           if (firstScreenId) navigateTo(firstScreenId)
         }

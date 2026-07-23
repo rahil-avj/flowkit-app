@@ -3,7 +3,7 @@ import { ArrowRight, ChevronDown, ChevronRight, MonitorX } from 'lucide-react'
 import React, { useState } from 'react'
 
 interface CommentGroupProps {
-  screenId: string
+  pageId: string
   screenLabel: string
   screenExists: boolean
   isCurrentScreen: boolean
@@ -13,7 +13,7 @@ interface CommentGroupProps {
 }
 
 export default function CommentGroup({
-  screenId,
+  pageId,
   screenLabel,
   screenExists,
   isCurrentScreen,
@@ -57,7 +57,7 @@ export default function CommentGroup({
               letterSpacing: '0.05em',
             }}
           >
-            {screenLabel || screenId}
+            {screenLabel || pageId}
           </span>
 
           {!screenExists && (
@@ -80,7 +80,7 @@ export default function CommentGroup({
           <button
             onClick={(e: React.MouseEvent) => {
               e.stopPropagation()
-              onNavigate(screenId)
+              onNavigate(pageId)
             }}
             title={`Navigate to ${screenLabel}`}
             className="flex items-center gap-1 shrink-0"

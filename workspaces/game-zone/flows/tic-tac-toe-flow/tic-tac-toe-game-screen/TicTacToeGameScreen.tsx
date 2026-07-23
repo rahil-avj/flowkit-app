@@ -1,4 +1,4 @@
-import type { ScreenMeta } from '@flowkit/types'
+import type { PageMeta } from '@flowkit/types'
 import { useAppNav, useDb } from '@flowkit-shared/utils'
 import GameOverModal from '@workspace/lib/components/ui/GameOverModal'
 import Grid from '@workspace/lib/components/ui/Grid'
@@ -116,7 +116,7 @@ export default function TicTacToeGameScreen() {
   )
 }
 
-export const screenMeta: ScreenMeta = {
+export const pageMeta: PageMeta = {
   label: 'Tic-Tac-Toe',
   desc: '2-player pass-and-play tic-tac-toe with a session win/draw tally.',
   tags: ['type:strategy'],

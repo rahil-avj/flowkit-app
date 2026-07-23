@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 
 interface Props {
   samples: CursorSample[]
-  screenId: string
+  pageId: string
   width: number
   height: number
 }
@@ -11,7 +11,7 @@ interface Props {
 const RADIUS = 24
 const MAX_OPACITY = 0.85
 
-export default function CursorHeatmap({ samples, screenId, width, height }: Props) {
+export default function CursorHeatmap({ samples, pageId, width, height }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export default function CursorHeatmap({ samples, screenId, width, height }: Prop
 
     ctx.clearRect(0, 0, width, height)
 
-    const filtered = samples.filter(s => s.screenId === screenId)
+    const filtered = samples.filter(s => s.pageId === pageId)
     if (filtered.length === 0) return
 
     // Use the capture dimensions from first sample for coordinate mapping
@@ -67,9 +67,9 @@ export default function CursorHeatmap({ samples, screenId, width, height }: Prop
     }
 
     ctx.putImageData(outData, 0, 0)
-  }, [samples, screenId, width, height])
+  }, [samples, pageId, width, height])
 
-  if (samples.filter(s => s.screenId === screenId).length === 0) return null
+  if (samples.filter(s => s.pageId === pageId).length === 0) return null
 
   return (
     <canvas

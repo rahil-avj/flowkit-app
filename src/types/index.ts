@@ -44,12 +44,12 @@ export type EntryGuard<Db extends Record<string, unknown> = Record<string, unkno
   db: Db
 }) => boolean
 
-// ─── Screen Meta ──────────────────────────────────────────────────────────────
+// ─── Page Meta ──────────────────────────────────────────────────────────────
 //
-// Optional metadata exported from each screen file as `screenMeta`.
+// Optional metadata exported from each screen file as `pageMeta`.
 // Controls how the screen appears in the sidebar and whether it can be accessed.
 
-export interface ScreenMeta {
+export interface PageMeta {
   id?: string
   label?: string
   /** Mark as true for screens that are entry points (not reached via back-nav). */
@@ -89,7 +89,7 @@ export interface ScreenMeta {
   annotations?: AnnotationTag[]
 }
 
-export interface FlowMeta {
+export interface ChapterMeta {
   desc?: string
   devNotes?: string
 }
@@ -100,7 +100,7 @@ export interface FlowMeta {
  * An A/B variant of a screen. `serial` "default" is the base file (no .variant.);
  * other serials come from `<Name>Screen.variant.<serial>.tsx`.
  */
-export interface ScreenVariant {
+export interface PageVariant {
   serial: string // "default" | "b" | "c" | …
   label: string
   component: React.ComponentType
@@ -111,25 +111,25 @@ export interface WireframeView {
   id: string
   label: string
   component: React.ComponentType
-  meta?: ScreenMeta
+  meta?: PageMeta
   /** Workspace-relative path, e.g. flows/diagnostics/EquipmentListScreen.tsx */
   filePath?: string
   /**
    * A/B variants of this screen (Flowplan hierarchy only). Always includes the
    * "default" variant whose component === `component`. Absent for legacy views.
    */
-  variants?: ScreenVariant[]
+  variants?: PageVariant[]
   /** The flow folder this screen is grouped under (Flowplan hierarchy). */
   flow?: string
   /** The project this screen belongs to (Flowplan hierarchy). */
   project?: string
 }
 
-export interface FlowNode {
+export interface Chapter {
   id: string
   label: string
   children?: WireframeView[]
-  config?: FlowConfig
+  config?: ChapterConfig
 }
 
 // ─── Transition Animations ────────────────────────────────────────────────────
@@ -244,13 +244,13 @@ export interface InteractionRule {
 /**
  * Context passed to interaction `do` functions and conditional `goTo` resolvers.
  */
-// "viewId" = workspace-level navigation (DashboardContext); "screenId" = flow-engine step identity (FlowEngine/FlowMaster). Both point at screen components but in different scopes.
+// "viewId" = workspace-level navigation (DashboardContext); "pageId" = flow-engine step identity (FlowEngine/FlowMaster). Both point at screen components but in different scopes.
 export type InteractionCtx = {
   /** The id of the screen that is currently active. */
   activeScreenId: string
   /** The navigation history for this flow session. */
   history: string[]
-  /** The current flow-local sandbox state (see localData in FlowConfig). */
+  /** The current flow-local sandbox state (see localData in ChapterConfig). */
   flowState: Record<string, unknown>
   /** Read a value from the flow-local sandbox. */
   get: (key: string) => unknown
@@ -314,13 +314,13 @@ export interface AutoPlayConfig {
   loop?: boolean
 }
 
-// ─── Flow Config ──────────────────────────────────────────────────────────────
+// ─── Chapter Config ──────────────────────────────────────────────────────────────
 
 /**
- * FlowConfig — the runtime type used internally by FlowMaster.
+ * ChapterConfig — the runtime type used internally by FlowMaster.
  * Screens are fully resolved React components.
  */
-export interface FlowConfig {
+export interface ChapterConfig {
   /** Unique identifier for this flow. Used in navigation and the sidebar. */
   id: string
   /** Display name shown in the sidebar. */
@@ -334,11 +334,11 @@ export interface FlowConfig {
    * `enterAnimation` — play this animation when this screen is navigated to.
    * `hotspots` — clickable overlay regions for static/image screens.
    */
-  screens: {
+  pages: {
     id: string
     label: string
     component: React.ComponentType
-    meta?: ScreenMeta
+    meta?: PageMeta
     /** Auto-advance to the next screen after this many milliseconds. */
     autoAdvanceDelay?: number
     /** Animation to play when entering this screen. */
@@ -385,7 +385,7 @@ export interface FlowConfig {
   onComplete?: (navigateTo: (id: string) => void) => void
 
   /** Start on a specific screen instead of the first one. Pass the screen id. */
-  initialScreen?: string
+  initialPage?: string
 
   /**
    * Flow-level auto-advance delay (ms). Used as a fallback for any screen
@@ -401,7 +401,7 @@ export interface FlowConfig {
    */
   autoPlay?: AutoPlayConfig
 
-  meta?: FlowMeta
+  meta?: ChapterMeta
 }
 
 // ─── Screen Props ─────────────────────────────────────────────────────────────
@@ -410,14 +410,14 @@ export interface FlowConfig {
  * Props automatically injected into every screen component by FlowMaster
  * during flowplan playback. All fields are `undefined` when a screen is
  * previewed standalone (e.g. the Screens tab, outside any flow) — use the
- * `isFlow` field to detect which case you're in.
+ * `isChapter` field to detect which case you're in.
  *
  * These exist as an escape hatch for screens that need programmatic
  * triggers (form submits, async callbacks, custom gesture libraries, etc.);
  * simple taps should prefer an element `id` + a matching flowplan step
  * instead of destructuring these props.
  */
-export interface FlowScreenProps<
+export interface PageProps<
   TState extends Record<string, unknown> = Record<string, unknown>,
   TDb extends Record<string, unknown> = Record<string, unknown>,
 > {
@@ -434,9 +434,9 @@ export interface FlowScreenProps<
   /** Go back to the previous screen. */
   onBack?: () => void
   /** True when this screen is rendered inside FlowMaster (vs. standalone preview). */
-  isFlow?: boolean
+  isChapter?: boolean
   /** The current flow-local sandbox state. Read-only — mutate via ctx.set() in interactions. */
-  flowState?: TState
+  state?: TState
   /**
    * The live global mock database.
    * Use optional chaining: db?.user?.name
@@ -447,7 +447,7 @@ export interface FlowScreenProps<
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
-// "viewId" = workspace-level navigation (DashboardContext); "screenId" = flow-engine step identity (FlowEngine/FlowMaster). Both point at screen components but in different scopes.
+// "viewId" = workspace-level navigation (DashboardContext); "pageId" = flow-engine step identity (FlowEngine/FlowMaster). Both point at screen components but in different scopes.
 export interface DashboardState {
   activeViewId: string
   devicePreset: DevicePreset
@@ -483,7 +483,7 @@ export type FeedbackTag = (typeof FEEDBACK_TAGS)[number]
 
 export interface FeedbackComment {
   id: string
-  screenId: string
+  pageId: string
   screenLabel: string
   tags: FeedbackTag[]
   text: string
@@ -496,7 +496,7 @@ export interface FeedbackComment {
 // ─── Flowplan System (Phase 1) ──────────────────────────────────────────────────
 //
 // A Flowplan is an authored user journey. It is COMPILED into the runtime
-// FlowConfig (see features/flow-library/compileFlowplan.ts) and run by the
+// ChapterConfig (see features/flow-library/compileFlowplan.ts) and run by the
 // existing FlowMaster/useFlowEngine — the engine is never modified.
 //
 // Authoring lives in: workspaces/<ws>/projects/<proj>/[modules/<mod>/]flowplans/<Name>.ts
@@ -573,7 +573,7 @@ export interface FlowplanRef {
 /** One step in a Flowplan — shows a screen, optionally patches db, may branch. */
 export interface FlowStep {
   /** Id of the screen to show. Must resolve to a registered workspace screen. */
-  screenId: string
+  pageId: string
   /**
    * The element `id` in the screen's JSX whose tap advances this step
    * (e.g. "checkout" for <button id="checkout">). The compiler keys the
@@ -605,7 +605,7 @@ export function isFlowplanRef(entry: FlowplanStepEntry): entry is FlowplanRef {
 
 /**
  * The authored Flowplan shape. Written with defineFlow({ ... }).
- * Developer-owned: screenId, db, simulator. Designer/PM-editable: name,
+ * Developer-owned: pageId, db, simulator. Designer/PM-editable: name,
  * description, actionNote, decisionNote, annotation, tags.
  */
 export interface FlowplanDef {
@@ -622,7 +622,7 @@ export interface FlowplanDef {
   simulator?: { controls: SimulatorControl[] }
   /**
    * Screen id the device's home button/reset-to-first should target while this
-   * flowplan is playing. Falls back to the workspace's `startScreen` (or the
+   * flowplan is playing. Falls back to the workspace's `startPage` (or the
    * first declared screen) when unset.
    */
   homeScreen?: string
@@ -654,11 +654,11 @@ export interface FlowkitProjectConfig {
    * Unlisted screens are appended after declared ones in alphabetical order.
    *
    * @example
-   * screenOrder: {
+   * pageOrder: {
    *   diagnostics: ['equipment-list', 'equipment-detail', 'equipment-drill-down', 'trends'],
    * }
    */
-  screenOrder?: Record<string, string[]>
+  pageOrder?: Record<string, string[]>
 }
 
 /** The root workspace manifest authored with defineConfig({ ... }). */
@@ -667,14 +667,14 @@ export interface FlowkitConfig {
   /** Flat-layout: explicit flow ordering at the workspace root (no projects layer). */
   flows?: string[]
   /** Flat-layout: screen ordering per flow at the workspace root. */
-  screenOrder?: Record<string, string[]>
+  pageOrder?: Record<string, string[]>
   /** Nested-layout: per-project config (use when the workspace has a projects/ folder). */
   projects?: Record<string, FlowkitProjectConfig>
   /**
    * Screen id to load by default (cold load, canvas "home" button, reset-to-first)
    * when no flowplan is active. Falls back to the first declared screen when unset.
    */
-  startScreen?: string
+  startPage?: string
   /**
    * Default device shell/mockup shown on load. Must match a `DevicePreset.label`
    * from `src/shared/components/devices` (e.g. "iPhone 16 Pro"). Falls back to the

@@ -43,10 +43,10 @@ a real `onClick={() => navigateTo(...)}` — works with or without a flowplan ac
 ## Verified platform facts this plan depends on
 
 - **Screen anatomy** (repo mode): default-exported component, no required props (unlike
-  consumer mode's `FlowScreenProps`) — reads/writes data via `const db = useDb()`
+  consumer mode's `PageProps`) — reads/writes data via `const db = useDb()`
   (`get`/`set`/`has`/`remove`/`update`/`reset`), navigates via `const { navigateTo } =
-useAppNav()`. `screenMeta` export: `{ label?, desc?, canEnter?, canNotEnter?, tags?, ... }`
-  (`ScreenMeta`, `src/types/index.ts`).
+useAppNav()`. `pageMeta` export: `{ label?, desc?, canEnter?, canNotEnter?, tags?, ... }`
+  (`PageMeta`, `src/types/index.ts`).
 - **Path aliases** (this workspace's own generated `CLAUDE.md`): `@flowkit/` → `src/`
   (read-only, never edit), `@workspace/` → `workspaces/game-zone/` (this workspace root).
   Screens import shared code as `@workspace/lib/components/...`, never relative `../../`.
@@ -190,7 +190,7 @@ gap at all**: `colorBlindMode`/`blurryVision` (simulator accessibility filters) 
 automatically as a canvas-level CSS filter over any screen — no author-side code needed,
 already "working" for every screen in this plan with zero changes.
 
-1. **`canEnter` screen guards** (`ScreenMeta`, `src/types/index.ts`): both **2048's** and
+1. **`canEnter` screen guards** (`PageMeta`, `src/types/index.ts`): both **2048's** and
    **Memory Match's** `high-scores` screens gate on having played at least once —
    `canEnter: ({ db }) => db.has('highScores.twentyFortyEight')` /
    `db.has('highScores.memoryMatch.bestMoves')` respectively. Sidebar shows a lock icon
@@ -204,7 +204,7 @@ already "working" for every screen in this plan with zero changes.
    (`'none'` plus every value 2–12) that the Dice game's roll logic checks first, if set,
    instead of a real random roll — a concrete, demoable "force a specific outcome" reviewer
    control.
-3. **Screen `tags`** (`ScreenMeta.tags`): every game's `game-view` screen gets a one-word
+3. **Screen `tags`** (`PageMeta.tags`): every game's `game-view` screen gets a one-word
    category tag for Screens-tab filtering — `['type:card']` (Blackjack), `['type:dice']`
    (Dice), `['type:strategy']` (Tic-Tac-Toe), `['type:puzzle']` (2048), `['type:memory']`
    (Memory Match), `['type:trivia']` (Math Quiz). Near-zero cost, real organizational value.
@@ -232,7 +232,7 @@ MathQuiz:    { difficulty (↔ db.set/db.get), equation, correctAnswer, options,
 ## File structure (`workspaces/game-zone/`)
 
 ```
-workspace.ts                       # flows: [...], startScreen: 'splash'
+workspace.ts                       # flows: [...], startPage: 'splash'
 flowplans/
   intro-flow.ts                    # splash → welcome → hub (replaces onboarding-flow.ts)
   journey-play-tic-tac-toe.ts
@@ -316,7 +316,7 @@ flow — highest logic complexity, tackled once simpler patterns are proven.
 high-scores pattern (`best` in `db`, a dedicated high-scores screen reading it live —
 this genuinely updates in repo mode, unlike the future consumer-mode port). Add its
 `canEnter` guard here (gate on `db.has('highScores.twentyFortyEight')`) and its `tags:
-['type:puzzle']` — both are one-line `screenMeta` additions, no reason to defer them.
+['type:puzzle']` — both are one-line `pageMeta` additions, no reason to defer them.
 
 **Phase 6 — Memory Match.** Reuses the high-scores pattern from 2048; adds flip-delay
 timer cleanup and move/time tracking. Same one-line additions: `canEnter` guard on
@@ -372,7 +372,7 @@ instruction to test here first.
 - `npx tsc --noEmit` (or the repo's `tsc -b`) after each phase to catch type errors early
   given the volume of new files.
 - `flowkit check` (or `flowkit check:screens`/`check:flowplans`) periodically to catch
-  authoring mistakes (missing `screenMeta`, broken flowplan references) before they compound.
+  authoring mistakes (missing `pageMeta`, broken flowplan references) before they compound.
 - Final Phase 9 pass is a real, manual click-through — no automated test replaces actually
   playing all 6 games end-to-end once.
 
@@ -383,6 +383,6 @@ instruction to test here first.
 - `/Users/mac/Documents/flowkit-app/src/shared/utils/useDb.ts` — **the `db` API every game screen should actually use** (`get`/`set`/`has`/`remove`/`update`/`reset`), not raw `updateDb`
 - `/Users/mac/Documents/flowkit-app/src/shared/utils/dbHelpers.ts` — the underlying pure logic behind `useDb()`, if you need to see exactly what each verb does
 - `/Users/mac/Documents/flowkit-app/src/shared/contexts/DashboardContext.tsx` — `db`/`updateDb`, the lower-level primitive `useDb()` wraps
-- `/Users/mac/Documents/flowkit-app/src/types/index.ts` — `ScreenMeta`, `FlowStep`, `SimulatorControl`
+- `/Users/mac/Documents/flowkit-app/src/types/index.ts` — `PageMeta`, `FlowStep`, `SimulatorControl`
 - `/Users/mac/Documents/flowkit-app/src/index.css` — existing token vocabulary to build on top of
 - `/Users/mac/Documents/flowkit-app/changelog-db.md` — full history of the `db.*` helper consolidation, in case a game screen's write behaves unexpectedly and you need the "why" behind the guard/auto-create rules

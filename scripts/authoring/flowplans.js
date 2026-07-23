@@ -36,7 +36,7 @@ function parseFlowplan(filePath) {
 
 /** Format a single step object back to source. */
 function formatStep(step) {
-  const parts = [`screenId: '${step.screenId}'`]
+  const parts = [`pageId: '${step.pageId}'`]
   if (step.on) parts.push(`on: '${step.on.replace(/'/g, "\\'")}'`)
   if (step.actionNote) parts.push(`actionNote: '${step.actionNote.replace(/'/g, "\\'")}'`)
   if (step.decisionNote) parts.push(`decisionNote: '${step.decisionNote.replace(/'/g, "\\'")}'`)
@@ -47,7 +47,7 @@ function formatStep(step) {
 /**
  * Replace the steps: [...] block in a flowplan source with regenerated steps.
  *
- * formatStep() only serializes screenId/on/actionNote/decisionNote/annotation —
+ * formatStep() only serializes pageId/on/actionNote/decisionNote/annotation —
  * it has no serialization path for a step's `forks`, and the non-greedy regex
  * below only matches up to the first `]`, not the true end of a nested-bracket
  * steps array. Silently proceeding on a flowplan with forks would either drop
@@ -80,7 +80,7 @@ export default defineFlow({
   description: '',
 
   steps: [
-    // { screenId: 'screen-id', on: 'element-id', actionNote: 'What the user does' },
+    // { pageId: 'screen-id', on: 'element-id', actionNote: 'What the user does' },
   ],
 })
 `
@@ -120,7 +120,7 @@ export async function cmdCreateFlowplan(_val, args = []) {
   console.log(g(`✓ Flowplan: ${FLOW_STORIES_DIRNAME}/${id}.ts`))
   console.log('')
   console.log(d(`Next:`))
-  console.log(d(`  flowkit add:step --flowplan:${id} --screen:<screenId> --action:"User arrives"`))
+  console.log(d(`  flowkit add:step --flowplan:${id} --screen:<pageId> --action:"User arrives"`))
   console.log(d(`  flowkit list:steps --flowplan:${id}`))
 }
 
@@ -156,34 +156,34 @@ export async function cmdAddStep(_val, args = []) {
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
   const fpId = parseStringFlag(args, 'flowplan')
-  const screenId = parseStringFlag(args, 'screen')
+  const pageId = parseStringFlag(args, 'screen')
   const on = parseStringFlag(args, 'on')
   const actionNote = parseStringFlag(args, 'action')
   const positionStr = parseStringFlag(args, 'position')
 
-  if (!fpId || !screenId) {
-    console.error(r('✗ --flowplan:<id> and --screen:<screenId> are required'))
+  if (!fpId || !pageId) {
+    console.error(r('✗ --flowplan:<id> and --screen:<pageId> are required'))
     process.exit(1)
   }
 
-  // Validate the bare screenId exists in some flow's screenOrder (screenOrder is
+  // Validate the bare pageId exists in some flow's pageOrder (pageOrder is
   // flow-scoped/bare, per config-patch.js), then build the collision-proof composite
   // id (flow-screen) from whichever flow it's actually registered under — a flowplan's
   // own id is a separate authored concept, not necessarily the same as the target
   // screen's flow folder, so this can't be assumed from fpId.
   const config = readWorkspaceConfig(wsDir)
-  const owningFlow = Object.entries(config.screenOrder).find(([, screens]) =>
-    screens.includes(screenId)
+  const owningFlow = Object.entries(config.pageOrder).find(([, screens]) =>
+    screens.includes(pageId)
   )?.[0]
   if (!owningFlow) {
-    const allScreens = Object.values(config.screenOrder).flat()
-    console.error(r(`✗ screenId '${screenId}' not found in workspace flows`))
-    const close = allScreens.filter(s => s.startsWith(screenId.split('-')[0]))
+    const allScreens = Object.values(config.pageOrder).flat()
+    console.error(r(`✗ pageId '${pageId}' not found in workspace flows`))
+    const close = allScreens.filter(s => s.startsWith(pageId.split('-')[0]))
     if (close.length > 0) console.error(d(`  Did you mean: ${close.join(', ')}`))
     console.error(d(`  Available screens: ${allScreens.join(', ')}`))
     process.exit(1)
   }
-  const compositeScreenId = makeScreenId(owningFlow, screenId)
+  const compositeScreenId = makeScreenId(owningFlow, pageId)
 
   const fpPath = flowplanPath(wsDir, fpId)
   if (!fs.existsSync(fpPath)) {
@@ -192,13 +192,15 @@ export async function cmdAddStep(_val, args = []) {
     process.exit(1)
   }
 
-  const step = { screenId: compositeScreenId }
+  const step = { pageId: compositeScreenId }
   if (on) step.on = on
   if (actionNote) step.actionNote = actionNote
 
   const fp = parseFlowplan(fpPath)
   if (!fp) {
-    console.error(r(`✗ Failed to parse ${FLOW_STORIES_DIRNAME}/${fpId}.ts — check for syntax errors`))
+    console.error(
+      r(`✗ Failed to parse ${FLOW_STORIES_DIRNAME}/${fpId}.ts — check for syntax errors`)
+    )
     process.exit(1)
   }
 
@@ -219,7 +221,7 @@ export async function cmdAddStep(_val, args = []) {
 
   console.log(g(`✓ Step added to ${FLOW_STORIES_DIRNAME}/${fpId}.ts`))
   console.log(
-    `  ${d('screen:')} ${screenId}${on ? `  ${d('on:')} ${on}` : ''}${actionNote ? `  ${d('action:')} ${actionNote}` : ''}`
+    `  ${d('screen:')} ${pageId}${on ? `  ${d('on:')} ${on}` : ''}${actionNote ? `  ${d('action:')} ${actionNote}` : ''}`
   )
   console.log('')
   console.log(d(`View: flowkit list:steps --flowplan:${fpId}`))
@@ -264,7 +266,7 @@ export async function cmdRemoveStep(_val, args = []) {
     process.exit(1)
   }
 
-  console.log(g(`✓ Removed step [${idx}]: screenId '${removed.screenId}'`))
+  console.log(g(`✓ Removed step [${idx}]: pageId '${removed.pageId}'`))
   if (steps.length > 0) {
     console.log(d(`  Flowplan now has ${steps.length} step${steps.length !== 1 ? 's' : ''}`))
   }
@@ -289,7 +291,9 @@ export async function cmdListSteps(_val, args = []) {
 
   const fp = parseFlowplan(fpPath)
   if (!fp) {
-    console.error(r(`✗ Failed to parse ${FLOW_STORIES_DIRNAME}/${fpId}.ts — check for syntax errors`))
+    console.error(
+      r(`✗ Failed to parse ${FLOW_STORIES_DIRNAME}/${fpId}.ts — check for syntax errors`)
+    )
     process.exit(1)
   }
 
@@ -298,7 +302,7 @@ export async function cmdListSteps(_val, args = []) {
 
   if (steps.length === 0) {
     console.log(d('  (no steps)'))
-    console.log(d(`  Add one: flowkit add:step --flowplan:${fpId} --screen:<screenId>`))
+    console.log(d(`  Add one: flowkit add:step --flowplan:${fpId} --screen:<pageId>`))
     return
   }
 
@@ -306,7 +310,7 @@ export async function cmdListSteps(_val, args = []) {
     const idx = String(i).padStart(2)
     const on = step.on ? `  ${d(`on: ${step.on}`)}` : ''
     const note = step.actionNote ? `  ${d(`"${step.actionNote}"`)}` : ''
-    console.log(`  [${idx}] ${c(step.screenId)}${on}${note}`)
+    console.log(`  [${idx}] ${c(step.pageId)}${on}${note}`)
   })
   console.log('')
   console.log(d(`Total: ${steps.length} step${steps.length !== 1 ? 's' : ''}`))
@@ -331,7 +335,9 @@ export async function cmdFlowplanInfo(_val, args = []) {
 
   const fp = parseFlowplan(fpPath)
   if (!fp) {
-    console.error(r(`✗ Failed to parse ${FLOW_STORIES_DIRNAME}/${fpId}.ts — check for syntax errors`))
+    console.error(
+      r(`✗ Failed to parse ${FLOW_STORIES_DIRNAME}/${fpId}.ts — check for syntax errors`)
+    )
     process.exit(1)
   }
 
@@ -348,7 +354,7 @@ export async function cmdFlowplanInfo(_val, args = []) {
     steps.slice(0, 5).forEach((step, i) => {
       const on = step.on ? ` → ${step.on}` : ''
       const note = step.actionNote ? ` — "${step.actionNote}"` : ''
-      console.log(`    ${i + 1}. ${step.screenId}${on}${d(note)}`)
+      console.log(`    ${i + 1}. ${step.pageId}${on}${d(note)}`)
     })
     if (steps.length > 5) console.log(d(`    … and ${steps.length - 5} more`))
   }

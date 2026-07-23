@@ -10,13 +10,13 @@ export interface AppNav {
    */
   navigateTo: (target: string) => void
   /** True when this screen is currently rendered inside a flowplan. */
-  isFlow: boolean
+  isChapter: boolean
   /** Flow-local sandbox state. Undefined when not in a flow. */
-  flowState: Record<string, unknown> | undefined
+  state: Record<string, unknown> | undefined
 }
 
 /**
- * The one hook screens use for direct navigation — no isFlow prop, no manual
+ * The one hook screens use for direct navigation — no isChapter prop, no manual
  * guard. Unlike useFlowNav(), this never throws outside a flow: it reads
  * FlowNavCtx non-throwing and falls back to DashboardContext when absent, so
  * a screen calling navigateTo() here can never accidentally reach the wrong
@@ -26,7 +26,7 @@ export function useAppNav(): AppNav {
   const flowNav = useContext(FlowNavCtx)
   const dashboard = useDashboard()
   if (flowNav) {
-    return { navigateTo: flowNav.navigateTo, isFlow: true, flowState: flowNav.flowState }
+    return { navigateTo: flowNav.navigateTo, isChapter: true, state: flowNav.flowState }
   }
-  return { navigateTo: dashboard.navigateTo, isFlow: false, flowState: undefined }
+  return { navigateTo: dashboard.navigateTo, isChapter: false, state: undefined }
 }

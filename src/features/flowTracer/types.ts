@@ -53,7 +53,7 @@ export type EventType =
   // Sidebar
   | 'sidebar.search-used'
   | 'sidebar.flow-expanded'
-  | 'sidebar.screen-clicked'
+  | 'sidebar.page-clicked'
 
 export interface SessionEvent {
   id: string
@@ -74,7 +74,7 @@ export interface CursorSample {
   y: number
   screenW: number
   screenH: number
-  screenId: string
+  pageId: string
 }
 
 // ─── Session metadata ─────────────────────────────────────────────────────────

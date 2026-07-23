@@ -8,23 +8,23 @@ declare module 'virtual:flowkit/config' {
 }
 
 declare module 'virtual:flowkit/screens' {
-  import type { ScreenMeta } from '@flowkit/types/index'
+  import type { PageMeta } from '@flowkit/types/index'
   import type React from 'react'
-  /** Lazy screen loaders keyed by "flow/screenId" */
+  /** Lazy screen loaders keyed by "flow/pageId" */
   export const screens: Record<
     string,
-    () => Promise<{ default: React.ComponentType; screenMeta?: ScreenMeta }>
+    () => Promise<{ default: React.ComponentType; pageMeta?: PageMeta }>
   >
-  /** Pre-wrapped React.lazy() components keyed by "flow/screenId" */
+  /** Pre-wrapped React.lazy() components keyed by "flow/pageId" */
   export const lazyScreens: Record<string, React.LazyExoticComponent<React.ComponentType>>
-  /** Eagerly imported screenMeta per screen, keyed by "flow/screenId" */
-  export const screenMeta: Record<string, ScreenMeta | undefined>
+  /** Eagerly imported pageMeta per screen, keyed by "flow/pageId" */
+  export const pageMeta: Record<string, PageMeta | undefined>
   /** Structured screen list for hierarchy building */
   export const screenList: Array<{
     key: string
     flow: string
-    screenId: string
-    loader: () => Promise<{ default: React.ComponentType; screenMeta?: ScreenMeta }>
+    pageId: string
+    loader: () => Promise<{ default: React.ComponentType; pageMeta?: PageMeta }>
     /** '__'-prefixed entries are filtered out before reaching this list entirely. */
     visibility?: 'normal' | 'hidden'
   }>
@@ -47,22 +47,22 @@ declare module 'virtual:flowkit/workspace' {
 }
 
 declare module '@flowkit-shared/utils/screenPathIdentity' {
-  export const MISC_FLOW_ID: string
+  export const MISC_CHAPTER_ID: string
   export function isNonExistent(segment: string): boolean
   export function isHidden(segment: string): boolean
   export function resolveVisibility(segments: string[]): 'normal' | 'hidden' | 'non-existent'
   export function parseVariant(stem: string): { componentName: string; variant: string }
-  export interface ParsedScreenSegments {
-    flow: string
-    screen: string
+  export interface ParsedPageSegments {
+    chapter: string
+    page: string
     variant: string
     componentName: string
     visibility: 'normal' | 'hidden' | 'non-existent'
     cosmeticSegments: string[]
   }
-  export function parseScreenSegments(segments: string[]): ParsedScreenSegments | null
-  export function makeScreenId(flow: string, screen: string): string
-  export function pickScreenFile(candidateFilenames: string[]): {
+  export function parsePageSegments(segments: string[]): ParsedPageSegments | null
+  export function makePageId(chapter: string, page: string): string
+  export function pickPageFile(candidateFilenames: string[]): {
     chosen: string | null
     ambiguous: boolean
   }

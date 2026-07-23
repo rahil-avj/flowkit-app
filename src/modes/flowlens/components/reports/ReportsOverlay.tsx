@@ -60,7 +60,7 @@ export default function ReportsOverlay({ entries, views, onClose }: Props) {
   const heatmaps = useMemo(() => mergedHeatmaps(filtered), [filtered])
   const [heatScreen, setHeatScreen] = useState<string>('')
 
-  const activeHeat = heatmaps.find(h => h.screenId === heatScreen) ?? heatmaps[0]
+  const activeHeat = heatmaps.find(h => h.pageId === heatScreen) ?? heatmaps[0]
 
   const set = <K extends keyof ReportFilters>(k: K, v: ReportFilters[K]) =>
     setFilters(f => ({ ...f, [k]: v }))
@@ -97,9 +97,9 @@ export default function ReportsOverlay({ entries, views, onClose }: Props) {
         <div className="flex flex-wrap gap-2.5 items-center py-3 px-5 border-b border-theme-border shrink-0">
           <Select
             label="Screen"
-            value={filters.screenId}
-            onChange={v => set('screenId', v)}
-            options={facets?.screens ?? []}
+            value={filters.pageId}
+            onChange={v => set('pageId', v)}
+            options={facets?.pages ?? []}
             anyLabel="Any screen"
           />
           <Select
@@ -198,9 +198,9 @@ export default function ReportsOverlay({ entries, views, onClose }: Props) {
                 {funnel.map(step => {
                   const pct = stats.sessionCount > 0 ? (step.reached / stats.sessionCount) * 100 : 0
                   return (
-                    <div key={step.screenId} className="flex items-center gap-2.5">
+                    <div key={step.pageId} className="flex items-center gap-2.5">
                       <span className="w-40 text-xs text-theme-text-primary truncate">
-                        {step.screenId}
+                        {step.pageId}
                       </span>
                       <div className="flex-1 h-5.5 bg-theme-elevated rounded-[5px] overflow-hidden relative">
                         <div
@@ -244,10 +244,10 @@ export default function ReportsOverlay({ entries, views, onClose }: Props) {
               <div className="flex flex-col gap-1">
                 {stats.topFrustratedScreens.map(s => (
                   <div
-                    key={s.screenId}
+                    key={s.pageId}
                     className="flex justify-between text-xs text-theme-text-primary py-0.75"
                   >
-                    <span>{s.screenId}</span>
+                    <span>{s.pageId}</span>
                     <span className="text-red-500 font-semibold">{s.count}</span>
                   </div>
                 ))}
@@ -266,11 +266,11 @@ export default function ReportsOverlay({ entries, views, onClose }: Props) {
               <>
                 <div className="flex gap-1.5 flex-wrap mb-3">
                   {heatmaps.map(h => {
-                    const active = activeHeat?.screenId === h.screenId
+                    const active = activeHeat?.pageId === h.pageId
                     return (
                       <button
-                        key={h.screenId}
-                        onClick={() => setHeatScreen(h.screenId)}
+                        key={h.pageId}
+                        onClick={() => setHeatScreen(h.pageId)}
                         style={{
                           borderColor: active ? FLOWLENS_ACCENT : 'var(--color-bg-border)',
                           background: active ? FLOWLENS_ACCENT : 'transparent',
@@ -279,7 +279,7 @@ export default function ReportsOverlay({ entries, views, onClose }: Props) {
                           active ? 'text-white' : 'text-theme-text-secondary'
                         }`}
                       >
-                        {h.screenId} <span className="opacity-70">· {h.samples.length}</span>
+                        {h.pageId} <span className="opacity-70">· {h.samples.length}</span>
                       </button>
                     )
                   })}
@@ -288,7 +288,7 @@ export default function ReportsOverlay({ entries, views, onClose }: Props) {
                   <div className="h-[760px]">
                     <HeatmapView
                       views={views}
-                      screenId={activeHeat.screenId}
+                      pageId={activeHeat.pageId}
                       samples={activeHeat.samples}
                       width={activeHeat.samples[0]?.screenW ?? 393}
                       height={activeHeat.samples[0]?.screenH ?? 852}

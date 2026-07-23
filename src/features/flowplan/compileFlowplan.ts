@@ -1,5 +1,5 @@
 import type {
-  FlowConfig,
+  ChapterConfig,
   FlowplanDef,
   FlowStep,
   Fork,
@@ -11,12 +11,12 @@ import { get } from '@flowkit-shared/utils/dbHelpers'
 
 // ── compileFlowplan ─────────────────────────────────────────────────────────────
 //
-// Turns an authored FlowplanDef into the runtime FlowConfig that the EXISTING
+// Turns an authored FlowplanDef into the runtime ChapterConfig that the EXISTING
 // useFlowEngine/FlowMaster already accept. The engine is never modified — this
 // compiler is the single seam where Flowplan concepts (forks, refs, step db
 // patches) map onto the engine's primitives:
 //
-//   • steps[]            → FlowConfig.screens[]  (flat, ordered, deduped)
+//   • steps[]            → ChapterConfig.pages[]  (flat, ordered, deduped)
 //   • sequential advance → interactions["<advanceId>"] = { goTo: "<nextScreenId>" }
 //   • forks              → a function-valued goTo (engine calls it with {db,flowState})
 //   • mergesTo:"next"    → last branch step advances to the parent's next step
@@ -31,14 +31,14 @@ import { get } from '@flowkit-shared/utils/dbHelpers'
 // injected so this is fully unit-testable.
 
 /** Minimal resolved-screen shape the compiler needs from the workspace loader. */
-export interface ResolvedScreen {
+export interface ResolvedPage {
   id: string
   label: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   component: React.ComponentType<any>
 }
 
-export type ScreenResolver = (screenId: string) => ResolvedScreen | undefined
+export type ScreenResolver = (pageId: string) => ResolvedPage | undefined
 
 /**
  * Per-screen playback metadata, indexed by the COMPILED screen id (which may be
@@ -46,8 +46,8 @@ export type ScreenResolver = (screenId: string) => ResolvedScreen | undefined
  */
 export interface CompiledStep {
   /** The compiled (possibly namespaced) screen id this step renders. */
-  screenId: string
-  /** Original authored screenId (pre-namespacing) — for resolver/debug. */
+  pageId: string
+  /** Original authored pageId (pre-namespacing) — for resolver/debug. */
   sourceScreenId: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   db?: Record<string, any>
@@ -67,8 +67,8 @@ export interface CompiledStep {
   next: InteractionRule['goTo']
 }
 
-/** A FlowConfig plus the Flowplan playback metadata that rides alongside it. */
-export interface CompiledFlowplan extends FlowConfig {
+/** A ChapterConfig plus the Flowplan playback metadata that rides alongside it. */
+export interface CompiledFlowplan extends ChapterConfig {
   __flowplan: {
     flowplanId: string
     steps: CompiledStep[]
@@ -82,11 +82,11 @@ export interface CompiledFlowplan extends FlowConfig {
 class FlowplanCompileError extends Error {}
 
 // A fully-resolved linear step with an explicit advance target. `next` is either
-// a compiled screen id, "__complete__", or a function (fork) returning one.
+// a compiled page id, "__complete__", or a function (fork) returning one.
 interface FlatStep {
   compiledId: string
   sourceScreenId: string
-  screen: ResolvedScreen
+  page: ResolvedPage
   step: FlowStep
   next: InteractionRule['goTo']
 }
@@ -112,7 +112,7 @@ function flatten(
   const level: {
     compiledId: string
     sourceScreenId: string
-    screen: ResolvedScreen
+    page: ResolvedPage
     step: FlowStep
   }[] = []
 
@@ -130,12 +130,12 @@ function flatten(
         expand(refPlan.steps, `${pfx}${refId}::`, new Set([...vis, refId]))
         continue
       }
-      const screen = resolve(entry.screenId)
-      if (!screen) throw new FlowplanCompileError(`screen not found: "${entry.screenId}"`)
+      const page = resolve(entry.pageId)
+      if (!page) throw new FlowplanCompileError(`page not found: "${entry.pageId}"`)
       level.push({
-        compiledId: `${pfx}${entry.screenId}`,
-        sourceScreenId: entry.screenId,
-        screen,
+        compiledId: `${pfx}${entry.pageId}`,
+        sourceScreenId: entry.pageId,
+        page,
         step: entry,
       })
     }
@@ -158,7 +158,7 @@ function flatten(
     out.push({
       compiledId: cur.compiledId,
       sourceScreenId: cur.sourceScreenId,
-      screen: cur.screen,
+      page: cur.page,
       step: cur.step,
       next,
     })
@@ -221,9 +221,9 @@ function firstCompiledScreenId(
     const refPlan = registry.get(first.ref)
     const firstStep = refPlan?.steps[0]
     if (!firstStep || isFlowplanRef(firstStep)) return undefined
-    return `${prefix}${first.ref}::${firstStep.screenId}`
+    return `${prefix}${first.ref}::${firstStep.pageId}`
   }
-  return `${prefix}${first.screenId}`
+  return `${prefix}${first.pageId}`
 }
 
 /**
@@ -242,7 +242,7 @@ function forkMatches(fork: Fork, db: Record<string, any>): boolean {
 }
 
 /**
- * Compile a Flowplan into a runtime CompiledFlowplan (FlowConfig + playback
+ * Compile a Flowplan into a runtime CompiledFlowplan (ChapterConfig + playback
  * metadata). Throws FlowplanCompileError on missing screen, missing ref, or a
  * circular ref.
  */
@@ -259,13 +259,13 @@ export function compileFlowplan(
     throw new FlowplanCompileError(`flowplan "${plan.id}" has no steps`)
   }
 
-  // screens[] — dedupe compiled ids (a screen may repeat; engine matches by id).
-  const screens: FlowConfig['screens'] = []
+  // pages[] — dedupe compiled ids (a page may repeat; engine matches by id).
+  const pages: ChapterConfig['pages'] = []
   const seen = new Set<string>()
   for (const fs of flat) {
     if (seen.has(fs.compiledId)) continue
     seen.add(fs.compiledId)
-    screens.push({ id: fs.compiledId, label: fs.screen.label, component: fs.screen.component })
+    pages.push({ id: fs.compiledId, label: fs.page.label, component: fs.page.component })
   }
 
   // interactions[] — a step with `on` advances when its named element is tapped
@@ -298,7 +298,7 @@ export function compileFlowplan(
       interactions[fs.step.on] = { trigger: 'tap', goTo: fs.next }
     }
     steps.push({
-      screenId: fs.compiledId,
+      pageId: fs.compiledId,
       sourceScreenId: fs.sourceScreenId,
       db: fs.step.db,
       actionNote: fs.step.actionNote,
@@ -312,12 +312,12 @@ export function compileFlowplan(
   return {
     id: plan.id,
     label: plan.name,
-    screens,
+    pages,
     // Only include interactions when at least one step declares `on`; an
     // all-tap-anywhere flow leaves interactions undefined so FlowMaster's
     // sequential mode can also work as a fallback.
     interactions: Object.keys(interactions).length > 0 ? interactions : undefined,
-    initialScreen: flat[0].compiledId,
+    initialPage: flat[0].compiledId,
     __flowplan: {
       flowplanId: plan.id,
       steps,

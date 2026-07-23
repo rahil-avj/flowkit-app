@@ -1,4 +1,4 @@
-import type { FlowNode, WireframeView } from '@flowkit/types/index'
+import type { Chapter, WireframeView } from '@flowkit/types/index'
 import { useFeedback } from '@flowkit-features/feedback/context/FeedbackContext'
 import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
 import { useSessionSettings } from '@flowkit-features/flowTracer/components/useSessionSettings'
@@ -95,7 +95,7 @@ const FlowLensMode = flowlensLoader
   : null
 
 interface Props {
-  flows: FlowNode[]
+  flows: Chapter[]
   views: WireframeView[]
 }
 export default function PreviewCanvas({ flows, views }: Props) {
@@ -805,7 +805,7 @@ function CanvasContent({
                 // Screens tab is a static structural preview outside flowplan
                 // playback — screens that also want Screens-tab interactivity
                 // should call useAppNav() (@flowkit-shared/utils) for navigateTo;
-                // it's flow-aware automatically, no isFlow guard needed (see
+                // it's flow-aware automatically, no isChapter guard needed (see
                 // FLOWMASTER.md).
                 <ActiveComponent db={db} />
               ) : (

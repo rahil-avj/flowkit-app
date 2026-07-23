@@ -3,7 +3,7 @@ import { FLOWLENS_ACCENT } from '../flowLensTheme'
 
 interface Props {
   nodes: PathNode[]
-  onScreenClick?: (screenId: string) => void
+  onScreenClick?: (pageId: string) => void
 }
 
 export default function PathsView({ nodes, onScreenClick }: Props) {
@@ -20,7 +20,7 @@ export default function PathsView({ nodes, onScreenClick }: Props) {
       ) : (
         nodes.map(node => (
           <div
-            key={node.screenId}
+            key={node.pageId}
             className="mb-2.5 bg-theme-elevated border border-theme-border rounded-lg overflow-hidden"
           >
             {/* Source node */}
@@ -28,7 +28,7 @@ export default function PathsView({ nodes, onScreenClick }: Props) {
               className={`py-2 px-3 flex items-center gap-2 ${
                 onScreenClick ? 'cursor-pointer' : 'cursor-default'
               } ${Object.keys(node.nextScreens).length > 0 ? 'border-b border-theme-border' : ''}`}
-              onClick={() => onScreenClick?.(node.screenId)}
+              onClick={() => onScreenClick?.(node.pageId)}
             >
               <div
                 className="h-1 min-w-1 max-w-20 rounded-sm shrink-0"
@@ -38,7 +38,7 @@ export default function PathsView({ nodes, onScreenClick }: Props) {
                 }}
               />
               <span className="text-xs text-theme-text-primary flex-1 truncate">
-                {node.screenId}
+                {node.pageId}
               </span>
               <span className="text-theme-text-muted text-ui-2xs shrink-0">{node.count}×</span>
             </div>

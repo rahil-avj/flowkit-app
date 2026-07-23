@@ -124,12 +124,12 @@ This is a small change to `agentSpec.js` (the generator source) that propagates 
 
 ### Gap 6 — Screen props / lifecycle is underdocumented for workspace authors (MEDIUM)
 
-**The problem:** CLAUDE.md and FLOWMASTER.md document screen props (`FlowScreenProps`, `onNext`, `onBack`, `db`, `flowState`, `isFlow`) in type tables but no narrative walkthrough exists showing:
+**The problem:** CLAUDE.md and FLOWMASTER.md document screen props (`PageProps`, `onNext`, `onBack`, `db`, `flowState`, `isChapter`) in type tables but no narrative walkthrough exists showing:
 
 - Which props are always injected vs. conditionally present
 - When to use `onNext` vs. `goNext()` from `useFlowNav()` vs. id-wiring
 - What `flowState` actually is (typed shape? `Record<string, unknown>`?) and when it's populated
-- Whether `screenMeta` is required or optional and what breaks without it
+- Whether `pageMeta` is required or optional and what breaks without it
 
 **Fix needed:** Add a "Screen component contract" section to `FLOWMASTER.md` (or a new `SCREENS.md`) that walks through a real screen with annotations on every injected prop — when each is present, what it does, and when to prefer it.
 

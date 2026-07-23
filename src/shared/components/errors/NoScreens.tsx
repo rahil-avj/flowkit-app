@@ -1,9 +1,9 @@
-interface NoScreensProps {
+interface NoPagesProps {
   workspaceName: string
   onAction?: () => void
 }
 
-export default function NoScreens({ workspaceName, onAction }: NoScreensProps) {
+export default function NoScreens({ workspaceName, onAction }: NoPagesProps) {
   return (
     <div className="flex h-screen w-full items-center justify-center bg-theme-base">
       <div className="flex flex-col items-center gap-4 text-center">
@@ -38,7 +38,7 @@ export default function NoScreens({ workspaceName, onAction }: NoScreensProps) {
             </code>{' '}
             /{' '}
             <code className="rounded bg-theme-elevated px-1 py-0.5 font-mono text-ui-xs text-theme-text-secondary">
-              screenOrder
+              pageOrder
             </code>{' '}
             entries, or add a screen with{' '}
             <code className="rounded bg-theme-elevated px-1 py-0.5 font-mono text-ui-xs text-theme-text-secondary">

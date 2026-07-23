@@ -1,4 +1,4 @@
-import type { ScreenMeta } from '@flowkit/types'
+import type { PageMeta } from '@flowkit/types'
 import { useAppNav } from '@flowkit-shared/utils'
 import PrimaryButton from '@workspace/lib/components/ui/PrimaryButton'
 
@@ -28,7 +28,7 @@ export default function WelcomeScreen() {
   )
 }
 
-export const screenMeta: ScreenMeta = {
+export const pageMeta: PageMeta = {
   label: 'Welcome Screen',
   desc: 'Entry point — introduces the arcade and prompts the player to enter the hub.',
 }

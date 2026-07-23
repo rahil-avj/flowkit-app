@@ -10,7 +10,7 @@ export interface SourcedSession extends SessionExport {
 
 export interface ReportFilters {
   /** Only sessions that visited this screen id (""=any). */
-  screenId: string
+  pageId: string
   /** Device preset label the session used at some point (""=any). */
   device: string
   /** Connection mode the session used at some point (""=any). */
@@ -29,7 +29,7 @@ export interface ReportFilters {
 }
 
 export const DEFAULT_FILTERS: ReportFilters = {
-  screenId: '',
+  pageId: '',
   device: '',
   connection: '',
   minQuality: 0,
@@ -49,7 +49,7 @@ function screensVisited(s: SessionExport): Set<string> {
   return new Set(
     s.events
       .filter(e => e.type === 'screen.visited')
-      .map(e => e.payload.screenId as string)
+      .map(e => e.payload.pageId as string)
       .filter(Boolean)
   )
 }
@@ -96,7 +96,7 @@ export function matchesFilters(s: SourcedSession, f: ReportFilters): boolean {
     if (f.completion === 'completed' && !completed) return false
     if (f.completion === 'abandoned' && completed) return false
   }
-  if (f.screenId && !screensVisited(s).has(f.screenId)) return false
+  if (f.pageId && !screensVisited(s).has(f.pageId)) return false
   if (f.device && !devicesUsed(s).has(f.device)) return false
   if (f.connection && !connectionsUsed(s).has(f.connection)) return false
   return true
@@ -109,7 +109,7 @@ export function applyFilters(sessions: SourcedSession[], f: ReportFilters): Sour
 // ── Facet collection for the filter bar (union across all sessions) ─────────────
 
 export interface ReportFacets {
-  screens: string[]
+  pages: string[]
   devices: string[]
   connections: string[]
   tags: string[]
@@ -117,20 +117,20 @@ export interface ReportFacets {
 }
 
 export function collectFacets(sessions: SourcedSession[]): ReportFacets {
-  const screens = new Set<string>()
+  const pages = new Set<string>()
   const devices = new Set<string>()
   const connections = new Set<string>()
   const tags = new Set<string>()
   const studyIds = new Set<string>()
   for (const s of sessions) {
-    screensVisited(s).forEach(x => screens.add(x))
+    screensVisited(s).forEach(x => pages.add(x))
     devicesUsed(s).forEach(x => devices.add(x))
     connectionsUsed(s).forEach(x => connections.add(x))
     s.meta.tags.forEach(x => tags.add(x))
     if (s.studyId) studyIds.add(s.studyId)
   }
   return {
-    screens: [...screens].sort(),
+    pages: [...pages].sort(),
     devices: [...devices].sort(),
     connections: [...connections].sort(),
     tags: [...tags].sort(),

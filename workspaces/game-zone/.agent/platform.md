@@ -4,7 +4,7 @@ Terse map of the platform surfaces you can reach. Each ends in a pointer to the 
 
 ### Navigation
 
-- **Use:** `useFlowNav()` → `navigateTo(target)`, `goNext()`, `goBack()`, `isFlow`, `flowState`
+- **Use:** `useFlowNav()` → `navigateTo(target)`, `goNext()`, `goBack()`, `isChapter`, `flowState`
 - **From:** `@flowkit-shared/utils/useFlowNav`
 - **Note:** target = a screen id, "next", "back", or "**complete**"
 - **Full detail:** `Documentation/FLOWMASTER.md`
@@ -13,12 +13,12 @@ Terse map of the platform surfaces you can reach. Each ends in a pointer to the 
 
 - **Use:** `useDashboard()` → `db`, `updateDb(fn)`, `resetDb()`, `navigateTo(id)`
 - **From:** `@flowkit-shared/contexts/DashboardContext`
-- **Note:** db/updateDb/resetDb always safe; for navigateTo() prefer `useAppNav()` (see Navigation group above) — it works standalone and during flow playback with no `isFlow` check needed; use useFlowNav() instead for flow-only screens
+- **Note:** db/updateDb/resetDb always safe; for navigateTo() prefer `useAppNav()` (see Navigation group above) — it works standalone and during flow playback with no `isChapter` check needed; use useFlowNav() instead for flow-only screens
 - **Full detail:** `Documentation/FLOWKIT.md`
 
 ### Screen props
 
-- **Use:** `FlowScreenProps` → `onAction?`, `onNext?`, `onBack?`, `isFlow?`, `flowState?`, `db?`
+- **Use:** `PageProps` → `onAction?`, `onNext?`, `onBack?`, `isChapter?`, `flowState?`, `db?`
 - **From:** `@flowkit/types`
 - **Note:** screens are pure markup with element `id`s
 - **Full detail:** `Documentation/FLOWMASTER.md`
@@ -27,13 +27,13 @@ Terse map of the platform surfaces you can reach. Each ends in a pointer to the 
 
 - **Use:** `defineFlow({ id, name, steps[], homeScreen? })` — authored in `flowplans/<flow>.ts`
 - **From:** `@flowkit-core/config` → `defineFlow`
-- **Note:** Screen folders: `flows/<flow>/<screen>/`. Ordering declared in `workspace.ts` → `projects.<proj>.flows[]`. `homeScreen` overrides the device home button while that plan is playing; workspace-level default is `workspace.ts` → `startScreen`.
+- **Note:** Screen folders: `flows/<flow>/<screen>/`. Ordering declared in `workspace.ts` → `projects.<proj>.flows[]`. `homeScreen` overrides the device home button while that plan is playing; workspace-level default is `workspace.ts` → `startPage`.
 - **Full detail:** `Documentation/FLOWMASTER.md`
 
 ### Guards
 
 - **Use:** `canEnter`/`canNotEnter`: `({ db }) => boolean`
-- **From:** `screenMeta` exported from the screen `.tsx` file
+- **From:** `pageMeta` exported from the screen `.tsx` file
 - **Note:** Screen-level guards only
 - **Full detail:** `Documentation/FLOWMASTER.md`
 
@@ -86,7 +86,7 @@ Terse map of the platform surfaces you can reach. Each ends in a pointer to the 
 
 > **Flow ordering** is set in `workspace.ts` → `projects.<proj>.flows[]`. Use the **Manage tab** (right panel → Manage) to generate a terminal script for reordering.
 >
-> **Default screen** (cold load / device home button / reset-to-first) is set in `workspace.ts` → `startScreen`; a flowplan's `homeScreen` overrides it while that plan is playing.
+> **Default screen** (cold load / device home button / reset-to-first) is set in `workspace.ts` → `startPage`; a flowplan's `homeScreen` overrides it while that plan is playing.
 >
 > **To remove a flow or screen**, delete the folder manually: `rm -rf workspaces/game-zone/flows/<flow>/`
 

@@ -1,4 +1,4 @@
-import type { ScreenMeta } from '@flowkit/types'
+import type { PageMeta } from '@flowkit/types'
 import { useAppNav, useDb } from '@flowkit-shared/utils'
 import GameOverModal from '@workspace/lib/components/ui/GameOverModal'
 import IconButton from '@workspace/lib/components/ui/IconButton'
@@ -147,7 +147,7 @@ export default function MemoryMatchGameScreen() {
   )
 }
 
-export const screenMeta: ScreenMeta = {
+export const pageMeta: PageMeta = {
   label: 'Memory Match',
   desc: 'Flip pairs of cards to find every match — tracks moves and elapsed time.',
   tags: ['type:memory'],

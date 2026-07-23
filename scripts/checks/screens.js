@@ -4,12 +4,18 @@
 // eslint-plugin-boundaries' `workspace` element/policy in eslint.config.js instead (resolved
 // decision: reuse existing, already-configured infra rather than duplicate the same concern
 // in a second, parallel rule engine). This module only covers what ESLint structurally
-// cannot see: the screen's own export shape and screenMeta consistency.
+// cannot see: the screen's own export shape and pageMeta consistency.
 import fs from 'fs'
 import path from 'path'
 import { parseTopLevel, hasDefaultFunctionExport, findExportedObjectLiteral } from './ts-parse.js'
 import { FLOW_BOOK_DIRNAME } from '../helpers/config-filenames.js'
-import { isNonExistent, resolveVisibility, parseScreenSegments, makeScreenId, pickScreenFile } from '../../src/shared/utils/screenPathIdentity.js'
+import {
+  isNonExistent,
+  resolveVisibility,
+  parseScreenSegments,
+  makeScreenId,
+  pickScreenFile,
+} from '../../src/shared/utils/screenPathIdentity.js'
 
 const SCREEN_EXTS = ['.tsx', '.jsx']
 
@@ -54,7 +60,7 @@ export function checkScreens(wsDir, report) {
     const parsed = parseScreenSegments(entry.segments)
     if (!parsed) continue // not a recognized screen-file extension (shouldn't happen given the walk filter)
 
-    const key = `${parsed.flow}::${parsed.screen}`
+    const key = `${parsed.flow}::${parsed.page}`
     if (!groups.has(key)) groups.set(key, [])
     groups.get(key).push({ ...entry, parsed })
   }
@@ -101,14 +107,14 @@ export function checkScreens(wsDir, report) {
       })
     }
 
-    const meta = findExportedObjectLiteral(body, 'screenMeta')
+    const meta = findExportedObjectLiteral(body, 'pageMeta')
     if (!meta) {
       report.add({
         ruleId: 'screen/missing-meta',
         severity: 'error',
         file: relPath,
-        message: 'No `export const screenMeta` found.',
-        fix: `Add: export const screenMeta = { label: '...', desc: '...' }`,
+        message: 'No `export const pageMeta` found.',
+        fix: `Add: export const pageMeta = { label: '...', desc: '...' }`,
       })
       continue
     }
@@ -120,8 +126,8 @@ export function checkScreens(wsDir, report) {
         ruleId: 'screen/meta-id-mismatch',
         severity: 'error',
         file: relPath,
-        message: `screenMeta.id is '${meta.id}' but the derived screen id is '${expectedId}'.`,
-        fix: `Set screenMeta.id to '${expectedId}', or rename the directory to match.`,
+        message: `pageMeta.id is '${meta.id}' but the derived screen id is '${expectedId}'.`,
+        fix: `Set pageMeta.id to '${expectedId}', or rename the directory to match.`,
       })
     }
 
@@ -130,8 +136,8 @@ export function checkScreens(wsDir, report) {
         ruleId: 'screen/meta-missing-label',
         severity: 'warning',
         file: relPath,
-        message: 'screenMeta has no `label` field.',
-        fix: `Add a label: screenMeta.label = 'Some Title'`,
+        message: 'pageMeta has no `label` field.',
+        fix: `Add a label: pageMeta.label = 'Some Title'`,
       })
     }
   }

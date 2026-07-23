@@ -1,4 +1,4 @@
-import type { ScreenMeta } from '@flowkit/types'
+import type { PageMeta } from '@flowkit/types'
 import { useAppNav } from '@flowkit-shared/utils'
 import { useEffect } from 'react'
 
@@ -23,7 +23,7 @@ export default function SplashScreen() {
   )
 }
 
-export const screenMeta: ScreenMeta = {
+export const pageMeta: PageMeta = {
   label: 'Splash Screen',
   desc: 'Auto-advancing intro splash — arcade logo, no interaction required.',
   isStandalone: true,

@@ -24,11 +24,11 @@ export function cmdSessionsSample(val) {
     timestamp: seq * 600,
     payload,
   })
-  const events = [ev('screen.visited', { screenId: screens[0] })]
+  const events = [ev('screen.visited', { pageId: screens[0] })]
   for (let i = 1; i < screens.length; i++) {
-    events.push(ev('interaction.tap', { screenId: screens[i - 1], elementId: 'primary-cta' }))
+    events.push(ev('interaction.tap', { pageId: screens[i - 1], elementId: 'primary-cta' }))
     events.push(ev('navigation.programmatic', { to: screens[i], from: screens[i - 1] }))
-    events.push(ev('screen.visited', { screenId: screens[i] }))
+    events.push(ev('screen.visited', { pageId: screens[i] }))
   }
   events.push(ev('flow.completed', { flowId: 'sample' }))
 
@@ -44,7 +44,7 @@ export function cmdSessionsSample(val) {
         y: 150 + ((i * 53) % 500),
         screenW: 393,
         screenH: 852,
-        screenId: sid,
+        pageId: sid,
       })
     }
 

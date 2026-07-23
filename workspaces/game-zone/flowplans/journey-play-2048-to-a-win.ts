@@ -6,7 +6,7 @@ export default defineFlow({
   description: 'Open 2048 and slide toward the 2048 tile.',
 
   steps: [
-    { screenId: 'hub-screen', on: 'game-2048', actionNote: 'Taps the 2048 card' },
-    { screenId: '2048-game-screen', on: 'move-right', actionNote: 'Slides right to merge tiles' },
+    { pageId: 'hub-screen', on: 'game-2048', actionNote: 'Taps the 2048 card' },
+    { pageId: '2048-game-screen', on: 'move-right', actionNote: 'Slides right to merge tiles' },
   ],
 })

@@ -106,7 +106,7 @@ export function cmdFeedbackLs(val) {
 
   for (const cm of data.comments) {
     const reviewer = cm.reviewer ?? cm.author ?? '—'
-    const screen = cm.screenId ?? cm.screen ?? '—'
+    const screen = cm.pageId ?? cm.page ?? '—'
     const status = cm.status ?? 'open'
     const text = (cm.text ?? cm.body ?? '').slice(0, 80)
     const date = fmtDate(cm.createdAt ?? cm.timestamp ?? null)

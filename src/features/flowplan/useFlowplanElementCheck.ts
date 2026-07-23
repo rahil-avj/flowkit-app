@@ -27,11 +27,11 @@ export function useFlowplanElementCheck(
   params: {
     flowplanId?: string
     stepIndex: number
-    screenId: string
+    pageId: string
     on: string | undefined
   }
 ): FlowplanElementCheckResult {
-  const { flowplanId, stepIndex, screenId, on } = params
+  const { flowplanId, stepIndex, pageId, on } = params
   const [missing, setMissing] = useState(false)
 
   useEffect(() => {
@@ -49,14 +49,14 @@ export function useFlowplanElementCheck(
       if (isMissing && import.meta.env.DEV) {
         console.warn(
           `[Flowkit] flowplan "${flowplanId ?? '?'}" step ${stepIndex + 1} expects ` +
-            `#${on} on screen "${screenId}" but no matching element exists. ` +
+            `#${on} on screen "${pageId}" but no matching element exists. ` +
             `Add id="${on}" to the element that should advance this step, or update ` +
             `the flowplan's "on" field to match the screen's real element id.`
         )
       }
     }, 0)
     return () => clearTimeout(t)
-  }, [screenContainerRef, flowplanId, stepIndex, screenId, on])
+  }, [screenContainerRef, flowplanId, stepIndex, pageId, on])
 
   return { missing }
 }

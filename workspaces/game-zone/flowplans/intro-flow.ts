@@ -7,8 +7,8 @@ export default defineFlow({
   homeScreen: 'hub-screen',
 
   steps: [
-    { screenId: 'splash-screen', actionNote: 'Splash auto-advances' },
-    { screenId: 'welcome-screen', on: 'play', actionNote: 'Taps Play' },
-    { screenId: 'hub-screen', actionNote: 'Arrives at the game hub' },
+    { pageId: 'splash-screen', actionNote: 'Splash auto-advances' },
+    { pageId: 'welcome-screen', on: 'play', actionNote: 'Taps Play' },
+    { pageId: 'hub-screen', actionNote: 'Arrives at the game hub' },
   ],
 })

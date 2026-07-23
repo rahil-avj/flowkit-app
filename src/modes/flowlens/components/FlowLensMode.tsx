@@ -157,7 +157,7 @@ export default function FlowLensMode({
   const replayDisabledReason = useMemo(() => {
     if (!selectedSession) return null
     const screenIds = selectedSession.events
-      .map(e => (e.payload.screenId ?? e.payload.to) as string | undefined)
+      .map(e => (e.payload.pageId ?? e.payload.to) as string | undefined)
       .filter((x): x is string => typeof x === 'string')
     if (screenIds.length === 0) return null
     const known = screenIds.filter(id => validScreenIds.has(id))

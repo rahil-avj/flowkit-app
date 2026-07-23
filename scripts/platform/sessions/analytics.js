@@ -40,8 +40,8 @@ export function cmdSessionsStats(val) {
   const frustrated = {}
   for (const x of sessions)
     for (const e of x.events) {
-      if (e.type === 'interaction.frustrated-click' && typeof e.payload?.screenId === 'string') {
-        frustrated[e.payload.screenId] = (frustrated[e.payload.screenId] ?? 0) + 1
+      if (e.type === 'interaction.frustrated-click' && typeof e.payload?.pageId === 'string') {
+        frustrated[e.payload.pageId] = (frustrated[e.payload.pageId] ?? 0) + 1
       }
     }
   const topFrustrated = Object.entries(frustrated)
@@ -131,8 +131,8 @@ export function cmdSessionsReport(wsVal, args = []) {
     const frustrated = {}
     for (const x of sessions)
       for (const e of x.events) {
-        if (e.type === 'interaction.frustrated-click' && typeof e.payload?.screenId === 'string') {
-          frustrated[e.payload.screenId] = (frustrated[e.payload.screenId] ?? 0) + 1
+        if (e.type === 'interaction.frustrated-click' && typeof e.payload?.pageId === 'string') {
+          frustrated[e.payload.pageId] = (frustrated[e.payload.pageId] ?? 0) + 1
         }
       }
 
@@ -213,17 +213,17 @@ function buildBriefMarkdown(ws, sessions, studyId = null) {
 
   for (const x of sessions) {
     for (const e of x.events) {
-      if (e.type === 'screen.dwell-end' && typeof e.payload?.screenId === 'string') {
-        const sid = e.payload.screenId
+      if (e.type === 'screen.dwell-end' && typeof e.payload?.pageId === 'string') {
+        const sid = e.payload.pageId
         dwellMs[sid] = (dwellMs[sid] ?? 0) + (e.payload.dwellMs ?? 0)
         dwellCount[sid] = (dwellCount[sid] ?? 0) + 1
       }
-      if (e.type === 'interaction.frustrated-click' && typeof e.payload?.screenId === 'string')
-        frustrated[e.payload.screenId] = (frustrated[e.payload.screenId] ?? 0) + 1
+      if (e.type === 'interaction.frustrated-click' && typeof e.payload?.pageId === 'string')
+        frustrated[e.payload.pageId] = (frustrated[e.payload.pageId] ?? 0) + 1
       if (e.type === 'flow.exited-early' && typeof e.payload?.fromScreen === 'string')
         dropOff[e.payload.fromScreen] = (dropOff[e.payload.fromScreen] ?? 0) + 1
-      if (e.type === 'screen.blocked' && typeof e.payload?.screenId === 'string')
-        blocked[e.payload.screenId] = (blocked[e.payload.screenId] ?? 0) + 1
+      if (e.type === 'screen.blocked' && typeof e.payload?.pageId === 'string')
+        blocked[e.payload.pageId] = (blocked[e.payload.pageId] ?? 0) + 1
     }
   }
 

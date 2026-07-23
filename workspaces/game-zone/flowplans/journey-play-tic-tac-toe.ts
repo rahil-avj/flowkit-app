@@ -6,9 +6,9 @@ export default defineFlow({
   description: 'From the hub, open Tic-Tac-Toe and play a full round to completion.',
 
   steps: [
-    { screenId: 'hub-screen', on: 'game-tic-tac-toe', actionNote: 'Taps the Tic-Tac-Toe card' },
+    { pageId: 'hub-screen', on: 'game-tic-tac-toe', actionNote: 'Taps the Tic-Tac-Toe card' },
     {
-      screenId: 'tic-tac-toe-game-screen',
+      pageId: 'tic-tac-toe-game-screen',
       on: 'cell-4',
       actionNote: 'Places a mark on the center square',
     },

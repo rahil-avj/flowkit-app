@@ -6,7 +6,7 @@
 // generates for screens (scripts/helpers/workspace-template.js's writeXScreen functions,
 // scripts/helpers/scaffold.js's repo-mode equivalent) — an inline
 // `export default function Name(...) { ... }` plus a sibling
-// `export const screenMeta = { ... }`. Hand-written screens using other valid-but-uncommon
+// `export const pageMeta = { ... }`. Hand-written screens using other valid-but-uncommon
 // export shapes (re-exports, `export { x as default }`, conditional exports) are
 // best-effort, not guaranteed — this catches drift in CLI-generated content, not general
 // arbitrary TypeScript.
@@ -48,7 +48,7 @@ export function hasDefaultFunctionExport(body) {
  * Finds a top-level `export const <exportName> = { ... }` object literal and returns its
  * properties as a plain key→value map (string/number/boolean literal values only — nested
  * objects/arrays are returned as `undefined` for that key, since callers here only ever need
- * to check simple fields like `screenMeta.id`).
+ * to check simple fields like `pageMeta.id`).
  */
 export function findExportedObjectLiteral(body, exportName) {
   for (const node of body) {

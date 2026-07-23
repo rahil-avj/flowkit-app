@@ -56,7 +56,7 @@ function Sequence({
         }
         const step = entry as FlowStep
         const forks = (step.forks as Fork[] | undefined) ?? []
-        const isActive = activeSourceScreenId !== null && step.screenId === activeSourceScreenId
+        const isActive = activeSourceScreenId !== null && step.pageId === activeSourceScreenId
         return (
           <div key={i} className="flex flex-col items-start">
             <Connector theme={theme} hide={i === 0 && depth === 0} active={isActive} />
@@ -128,7 +128,7 @@ function ScreenNode({
           className="font-mono font-semibold"
           style={{ fontSize: scale.text.xs, color: isActive ? '#818cf8' : theme.text.primary }}
         >
-          {step.screenId}
+          {step.pageId}
         </div>
         {isActive && (
           <span

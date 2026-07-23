@@ -26,9 +26,9 @@ export default defineFlow({
   },
 
   steps: [
-    { screenId: 'hub-screen', on: 'game-blackjack', actionNote: 'Taps the Blackjack card' },
+    { pageId: 'hub-screen', on: 'game-blackjack', actionNote: 'Taps the Blackjack card' },
     {
-      screenId: 'blackjack-game-screen',
+      pageId: 'blackjack-game-screen',
       on: 'deal',
       actionNote: 'Places a bet and deals the hand',
       forks: [
@@ -36,7 +36,7 @@ export default defineFlow({
           label: 'Hand wins',
           steps: [
             {
-              screenId: 'blackjack-game-screen',
+              pageId: 'blackjack-game-screen',
               on: 'stand',
               actionNote: 'Stands and wins the hand',
               decisionNote: 'The dealer busts or the player out-values the dealer.',
@@ -48,7 +48,7 @@ export default defineFlow({
           label: 'Hand loses',
           steps: [
             {
-              screenId: 'blackjack-game-screen',
+              pageId: 'blackjack-game-screen',
               on: 'stand',
               actionNote: 'Stands and loses the hand',
               decisionNote: 'The player busts or the dealer out-values the player.',
@@ -59,7 +59,7 @@ export default defineFlow({
       ],
     },
     {
-      screenId: 'blackjack-game-screen',
+      pageId: 'blackjack-game-screen',
       on: 'deal',
       actionNote: 'Hand settled — deals again',
     },

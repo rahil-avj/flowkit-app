@@ -3,7 +3,7 @@
 export type {
   CompiledFlowplan,
   CompiledStep,
-  ResolvedScreen,
+  ResolvedPage,
   ScreenResolver,
 } from './compileFlowplan'
 export { compileFlowplan, FlowplanCompileError } from './compileFlowplan'

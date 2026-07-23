@@ -1,4 +1,4 @@
-import type { FlowNode } from '@flowkit/types/index'
+import type { Chapter } from '@flowkit/types/index'
 import type { PaletteGroup, PaletteItem } from '@flowkit-features/command-palette'
 import { PALETTE_ACCENT_COLORS } from '@flowkit-features/command-palette'
 import { useFlowLibrary } from '@flowkit-features/flow-library'
@@ -15,7 +15,7 @@ const FLOW_COLOR = PALETTE_ACCENT_COLORS[1]
 const FLOWPLAN_COLOR = PALETTE_ACCENT_COLORS[2]
 
 interface Options {
-  flows: FlowNode[]
+  flows: Chapter[]
   activeViewId: string
   query: string
 }

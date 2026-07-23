@@ -104,7 +104,7 @@ wall-clock via `crashSession.startTime` when reconstructing remarks after a cras
 **Flowplan format adopted as primary; old kept behind kill-switch.** `defineFlow()`/
 `projects/**/flowplans/*.ts` is current; old `_playFlow.ts` stays functional behind `removed`,
 CLI-scaffolded under `flowkit arch`. Reason: flowplans are pure TS data, compile to the same
-runtime `FlowConfig`, and support forks/db-patches/step-level simulator overrides the old format
+runtime `ChapterConfig`, and support forks/db-patches/step-level simulator overrides the old format
 can't express — the compiler boundary meant zero runtime changes were needed to add it.
 
 **`InteractionCtx` has 8 fields, not 3.** `{ activeScreenId, history, flowState, get, set, db,

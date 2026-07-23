@@ -1,4 +1,4 @@
-import type { ScreenMeta } from '@flowkit/types'
+import type { PageMeta } from '@flowkit/types'
 import { useAppNav, useDb } from '@flowkit-shared/utils'
 import GameOverModal from '@workspace/lib/components/ui/GameOverModal'
 import IconButton from '@workspace/lib/components/ui/IconButton'
@@ -214,7 +214,7 @@ export default function TwentyFortyEightGameScreen() {
   )
 }
 
-export const screenMeta: ScreenMeta = {
+export const pageMeta: PageMeta = {
   label: '2048',
   desc: 'Slide-and-merge puzzle — reach the 2048 tile before the grid fills up.',
   tags: ['type:puzzle'],

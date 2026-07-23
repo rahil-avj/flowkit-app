@@ -1,4 +1,4 @@
-import type { FlowNode, WireframeView } from '@flowkit/types/index'
+import type { Chapter, WireframeView } from '@flowkit/types/index'
 import KitSideExplorer from '@flowkit-core/layout/KitSideExplorer'
 import { COLOR_BLIND_FILTERS, ColorBlindSVGDefs } from '@flowkit-core/layout/KitSideInspector'
 import {
@@ -118,7 +118,7 @@ function RailShell({ tabs, activeId, onSelect, children, badgeMap = {} }: RailSh
 // ── Main canvas ────────────────────────────────────────────────────────────────
 
 interface MobileCanvasProps {
-  flows: FlowNode[]
+  flows: Chapter[]
   views: WireframeView[]
 }
 

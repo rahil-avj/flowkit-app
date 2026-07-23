@@ -29,9 +29,9 @@ function listFlowplanFiles(wsDir) {
     .map(f => ({ file: f, fullPath: path.join(dir, f) }))
 }
 
-/** True for a plain FlowStep entry (has screenId) — excludes FlowplanRef ({ ref }) entries. */
+/** True for a plain FlowStep entry (has pageId) — excludes FlowplanRef ({ ref }) entries. */
 function isScreenStep(entry) {
-  return entry && typeof entry === 'object' && typeof entry.screenId === 'string'
+  return entry && typeof entry === 'object' && typeof entry.pageId === 'string'
 }
 
 const SCREEN_EXTS = ['.tsx', '.jsx']
@@ -68,7 +68,7 @@ function collectAllScreenIds(wsDir) {
     if (resolveVisibility(segments) === 'non-existent') continue // belt-and-suspenders
     const parsed = parseScreenSegments(segments)
     if (!parsed) continue
-    ids.add(makeScreenId(parsed.flow, parsed.screen))
+    ids.add(makeScreenId(parsed.flow, parsed.page))
   }
   return ids
 }
@@ -133,12 +133,12 @@ export async function checkFlowplans(wsDir, report) {
     steps.forEach((step, i) => {
       if (!isScreenStep(step)) return // a FlowplanRef ({ ref }) — nothing to validate here
 
-      if (!knownScreenIds.has(step.screenId)) {
+      if (!knownScreenIds.has(step.pageId)) {
         report.add({
           ruleId: 'flowplan/invalid-screen',
           severity: 'error',
           file: relPath,
-          message: `step[${i}]'s screenId '${step.screenId}' is not a real screen in this workspace. Expected the 'flow-screen' composite id form (see makeScreenId).`,
+          message: `step[${i}]'s pageId '${step.pageId}' is not a real screen in this workspace. Expected the 'flow-screen' composite id form (see makeScreenId).`,
           fix: 'Update the step to reference a real, composite flow-screen id.',
         })
       }

@@ -1,5 +1,5 @@
 import type {
-  FlowConfig,
+  ChapterConfig,
   InteractionCtx,
   InteractionRule,
   TransitionAnimation,
@@ -69,7 +69,7 @@ export const BACK_ANIM: Partial<Record<TransitionAnimation, TransitionAnimation>
 export interface FlowEngineReturn {
   // State
   activeScreenIndex: number
-  activeScreen: FlowConfig['screens'][number] | undefined
+  activeScreen: ChapterConfig['pages'][number] | undefined
   activeScreenId: string // T5: tags cursor.sample events
   history: string[]
   localState: Record<string, unknown>
@@ -78,7 +78,7 @@ export interface FlowEngineReturn {
   animClass: string
   isAutoPlayPaused: boolean
   isAllowed: boolean
-  autoPlay: (FlowConfig['autoPlay'] & Record<string, unknown>) | null
+  autoPlay: (ChapterConfig['autoPlay'] & Record<string, unknown>) | null
 
   // Refs — stable identity across renders
   screenContainerRef: React.RefObject<HTMLDivElement | null> // T5: cursor listener attachment
@@ -108,7 +108,7 @@ export interface FlowEngineReturn {
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): FlowEngineReturn {
+export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions): FlowEngineReturn {
   const flowplanGate = options?.flowplanGate ?? null
   const completionDelayMs = options?.completionDelayMs ?? 0
   const completionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -137,12 +137,12 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
 
   // ─── Screen lookup ────────────────────────────────────────────────────────
   const findScreenIndex = useCallback(
-    (idOrLabel: string) => flow.screens.findIndex(s => s.id === idOrLabel || s.label === idOrLabel),
-    [flow.screens]
+    (idOrLabel: string) => flow.pages.findIndex(s => s.id === idOrLabel || s.label === idOrLabel),
+    [flow.pages]
   )
 
   const initialScreenName =
-    flow.initialScreen || flow.screens[0]?.id || flow.screens[0]?.label || ''
+    flow.initialPage || flow.pages[0]?.id || flow.pages[0]?.label || ''
   const initialIndex = findScreenIndex(initialScreenName)
 
   // ─── State ────────────────────────────────────────────────────────────────
@@ -195,7 +195,7 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
   }, [isAllowed])
 
   // ─── Sync debugger ────────────────────────────────────────────────────────
-  const activeScreen = flow.screens[activeScreenIndex]
+  const activeScreen = flow.pages[activeScreenIndex]
   const activeScreenId = activeScreen?.id ?? activeScreen?.label ?? ''
   const activeScreenLabel = activeScreenId
 
@@ -203,7 +203,7 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
     if (!isAllowed) return
     const historyList = history.map(h => {
       const idx = findScreenIndex(h)
-      return idx !== -1 ? flow.screens[idx].id || flow.screens[idx].label : h
+      return idx !== -1 ? flow.pages[idx].id || flow.pages[idx].label : h
     })
     setActiveFlowDebugInfo({ history: historyList, state: localState, transitionLog, effects })
   }, [
@@ -214,7 +214,7 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
     effects,
     setActiveFlowDebugInfo,
     findScreenIndex,
-    flow.screens,
+    flow.pages,
   ])
 
   useEffect(
@@ -227,13 +227,13 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
   // ─── Screen-level entry guard ─────────────────────────────────────────────
   const screenPassesGuard = useCallback(
     (idx: number): boolean => {
-      const screen = flow.screens[idx]
+      const screen = flow.pages[idx]
       if (!screen?.meta) return true
       if (screen.meta.canNotEnter && screen.meta.canNotEnter({ db })) return false
       if (screen.meta.canEnter && !screen.meta.canEnter({ db })) return false
       return true
     },
-    [flow.screens, db]
+    [flow.pages, db]
   )
 
   // ─── Animated screen transition ───────────────────────────────────────────
@@ -245,12 +245,12 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
       historyMode: 'push' | 'pop' = 'push'
     ) => {
       const commit = () => {
-        const s = flow.screens[nextIdx]
+        const s = flow.pages[nextIdx]
         const name = s.id || s.label
         // Emit dwell-end for the screen we're leaving
         const dwell = performance.now() - screenEntryTimeRef.current
         recorder.current?.logEvent('screen.dwell-end', {
-          screenId: logEntry.fromScreen,
+          pageId: logEntry.fromScreen,
           dwellMs: Math.round(dwell),
           flowId: flow.id,
         })
@@ -261,7 +261,7 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
         setHistory(h => (historyMode === 'pop' ? h.slice(0, -1) : [...h, name]))
         setTransitionLog(prev => [...prev, { ...logEntry, toScreen: name }])
         recorder.current?.logEvent('screen.visited', {
-          screenId: name,
+          pageId: name,
           flowId: flow.id,
           from: logEntry.fromScreen,
           action: logEntry.action,
@@ -287,9 +287,9 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
       }, ANIM_DURATION)
     },
     // State setters and recorder ref are stable; flow.id is structurally stable
-    // per flow instance. Only flow.screens drives screen-lookup re-computation.
+    // per flow instance. Only flow.pages drives screen-lookup re-computation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [flow.screens]
+    [flow.pages]
   )
 
   // ─── Build InteractionCtx ─────────────────────────────────────────────────
@@ -344,7 +344,7 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
             },
           ])
           recorder.current?.logEvent('screen.blocked', {
-            screenId: target,
+            pageId: target,
             flowId: flow.id,
             fromScreen: activeScreenLabel,
             strict: true,
@@ -377,8 +377,8 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
       }
       if (target === 'next') {
         let nextIndex = activeScreenIndex + 1
-        while (nextIndex < flow.screens.length && !screenPassesGuard(nextIndex)) nextIndex++
-        if (nextIndex >= flow.screens.length) {
+        while (nextIndex < flow.pages.length && !screenPassesGuard(nextIndex)) nextIndex++
+        if (nextIndex >= flow.pages.length) {
           setTransitionLog(prev => [
             ...prev,
             {
@@ -482,7 +482,7 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
           },
         ])
         recorder.current?.logEvent('screen.blocked', {
-          screenId: target,
+          pageId: target,
           flowId: flow.id,
           fromScreen: activeScreenLabel,
         })
@@ -498,7 +498,7 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
       }
 
       const resolvedAnim =
-        animation !== 'none' ? animation : (flow.screens[nextIdx].enterAnimation ?? 'none')
+        animation !== 'none' ? animation : (flow.pages[nextIdx].enterAnimation ?? 'none')
       navigateToScreen(
         nextIdx,
         { timestamp, action: actionName, fromScreen: activeScreenLabel, toScreen: '', warnings },
@@ -548,7 +548,7 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
       recorder.current?.logEvent('interaction.tap', {
         elementId,
         trigger: triggerName,
-        screenId: activeScreenId,
+        pageId: activeScreenId,
         flowId: flow.id,
         ...(fkId ? { fkId } : {}),
       })
@@ -558,7 +558,7 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
           rule.do(ctx)
           recorder.current?.logEvent('interaction.effect', {
             elementId,
-            screenId: activeScreenId,
+            pageId: activeScreenId,
             flowId: flow.id,
           })
         } catch (e: unknown) {
@@ -679,7 +679,7 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
     autoTimerRef.current = setTimeout(() => {
       const timestamp = new Date().toLocaleTimeString()
       recorder.current?.logEvent('navigation.auto-advance', {
-        screenId: activeScreenId,
+        pageId: activeScreenId,
         delayMs: delay,
         flowId: flow.id,
       })
@@ -709,7 +709,7 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
 
     const timer = setTimeout(() => {
       const timestamp = new Date().toLocaleTimeString()
-      if (activeScreenIndex >= flow.screens.length - 1) {
+      if (activeScreenIndex >= flow.pages.length - 1) {
         if (autoPlay.loop) {
           navigateToScreen(
             0,
@@ -784,11 +784,11 @@ export function useFlowEngine(flow: FlowConfig, options?: FlowEngineOptions): Fl
     ;[autoTimerRef, animTimerRef, animEndTimerRef].forEach(r => {
       if (r.current) clearTimeout(r.current)
     })
-    const last = flow.screens[flow.screens.length - 1]
+    const last = flow.pages[flow.pages.length - 1]
     setAnimClass('')
-    setActiveScreenIndex(flow.screens.length - 1)
+    setActiveScreenIndex(flow.pages.length - 1)
     setHistory(h => [...h, last.id || last.label])
-  }, [flow.screens])
+  }, [flow.pages])
 
   return {
     activeScreenIndex,
