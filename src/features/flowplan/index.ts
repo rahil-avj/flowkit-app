@@ -1,11 +1,6 @@
 // Public API for the flowplan feature.
 // Import from '@flowkit-features/flowplan' — never reach inside internals.
-export type {
-  CompiledFlowplan,
-  CompiledStep,
-  PageResolver,
-  ResolvedPage,
-} from './compileFlowplan'
+export type { CompiledFlowplan, CompiledStep, PageResolver, ResolvedPage } from './compileFlowplan'
 export { compileFlowplan, FlowplanCompileError } from './compileFlowplan'
 export { default as MobilePlaybackBar } from './components/MobilePlaybackBar'
 export type { FlowplanSettingsValue, HighlightColor, HintPosition } from './FlowplanSettingsContext'

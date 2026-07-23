@@ -1,5 +1,5 @@
 // flowkit check:config — workspace config file consistency rules, plus the shared esbuild-based
-// TypeScript module reader other check domains (flowplans.js) reuse.
+// TypeScript module reader other check domains (flowStories.js) reuse.
 //
 // Reuses the exact esbuild-bundle-then-import() pattern already implemented in
 // scripts/helpers/vite-plugin.js's readFlowkitConfig() — not reinvented here — so reading

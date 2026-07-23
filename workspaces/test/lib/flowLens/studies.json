@@ -1,12 +1,12 @@
 {
-  "workspace": "test",
+  "workspace": "game-zone",
   "activeStudyId": "initial-study",
   "studies": [
     {
       "id": "initial-study",
       "name": "Initial Study",
       "status": "active",
-      "createdAt": "2026-07-23T20:13:48.004Z",
+      "createdAt": "2026-07-22T08:26:25.273Z",
       "archivedAt": null,
       "description": ""
     }

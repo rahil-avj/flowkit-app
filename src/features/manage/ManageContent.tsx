@@ -96,7 +96,7 @@ export function ManageContent() {
   for (const projectNode of tree) {
     if (projectNode.kind === 'project') {
       projectFlowMap[projectNode.id] = (projectNode.children ?? [])
-        .filter(c => c.kind === 'flow')
+        .filter(c => c.kind === 'chapter')
         .map(c => c.id)
     }
   }

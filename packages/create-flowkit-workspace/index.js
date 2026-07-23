@@ -286,7 +286,7 @@ function writeAgentsMd(dir) {
     `# ${projectName}
 
 A [FlowKit](https://github.com/rahil-avj/flowkit-app) multi-workspace author project —
-this repo is **content only** (pages, flowplans, mock data per workspace). The platform
+this repo is **content only** (pages, flowStories, mock data per workspace). The platform
 engine lives in \`node_modules/flowkit/\` and is not yours to edit. FlowKit exists to let
 you build and demo realistic multi-page product flows — with working navigation, mock
 data, and a reviewer-facing simulator — without standing up a backend or a router by hand.

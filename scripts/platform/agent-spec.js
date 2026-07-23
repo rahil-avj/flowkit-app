@@ -11,7 +11,7 @@
 //   nav      → src/shared/utils/useNav.ts (navigateTo/goNext/goBack/isChapter/flowState)
 //   data     → src/shared/contexts/DashboardContext.tsx (db, updateDb, resetDb)
 //   screens  → src/types.ts PageProps / PageMeta
-//   flows    → src/types.ts FlowDef + OnMapEntry; declared in flowplans/*.ts
+//   flows    → src/types.ts FlowDef + OnMapEntry; declared in flowStories/*.ts
 //   flowplan → src/features/flow-library/compileFlowplan.ts + src/types FlowkitConfig
 //   sim      → src/core/layout/ (ControlAccordion, SimControl, SimAction, etc.)
 //   theme    → src/theme.ts (bg/text/accent/shadow) + ThemeContext useTheme()
@@ -354,13 +354,13 @@ export function platformSurfaces(ctx) {
 
 export function cliRows(_ctx) {
   return [
-    { cmd: 'flowkit plan:ls', what: 'list all flowplans in the workspace' },
+    { cmd: 'flowkit plan:ls', what: 'list all flowStories in the workspace' },
     {
       cmd: 'flowkit check / flowkit check:<domain>',
-      what: 'validate authored content — screens/config/components/db/flowplans',
+      what: 'validate authored content — screens/config/components/db/flowStories',
     },
     { cmd: 'flowkit project:ls', what: 'list projects and their flowplan counts' },
-    { cmd: 'flowkit status', what: 'workspace health: projects, flowplans, sessions, feedback' },
+    { cmd: 'flowkit status', what: 'workspace health: projects, flowStories, sessions, feedback' },
     {
       cmd: 'flowkit sessions:ls / import / check / stats / sample / rm',
       what: 'manage the session library',

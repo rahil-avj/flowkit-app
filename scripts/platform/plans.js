@@ -1,5 +1,5 @@
 // Platform command: read-only flowplan/project discovery (plan:ls, project:ls). Flowplan
-// validation lives in scripts/checks/flowplans.js — see `flowkit check:flowplans`.
+// validation lives in scripts/checks/flowStories.js — see `flowkit check:flowStories`.
 import fs from 'fs'
 import path from 'path'
 import { workspacePath } from '../helpers/paths.js'
@@ -18,8 +18,8 @@ function listProjects(ws) {
 }
 
 // ─── Format-aware flowplan resolver (R1) ──────────────────────────────────────
-// Checks the flat layout (workspaces/<ws>/flowplans/) first, then falls back
-// to the legacy nested layout (workspaces/<ws>/projects/<proj>/flowplans/).
+// Checks the flat layout (workspaces/<ws>/flowStories/) first, then falls back
+// to the legacy nested layout (workspaces/<ws>/projects/<proj>/flowStories/).
 // This is the single source of truth for ALL plan-discovery commands.
 
 function resolveFlowplans(ws, project) {
@@ -37,7 +37,7 @@ function resolveFlowplans(ws, project) {
     }
   }
 
-  // Legacy nested layout — projects/<proj>/flowplans/
+  // Legacy nested layout — projects/<proj>/flowStories/
   const projectsDir = findProjectsDir(ws)
   if (!fs.existsSync(projectsDir)) return results
   const projects = project ? [project] : listProjects(ws)
@@ -64,12 +64,12 @@ export function cmdPlanLs(val, args) {
   const plans = listFlowplans(ws, projectFlag || null)
 
   console.log('')
-  console.log(b(` FlowPlans — ${ws}`) + (projectFlag ? d(`  (project: ${projectFlag})`) : ''))
+  console.log(b(` FlowStories — ${ws}`) + (projectFlag ? d(`  (project: ${projectFlag})`) : ''))
   console.log(d(' ────────────────────────────────────────────'))
 
   if (plans.length === 0) {
     console.log(
-      d(`  No flowplans found. Drop a .ts file into ${FLOW_STORIES_DIRNAME}/ to add one.`)
+      d(`  No flowStories found. Drop a .ts file into ${FLOW_STORIES_DIRNAME}/ to add one.`)
     )
     console.log('')
     return

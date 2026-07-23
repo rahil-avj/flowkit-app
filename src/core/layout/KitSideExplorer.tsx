@@ -97,12 +97,12 @@ export default function KitSideExplorer({
   const { hasHierarchy, tree } = useWorkspaceHierarchy(activeWorkspaceName)
   const { allTags: flowTags } = useFlowLibrary()
 
-  // Collect screen tags from hierarchy tree
+  // Collect page tags from hierarchy tree
   const screenTags = useMemo(() => {
     const set = new Set<string>()
     function walk(nodes: typeof tree) {
       for (const n of nodes) {
-        if (n.kind === 'screen') (n.view?.meta?.tags ?? []).forEach(t => set.add(t))
+        if (n.kind === 'page') (n.view?.meta?.tags ?? []).forEach(t => set.add(t))
         else if (n.children) walk(n.children)
       }
     }

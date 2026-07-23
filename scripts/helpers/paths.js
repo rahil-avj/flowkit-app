@@ -81,7 +81,7 @@ export function isRepoMode() {
  * that generate a brand-new file from scratch (no existing import line to
  * round-trip, unlike config-patch.js's read-modify-write flow) each hardcoded
  * one mode's import path directly — confirmed live: scripts/authoring/
- * flowplans.js's create:flowplan hardcoded 'flowkit' (wrong in repo mode) and
+ * flowStories.js's create:flowplan hardcoded 'flowkit' (wrong in repo mode) and
  * scripts/authoring/promote-flow.js hardcoded '@flowkit-core/config' (wrong
  * in flat/multi-workspace mode), each breaking the opposite mode's build.
  */

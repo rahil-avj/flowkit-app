@@ -104,7 +104,7 @@ export const APP_ACTIONS: AppAction[] = [
     label: 'Open Flow Debugger',
     shortcut: 'Shift+4',
     run: c => {
-      c.setActiveTab('flow')
+      c.setActiveTab('chapter')
       c.setIsOpen(true)
     },
   },

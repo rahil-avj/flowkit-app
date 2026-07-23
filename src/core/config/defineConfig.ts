@@ -10,7 +10,7 @@ import type { AnnotationTag, FlowkitConfig, FlowplanDef } from '../../types/inde
 //   import { defineConfig } from "@flowkit-core/config";
 //   export default defineConfig({ projects: { shop: { label: "Shop" } } });
 //
-//   // workspaces/<ws>/projects/<p>/flowplans/Checkout.ts
+//   // workspaces/<ws>/projects/<p>/flowStories/Checkout.ts
 //   import { defineFlow } from "@flowkit-core/config";
 //   export default defineFlow({ id: "checkout-flow", name: "Checkout", steps: [...] });
 
@@ -46,7 +46,7 @@ export function defineConfig(config: FlowkitConfig): FlowkitConfig {
  *
  * @example
  * ```ts
- * // workspaces/<ws>/flowplans/checkout.ts
+ * // workspaces/<ws>/flowStories/checkout.ts
  * import { defineFlow } from "flowkit";
  * export default defineFlow({ id: "checkout", name: "Checkout", steps: [...] });
  * ```

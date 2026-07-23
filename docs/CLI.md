@@ -172,14 +172,14 @@ export default defineConfig({
 
 **Field summary:**
 
-| Field                | Purpose                                                                          |
-| -------------------- | --------------------------------------------------------------------------------- |
-| `workspace`          | Display `name` / `description` shown in the workspace picker                     |
-| `startPage`          | Default page id — cold load, device home button, reset-to-first (optional)       |
-| `defaultDevice`      | Default device shell/mockup label, must match a `DevicePreset.label` (optional)  |
-| `defaultOrientation` | Default orientation, `"portrait"` or `"landscape"` (optional)                    |
-| `chapters`           | Explicit chapter ordering (flat-layout workspaces — see note below)              |
-| `pageOrder`          | Explicit per-chapter page ordering, keyed by chapter id                          |
+| Field                | Purpose                                                                            |
+| -------------------- | ---------------------------------------------------------------------------------- |
+| `workspace`          | Display `name` / `description` shown in the workspace picker                       |
+| `startPage`          | Default page id — cold load, device home button, reset-to-first (optional)         |
+| `defaultDevice`      | Default device shell/mockup label, must match a `DevicePreset.label` (optional)    |
+| `defaultOrientation` | Default orientation, `"portrait"` or `"landscape"` (optional)                      |
+| `chapters`           | Explicit chapter ordering (flat-layout workspaces — see note below)                |
+| `pageOrder`          | Explicit per-chapter page ordering, keyed by chapter id                            |
 | `projects`           | Nested-layout only — per-project `chapters`/`pageOrder` (skip for flat workspaces) |
 
 > **"Flat-layout" here is unrelated to flat _mode_.** `chapters`/`pageOrder` vs. `projects` describes whether a single workspace has a `projects/` subdivision layer inside it — a repo-mode-and-consumer-mode-agnostic authoring choice. It has nothing to do with flat mode (one implicit workspace, no `workspaces/` dir) vs. multi-workspace mode (sibling workspace folders) described elsewhere in this doc. Both `flat-layout` and `nested-layout` workspaces exist identically in repo mode, flat mode, and multi-workspace mode.
@@ -409,13 +409,13 @@ Domain-specific linter for authored content — validates flowkit's own structur
 
 `flowkit check` with no domain runs all 5 domains against one workspace and prints one combined report. `flowkit check:<domain>` runs just that domain:
 
-| Domain     | Command            | Checks                                                                                        |
-| ---------- | ------------------ | --------------------------------------------------------------------------------------------- |
-| Pages      | `check:pages`      | Default export shape, `pageMeta` presence/shape, id/directory match, ambiguous page folders   |
-| Config     | `check:config`     | `workspace.ts`'s `chapters[]`/`pageOrder` consistency against `flowBook/` on disk              |
-| Components | `check:components` | `.flowkit/components.json` registry vs. files on disk, barrel export consistency              |
-| DB         | `check:db`         | `lib/data/db.ts`/`db.js` has at least one export                                              |
-| FlowPlans  | `check:flowplans`  | Parseable, `id` matches filename, non-empty `steps[]`, step `pageId`s exist, step guidance    |
+| Domain     | Command            | Checks                                                                                      |
+| ---------- | ------------------ | ------------------------------------------------------------------------------------------- |
+| Pages      | `check:pages`      | Default export shape, `pageMeta` presence/shape, id/directory match, ambiguous page folders |
+| Config     | `check:config`     | `workspace.ts`'s `chapters[]`/`pageOrder` consistency against `flowBook/` on disk           |
+| Components | `check:components` | `.flowkit/components.json` registry vs. files on disk, barrel export consistency            |
+| DB         | `check:db`         | `lib/data/db.ts`/`db.js` has at least one export                                            |
+| FlowPlans  | `check:flowplans`  | Parseable, `id` matches filename, non-empty `steps[]`, step `pageId`s exist, step guidance  |
 
 Target a non-active workspace: `flowkit check:pages:<workspace-name>` for a single domain (workspace as the second colon segment, same convention as `sessions:ls:<ws>`), or `flowkit check --workspace:<workspace-name>` for the all-domains form.
 
@@ -1051,29 +1051,29 @@ Commands grouped by item type. Click the heading to jump to the full section.
 
 ### [Authoring](#authoring)
 
-| Command            | Alias | Description                            |
-| ------------------ | ----- | -------------------------------------- |
-| `create:chapter`   | —     | Add a chapter                          |
+| Command            | Alias | Description                               |
+| ------------------ | ----- | ----------------------------------------- |
+| `create:chapter`   | —     | Add a chapter                             |
 | `remove:chapter`   | —     | Remove a chapter (`--force` if non-empty) |
-| `list:chapters`    | —     | List chapters                          |
-| `create:page`      | —     | Add a page to a chapter                |
-| `remove:page`      | —     | Remove a page                          |
-| `rename:page`      | —     | Rename a page                          |
-| `move:page`        | —     | Move a page to a different chapter     |
-| `list:pages`       | —     | List pages                             |
-| `page:info`        | —     | Show page metadata                     |
-| `add:step`         | —     | Append a step to a flowplan            |
-| `remove:step`      | —     | Remove a step by index                 |
-| `list:steps`       | —     | List a flowplan's steps                |
-| `flowplan:info`    | —     | Show flowplan summary                  |
-| `create:component` | —     | Add a shared component                 |
-| `remove:component` | —     | Remove a shared component              |
-| `components:find`  | —     | Look up a component                    |
-| `components:ls`    | —     | List registered components             |
-| `components:scan`  | —     | Sync the registry from disk            |
-| `add:export`       | —     | Add a barrel export                    |
-| `list:exports`     | —     | List a barrel's exports                |
-| `promote:chapter`  | —     | Extract a fork into its own flowplan   |
+| `list:chapters`    | —     | List chapters                             |
+| `create:page`      | —     | Add a page to a chapter                   |
+| `remove:page`      | —     | Remove a page                             |
+| `rename:page`      | —     | Rename a page                             |
+| `move:page`        | —     | Move a page to a different chapter        |
+| `list:pages`       | —     | List pages                                |
+| `page:info`        | —     | Show page metadata                        |
+| `add:step`         | —     | Append a step to a flowplan               |
+| `remove:step`      | —     | Remove a step by index                    |
+| `list:steps`       | —     | List a flowplan's steps                   |
+| `flowplan:info`    | —     | Show flowplan summary                     |
+| `create:component` | —     | Add a shared component                    |
+| `remove:component` | —     | Remove a shared component                 |
+| `components:find`  | —     | Look up a component                       |
+| `components:ls`    | —     | List registered components                |
+| `components:scan`  | —     | Sync the registry from disk               |
+| `add:export`       | —     | Add a barrel export                       |
+| `list:exports`     | —     | List a barrel's exports                   |
+| `promote:chapter`  | —     | Extract a fork into its own flowplan      |
 
 ### [Sessions](#sessions-flowtracer--flowlens)
 

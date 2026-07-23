@@ -475,15 +475,7 @@ interface StepRowProps {
   isActive: boolean
   activeSourcePageId: string | null
 }
-function StepRow({
-  step,
-  num,
-  depth,
-  index,
-  stepNum,
-  isActive,
-  activeSourcePageId,
-}: StepRowProps) {
+function StepRow({ step, num, depth, index, stepNum, isActive, activeSourcePageId }: StepRowProps) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -581,8 +573,8 @@ function EmptyState({ hasAny }: EmptyStateProps) {
     <SharedEmptyState
       variant="panel"
       icon={<GitFork size={28} />}
-      title={hasAny ? 'No flows match this filter.' : 'No flowplans yet'}
-      subtitle={hasAny ? undefined : 'Add a defineFlow() file under projects/<p>/flowplans/.'}
+      title={hasAny ? 'No flows match this filter.' : 'No flowStories yet'}
+      subtitle={hasAny ? undefined : 'Add a defineFlow() file under projects/<p>/flowStories/.'}
     />
   )
 }

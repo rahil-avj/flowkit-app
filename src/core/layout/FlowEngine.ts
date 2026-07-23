@@ -141,8 +141,7 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
     [flow.pages]
   )
 
-  const initialScreenName =
-    flow.initialPage || flow.pages[0]?.id || flow.pages[0]?.label || ''
+  const initialScreenName = flow.initialPage || flow.pages[0]?.id || flow.pages[0]?.label || ''
   const initialIndex = findScreenIndex(initialScreenName)
 
   // ─── State ────────────────────────────────────────────────────────────────

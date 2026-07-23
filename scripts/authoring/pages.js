@@ -83,7 +83,7 @@ export async function cmdCreatePage(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
-  let flowId = parseStringFlag(args, 'flow')
+  let flowId = parseStringFlag(args, 'chapter')
   let pageId = parseStringFlag(args, 'name')
   let label = parseStringFlag(args, 'label')
 
@@ -94,7 +94,7 @@ export async function cmdCreatePage(_val, args = []) {
   }
 
   try {
-    flowId = assertKebab(flowId, 'flow')
+    flowId = assertKebab(flowId, 'chapter')
     pageId = assertKebab(pageId, 'page name')
   } catch (e) {
     console.error(r(`✗ ${e.message}`))
@@ -161,7 +161,7 @@ export async function cmdRemovePage(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
-  let flowId = parseStringFlag(args, 'flow')
+  let flowId = parseStringFlag(args, 'chapter')
   let pageId = parseStringFlag(args, 'name')
 
   if (!flowId || !pageId) {
@@ -169,7 +169,7 @@ export async function cmdRemovePage(_val, args = []) {
     process.exit(1)
   }
   try {
-    flowId = assertKebab(flowId, 'flow')
+    flowId = assertKebab(flowId, 'chapter')
     pageId = assertKebab(pageId, 'page name')
   } catch (e) {
     console.error(r(`✗ ${e.message}`))
@@ -179,7 +179,7 @@ export async function cmdRemovePage(_val, args = []) {
   const refs = findFlowplanRefs(wsDir, pageId)
   if (refs.length > 0) {
     console.log(r(`⚠  Warning: flowplan(s) reference '${pageId}': ${refs.join(', ')}`))
-    console.log(r('   Update those flowplans after removing this page.'))
+    console.log(r('   Update those flowStories after removing this page.'))
   }
 
   removePage(wsDir, flowId, pageId)
@@ -203,7 +203,7 @@ export async function cmdRenamePage(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
-  let flowId = parseStringFlag(args, 'flow')
+  let flowId = parseStringFlag(args, 'chapter')
   let oldId = parseStringFlag(args, 'name')
   let newId = parseStringFlag(args, 'to')
 
@@ -213,7 +213,7 @@ export async function cmdRenamePage(_val, args = []) {
   }
 
   try {
-    flowId = assertKebab(flowId, 'flow')
+    flowId = assertKebab(flowId, 'chapter')
     oldId = assertKebab(oldId, 'name')
     newId = assertKebab(newId, 'new name')
   } catch (e) {
@@ -427,7 +427,7 @@ export async function cmdListPages(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
-  const filterFlow = parseStringFlag(args, 'flow')
+  const filterFlow = parseStringFlag(args, 'chapter')
   // Presence-flags, consistent with the `args.includes('--flag')` convention
   // used elsewhere in this codebase (e.g. scripts/checks/index.js's --json,
   // scripts/authoring/chapters.js's --force) — no dedicated boolean-flag helper
@@ -515,7 +515,7 @@ export async function cmdPageInfo(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
-  const flowId = parseStringFlag(args, 'flow')
+  const flowId = parseStringFlag(args, 'chapter')
   const pageId = parseStringFlag(args, 'name')
 
   if (!flowId || !pageId) {

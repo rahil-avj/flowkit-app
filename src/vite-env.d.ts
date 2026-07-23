@@ -7,7 +7,7 @@ declare module 'virtual:flowkit/config' {
   export const config: FlowkitConfig
 }
 
-declare module 'virtual:flowkit/screens' {
+declare module 'virtual:flowkit/pages' {
   import type { PageMeta } from '@flowkit/types/index'
   import type React from 'react'
   /** Lazy screen loaders keyed by "flow/pageId" */
@@ -30,9 +30,9 @@ declare module 'virtual:flowkit/screens' {
   }>
 }
 
-declare module 'virtual:flowkit/flowplans' {
+declare module 'virtual:flowkit/flowStories' {
   import type { FlowplanDef } from '@flowkit/types/index'
-  export const flowplans: FlowplanDef[]
+  export const flowStories: FlowplanDef[]
 }
 
 declare module 'virtual:flowkit/workspace' {

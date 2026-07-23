@@ -63,12 +63,12 @@ ${b('Scaffold (authoring):')}
 ${b('Projects:')}
   ${c('project:ls')} / ${c('pj:ls')}          List projects + plan counts
 
-${b('FlowPlans:')}
-  ${c('plan:ls')} / ${c('fp:ls')}             List flowplans  ${d('[--project:<slug>]')}
+${b('FlowStories:')}
+  ${c('plan:ls')} / ${c('fp:ls')}             List flowStories  ${d('[--project:<slug>]')}
 
 ${b('Check (domain-specific linter for authored content):')}
   ${c('check')}                            Run all 5 domain checkers, combined report
-  ${c('check:screens')} / ${c('check:config')} / ${c('check:components')} / ${c('check:db')} / ${c('check:flowplans')}
+  ${c('check:screens')} / ${c('check:config')} / ${c('check:components')} / ${c('check:db')} / ${c('check:flowStories')}
                                        Run just one domain  ${d('[--json]')}
 
 ${b('Sessions (FlowTracer / FlowLens library):')}

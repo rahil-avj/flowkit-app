@@ -45,7 +45,7 @@ import MobileFAB, { type MobileTab } from './MobileFAB'
 
 // ── Sub-tab definitions per top-level tab ─────────────────────────────────────
 
-type RightSubTab = 'info' | 'simulator' | 'flow' | 'db' | 'sessions'
+type RightSubTab = 'info' | 'simulator' | 'chapter' | 'db' | 'sessions'
 type SettingsSubTab = 'interface' | 'panel' | 'sessions' | 'workspace' | 'debug'
 
 interface SubTabDef {
@@ -57,7 +57,7 @@ interface SubTabDef {
 const RIGHT_SUBTABS_ALL: SubTabDef[] = [
   { id: 'info', icon: <Info size={15} />, label: 'Screen Info' },
   { id: 'simulator', icon: <Settings2 size={15} />, label: 'Simulator' },
-  { id: 'flow', icon: <Workflow size={15} />, label: 'Flow Debugger' },
+  { id: 'chapter', icon: <Workflow size={15} />, label: 'Flow Debugger' },
   { id: 'db', icon: <Database size={15} />, label: 'Database' },
   { id: 'sessions', icon: <Activity size={15} />, label: 'Sessions' },
 ]
@@ -357,7 +357,7 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
           >
             {rightSub === 'info' && <ScreenInfoContent views={views} touch />}
             {rightSub === 'simulator' && <SimulatorContent />}
-            {rightSub === 'flow' && <FlowDebuggerContent />}
+            {rightSub === 'chapter' && <FlowDebuggerContent />}
             {rightSub === 'db' && <DbContent />}
             {rightSub === 'sessions' && showSessionsFeature && <SessionsContent />}
           </RailShell>

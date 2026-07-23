@@ -1,4 +1,4 @@
-import type { ChapterConfig, Hotspot,PageProps } from '@flowkit/types/index'
+import type { ChapterConfig, Hotspot, PageProps } from '@flowkit/types/index'
 import type { CompiledFlowplan } from '@flowkit-features/flow-library'
 import { useFlowplanSettings } from '@flowkit-features/flowplan/FlowplanSettingsContext'
 import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
@@ -96,9 +96,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
   // compiled step list (FlowMaster is the source of truth for the active screen;
   // the context never looks the step up itself). Used by the patch effect, the
   // gating handler, and the actionNote caption.
-  const currentStepIndex = flowplan
-    ? flowplan.steps.findIndex(s => s.pageId === activePageId)
-    : -1
+  const currentStepIndex = flowplan ? flowplan.steps.findIndex(s => s.pageId === activePageId) : -1
   const currentStep =
     flowplan && currentStepIndex >= 0 ? flowplan.steps[currentStepIndex] : undefined
 
@@ -349,7 +347,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
         }
         node = node.parentElement
       }
-      // No rule matched — frustrated click (legacy flows only; flowplans return
+      // No rule matched — frustrated click (legacy flows only; flowStories return
       // above and never reach here).
       recorderOpt?.logEvent('interaction.frustrated-click', {
         x: e.clientX,

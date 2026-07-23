@@ -126,5 +126,7 @@ export async function cmdListChapters(_val, args = []) {
     console.log(`  ${flowId.padEnd(28)} ${d(`${count} page${pages.length !== 1 ? 's' : ''}`)}`)
   }
   console.log('')
-  console.log(d(`Total: ${config.chapters.length} chapter${config.chapters.length !== 1 ? 's' : ''}`))
+  console.log(
+    d(`Total: ${config.chapters.length} chapter${config.chapters.length !== 1 ? 's' : ''}`)
+  )
 }

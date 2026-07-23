@@ -1,4 +1,4 @@
-// Authoring command: CRUD for flowplans and their steps (create/remove/add/list/info).
+// Authoring command: CRUD for flowStories and their steps (create/remove/add/list/info).
 import fs from 'fs'
 import path from 'path'
 import { parseStringFlag } from '../helpers/args.js'
@@ -8,7 +8,7 @@ import { assertKebab } from '../helpers/validate.js'
 import { g, r, b, d, c } from '../helpers/colors.js'
 import { readWorkspaceConfig } from '../authoring-support/config-patch.js'
 import { FLOW_STORIES_DIRNAME } from '../helpers/config-filenames.js'
-import { makePageId } from '../../src/shared/utils/screenPathIdentity.js'
+import { makePageId } from '../../src/shared/utils/pagePathIdentity.js'
 
 function toDisplayName(kebab) {
   return kebab
@@ -52,7 +52,7 @@ function formatStep(step) {
  * below only matches up to the first `]`, not the true end of a nested-bracket
  * steps array. Silently proceeding on a flowplan with forks would either drop
  * the fork data or write out a truncated/malformed array. Refuse instead —
- * `promote:flow` is the one command that correctly bracket-scans nested
+ * `promote:chapter` is the one command that correctly bracket-scans nested
  * structures, so route the author there or ask them to hand-edit.
  */
 function rewriteSteps(filePath, steps) {
@@ -80,7 +80,7 @@ export default defineFlow({
   description: '',
 
   steps: [
-    // { pageId: 'screen-id', on: 'element-id', actionNote: 'What the user does' },
+    // { pageId: 'page-id', on: 'element-id', actionNote: 'What the user does' },
   ],
 })
 `
@@ -120,7 +120,7 @@ export async function cmdCreateFlowplan(_val, args = []) {
   console.log(g(`✓ Flowplan: ${FLOW_STORIES_DIRNAME}/${id}.ts`))
   console.log('')
   console.log(d(`Next:`))
-  console.log(d(`  flowkit add:step --flowplan:${id} --screen:<pageId> --action:"User arrives"`))
+  console.log(d(`  flowkit add:step --flowplan:${id} --page:<pageId> --action:"User arrives"`))
   console.log(d(`  flowkit list:steps --flowplan:${id}`))
 }
 
@@ -156,31 +156,31 @@ export async function cmdAddStep(_val, args = []) {
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
   const fpId = parseStringFlag(args, 'flowplan')
-  const pageId = parseStringFlag(args, 'screen')
+  const pageId = parseStringFlag(args, 'page')
   const on = parseStringFlag(args, 'on')
   const actionNote = parseStringFlag(args, 'action')
   const positionStr = parseStringFlag(args, 'position')
 
   if (!fpId || !pageId) {
-    console.error(r('✗ --flowplan:<id> and --screen:<pageId> are required'))
+    console.error(r('✗ --flowplan:<id> and --page:<pageId> are required'))
     process.exit(1)
   }
 
   // Validate the bare pageId exists in some flow's pageOrder (pageOrder is
   // flow-scoped/bare, per config-patch.js), then build the collision-proof composite
-  // id (flow-screen) from whichever flow it's actually registered under — a flowplan's
+  // id (chapter-page) from whichever flow it's actually registered under — a flowplan's
   // own id is a separate authored concept, not necessarily the same as the target
-  // screen's flow folder, so this can't be assumed from fpId.
+  // page's chapter folder, so this can't be assumed from fpId.
   const config = readWorkspaceConfig(wsDir)
-  const owningFlow = Object.entries(config.pageOrder).find(([, screens]) =>
-    screens.includes(pageId)
+  const owningFlow = Object.entries(config.pageOrder).find(([, pages]) =>
+    pages.includes(pageId)
   )?.[0]
   if (!owningFlow) {
-    const allScreens = Object.values(config.pageOrder).flat()
+    const allPages = Object.values(config.pageOrder).flat()
     console.error(r(`✗ pageId '${pageId}' not found in workspace flows`))
-    const close = allScreens.filter(s => s.startsWith(pageId.split('-')[0]))
+    const close = allPages.filter(s => s.startsWith(pageId.split('-')[0]))
     if (close.length > 0) console.error(d(`  Did you mean: ${close.join(', ')}`))
-    console.error(d(`  Available screens: ${allScreens.join(', ')}`))
+    console.error(d(`  Available pages: ${allPages.join(', ')}`))
     process.exit(1)
   }
   const compositePageId = makePageId(owningFlow, pageId)
@@ -221,7 +221,7 @@ export async function cmdAddStep(_val, args = []) {
 
   console.log(g(`✓ Step added to ${FLOW_STORIES_DIRNAME}/${fpId}.ts`))
   console.log(
-    `  ${d('screen:')} ${pageId}${on ? `  ${d('on:')} ${on}` : ''}${actionNote ? `  ${d('action:')} ${actionNote}` : ''}`
+    `  ${d('page:')} ${pageId}${on ? `  ${d('on:')} ${on}` : ''}${actionNote ? `  ${d('action:')} ${actionNote}` : ''}`
   )
   console.log('')
   console.log(d(`View: flowkit list:steps --flowplan:${fpId}`))
@@ -302,7 +302,7 @@ export async function cmdListSteps(_val, args = []) {
 
   if (steps.length === 0) {
     console.log(d('  (no steps)'))
-    console.log(d(`  Add one: flowkit add:step --flowplan:${fpId} --screen:<pageId>`))
+    console.log(d(`  Add one: flowkit add:step --flowplan:${fpId} --page:<pageId>`))
     return
   }
 

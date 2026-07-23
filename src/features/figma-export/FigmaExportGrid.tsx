@@ -27,7 +27,7 @@ export function groupScreens(screens: WireframeView[], groupBy: GroupBy): Groupe
 
   for (const view of screens) {
     let key: string
-    if (groupBy === 'flow') {
+    if (groupBy === 'chapter') {
       key = view.flow ?? UNGROUPED
     } else if (groupBy === 'project') {
       key = view.project ?? UNGROUPED

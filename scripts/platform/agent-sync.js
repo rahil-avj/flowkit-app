@@ -115,7 +115,7 @@ export function renderMemory(ctx) {
     `# FlowKit workspace — ${ctx.name}\n\n` +
     `You are building a product inside a **FlowKit** workspace (screens = React components, ` +
     `flows = ordered screen sequences). You edit \`workspaces/${ctx.name}/\` only; \`src/\` is platform code.\n\n` +
-    `**Screens live under \`flows/<flow>/<screen>/\`.** Journeys are declared in \`flowplans/<flow>.ts\`. There is no \`_playFlow.ts\` and no \`flows/router.tsx\`.\n\n` +
+    `**Screens live under \`flows/<flow>/<screen>/\`.** Journeys are declared in \`flowStories/<flow>.ts\`. There is no \`_playFlow.ts\` and no \`flows/router.tsx\`.\n\n` +
     `**Start here:** read \`.agent/rules.md\` (directives) and \`.agent/INDEX.md\` (task → where to go), ` +
     `then \`.agent/project.md\` (what this product is). Use the INDEX to find anything — do not search blindly.\n\n` +
     `## Non-negotiables (full set in \`.agent/rules.md\`)\n\n${top}\n\n` +

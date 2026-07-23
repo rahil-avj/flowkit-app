@@ -72,7 +72,7 @@ export function usePanelShortcuts({
             const idx = SIM_SUB_TABS.findIndex(s => s.id === cur)
             return SIM_SUB_TABS[(idx + dir + SIM_SUB_TABS.length) % SIM_SUB_TABS.length].id
           })
-        } else if (activeTab === 'flow') {
+        } else if (activeTab === 'chapter') {
           setDebugSubTab(cur => {
             const idx = DEBUG_SUB_TABS.findIndex(s => s.id === cur)
             return DEBUG_SUB_TABS[(idx + dir + DEBUG_SUB_TABS.length) % DEBUG_SUB_TABS.length].id
@@ -113,7 +113,7 @@ export function useNavigationShortcuts({
   navigateTo,
 }: NavigationShortcutActions) {
   // Flat list of all non-play screens, grouped by flow
-  const allScreens = useMemo(
+  const allPages = useMemo(
     () => flows.flatMap(f => (f.children ?? []).filter(v => !v.id.endsWith('-play'))),
     [flows]
   )
@@ -137,15 +137,15 @@ export function useNavigationShortcuts({
         if (firstScreen) navigateTo(firstScreen.id)
       } else {
         // Cycle screens within all screens (wraps across flows)
-        const idx = allScreens.findIndex(v => v.id === activeViewId)
+        const idx = allPages.findIndex(v => v.id === activeViewId)
         if (idx === -1) return
-        const next = allScreens[idx + dir]
+        const next = allPages[idx + dir]
         if (next) navigateTo(next.id)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [flows, allScreens, activeViewId, navigateTo])
+  }, [flows, allPages, activeViewId, navigateTo])
 }
 
 // ─── Global overlay shortcuts ─────────────────────────────────────────────────

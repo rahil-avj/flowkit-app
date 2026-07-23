@@ -48,11 +48,11 @@ const isSingle = import.meta.env.VITE_SINGLE_WORKSPACE === 'true'
 
 // ─── Flat mode: virtual module imports ────────────────────────────────────────
 
-import { flowplans as _virtualFlowplans } from 'virtual:flowkit/flowplans'
+import { flowStories as _virtualFlowplans } from 'virtual:flowkit/flowStories'
 import {
   pageMeta as _virtualScreenMeta,
   screenList as _virtualScreenList,
-} from 'virtual:flowkit/screens'
+} from 'virtual:flowkit/pages'
 
 // ─── Repo mode: Vite glob maps (string literals only) ────────────────────────
 //
@@ -70,9 +70,7 @@ const flowplanModules = import.meta.glob('/workspaces/**/flowStories/*.ts', {
   eager: true,
 }) as FlowplanGlobMap
 
-const projectScreenModules = import.meta.glob(
-  '/workspaces/**/flowBook/**/*.tsx'
-) as ScreenGlobMap
+const projectScreenModules = import.meta.glob('/workspaces/**/flowBook/**/*.tsx') as ScreenGlobMap
 
 // Eager named-import of pageMeta only — zero cost for files that don't export it.
 const screenMetaModules = import.meta.glob('/workspaces/**/flowBook/**/*.tsx', {
@@ -256,7 +254,7 @@ function buildFlatHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
     })
   }
 
-  // 2. Flowplan registry from virtual:flowkit/flowplans
+  // 2. Flowplan registry from virtual:flowkit/flowStories
   const registry = new Map<string, FlowplanDef>()
   for (const def of _virtualFlowplans) {
     if (def?.id) registry.set(def.id, def)
@@ -273,7 +271,8 @@ function buildFlatHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
 
   // 4. Flow library Chapters
   const declaredIds =
-    config.chapters ?? Object.values(config.projects ?? {}).flatMap(p => p.chapters ?? p.modules ?? [])
+    config.chapters ??
+    Object.values(config.projects ?? {}).flatMap(p => p.chapters ?? p.modules ?? [])
   const allDefs = [...registry.values()]
   const orderedDefs = [
     ...declaredIds.filter(id => registry.has(id)).map(id => registry.get(id)!),
@@ -455,7 +454,8 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   // 5. Flow library Chapters — one per flowplan, with a `-play` runner child.
   //    Flat layout: order from config.flows[]. Nested: from config.projects[*].flows[].
   const declaredIds =
-    config.chapters ?? Object.values(config.projects ?? {}).flatMap(p => p.chapters ?? p.modules ?? [])
+    config.chapters ??
+    Object.values(config.projects ?? {}).flatMap(p => p.chapters ?? p.modules ?? [])
   const allDefs = [...registry.values()]
   const orderedDefs = [
     ...declaredIds.filter(id => registry.has(id)).map(id => registry.get(id)!),
@@ -521,7 +521,10 @@ function buildTree(
     // Nested layout: config.projects[project].flows + .pageOrder
     const projCfg = config.projects?.[project]
     const declaredOrder: string[] =
-      (project === wsName ? config.chapters : undefined) ?? projCfg?.chapters ?? projCfg?.modules ?? []
+      (project === wsName ? config.chapters : undefined) ??
+      projCfg?.chapters ??
+      projCfg?.modules ??
+      []
     const flowEntries = [...flowsMap.entries()]
     const orderedFlows: [string, WireframeView[]][] = [
       ...declaredOrder
@@ -547,11 +550,11 @@ function buildTree(
                 .sort((a, b) => a.label.localeCompare(b.label)),
             ]
       flowNodes.push({
-        kind: 'flow',
+        kind: 'chapter',
         id: flow,
         label: titleCase(flow),
         children: sortedViews.map(v => ({
-          kind: 'screen' as const,
+          kind: 'page' as const,
           id: v.id,
           label: v.label,
           view: v,
@@ -629,7 +632,9 @@ function makeFlowplanRunner(
  * own pageMeta.annotations — replaces the old workspace-level `_tags.ts` sidecar file.
  * `metaByPageId` maps a screen's final id (flowname-screenname) to its parsed PageMeta.
  */
-function buildTagsMap(metaByPageId: Map<string, PageMeta | undefined>): Map<string, AnnotationTag[]> {
+function buildTagsMap(
+  metaByPageId: Map<string, PageMeta | undefined>
+): Map<string, AnnotationTag[]> {
   const today = new Date().toISOString().slice(0, 10)
   const map = new Map<string, AnnotationTag[]>()
   for (const [pageId, meta] of metaByPageId) {

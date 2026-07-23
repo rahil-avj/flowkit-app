@@ -498,7 +498,7 @@ import {
   cmdRemovePage,
   cmdRenameScreen,
   cmdMoveScreen,
-  cmdListScreens,
+  cmdListPages,
   cmdScreenInfo,
 } from './agent/screens.js'
 import {
@@ -542,7 +542,7 @@ Add dispatch blocks (after existing commands, before the final `else` unknown co
 } else if (p.cmd === 'list') {
   const sub = p.val
   if (sub === 'flows') await cmdListFlows('', rest)
-  else if (sub === 'screens') await cmdListScreens('', rest)
+  else if (sub === 'screens') await cmdListPages('', rest)
   else if (sub === 'steps') await cmdListSteps('', rest)
   else if (sub === 'exports') await cmdListExports('', rest)
 

@@ -9,7 +9,7 @@ const workspace = process.env.FLOWKIT_WORKSPACE
 if (!workspace) throw new Error('FLOWKIT_WORKSPACE env var is required for standalone build.')
 
 export default defineConfig({
-  // flowkit() supplies virtual:flowkit/* (config/screens/flowplans/workspace) —
+  // flowkit() supplies virtual:flowkit/* (config/pages/flowStories/workspace) —
   // needed by src/modes/flowlens/useSessionLibrary.ts's virtual:flowkit/workspace
   // import, same mechanism this repo's own vite.config.ts already uses for the
   // dev server. standalone defaults to false since @flowkit/@workspace/@flowkit-kit

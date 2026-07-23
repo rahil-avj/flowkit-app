@@ -9,7 +9,7 @@ interface Props {
 }
 
 type CategoryFilter =
-  'all' | 'flow' | 'interaction' | 'navigation' | 'state' | 'simulator' | 'session'
+  'all' | 'chapter' | 'interaction' | 'navigation' | 'state' | 'simulator' | 'session'
 
 const CATEGORY_COLORS: Record<string, string> = {
   flow: '#22c55e',
@@ -113,7 +113,7 @@ export default function SessionInspect({ sessionId, onBack }: Props) {
 
   const CATEGORIES: CategoryFilter[] = [
     'all',
-    'flow',
+    'chapter',
     'interaction',
     'navigation',
     'state',

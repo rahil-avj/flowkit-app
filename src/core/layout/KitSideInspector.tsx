@@ -958,7 +958,7 @@ function KitSideInspectorInner({
       )}
 
       {/* Flow Debugger */}
-      {activeTab === 'flow' && (
+      {activeTab === 'chapter' && (
         <FlowDebuggerContent subTab={debugSubTab} onSubTabChange={setDebugSubTab} />
       )}
 

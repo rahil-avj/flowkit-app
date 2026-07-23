@@ -37,9 +37,7 @@ export default function PathsView({ nodes, onScreenClick }: Props) {
                   background: FLOWLENS_ACCENT,
                 }}
               />
-              <span className="text-xs text-theme-text-primary flex-1 truncate">
-                {node.pageId}
-              </span>
+              <span className="text-xs text-theme-text-primary flex-1 truncate">{node.pageId}</span>
               <span className="text-theme-text-muted text-ui-2xs shrink-0">{node.count}×</span>
             </div>
 

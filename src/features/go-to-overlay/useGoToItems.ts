@@ -9,7 +9,7 @@ import { useMemo } from 'react'
 
 import type { GoToItemMeta } from './types'
 
-// Screens = blue [0], Flows = green [1], Flowplans = purple [2]
+// Pages  = blue [0], Flows = green [1], flowStories = purple [2]
 const SCREEN_COLOR = PALETTE_ACCENT_COLORS[0]
 const FLOW_COLOR = PALETTE_ACCENT_COLORS[1]
 const FLOWPLAN_COLOR = PALETTE_ACCENT_COLORS[2]
@@ -33,14 +33,14 @@ export function useGoToItems({ flows, activeViewId, query }: Options): PaletteGr
     if (hasHierarchy) {
       for (const projectNode of tree) {
         for (const flowNode of projectNode.children ?? []) {
-          if (flowNode.kind !== 'flow') continue
+          if (flowNode.kind !== 'chapter') continue
           const flowId = flowNode.id
           const flowLabel = flowNode.label
-          const screenChildren = (flowNode.children ?? []).filter(n => n.kind === 'screen')
+          const screenChildren = (flowNode.children ?? []).filter(n => n.kind === 'page')
 
           if (!q || flowLabel.toLowerCase().includes(q)) {
             const firstPageId = screenChildren[0]?.id
-            const meta: GoToItemMeta = { kind: 'flow', flowId, firstPageId }
+            const meta: GoToItemMeta = { kind: 'chapter', flowId, firstPageId }
             flowItems.push({
               id: `flow:${flowId}`,
               label: flowLabel,
@@ -74,18 +74,18 @@ export function useGoToItems({ flows, activeViewId, query }: Options): PaletteGr
       }
     } else {
       for (const flow of flows) {
-        const screens = (flow.children ?? []).filter(v => !v.id.endsWith('-play'))
+        const pages = (flow.children ?? []).filter(v => !v.id.endsWith('-play'))
 
         if (!q || flow.label.toLowerCase().includes(q)) {
           const meta: GoToItemMeta = {
-            kind: 'flow',
+            kind: 'chapter',
             flowId: flow.id,
-            firstPageId: screens[0]?.id,
+            firstPageId: pages[0]?.id,
           }
           flowItems.push({
             id: `flow:${flow.id}`,
             label: flow.label,
-            subtitle: `${screens.length} screen${screens.length !== 1 ? 's' : ''}`,
+            subtitle: `${pages.length} screen${pages.length !== 1 ? 's' : ''}`,
             icon: Folder,
             iconColor: FLOW_COLOR,
             meta: meta as unknown as Record<string, unknown>,
@@ -93,10 +93,10 @@ export function useGoToItems({ flows, activeViewId, query }: Options): PaletteGr
         }
 
         const matched = q
-          ? screens.filter(
+          ? pages.filter(
               s => s.label.toLowerCase().includes(q) || flow.label.toLowerCase().includes(q)
             )
-          : screens
+          : pages
         for (const s of matched) {
           const meta: GoToItemMeta = { kind: 'screen', flowId: flow.id }
           screenItems.push({
@@ -136,9 +136,9 @@ export function useGoToItems({ flows, activeViewId, query }: Options): PaletteGr
     }
 
     return [
-      { id: 'screens', label: 'Screens', items: screenItems, color: SCREEN_COLOR },
+      { id: 'pages', label: 'Pages', items: screenItems, color: SCREEN_COLOR },
       { id: 'flows', label: 'Flows', items: flowItems, color: FLOW_COLOR },
-      { id: 'flowplans', label: 'Flow Plans', items: flowplanItems, color: FLOWPLAN_COLOR },
+      { id: 'flowStories', label: 'Flow Plans', items: flowplanItems, color: FLOWPLAN_COLOR },
     ]
   }, [flows, tree, hasHierarchy, summaries, q, activeViewId])
 }

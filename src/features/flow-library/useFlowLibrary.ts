@@ -73,7 +73,7 @@ function firstPageId(
 
 export interface FlowLibraryData {
   summaries: FlowSummary[]
-  /** All tags across all flowplans (for the filter bar). */
+  /** All tags across all flowStories (for the filter bar). */
   allTags: string[]
   /**
    * Union of all screen ids referenced by any flowplan step.

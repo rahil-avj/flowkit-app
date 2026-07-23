@@ -11,7 +11,7 @@ export default defineConfig({
   defaultDevice: 'Compact',
   // Default orientation on load. Ignored if the device doesn't support landscape.
   defaultOrientation: 'portrait',
-  Chepters: [
+  chapters: [
     'intro-flow',
     'tic-tac-toe-flow',
     'dice-flow',

@@ -67,9 +67,7 @@ export function aggregateSessions(
       pageId,
       totalVisits,
       avgDwell: screenDwells[pageId]?.length
-        ? Math.round(
-            screenDwells[pageId].reduce((a, b) => a + b, 0) / screenDwells[pageId].length
-          )
+        ? Math.round(screenDwells[pageId].reduce((a, b) => a + b, 0) / screenDwells[pageId].length)
         : 0,
     }))
     .sort((a, b) => b.totalVisits - a.totalVisits)

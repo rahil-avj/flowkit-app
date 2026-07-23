@@ -7,7 +7,7 @@ import { ChevronDown, Search, X } from 'lucide-react'
 import { useState } from 'react'
 
 export type CanvasBg = 'theme' | 'dark' | 'light' | 'white'
-export type GroupBy = 'flat' | 'flow' | 'tag' | 'project'
+export type GroupBy = 'flat' | 'chapter' | 'tag' | 'project'
 export type LabelField = 'label' | 'id' | 'description'
 
 export interface FigmaExportSidebarProps {
@@ -140,7 +140,7 @@ const BG_OPTIONS: { value: CanvasBg; label: string }[] = [
 
 const GROUP_OPTIONS: { value: GroupBy; label: string }[] = [
   { value: 'flat', label: 'None' },
-  { value: 'flow', label: 'Flow' },
+  { value: 'chapter', label: 'chapter' },
   { value: 'tag', label: 'Tag' },
   { value: 'project', label: 'Project' },
 ]
@@ -245,7 +245,7 @@ export default function FigmaExportSidebar({
         {/* ── Scale ──────────────────────────────────────────────────────────── */}
         <SidebarSection label="Scale">
           <div className="flex items-center gap-2">
-            <span className="text-ui-2xs font-bold text-theme-text-secondary min-w-[30px] text-right">
+            <span className="text-ui-2xs font-bold text-theme-text-secondary min-w-7.5 text-right">
               {Math.round(scale * 100)}%
             </span>
             <input
@@ -265,7 +265,7 @@ export default function FigmaExportSidebar({
                 key={v}
                 onClick={() => onScaleChange(v)}
                 className={[
-                  'flex-1 text-[9px] font-bold py-[3px] rounded-[5px] cursor-pointer border transition-colors duration-120',
+                  'flex-1 text-[9px] font-bold py-0.75 rounded-[5px] cursor-pointer border transition-colors duration-120',
                   scale === v
                     ? 'bg-theme-blue text-white border-theme-blue'
                     : 'bg-theme-base text-theme-text-muted border-theme-border hover:text-theme-text-secondary hover:bg-theme-hover',
@@ -385,7 +385,7 @@ export default function FigmaExportSidebar({
               placeholder="Search screens…"
               value={searchQuery}
               onChange={e => onSearchQueryChange(e.target.value)}
-              className="w-full h-8 text-ui-sm bg-theme-base border border-theme-border rounded-[6px] text-theme-text-primary placeholder:text-theme-text-muted outline-none focus:border-theme-blue transition-[border-color] duration-150 px-7"
+              className="w-full h-8 text-ui-sm bg-theme-base border border-theme-border rounded-md text-theme-text-primary placeholder:text-theme-text-muted outline-none focus:border-theme-blue transition-[border-color] duration-150 px-7"
             />
             {searchQuery && (
               <button
@@ -460,7 +460,7 @@ export default function FigmaExportSidebar({
         <div className="mt-auto p-3 border-t border-theme-border">
           <button
             onClick={onFigmaExport}
-            className="flex items-center justify-center gap-1.5 w-full text-ui-xs font-bold px-3 py-[5px] rounded-[6px] cursor-pointer bg-theme-blue-dim border border-theme-blue/25 text-theme-blue hover:bg-theme-blue/15 transition-colors duration-150"
+            className="flex items-center justify-center gap-1.5 w-full text-ui-xs font-bold px-3 py-1.25 rounded-md cursor-pointer bg-theme-blue-dim border border-theme-blue/25 text-theme-blue hover:bg-theme-blue/15 transition-colors duration-150"
           >
             <FigmaIcon size={12} />
             Export to Figma

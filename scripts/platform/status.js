@@ -67,12 +67,12 @@ export function cmdStatus(wsArg) {
   }
   console.log(`  Flows:           ${b(flowCount)}  (${screenCount} screens total)`)
 
-  // FlowPlans
+  // FlowStories
   if (fs.existsSync(flatPlansDir)) {
     const planCount = fs
       .readdirSync(flatPlansDir)
       .filter(f => f.endsWith('.ts') || f.endsWith('.js')).length
-    console.log(`  FlowPlans:       ${b(planCount)}`)
+    console.log(`  FlowStories:       ${b(planCount)}`)
   }
 
   // Session library — sessions/<study>/*.json under lib/flowLens/

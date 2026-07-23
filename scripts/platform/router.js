@@ -42,7 +42,7 @@ import {
   cmdRemoveStep,
   cmdListSteps,
   cmdFlowplanInfo,
-} from '../authoring/flowplans.js'
+} from '../authoring/flowStories.js'
 import {
   cmdCreateComponent,
   cmdRemoveComponent,
@@ -192,7 +192,7 @@ export async function route(argv) {
     if (sub === 'ls' || sub === 'list') cmdPlanLs(nameVal, rest)
     else {
       console.error(r(`✗ Unknown plan command: plan:${p.val}`))
-      console.log(d('  Try: plan:ls  ·  for validation, use: flowkit check:flowplans'))
+      console.log(d('  Try: plan:ls  ·  for validation, use: flowkit check:flowStories'))
       process.exit(1)
     }
 

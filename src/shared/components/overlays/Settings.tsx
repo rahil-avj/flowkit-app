@@ -34,7 +34,7 @@ import OverlayShell from './OverlayShell'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type SectionId = 'interface' | 'panel' | 'flowplans' | 'feedback' | 'sessions' | 'debug'
+type SectionId = 'interface' | 'panel' | 'flowStories' | 'feedback' | 'sessions' | 'debug'
 
 interface Section {
   id: SectionId
@@ -691,7 +691,7 @@ function SessionsSection({ ctx }: { ctx: ActionCtx }) {
 const SECTIONS: Section[] = [
   { id: 'interface', label: 'Interface', icon: <SlidersHorizontal size={14} /> },
   { id: 'panel', label: 'Panel', icon: <LayoutPanelLeft size={14} /> },
-  { id: 'flowplans', label: 'Flow Plans', icon: <Workflow size={14} /> },
+  { id: 'flowStories', label: 'Flow Plans', icon: <Workflow size={14} /> },
   { id: 'feedback', label: 'Feedback', icon: <MessageSquare size={14} /> },
   { id: 'sessions', label: 'Sessions', icon: <Video size={14} /> },
   { id: 'debug', label: 'Debug', icon: <Bug size={14} /> },
@@ -744,7 +744,7 @@ export default function Settings({ onClose, ctx, initialSection = 'interface' }:
   const panel = {
     interface: <InterfaceSection ctx={ctx} />,
     panel: <PanelSection />,
-    flowplans: <FlowPlansSection />,
+    flowStories: <FlowPlansSection />,
     feedback: <FeedbackSection ctx={ctx} />,
     sessions: <SessionsSection ctx={ctx} />,
     debug: <DebugSection />,

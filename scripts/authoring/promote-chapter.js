@@ -35,7 +35,7 @@ export async function cmdPromoteChapter(_val, args = []) {
     console.error(r('✗ --flowStory:<path> and --fork:"<Fork label>" are required'))
     console.error(
       d(
-        '  Example: flowkit promote:chapter --flowStory:flowplans/Checkout.ts --fork:"Empty cart" --as:empty-cart-flow'
+        '  Example: flowkit promote:chapter --flowStory:flowStories/Checkout.ts --fork:"Empty cart" --as:empty-cart-flow'
       )
     )
     process.exit(1)
@@ -65,7 +65,7 @@ export async function cmdPromoteChapter(_val, args = []) {
   // ── Locate the fork object by its label, then the balanced steps:[ … ] array ──
 
   // Tolerate single, double, or backtick quotes and flexible spacing around
-  // the colon — hand-authored flowplans aren't guaranteed to use one style.
+  // the colon — hand-authored flowStories aren't guaranteed to use one style.
   const escapedLabel = forkLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const labelRe = new RegExp(`label\\s*:\\s*['"\`]${escapedLabel}['"\`]`)
   const labelMatch = src.match(labelRe)

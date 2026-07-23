@@ -144,7 +144,7 @@ export type TransitionAnimation =
 // ─── Interaction System ───────────────────────────────────────────────────────
 //
 // The interaction system lets you define ALL click, swipe, and gesture logic
-// in flowplans — screens never need to import anything or wire up handlers.
+// in flowStories — screens never need to import anything or wire up handlers.
 //
 // How it works:
 //   1. Give any HTML element in your screen an `id` attribute.
@@ -499,7 +499,7 @@ export interface FeedbackComment {
 // ChapterConfig (see features/flow-library/compileFlowplan.ts) and run by the
 // existing FlowMaster/useFlowEngine — the engine is never modified.
 //
-// Authoring lives in: workspaces/<ws>/projects/<proj>/[modules/<mod>/]flowplans/<Name>.ts
+// Authoring lives in: workspaces/<ws>/projects/<proj>/[modules/<mod>/]flowStories/<Name>.ts
 // authored with defineFlow({ ... }) from @flowkit-core/config.
 
 /**
@@ -626,7 +626,7 @@ export interface FlowplanDef {
    * first declared screen) when unset.
    */
   homeScreen?: string
-  /** Ordered steps (or refs to other Flowplans). */
+  /** Ordered steps (or refs to other flowStories). */
   steps: FlowplanStepEntry[]
 }
 
@@ -694,7 +694,7 @@ export interface FlowkitConfig {
  * Levels: project → module → screen (intermediate levels auto-detected).
  */
 export interface WorkspaceHierarchyNode {
-  kind: 'project' | 'flow' | 'module' | 'screen'
+  kind: 'project' | 'chapter' | 'page'
   id: string
   label: string
   children?: WorkspaceHierarchyNode[]

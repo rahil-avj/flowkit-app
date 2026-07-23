@@ -1,5 +1,5 @@
 // Shared per-workspace content generator — the one source of truth for demo
-// workspace content (the workspace config file, flowplans, five screens, db,
+// workspace content (the workspace config file, flowStories, five screens, db,
 // tokens.css) across three call sites: this repo's own `flowkit
 // create:workspace` command (scripts/platform/workspace-flat.js), and the two
 // standalone scaffolder packages (create-flowkit-app, create-flowkit-workspace),
@@ -436,7 +436,7 @@ ${VITE_CONFIG_BUILD_BLOCK}
   )
 }
 
-/** Writes the full demo content set (config, flowplans, five screens, db, tokens) for one workspace folder. */
+/** Writes the full demo content set (config, flowStories, five screens, db, tokens) for one workspace folder. */
 export function writeWorkspaceContent(dir, workspaceName, language) {
   writeFlowkitConfig(dir, workspaceName)
   writeFlowplans(dir)

@@ -166,8 +166,8 @@ export const pageMeta = {
 | `flowState` | `TState`                   | Local sandbox state for this chapter                                         |
 | `db`        | `TDb`                      | Global mock db (live reference)                                              |
 | `onAction`  | `(name, payload?) => void` | Trigger a named interaction programmatically (form submits, async callbacks) |
-| `onNext`    | `() => void`               | Advance to the next page in order                                           |
-| `onBack`    | `() => void`               | Go to the previous page                                                     |
+| `onNext`    | `() => void`               | Advance to the next page in order                                            |
+| `onBack`    | `() => void`               | Go to the previous page                                                      |
 
 > Prefer element `id` + flowplan `on:` over `onAction`/`onNext`/`onBack` for simple taps — it keeps pages free of routing logic.
 
@@ -177,7 +177,7 @@ export const pageMeta = {
 
 | Field          | Type                  | Purpose                                                                         |
 | -------------- | --------------------- | ------------------------------------------------------------------------------- |
-| `id`           | `string`              | Page identifier (optional; auto-derived from file name if omitted)             |
+| `id`           | `string`              | Page identifier (optional; auto-derived from file name if omitted)              |
 | `label`        | `string`              | Display name (optional; defaults to derived from component name)                |
 | `desc`         | `string`              | Short description shown in the sidebar                                          |
 | `devNotes`     | `string`              | Developer notes (not shown in sidebar)                                          |

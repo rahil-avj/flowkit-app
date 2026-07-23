@@ -20,7 +20,7 @@ marker at repo root) and `scripts/helpers/flowkit-manifest.js#isMultiMode()` (re
 `flowkit.mode`):
 
 | Mode                                         | Workspace lives at                                                  | Create/remove workspace                                                                |
-| --------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| -------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | Repo (this checkout)                         | `workspaces/<name>/`                                                | `flowkit nw:<name>` / `rw:<name>` (repo-mode only, gated by `requireRepoMode()`)       |
 | Flat (consumer, `create-flowkit-app`)        | project root itself                                                 | N/A — one implicit workspace, is `process.cwd()`                                       |
 | Multi (consumer, `create-flowkit-workspace`) | sibling folder per `package.json`'s `flowkit.workspaces[name].path` | `flowkit create:workspace` / `remove:workspace` / `rename:workspace` (flat/multi-only) |
@@ -385,24 +385,24 @@ Rule ids you'll see: `page/no-default-export`, `page/missing-meta`, `page/meta-i
 
 # Full flag reference (verified against source, not paraphrased)
 
-| Command             | Required flags                                  | Optional flags                                      |
-| -------------------- | ------------------------------------------------ | ----------------------------------------------------- |
-| `create:chapter`    | `--name:`                                       | `--workspace:`                                       |
-| `remove:chapter`    | `--name:`                                       | `--workspace:`, `--force` (if pages exist)          |
-| `list:chapters`     | —                                                | `--workspace:`                                       |
-| `create:page`       | `--flow:`, `--name:`                            | `--label:`, `--workspace:`                          |
-| `remove:page`       | `--flow:`, `--name:`                            | `--workspace:`                                       |
-| `rename:page`       | `--flow:`, `--name:` (old id), `--to:` (new id) | `--workspace:`                                       |
-| `move:page`         | `--name:`, `--from-flow:`, `--to-flow:`         | `--workspace:`                                       |
-| `list:pages`        | —                                                | `--flow:`, `--hidden`, `--gone`, `--all`, `--workspace:` |
-| `page:info`         | `--flow:`, `--name:`                            | `--workspace:`                                       |
-| `create:flowplan`   | `--name:`                                       | `--workspace:`                                       |
-| `remove:flowplan`   | `--name:`                                       | `--workspace:`, `--force`                            |
-| `add:step`          | `--flowplan:`, `--screen:`                      | `--on:`, `--action:`, `--position:`, `--workspace:` |
-| `remove:step`       | `--flowplan:`, `--index:`                       | `--workspace:`                                       |
-| `create:component`  | `--name:`, `--path:`                            | `--desc:`, `--workspace:`                           |
-| `promote:chapter`   | `--flowplan:`, `--fork:`                        | `--as:`, `--workspace:`                             |
-| `add:export`        | `--barrel:`, `--name:`                          | `--workspace:`                                       |
+| Command            | Required flags                                  | Optional flags                                           |
+| ------------------ | ----------------------------------------------- | -------------------------------------------------------- |
+| `create:chapter`   | `--name:`                                       | `--workspace:`                                           |
+| `remove:chapter`   | `--name:`                                       | `--workspace:`, `--force` (if pages exist)               |
+| `list:chapters`    | —                                               | `--workspace:`                                           |
+| `create:page`      | `--flow:`, `--name:`                            | `--label:`, `--workspace:`                               |
+| `remove:page`      | `--flow:`, `--name:`                            | `--workspace:`                                           |
+| `rename:page`      | `--flow:`, `--name:` (old id), `--to:` (new id) | `--workspace:`                                           |
+| `move:page`        | `--name:`, `--from-flow:`, `--to-flow:`         | `--workspace:`                                           |
+| `list:pages`       | —                                               | `--flow:`, `--hidden`, `--gone`, `--all`, `--workspace:` |
+| `page:info`        | `--flow:`, `--name:`                            | `--workspace:`                                           |
+| `create:flowplan`  | `--name:`                                       | `--workspace:`                                           |
+| `remove:flowplan`  | `--name:`                                       | `--workspace:`, `--force`                                |
+| `add:step`         | `--flowplan:`, `--screen:`                      | `--on:`, `--action:`, `--position:`, `--workspace:`      |
+| `remove:step`      | `--flowplan:`, `--index:`                       | `--workspace:`                                           |
+| `create:component` | `--name:`, `--path:`                            | `--desc:`, `--workspace:`                                |
+| `promote:chapter`  | `--flowplan:`, `--fork:`                        | `--as:`, `--workspace:`                                  |
+| `add:export`       | `--barrel:`, `--name:`                          | `--workspace:`                                           |
 
 Flag syntax is `--name:value` or `--name:"quoted value"` (`scripts/helpers/args.js#parseStringFlag`
 strips only leading/trailing quote characters, not internal escapes).

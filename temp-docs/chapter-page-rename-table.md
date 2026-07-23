@@ -53,7 +53,7 @@ Status: approved, not yet implemented.
 | `parseScreenPath`                                                                 | `parsePagePath`           |
 | `derivePageLabel`                                                                 | `derivePageLabel`         |
 | `cmdCreatePage`/`Remove`/`Rename`/`Move`/`Info`                                   | `cmdCreatePage`/etc.      |
-| `cmdListScreens`                                                                  | `cmdListPages`            |
+| `cmdListPages`                                                                    | `cmdListPages`            |
 | `isHiddenPageId`                                                                  | `isHiddenPageId`          |
 | `checkScreens`                                                                    | `checkPages`              |
 | `addScreen`/`removeScreen`/`renameScreen`/`moveScreen`/`listScreens`/`pageExists` | `addPage`/etc.            |

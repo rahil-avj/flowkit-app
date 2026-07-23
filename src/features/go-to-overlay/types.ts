@@ -1,4 +1,4 @@
-export type SearchItemKind = 'screen' | 'flowplan' | 'flow'
+export type SearchItemKind = 'screen' | 'flowplan' | 'chapter'
 
 /** Extra metadata attached to PaletteItem.meta for Go-To results. */
 export interface GoToItemMeta {

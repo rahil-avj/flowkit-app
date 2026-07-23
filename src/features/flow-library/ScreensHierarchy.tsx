@@ -174,7 +174,7 @@ function TreeNode({
 }) {
   const { theme, scale } = useTheme()
 
-  if (node.kind === 'screen' && node.view) {
+  if (node.kind === 'page' && node.view) {
     if (!screenMatches(node.view)) return null
     return (
       <ScreenRow
@@ -394,7 +394,7 @@ function collectExpandableIds(nodes: WorkspaceHierarchyNode[]): string[] {
   const ids: string[] = []
   const walk = (ns: WorkspaceHierarchyNode[]) => {
     for (const n of ns) {
-      if (n.kind !== 'screen') {
+      if (n.kind !== 'page') {
         ids.push(`${n.kind}:${n.id}`)
         if (n.children) walk(n.children)
       }
@@ -408,17 +408,17 @@ function hasVisibleScreen(
   node: WorkspaceHierarchyNode,
   matches: (v: WireframeView) => boolean
 ): boolean {
-  if (node.kind === 'screen' && node.view) return matches(node.view)
+  if (node.kind === 'page' && node.view) return matches(node.view)
   return (node.children ?? []).some(c => hasVisibleScreen(c, matches))
 }
 
 function countScreens(node: WorkspaceHierarchyNode): number {
-  if (node.kind === 'screen') return 1
+  if (node.kind === 'page') return 1
   return (node.children ?? []).reduce((sum, c) => sum + countScreens(c), 0)
 }
 
 function hasDescendantComment(node: WorkspaceHierarchyNode, commented: Set<string>): boolean {
-  if (node.kind === 'screen' && node.view) return commented.has(node.view.id)
+  if (node.kind === 'page' && node.view) return commented.has(node.view.id)
   return (node.children ?? []).some(c => hasDescendantComment(c, commented))
 }
 
@@ -429,7 +429,7 @@ function collectDescendantAnnotationTags(
   const seen = new Set<string>()
   const result: AnnotationTag[] = []
   const walk = (n: WorkspaceHierarchyNode) => {
-    if (n.kind === 'screen' && n.view) {
+    if (n.kind === 'page' && n.view) {
       for (const t of tagsByScreen.get(n.view.id) ?? []) {
         if (!seen.has(t.label)) {
           seen.add(t.label)

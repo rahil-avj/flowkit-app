@@ -10,7 +10,7 @@
  * Virtual modules produced:
  *   virtual:flowkit/config      — parsed FlowkitConfig object
  *   virtual:flowkit/screens     — lazy screen import map
- *   virtual:flowkit/flowplans   — eager flowplan import map
+ *   virtual:flowkit/flowStories   — eager flowplan import map
  *   virtual:flowkit/workspace   — db, simulator, tokens, logos, tags, sessions
  */
 
@@ -97,8 +97,8 @@ async function globFiles(pattern, cwd) {
 
 const VIRTUALS = {
   config: 'virtual:flowkit/config',
-  screens: 'virtual:flowkit/screens',
-  flowplans: 'virtual:flowkit/flowplans',
+  pages: 'virtual:flowkit/pages',
+  flowStories: 'virtual:flowkit/flowStories',
   workspace: 'virtual:flowkit/workspace',
 }
 
@@ -203,7 +203,7 @@ async function genFlowplans(cwd) {
   })
   return `const exports = []
 ${lines.join('\n')}
-export const flowplans = exports`
+export const flowStories = exports`
 }
 
 async function genWorkspace(config, cwd) {
@@ -293,7 +293,7 @@ export function flowkit(options = {}) {
     ? path.resolve(process.cwd(), options.workspaceRoot)
     : process.cwd()
   // Two independent things `workspaceRoot` used to conflate into one flag:
-  //   1. which folder to read the workspace config file/flows/flowplans/lib from (cwd, above)
+  //   1. which folder to read the workspace config file/flows/flowStories/lib from (cwd, above)
   //   2. whether flat-mode aliases (@flowkit/@flowkit-core/@flowkit-features/etc) need supplying
   // Repo mode passes workspaceRoot AND already supplies its own aliases in the
   // host vite.config.ts (see this repo's own vite.config.ts) — standalone
@@ -324,7 +324,7 @@ export function flowkit(options = {}) {
       code = genConfig(cfg)
     } else if (id === VIRTUALS.pages) {
       code = await genScreens(cfg, cwd)
-    } else if (id === VIRTUALS.flowplans) {
+    } else if (id === VIRTUALS.flowStories) {
       code = await genFlowplans(cwd)
     } else if (id === VIRTUALS.workspace) {
       code = await genWorkspace(cfg, cwd)
@@ -397,7 +397,7 @@ export function flowkit(options = {}) {
         },
         server: {
           fs: {
-            // cwd = where the workspace config file/flows/flowplans/lib live — the
+            // cwd = where the workspace config file/flows/flowStories/lib live — the
             // project root itself (flat mode, single-workspace standalone),
             // or a workspace subfolder under the project root (multi-workspace
             // standalone, or repo mode's active workspace dir).

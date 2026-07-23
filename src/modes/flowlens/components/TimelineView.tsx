@@ -61,7 +61,7 @@ export default function TimelineView({ events, snapshots, currentSequenceId, onS
   // Group events by category prefix
   const categories = [
     'session',
-    'flow',
+    'chapter',
     'screen',
     'interaction',
     'navigation',

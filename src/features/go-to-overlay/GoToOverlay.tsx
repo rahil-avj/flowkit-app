@@ -33,7 +33,7 @@ function useGoToHandlers({ flows, activeViewId, navigateTo, onClose }: Props) {
             pageId: item.id,
           })
         }
-      } else if (meta?.kind === 'flow') {
+      } else if (meta?.kind === 'chapter') {
         dispatchExplorerCommand({ type: 'switchTab', tab: 'screens' })
         if (meta.flowId) {
           const firstPageId = meta.firstPageId ?? ''

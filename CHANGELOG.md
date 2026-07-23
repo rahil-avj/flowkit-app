@@ -40,61 +40,64 @@ Each rename was centralized behind a single constant in `scripts/helpers/config-
 The platform's core vocabulary has changed. A **Flow** (a grouping of screens) is now a **Chapter**; a **Screen** (one component file/folder) is now a **Page**.
 
 - **CLI verbs:**
-  | Old | New |
-  |---|---|
-  | `create:screen` | `create:page` |
-  | `remove:screen` | `remove:page` |
-  | `rename:screen` | `rename:page` |
-  | `move:screen` | `move:page` |
-  | `list:screens` | `list:pages` |
-  | `screen:info` | `page:info` |
-  | `create:flow` | `create:chapter` |
-  | `remove:flow` | `remove:chapter` |
-  | `list:flows` | `list:chapters` |
-  | `promote:flow` | `promote:chapter` |
+
+  | Old             | New               |
+  | --------------- | ----------------- |
+  | `create:screen` | `create:page`     |
+  | `remove:screen` | `remove:page`     |
+  | `rename:screen` | `rename:page`     |
+  | `move:screen`   | `move:page`       |
+  | `list:screens`  | `list:pages`      |
+  | `screen:info`   | `page:info`       |
+  | `create:flow`   | `create:chapter`  |
+  | `remove:flow`   | `remove:chapter`  |
+  | `list:flows`    | `list:chapters`   |
+  | `promote:flow`  | `promote:chapter` |
 
   Flowplan-domain verbs are **unaffected**: `create:flowplan`, `remove:flowplan`, `add:step`, `remove:step`, `list:steps`, `flowplan:info`, `check:flowplans`, `plan:ls`.
 
 - **Check domains and rule ids:**
-  | Old | New |
-  |---|---|
-  | `check:screens` | `check:pages` |
-  | `screen/ambiguous-folder` | `page/ambiguous-folder` |
-  | `screen/no-default-export` | `page/no-default-export` |
-  | `screen/missing-meta` | `page/missing-meta` |
-  | `screen/meta-id-mismatch` | `page/meta-id-mismatch` |
+
+  | Old                         | New                       |
+  | --------------------------- | ------------------------- |
+  | `check:screens`             | `check:pages`             |
+  | `screen/ambiguous-folder`   | `page/ambiguous-folder`   |
+  | `screen/no-default-export`  | `page/no-default-export`  |
+  | `screen/missing-meta`       | `page/missing-meta`       |
+  | `screen/meta-id-mismatch`   | `page/meta-id-mismatch`   |
   | `screen/meta-missing-label` | `page/meta-missing-label` |
-  | `config/flow-mismatch` | `config/chapter-mismatch` |
-  | `config/empty-flow` | `config/empty-chapter` |
-  | `flowplan/invalid-screen` | `flowplan/invalid-page` |
+  | `config/flow-mismatch`      | `config/chapter-mismatch` |
+  | `config/empty-flow`         | `config/empty-chapter`    |
+  | `flowplan/invalid-screen`   | `flowplan/invalid-page`   |
 
 - **Core types** (`src/types/index.ts` and related):
-  | Old | New |
-  |---|---|
-  | `ScreenMeta` | `PageMeta` |
-  | `ScreenVariant` | `PageVariant` |
-  | `FlowMeta` | `ChapterMeta` |
-  | `FlowNode` | `Chapter` |
-  | `FlowConfig` | `ChapterConfig` (`.screens` → `.pages`, `.initialScreen` → `.initialPage`) |
-  | `FlowScreenProps` | `PageProps` (`.isFlow` → `.isChapter`, `.flowState` → `.state`) |
-  | `FlowkitConfig.flows` / `FlowkitProjectConfig.flows` | `.chapters` |
-  | `FlowkitConfig.screenOrder` / `FlowkitProjectConfig.screenOrder` | `.pageOrder` |
-  | `FlowkitConfig.startScreen` | `.startPage` |
-  | `FeedbackComment.screenId` / `.screenLabel` | `.pageId` / `.pageLabel` |
-  | `AnnotationTag.screens` / `.flows` | `.pages` / `.chapters` |
-  | `ScreenResolver` / `ResolvedScreen` | `PageResolver` / `ResolvedPage` |
-  | `useFlowNav()` | `useNav()` (prefix dropped entirely, not renamed to `useChapterNav`) |
 
-- **Filename convention:** scaffolded screen files are now named `<Name>Page.tsx` (was `<Name>Screen.tsx`), with `export default function <Name>Page()`. The suffix is no longer *required* for any file — screen/page identity has always come from folder position, never the filename — but the CLI still generates it by default for readability.
+  | Old                                                              | New                                                                      |
+  | ---------------------------------------------------------------- | ------------------------------------------------------------------------ |
+  | `ScreenMeta`                                                     | `PageMeta`                                                               |
+  | `ScreenVariant`                                                  | `PageVariant`                                                            |
+  | `FlowMeta`                                                       | `ChapterMeta`                                                            |
+  | `FlowNode`                                                       | `Chapter`                                                                |
+  | `FlowConfig`                                                     | `ChapterConfig` (`.pages` → `.pages`, `.initialScreen` → `.initialPage`) |
+  | `FlowScreenProps`                                                | `PageProps` (`.isFlow` → `.isChapter`, `.flowState` → `.state`)          |
+  | `FlowkitConfig.flows` / `FlowkitProjectConfig.flows`             | `.chapters`                                                              |
+  | `FlowkitConfig.screenOrder` / `FlowkitProjectConfig.screenOrder` | `.pageOrder`                                                             |
+  | `FlowkitConfig.startScreen`                                      | `.startPage`                                                             |
+  | `FeedbackComment.screenId` / `.screenLabel`                      | `.pageId` / `.pageLabel`                                                 |
+  | `AnnotationTag.pages` / `.flows`                                 | `.pages` / `.chapters`                                                   |
+  | `ScreenResolver` / `ResolvedScreen`                              | `PageResolver` / `ResolvedPage`                                          |
+  | `useFlowNav()`                                                   | `useNav()` (prefix dropped entirely, not renamed to `useChapterNav`)     |
+
+- **Filename convention:** scaffolded screen files are now named `<Name>Page.tsx` (was `<Name>Screen.tsx`), with `export default function <Name>Page()`. The suffix is no longer _required_ for any file — screen/page identity has always come from folder position, never the filename — but the CLI still generates it by default for readability.
 
 - **Renamed files:**
-  | Old | New |
-  |---|---|
-  | `scripts/authoring/screens.js` | `scripts/authoring/pages.js` |
-  | `scripts/authoring/flows.js` | `scripts/authoring/chapters.js` |
+  | Old                                 | New                                    |
+  | ----------------------------------- | -------------------------------------- |
+  | `scripts/authoring/screens.js`      | `scripts/authoring/pages.js`           |
+  | `scripts/authoring/flows.js`        | `scripts/authoring/chapters.js`        |
   | `scripts/authoring/promote-flow.js` | `scripts/authoring/promote-chapter.js` |
-  | `scripts/checks/screens.js` | `scripts/checks/pages.js` |
-  | `src/shared/utils/useFlowNav.ts` | `src/shared/utils/useNav.ts` |
+  | `scripts/checks/screens.js`         | `scripts/checks/pages.js`              |
+  | `src/shared/utils/useFlowNav.ts`    | `src/shared/utils/useNav.ts`           |
 
 #### Explicitly unchanged (not part of this rename)
 

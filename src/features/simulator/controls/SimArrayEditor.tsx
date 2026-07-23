@@ -41,7 +41,7 @@ export function SimArrayEditor({ label, bind, val, theme, ctx }: ArrayEditorProp
 
       if ('id' in templateItem) {
         if (typeof templateItem.id === 'number') {
-          const maxId = array.reduce(
+          const maxId = array.reduce<number>(
             (max: number, item: unknown) =>
               Math.max(max, Number((item as Record<string, unknown>).id) || 0),
             0

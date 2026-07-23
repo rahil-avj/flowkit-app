@@ -1,1 +1,1 @@
-export type InspectorTab = 'info' | 'simulator' | 'flow' | 'db' | 'feedback' | 'sessions'
+export type InspectorTab = 'info' | 'simulator' | 'chapter' | 'db' | 'feedback' | 'sessions'

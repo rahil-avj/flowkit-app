@@ -8,8 +8,8 @@
 // has zero knowledge of `check` — no import, no dispatch branch — so this repo's own command
 // surface elsewhere is unaffected.
 //
-// This mirrors router.js's own colon-parsing convention (`check:screens` → cmd 'check',
-// val 'screens') in miniature, rather than importing router.js's internal parseCmd() — small,
+// This mirrors router.js's own colon-parsing convention (`check:pages` → cmd 'check',
+// val 'pages') in miniature, rather than importing router.js's internal parseCmd() — small,
 // deliberate duplication so router.js never needs to export anything check-specific.
 import { route } from './platform/router.js'
 
