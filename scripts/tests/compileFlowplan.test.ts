@@ -1,5 +1,5 @@
 import type { FlowplanDef, InteractionRule } from '@flowkit/types/index'
-import type { ScreenResolver } from '@flowkit-features/flowplan/compileFlowplan'
+import type { PageResolver } from '@flowkit-features/flowplan/compileFlowplan'
 import { compileFlowplan, FlowplanCompileError } from '@flowkit-features/flowplan/compileFlowplan'
 import { describe, expect, it } from 'vitest'
 // (InteractionRule used in the `on`-wiring test below)
@@ -7,8 +7,8 @@ import { describe, expect, it } from 'vitest'
 // A fake screen component (compiler only needs identity + label).
 const C = () => null
 
-// Resolver that accepts any screenId and echoes a label.
-const resolveAny: ScreenResolver = id => ({ id, label: `${id} label`, component: C })
+// Resolver that accepts any pageId and echoes a label.
+const resolveAny: PageResolver = id => ({ id, label: `${id} label`, component: C })
 
 function emptyRegistry(): Map<string, FlowplanDef> {
   return new Map()
@@ -21,7 +21,7 @@ function goToFor(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   db: Record<string, any> = {}
 ): string {
-  const step = config.__flowplan.steps.find(s => s.screenId === compiledScreenId)
+  const step = config.__flowplan.steps.find(s => s.pageId === compiledScreenId)
   if (!step) throw new Error(`no compiled step for ${compiledScreenId}`)
   const goTo = step.next!
   return typeof goTo === 'function' ? goTo({ db, flowState: {} }) : (goTo as string)
@@ -32,20 +32,20 @@ describe('compileFlowplan', () => {
     const plan: FlowplanDef = {
       id: 'p',
       name: 'P',
-      steps: [{ screenId: 'a' }, { screenId: 'b' }, { screenId: 'c' }],
+      steps: [{ pageId: 'a' }, { pageId: 'b' }, { pageId: 'c' }],
     }
     const cfg = compileFlowplan(plan, resolveAny, emptyRegistry())
-    expect(cfg.screens.map(s => s.id)).toEqual(['a', 'b', 'c'])
-    expect(cfg.screens[0].label).toBe('a label')
-    expect(cfg.initialScreen).toBe('a')
-    expect(cfg.__flowplan.steps.map(s => s.screenId)).toEqual(['a', 'b', 'c'])
+    expect(cfg.pages.map(s => s.id)).toEqual(['a', 'b', 'c'])
+    expect(cfg.pages[0].label).toBe('a label')
+    expect(cfg.initialPage).toBe('a')
+    expect(cfg.__flowplan.steps.map(s => s.pageId)).toEqual(['a', 'b', 'c'])
   })
 
   it('9. sequential transitions advance to the next screen; last completes', () => {
     const plan: FlowplanDef = {
       id: 'p',
       name: 'P',
-      steps: [{ screenId: 'a' }, { screenId: 'b' }],
+      steps: [{ pageId: 'a' }, { pageId: 'b' }],
     }
     const cfg = compileFlowplan(plan, resolveAny, emptyRegistry())
     expect(goToFor(cfg, 'a')).toBe('b')
@@ -56,7 +56,7 @@ describe('compileFlowplan', () => {
     const plan: FlowplanDef = {
       id: 'p',
       name: 'P',
-      steps: [{ screenId: 'cart', on: 'checkout' }, { screenId: 'pay' }],
+      steps: [{ pageId: 'cart', on: 'checkout' }, { pageId: 'pay' }],
     }
     const cfg = compileFlowplan(plan, resolveAny, emptyRegistry())
     // The interaction is keyed on the REAL element id, not a synthetic one.
@@ -67,7 +67,7 @@ describe('compileFlowplan', () => {
     // No synthetic __advance__ keys leak into interactions.
     expect(Object.keys(cfg.interactions!).some(k => k.startsWith('__advance__'))).toBe(false)
     // The compiled step records its `on` + resolved next for FlowMaster/gating.
-    const cartStep = cfg.__flowplan.steps.find(s => s.screenId === 'cart')!
+    const cartStep = cfg.__flowplan.steps.find(s => s.pageId === 'cart')!
     expect(cartStep.on).toBe('checkout')
     expect(cartStep.next).toBe('pay')
   })
@@ -76,7 +76,7 @@ describe('compileFlowplan', () => {
     const plan: FlowplanDef = {
       id: 'p',
       name: 'P',
-      steps: [{ screenId: 'a' }, { screenId: 'b' }], // no `on`
+      steps: [{ pageId: 'a' }, { pageId: 'b' }], // no `on`
     }
     const cfg = compileFlowplan(plan, resolveAny, emptyRegistry())
     expect(cfg.interactions).toBeUndefined()
@@ -88,7 +88,7 @@ describe('compileFlowplan', () => {
     const plan: FlowplanDef = {
       id: 'p',
       name: 'P',
-      steps: [{ screenId: 'a', actionNote: 'tap go', db: { 'local.x': 1 }, annotation: 'note' }],
+      steps: [{ pageId: 'a', actionNote: 'tap go', db: { 'local.x': 1 }, annotation: 'note' }],
     }
     const cfg = compileFlowplan(plan, resolveAny, emptyRegistry())
     const step = cfg.__flowplan.steps[0]
@@ -103,10 +103,10 @@ describe('compileFlowplan', () => {
       name: 'P',
       steps: [
         {
-          screenId: 'cart',
-          forks: [{ label: 'empty', db: { 'cart.count': 0 }, steps: [{ screenId: 'cart-empty' }] }],
+          pageId: 'cart',
+          forks: [{ label: 'empty', db: { 'cart.count': 0 }, steps: [{ pageId: 'cart-empty' }] }],
         },
-        { screenId: 'pay' },
+        { pageId: 'pay' },
       ],
     }
     const cfg = compileFlowplan(plan, resolveAny, emptyRegistry())
@@ -117,7 +117,7 @@ describe('compileFlowplan', () => {
     // terminal branch's last step completes the flow
     expect(goToFor(cfg, 'cart-empty')).toBe('__complete__')
     // the branch screen exists in screens[]
-    expect(cfg.screens.map(s => s.id)).toContain('cart-empty')
+    expect(cfg.pages.map(s => s.id)).toContain('cart-empty')
   })
 
   it("11. mergesTo:'next' rejoins the parent at the step after the fork", () => {
@@ -126,17 +126,17 @@ describe('compileFlowplan', () => {
       name: 'P',
       steps: [
         {
-          screenId: 'pay',
+          pageId: 'pay',
           forks: [
             {
               label: 'fail',
               db: { 'pay.failed': true },
               mergesTo: 'next',
-              steps: [{ screenId: 'pay-error' }],
+              steps: [{ pageId: 'pay-error' }],
             },
           ],
         },
-        { screenId: 'confirm' },
+        { pageId: 'confirm' },
       ],
     }
     const cfg = compileFlowplan(plan, resolveAny, emptyRegistry())
@@ -154,15 +154,15 @@ describe('compileFlowplan', () => {
       name: 'P',
       steps: [
         {
-          screenId: 'root',
+          pageId: 'root',
           forks: [
             {
               label: 'outer',
               db: { o: true },
               steps: [
                 {
-                  screenId: 'mid',
-                  forks: [{ label: 'inner', db: { i: true }, steps: [{ screenId: 'leaf' }] }],
+                  pageId: 'mid',
+                  forks: [{ label: 'inner', db: { i: true }, steps: [{ pageId: 'leaf' }] }],
                 },
               ],
             },
@@ -171,7 +171,7 @@ describe('compileFlowplan', () => {
       ],
     }
     const cfg = compileFlowplan(plan, resolveAny, emptyRegistry())
-    expect(cfg.screens.map(s => s.id)).toEqual(expect.arrayContaining(['root', 'mid', 'leaf']))
+    expect(cfg.pages.map(s => s.id)).toEqual(expect.arrayContaining(['root', 'mid', 'leaf']))
     expect(goToFor(cfg, 'root', { o: true })).toBe('mid')
     expect(goToFor(cfg, 'mid', { i: true })).toBe('leaf')
     expect(goToFor(cfg, 'leaf')).toBe('__complete__') // terminal
@@ -181,16 +181,16 @@ describe('compileFlowplan', () => {
     const checkout: FlowplanDef = {
       id: 'checkout',
       name: 'Checkout',
-      steps: [{ screenId: 'cart' }, { screenId: 'pay' }],
+      steps: [{ pageId: 'cart' }, { pageId: 'pay' }],
     }
     const registry = new Map([['checkout', checkout]])
     const plan: FlowplanDef = {
       id: 'quick',
       name: 'Quick',
-      steps: [{ screenId: 'home' }, { ref: 'checkout' }],
+      steps: [{ pageId: 'home' }, { ref: 'checkout' }],
     }
     const cfg = compileFlowplan(plan, resolveAny, registry)
-    expect(cfg.screens.map(s => s.id)).toEqual(['home', 'checkout::cart', 'checkout::pay'])
+    expect(cfg.pages.map(s => s.id)).toEqual(['home', 'checkout::cart', 'checkout::pay'])
     // home advances into the ref's first (namespaced) screen
     expect(goToFor(cfg, 'home')).toBe('checkout::cart')
     expect(goToFor(cfg, 'checkout::cart')).toBe('checkout::pay')
@@ -201,13 +201,13 @@ describe('compileFlowplan', () => {
     const checkout: FlowplanDef = {
       id: 'checkout',
       name: 'Checkout',
-      steps: [{ screenId: 'cart', on: 'checkout-btn' }, { screenId: 'pay' }],
+      steps: [{ pageId: 'cart', on: 'checkout-btn' }, { pageId: 'pay' }],
     }
     const registry = new Map([['checkout', checkout]])
     const plan: FlowplanDef = {
       id: 'quick',
       name: 'Quick',
-      steps: [{ screenId: 'home', on: 'reorder' }, { ref: 'checkout' }],
+      steps: [{ pageId: 'home', on: 'reorder' }, { ref: 'checkout' }],
     }
     const cfg = compileFlowplan(plan, resolveAny, registry)
     // `on` element ids are NOT namespaced (they're DOM ids), but their goTo
@@ -217,7 +217,7 @@ describe('compileFlowplan', () => {
     const cartRule = cfg.interactions!['checkout-btn'] as InteractionRule
     expect(cartRule.goTo).toBe('checkout::pay')
     // The compiled step records the source `on`.
-    const cartStep = cfg.__flowplan.steps.find(s => s.screenId === 'checkout::cart')!
+    const cartStep = cfg.__flowplan.steps.find(s => s.pageId === 'checkout::cart')!
     expect(cartStep.on).toBe('checkout-btn')
   })
 
@@ -241,16 +241,16 @@ describe('compileFlowplan', () => {
   })
 
   it('16. single-step plan compiles to a valid FlowConfig', () => {
-    const plan: FlowplanDef = { id: 'p', name: 'P', steps: [{ screenId: 'only' }] }
+    const plan: FlowplanDef = { id: 'p', name: 'P', steps: [{ pageId: 'only' }] }
     const cfg = compileFlowplan(plan, resolveAny, emptyRegistry())
-    expect(cfg.screens).toHaveLength(1)
-    expect(cfg.initialScreen).toBe('only')
+    expect(cfg.pages).toHaveLength(1)
+    expect(cfg.initialPage).toBe('only')
     expect(goToFor(cfg, 'only')).toBe('__complete__')
   })
 
   it('throws on missing screen with a clear error', () => {
-    const plan: FlowplanDef = { id: 'p', name: 'P', steps: [{ screenId: 'nope' }] }
-    const resolveNone: ScreenResolver = () => undefined
+    const plan: FlowplanDef = { id: 'p', name: 'P', steps: [{ pageId: 'nope' }] }
+    const resolveNone: PageResolver = () => undefined
     expect(() => compileFlowplan(plan, resolveNone, emptyRegistry())).toThrowError(
       FlowplanCompileError
     )
@@ -267,10 +267,10 @@ describe('compileFlowplan', () => {
       name: 'P',
       steps: [
         {
-          screenId: 'root',
-          forks: [{ label: 'zero', db: { key: 0 }, steps: [{ screenId: 'branch' }] }],
+          pageId: 'root',
+          forks: [{ label: 'zero', db: { key: 0 }, steps: [{ pageId: 'branch' }] }],
         },
-        { screenId: 'fallback' },
+        { pageId: 'fallback' },
       ],
     }
     const cfg = compileFlowplan(plan, resolveAny, emptyRegistry())
@@ -284,10 +284,10 @@ describe('compileFlowplan', () => {
       name: 'P',
       steps: [
         {
-          screenId: 'root',
-          forks: [{ label: 'falsy', db: { enabled: false }, steps: [{ screenId: 'branch' }] }],
+          pageId: 'root',
+          forks: [{ label: 'falsy', db: { enabled: false }, steps: [{ pageId: 'branch' }] }],
         },
-        { screenId: 'fallback' },
+        { pageId: 'fallback' },
       ],
     }
     const cfg = compileFlowplan(plan, resolveAny, emptyRegistry())
@@ -301,10 +301,10 @@ describe('compileFlowplan', () => {
       name: 'P',
       steps: [
         {
-          screenId: 'root',
+          pageId: 'root',
           forks: [
-            { label: 'unconditional', steps: [{ screenId: 'first' }] },
-            { label: 'conditional', db: { x: 1 }, steps: [{ screenId: 'second' }] },
+            { label: 'unconditional', steps: [{ pageId: 'first' }] },
+            { label: 'conditional', db: { x: 1 }, steps: [{ pageId: 'second' }] },
           ],
         },
       ],
@@ -319,7 +319,7 @@ describe('compileFlowplan', () => {
     const c: FlowplanDef = {
       id: 'c',
       name: 'C',
-      steps: [{ screenId: 'screen' }],
+      steps: [{ pageId: 'screen' }],
     }
     const b: FlowplanDef = {
       id: 'b',
@@ -333,11 +333,11 @@ describe('compileFlowplan', () => {
     const plan: FlowplanDef = {
       id: 'a',
       name: 'A',
-      steps: [{ screenId: 'a-screen' }, { ref: 'b' }],
+      steps: [{ pageId: 'a-screen' }, { ref: 'b' }],
     }
     const cfg = compileFlowplan(plan, resolveAny, registry)
-    expect(cfg.initialScreen).toBe('a-screen')
-    expect(cfg.screens.map(s => s.id)).toContain('b::c::screen')
+    expect(cfg.initialPage).toBe('a-screen')
+    expect(cfg.pages.map(s => s.id)).toContain('b::c::screen')
     expect(goToFor(cfg, 'a-screen')).toBe('b::c::screen')
     expect(goToFor(cfg, 'b::c::screen')).toBe('__complete__')
   })
@@ -346,7 +346,7 @@ describe('compileFlowplan', () => {
     const inner: FlowplanDef = {
       id: 'inner',
       name: 'Inner',
-      steps: [{ screenId: 'detail' }],
+      steps: [{ pageId: 'detail' }],
     }
     const registry = new Map([['inner', inner]])
     const plan: FlowplanDef = {
@@ -354,15 +354,15 @@ describe('compileFlowplan', () => {
       name: 'P',
       steps: [
         {
-          screenId: 'root',
+          pageId: 'root',
           forks: [{ label: 'branch', db: { go: true }, steps: [{ ref: 'inner' }] }],
         },
-        { screenId: 'end' },
+        { pageId: 'end' },
       ],
     }
     const cfg = compileFlowplan(plan, resolveAny, registry)
     expect(goToFor(cfg, 'root', { go: true })).toBe('inner::detail')
-    expect(cfg.screens.map(s => s.id)).toContain('inner::detail')
+    expect(cfg.pages.map(s => s.id)).toContain('inner::detail')
   })
 
   it('CP6. plan.simulator.controls propagated to cfg.__flowplan.simulatorControls', () => {
@@ -373,7 +373,7 @@ describe('compileFlowplan', () => {
     const plan: FlowplanDef = {
       id: 'p',
       name: 'P',
-      steps: [{ screenId: 'a' }],
+      steps: [{ pageId: 'a' }],
       simulator: { controls },
     }
     const cfg = compileFlowplan(plan, resolveAny, emptyRegistry())
@@ -384,7 +384,7 @@ describe('compileFlowplan', () => {
     const plan: FlowplanDef = {
       id: 'p',
       name: 'P',
-      steps: [{ screenId: 'a' }],
+      steps: [{ pageId: 'a' }],
       // no simulator field
     }
     const cfg = compileFlowplan(plan, resolveAny, emptyRegistry())
@@ -397,16 +397,16 @@ describe('compileFlowplan', () => {
       name: 'P',
       steps: [
         {
-          screenId: 'root',
+          pageId: 'root',
           forks: [
             {
               label: 'pro',
               db: { 'user.plan': 'pro' },
-              steps: [{ screenId: 'pro-screen' }],
+              steps: [{ pageId: 'pro-screen' }],
             },
           ],
         },
-        { screenId: 'fallback' },
+        { pageId: 'fallback' },
       ],
     }
     const cfg = compileFlowplan(plan, resolveAny, emptyRegistry())
@@ -419,17 +419,17 @@ describe('compileFlowplan', () => {
     const plan: FlowplanDef = {
       id: 'p',
       name: 'P',
-      steps: [{ screenId: 'a', decisionNote: 'choose path here' }],
+      steps: [{ pageId: 'a', decisionNote: 'choose path here' }],
     }
     const cfg = compileFlowplan(plan, resolveAny, emptyRegistry())
     expect(cfg.__flowplan.steps[0].decisionNote).toBe('choose path here')
   })
 
-  it("CP8. sourceScreenId on ref'd steps is the pre-namespace original id", () => {
+  it("CP8. sourcePageId on ref'd steps is the pre-namespace original id", () => {
     const ref: FlowplanDef = {
       id: 'ref',
       name: 'Ref',
-      steps: [{ screenId: 'screen' }],
+      steps: [{ pageId: 'screen' }],
     }
     const registry = new Map([['ref', ref]])
     const plan: FlowplanDef = {
@@ -438,8 +438,8 @@ describe('compileFlowplan', () => {
       steps: [{ ref: 'ref' }],
     }
     const cfg = compileFlowplan(plan, resolveAny, registry)
-    const step = cfg.__flowplan.steps.find(s => s.screenId === 'ref::screen')!
+    const step = cfg.__flowplan.steps.find(s => s.pageId === 'ref::screen')!
     expect(step).toBeDefined()
-    expect(step.sourceScreenId).toBe('screen')
+    expect(step.sourcePageId).toBe('screen')
   })
 })

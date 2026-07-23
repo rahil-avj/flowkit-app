@@ -22,7 +22,7 @@ import { g, r, c, d } from '../helpers/colors.js'
 //     that follows within that fork object. Author applies the ref replacement.
 //   • For deeply nested / unusual formatting, review the generated file before use.
 
-export async function cmdPromoteFlow(_val, args = []) {
+export async function cmdPromoteChapter(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
@@ -35,7 +35,7 @@ export async function cmdPromoteFlow(_val, args = []) {
     console.error(r('✗ --flowplan:<path> and --fork:"<Fork label>" are required'))
     console.error(
       d(
-        '  Example: flowkit promote:flow --flowplan:flowplans/Checkout.ts --fork:"Empty cart" --as:empty-cart-flow'
+        '  Example: flowkit promote:chapter --flowplan:flowplans/Checkout.ts --fork:"Empty cart" --as:empty-cart-flow'
       )
     )
     process.exit(1)
@@ -169,7 +169,7 @@ export async function cmdPromoteFlow(_val, args = []) {
   const forkLabelLiteral = asJsStringLiteral(forkLabel)
   const newFlow = `${resolveDefineImport('defineFlow')};
 
-// Promoted from ${forkLabelLiteral} fork in ${path.basename(filePath)} via promote:flow.
+// Promoted from ${forkLabelLiteral} fork in ${path.basename(filePath)} via promote:chapter.
 export default defineFlow({
   id: ${asJsStringLiteral(newId)},
   name: ${forkLabelLiteral},

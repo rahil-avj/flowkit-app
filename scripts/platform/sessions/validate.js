@@ -4,12 +4,12 @@ import path from 'path'
 import { ROOT } from '../../helpers/paths.js'
 import { g, r, b, d, c } from '../../helpers/colors.js'
 import { resolveWorkspace } from '../../helpers/workspace-resolve.js'
-import { listLibraryFiles, readSession, workspaceScreenIds, sessionScreenIds } from './_shared.js'
+import { listLibraryFiles, readSession, workspacePageIds, sessionPageIds } from './_shared.js'
 
 export function cmdSessionsCheck(val, { warnOnly = false } = {}) {
   const ws = resolveWorkspace(val)
   const files = listLibraryFiles(ws)
-  const wsIds = workspaceScreenIds(ws)
+  const wsIds = workspacePageIds(ws)
   let errors = 0,
     warnings = 0
   const seenIds = new Map()
@@ -32,7 +32,7 @@ export function cmdSessionsCheck(val, { warnOnly = false } = {}) {
       issues.push(['err', `workspaceId "${m.workspaceId}" ≠ "${ws}"`])
     if (seenIds.has(m.id)) issues.push(['err', `duplicate meta.id (also in ${seenIds.get(m.id)})`])
     else seenIds.set(m.id, name)
-    const sessIds = [...sessionScreenIds(res.session)]
+    const sessIds = [...sessionPageIds(res.session)]
     if (sessIds.length && !sessIds.some(id => wsIds.has(id)))
       issues.push(['warn', 'no screen ids match this workspace — replay disabled'])
     if (typeof m.qualityScore !== 'number') issues.push(['warn', 'missing qualityScore'])

@@ -35,7 +35,7 @@ export default function FlowLensAnalyticsOverlays({
 }: Props) {
   const metrics = useMemo(() => computeSessionMetrics(session), [session])
   const pathNodes = useMemo(() => buildPathGraph(session.events), [session.events])
-  const replayScreen = replayFromSnapshot(session, currentSequenceId).activeScreenId
+  const replayScreen = replayFromSnapshot(session, currentSequenceId).activePageId
 
   if (!overlay) return null
 

@@ -92,10 +92,10 @@ export default function ReplayController({ session, currentSequenceId }: Props) 
 
   // ── Active screen ──────────────────────────────────────────────────────────
   useEffect(() => {
-    if (state.activeScreenId && state.activeScreenId !== activeViewId) {
-      navigateTo(state.activeScreenId)
+    if (state.activePageId && state.activePageId !== activeViewId) {
+      navigateTo(state.activePageId)
     }
-  }, [state.activeScreenId, activeViewId, navigateTo])
+  }, [state.activePageId, activeViewId, navigateTo])
 
   // ── Device preset (matched by label) ───────────────────────────────────────
   useEffect(() => {

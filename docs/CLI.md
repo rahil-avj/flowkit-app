@@ -1,6 +1,6 @@
 # flowkit CLI
 
-Command-line interface for managing workspaces, flows, screens, FlowPlans, sessions, and workspace data.
+Command-line interface for managing workspaces, chapters, pages, FlowPlans, sessions, and workspace data.
 
 **This CLI runs in three modes**, and most of this doc's examples use repo-mode paths (`workspaces/<ws>/...`). Where a command behaves differently or isn't available in a mode, it's called out explicitly.
 
@@ -83,13 +83,13 @@ flowkit nw:<name>
 flowkit nw:<name> --kit:<name> --lang:ts
 ```
 
-Creates a new workspace under `workspaces/<name>/` with the full folder structure, mock db, design tokens, and a demo flow. Switches the active workspace immediately and builds the router.
+Creates a new workspace under `workspaces/<name>/` with the full folder structure, mock db, design tokens, and a demo chapter. Switches the active workspace immediately and builds the router.
 
 **Scaffolded structure:**
 
 ```
 workspaces/<name>/
-  flowBook/            ← demo flow + screen (was `flows/`)
+  flowBook/            ← demo chapter + page (was `flows/`)
   components/
     ui/
     layout/
@@ -140,8 +140,8 @@ import { defineConfig } from 'flowkit'
 export default defineConfig({
   workspace: { name: 'MyApp', description: 'What this prototype is.' }, // optional
 
-  // Screen loaded by default — cold load, device home button, reset-to-first —
-  // when no flowplan is active. Optional; falls back to the first declared screen when unset.
+  // Page loaded by default — cold load, device home button, reset-to-first —
+  // when no flowplan is active. Optional; falls back to the first declared page when unset.
   startPage: 'welcome-screen',
 
   // Default device shell/mockup shown on load. Must match a DevicePreset.label
@@ -153,15 +153,15 @@ export default defineConfig({
   // resolved device preset doesn't support landscape (DevicePreset.supportsLandscape).
   defaultOrientation: 'portrait',
 
-  // Explicit flow ordering for the Screens tab and Flow Library.
-  // Unlisted flows are appended after declared ones in discovery order.
-  flows: ['onboarding-flow', 'home-flow'],
+  // Explicit chapter ordering for the Screens tab and Flow Library.
+  // Unlisted chapters are appended after declared ones in discovery order.
+  chapters: ['onboarding-flow', 'home-flow'],
 
-  // Explicit screen ordering within each flow for the Screens tab sidebar.
-  // Unlisted screens are appended after declared ones, alphabetically.
+  // Explicit page ordering within each chapter for the Screens tab sidebar.
+  // Unlisted pages are appended after declared ones, alphabetically.
   // NOTE: unlike flowplan step `pageId`s (which use the composite
-  // `${flowId}-${pageId}` form), pageOrder's arrays stay BARE screen ids —
-  // this map is already flow-scoped by its own outer key, so no prefix is
+  // `${flowId}-${pageId}` form), pageOrder's arrays stay BARE page ids —
+  // this map is already chapter-scoped by its own outer key, so no prefix is
   // needed to avoid collisions here. See Screen identity below.
   pageOrder: {
     'onboarding-flow': ['welcome-screen', 'setup-screen', 'ready-screen'],
@@ -172,17 +172,17 @@ export default defineConfig({
 
 **Field summary:**
 
-| Field                | Purpose                                                                         |
-| -------------------- | ------------------------------------------------------------------------------- |
-| `workspace`          | Display `name` / `description` shown in the workspace picker                    |
-| `startPage`          | Default screen id — cold load, device home button, reset-to-first (optional)    |
-| `defaultDevice`      | Default device shell/mockup label, must match a `DevicePreset.label` (optional) |
-| `defaultOrientation` | Default orientation, `"portrait"` or `"landscape"` (optional)                   |
-| `flows`              | Explicit flow ordering (flat-layout workspaces — see note below)                |
-| `pageOrder`          | Explicit per-flow screen ordering, keyed by flow id                             |
-| `projects`           | Nested-layout only — per-project `flows`/`pageOrder` (skip for flat workspaces) |
+| Field                | Purpose                                                                          |
+| -------------------- | --------------------------------------------------------------------------------- |
+| `workspace`          | Display `name` / `description` shown in the workspace picker                     |
+| `startPage`          | Default page id — cold load, device home button, reset-to-first (optional)       |
+| `defaultDevice`      | Default device shell/mockup label, must match a `DevicePreset.label` (optional)  |
+| `defaultOrientation` | Default orientation, `"portrait"` or `"landscape"` (optional)                    |
+| `chapters`           | Explicit chapter ordering (flat-layout workspaces — see note below)              |
+| `pageOrder`          | Explicit per-chapter page ordering, keyed by chapter id                          |
+| `projects`           | Nested-layout only — per-project `chapters`/`pageOrder` (skip for flat workspaces) |
 
-> **"Flat-layout" here is unrelated to flat _mode_.** `flows`/`pageOrder` vs. `projects` describes whether a single workspace has a `projects/` subdivision layer inside it — a repo-mode-and-consumer-mode-agnostic authoring choice. It has nothing to do with flat mode (one implicit workspace, no `workspaces/` dir) vs. multi-workspace mode (sibling workspace folders) described elsewhere in this doc. Both `flat-layout` and `nested-layout` workspaces exist identically in repo mode, flat mode, and multi-workspace mode.
+> **"Flat-layout" here is unrelated to flat _mode_.** `chapters`/`pageOrder` vs. `projects` describes whether a single workspace has a `projects/` subdivision layer inside it — a repo-mode-and-consumer-mode-agnostic authoring choice. It has nothing to do with flat mode (one implicit workspace, no `workspaces/` dir) vs. multi-workspace mode (sibling workspace folders) described elsewhere in this doc. Both `flat-layout` and `nested-layout` workspaces exist identically in repo mode, flat mode, and multi-workspace mode.
 
 Per-flowplan playback can override the home-button target for the duration of that flow via `homeScreen` — see [FlowPlan anatomy](#flowplan-anatomy) below.
 
@@ -223,7 +223,7 @@ flowkit status:<name>
 
 Prints a compact health report for the active workspace:
 
-- Flow count + total screen count (counts screen files under `flowBook/<flow>/`, at any nesting depth; hidden `_`-prefixed items are counted, non-existent `__`-prefixed items are not — see [Screen visibility](#screen-visibility-hidden-vs-non-existent) below)
+- Chapter count + total page count (counts page files under `flowBook/<flow>/`, at any nesting depth; hidden `_`-prefixed items are counted, non-existent `__`-prefixed items are not — see [Screen visibility](#screen-visibility-hidden-vs-non-existent) below)
 - FlowPlan count (from `flowStories/*.ts`)
 - Session library: count + whether FlowLens module is present
 - Feedback: committed comment count (from `.flowkit-feedback.json`)
@@ -405,19 +405,19 @@ flowkit check
 flowkit check:<domain>
 ```
 
-Domain-specific linter for authored content — validates flowkit's own structural conventions (screen export shape, flowplan step references, workspace config consistency, component registry/barrel exports, mock db exports) that generic tools like `tsc`/`eslint` can't see. Works in every mode (repo, flat, multi-workspace).
+Domain-specific linter for authored content — validates flowkit's own structural conventions (page export shape, flowplan step references, workspace config consistency, component registry/barrel exports, mock db exports) that generic tools like `tsc`/`eslint` can't see. Works in every mode (repo, flat, multi-workspace).
 
 `flowkit check` with no domain runs all 5 domains against one workspace and prints one combined report. `flowkit check:<domain>` runs just that domain:
 
 | Domain     | Command            | Checks                                                                                        |
 | ---------- | ------------------ | --------------------------------------------------------------------------------------------- |
-| Screens    | `check:screens`    | Default export shape, `pageMeta` presence/shape, id/directory match, ambiguous screen folders |
-| Config     | `check:config`     | `workspace.ts`'s `flows[]`/`pageOrder` consistency against `flowBook/` on disk                |
+| Pages      | `check:pages`      | Default export shape, `pageMeta` presence/shape, id/directory match, ambiguous page folders   |
+| Config     | `check:config`     | `workspace.ts`'s `chapters[]`/`pageOrder` consistency against `flowBook/` on disk              |
 | Components | `check:components` | `.flowkit/components.json` registry vs. files on disk, barrel export consistency              |
 | DB         | `check:db`         | `lib/data/db.ts`/`db.js` has at least one export                                              |
 | FlowPlans  | `check:flowplans`  | Parseable, `id` matches filename, non-empty `steps[]`, step `pageId`s exist, step guidance    |
 
-Target a non-active workspace: `flowkit check:screens:<workspace-name>` for a single domain (workspace as the second colon segment, same convention as `sessions:ls:<ws>`), or `flowkit check --workspace:<workspace-name>` for the all-domains form.
+Target a non-active workspace: `flowkit check:pages:<workspace-name>` for a single domain (workspace as the second colon segment, same convention as `sessions:ls:<ws>`), or `flowkit check --workspace:<workspace-name>` for the all-domains form.
 
 Flags:
 
@@ -426,71 +426,71 @@ Flags:
 
 Exit code 0 if clean or only warnings, 1 if any error-severity finding. `check:flowplans` is wired into `npm run prebuild` — a broken or missing flowplan blocks the production build (including an empty-but-existing `flowStories/` directory, which is treated as suspicious rather than silently passing). (`check:flowplans` keeps its existing name even though the directory it validates was renamed from `flowplans/` to `flowStories/` — intentional, not an oversight.)
 
-Findings include a `ruleId` (e.g. `screen/missing-meta`, `flowplan/invalid-screen`), `severity` (`error`/`warning`), the offending `file`, a `message`, and where possible a `fix` (manual instructions) or `clifix` (an exact CLI command to run).
+Findings include a `ruleId` (e.g. `page/missing-meta`, `flowplan/invalid-page`), `severity` (`error`/`warning`), the offending `file`, a `message`, and where possible a `fix` (manual instructions) or `clifix` (an exact CLI command to run).
 
-**`screen/ambiguous-folder` (warning, non-blocking):** raised by `check:screens` when a screen folder contains 2+ unprefixed candidate `.tsx`/`.jsx` files. The alphabetically-first file is deterministically picked as the real screen; the finding names the winner and suggests `_`-prefixing, deleting, or renaming the other file(s) to remove the ambiguity. Never fails the build.
+**`page/ambiguous-folder` (warning, non-blocking):** raised by `check:pages` when a page folder contains 2+ unprefixed candidate `.tsx`/`.jsx` files. The alphabetically-first file is deterministically picked as the real page; the finding names the winner and suggests `_`-prefixing, deleting, or renaming the other file(s) to remove the ambiguity. Never fails the build.
 
 ---
 
 ## Authoring
 
-CRUD commands for editing the content inside a workspace — flows, screens, flowplan steps, and shared components. Every command accepts `--workspace:<name>` (optional; defaults to the active workspace) and exits 1 with a red `✗` message on any validation failure. IDs must be kebab-case (`^[a-z][a-z0-9-]*$`) unless noted otherwise.
+CRUD commands for editing the content inside a workspace — chapters, pages, flowplan steps, and shared components. Every command accepts `--workspace:<name>` (optional; defaults to the active workspace) and exits 1 with a red `✗` message on any validation failure. IDs must be kebab-case (`^[a-z][a-z0-9-]*$`) unless noted otherwise.
 
 Work identically across all three modes. "Active workspace" (the default when `--workspace` is omitted) resolves differently per mode:
 
 - **Repo mode** — `src/workspaces.json`'s `active` field, set by the browser UI or CLI.
 - **Flat mode** — the one implicit workspace (project root); `--workspace` has nothing else to target.
-- **Multi-workspace mode** — the first entry (by key order) in `package.json`'s `flowkit.workspaces` object. Pass `--workspace:<name>` to target a different one (e.g. `flowkit create:flow --name:checkout --workspace:app-b`).
+- **Multi-workspace mode** — the first entry (by key order) in `package.json`'s `flowkit.workspaces` object. Pass `--workspace:<name>` to target a different one (e.g. `flowkit create:chapter --name:checkout --workspace:app-b`).
 
-### Flows
+### Chapters
 
-#### `create:flow` — Add a flow
-
-```bash
-flowkit create:flow --name:<flow-id>
-```
-
-Creates `flowBook/<flow-id>/` and registers it in `workspace.ts` (`flows[]` + an empty `pageOrder[flow-id]`). If `--name` is omitted, prompts interactively. Rolls back the created directory if registration fails.
-
-Prints `Next: flowkit create:screen --flow:<flow-id> --name:<first-screen> --label:"Screen Name"` on success.
-
-#### `remove:flow` — Remove a flow
+#### `create:chapter` — Add a chapter
 
 ```bash
-flowkit remove:flow --name:<flow-id> [--force]
+flowkit create:chapter --name:<flow-id>
 ```
 
-Unregisters the flow from `workspace.ts` and deletes `flowBook/<flow-id>/`. Refuses if the flow directory contains any screens unless `--force` is passed.
+Creates `flowBook/<flow-id>/` and registers it in `workspace.ts` (`chapters[]` + an empty `pageOrder[flow-id]`). If `--name` is omitted, prompts interactively. Rolls back the created directory if registration fails.
 
-#### `list:flows` — List flows
+Prints `Next: flowkit create:page --flow:<flow-id> --name:<first-page> --label:"Page Name"` on success.
+
+#### `remove:chapter` — Remove a chapter
 
 ```bash
-flowkit list:flows
+flowkit remove:chapter --name:<flow-id> [--force]
 ```
 
-Read-only. Lists every flow with its screen count and a total.
+Unregisters the chapter from `workspace.ts` and deletes `flowBook/<flow-id>/`. Refuses if the chapter directory contains any pages unless `--force` is passed.
 
-### Screens
+#### `list:chapters` — List chapters
 
-Screen ids are **unique across the whole workspace**, not just within their flow — `create:screen`/`rename:screen` both check this.
+```bash
+flowkit list:chapters
+```
+
+Read-only. Lists every chapter with its page count and a total.
+
+### Pages
+
+Page ids are **unique across the whole workspace**, not just within their chapter — `create:page`/`rename:page` both check this.
 
 #### Screen identity (composite ids)
 
-A screen's identity is derived from its position in `flowBook/`, never from its filename:
+A page's identity is derived from its position in `flowBook/`, never from its filename:
 
 ```
 flowBook/<flow>/.../<screen>/<File>.tsx
 ```
 
-- The **first** path segment after `flowBook/` is the flow id.
-- The **last** folder before the file is the screen id.
+- The **first** path segment after `flowBook/` is the chapter id.
+- The **last** folder before the file is the page id.
 - Any folders in between are purely cosmetic/organizational — ignored for identity, kept only for on-disk display.
-- A file directly at `flowBook/<File>.tsx` (no folders at all) falls back to flow id `"misc"`, with the screen id taken from the filename minus extension.
-- Screen files no longer need to end in a literal `Screen` suffix — `create:screen` still generates `...Screen.tsx` by convention/default, but hand-authored files aren't required to follow it.
+- A file directly at `flowBook/<File>.tsx` (no folders at all) falls back to chapter id `"misc"`, with the page id taken from the filename minus extension.
+- Page files no longer need to end in a literal `Screen`/`Page` suffix — `create:page` still generates `...Page.tsx` by convention/default, but hand-authored files aren't required to follow it.
 
-The registered, globally-unique screen id is a **composite**: `${flowId}-${pageId}`. This makes ids collision-proof across flows — two different flows can each have a screen folder literally named the same thing without colliding. Flowplan step `pageId` values (and any other cross-flow/global reference) use this composite form. `workspace.ts`'s `pageOrder` map is the one exception — it stays **bare** (screen id only, no flow prefix), because that map is already flow-scoped by its own outer key (`pageOrder['onboarding-flow'] = ['welcome-screen', ...]`).
+The registered, globally-unique page id is a **composite**: `${flowId}-${pageId}`. This makes ids collision-proof across chapters — two different chapters can each have a page folder literally named the same thing without colliding. Flowplan step `pageId` values (and any other cross-chapter/global reference) use this composite form. `workspace.ts`'s `pageOrder` map is the one exception — it stays **bare** (page id only, no chapter prefix), because that map is already chapter-scoped by its own outer key (`pageOrder['onboarding-flow'] = ['welcome-screen', ...]`).
 
-**One real screen per folder:** if 2+ unprefixed candidate `.tsx`/`.jsx` files exist in the same screen folder, the alphabetically-first one is deterministically picked as the real screen, and `flowkit check:screens` reports a non-blocking `screen/ambiguous-folder` warning naming the winner and suggesting you `_`-prefix, remove, or rename the others. This never fails the build.
+**One real page per folder:** if 2+ unprefixed candidate `.tsx`/`.jsx` files exist in the same page folder, the alphabetically-first one is deterministically picked as the real page, and `flowkit check:pages` reports a non-blocking `page/ambiguous-folder` warning naming the winner and suggesting you `_`-prefix, remove, or rename the others. This never fails the build.
 
 #### Screen visibility (hidden vs. non-existent)
 
@@ -498,58 +498,58 @@ A single underscore prefix (`_name`) on a file or folder segment marks it **Hidd
 
 Visibility is resolved across the whole path, with parent dominance: if _any_ ancestor segment has a `__` prefix, the entire subtree is non-existent regardless of what's inside it; otherwise, if any ancestor has a single `_`, the whole subtree is hidden.
 
-#### `create:screen` — Add a screen to a flow
+#### `create:page` — Add a page to a chapter
 
 ```bash
-flowkit create:screen --flow:<flow-id> --name:<screen-id> [--label:"Display Label"]
+flowkit create:page --flow:<flow-id> --name:<screen-id> [--label:"Display Label"]
 ```
 
-Creates `flowBook/<flow-id>/<screen-id>/<PascalName>Screen.tsx` from a template and registers it in `workspace.ts` (`pageOrder.<flow-id>[]`, storing the bare screen id). The flow must already exist. `--label` defaults to a Title Case version of the screen id if omitted. The CLI always generates the standard 2-level shape (`<flow>/<screen>/`, no cosmetic folders in between) — variable-depth nesting with cosmetic folders is a hand-authoring capability, not something this command produces itself.
+Creates `flowBook/<flow-id>/<screen-id>/<PascalName>Page.tsx` from a template and registers it in `workspace.ts` (`pageOrder.<flow-id>[]`, storing the bare page id). The chapter must already exist. `--label` defaults to a Title Case version of the page id if omitted. The CLI always generates the standard 2-level shape (`<flow>/<screen>/`, no cosmetic folders in between) — variable-depth nesting with cosmetic folders is a hand-authoring capability, not something this command produces itself.
 
 Prints `Next: flowkit add:step --flowplan:<flow-id> --screen:<screen-id> --action:"..."` on success.
 
-#### `remove:screen` — Remove a screen
+#### `remove:page` — Remove a page
 
 ```bash
-flowkit remove:screen --flow:<flow-id> --name:<screen-id>
+flowkit remove:page --flow:<flow-id> --name:<screen-id>
 ```
 
-Unregisters the screen and deletes its directory. If any flowplan still references the screen id, prints a warning listing the affected flowplans but does not block the removal or edit them for you. Assumes the CLI's own 2-level shape (`flowBook/<flow>/<screen>/`) — a hand-authored screen nested deeper under cosmetic folders isn't located or removed by this command.
+Unregisters the page and deletes its directory. If any flowplan still references the page id, prints a warning listing the affected flowplans but does not block the removal or edit them for you. Assumes the CLI's own 2-level shape (`flowBook/<flow>/<screen>/`) — a hand-authored page nested deeper under cosmetic folders isn't located or removed by this command.
 
-#### `rename:screen` — Rename a screen
+#### `rename:page` — Rename a page
 
 ```bash
-flowkit rename:screen --flow:<flow-id> --name:<old-id> --to:<new-id>
+flowkit rename:page --flow:<flow-id> --name:<old-id> --to:<new-id>
 ```
 
-Renames the directory and the `.tsx` file (including the exported component function name), and updates `pageOrder`. The new id must not already exist anywhere in the workspace. Like `remove:screen`, warns about but does not update flowplan references to the old id. The filename patch assumes the CLI's own `...Screen.<ext>` naming convention; a screen hand-renamed away from that suffix won't be matched and the rename falls through to a "not found" error rather than crashing.
+Renames the directory and the `.tsx` file (including the exported component function name), and updates `pageOrder`. The new id must not already exist anywhere in the workspace. Like `remove:page`, warns about but does not update flowplan references to the old id. The filename patch assumes the CLI's own `...Page.<ext>` naming convention; a page hand-renamed away from that suffix won't be matched and the rename falls through to a "not found" error rather than crashing.
 
-#### `move:screen` — Move a screen to a different flow
+#### `move:page` — Move a page to a different chapter
 
 ```bash
-flowkit move:screen --name:<screen-id> --from-flow:<flow-id> --to-flow:<flow-id>
+flowkit move:page --name:<screen-id> --from-flow:<flow-id> --to-flow:<flow-id>
 ```
 
-Moves the screen's directory and updates `pageOrder` on both flows. The destination flow must already exist.
+Moves the page's directory and updates `pageOrder` on both chapters. The destination chapter must already exist.
 
-#### `list:screens` — List screens
+#### `list:pages` — List pages
 
 ```bash
-flowkit list:screens [--flow:<flow-id>]
-flowkit list:screens --hidden           # also show `_`-prefixed hidden screens
-flowkit list:screens --all              # show every visibility tier, labeled
-flowkit list:screens --gone             # show ONLY `__`-prefixed non-existent items
+flowkit list:pages [--flow:<flow-id>]
+flowkit list:pages --hidden           # also show `_`-prefixed hidden pages
+flowkit list:pages --all              # show every visibility tier, labeled
+flowkit list:pages --gone             # show ONLY `__`-prefixed non-existent items
 ```
 
-Read-only. Lists screens grouped by flow, or just the one flow if `--flow` is given. By default, hidden (`_`-prefixed) screens are omitted from the list; `--hidden` includes them (tagged `(hidden)`); `--all` shows hidden screens plus a separate non-existent (`__`) section; `--gone` is the dedicated way to find non-existent items, since they're excluded from every other listing mode by design (they're not "registered" screens at all) — this flag scans the filesystem directly rather than reading `workspace.ts`.
+Read-only. Lists pages grouped by chapter, or just the one chapter if `--flow` is given. By default, hidden (`_`-prefixed) pages are omitted from the list; `--hidden` includes them (tagged `(hidden)`); `--all` shows hidden pages plus a separate non-existent (`__`) section; `--gone` is the dedicated way to find non-existent items, since they're excluded from every other listing mode by design (they're not "registered" pages at all) — this flag scans the filesystem directly rather than reading `workspace.ts`.
 
-#### `screen:info` — Show screen metadata
+#### `page:info` — Show page metadata
 
 ```bash
-flowkit screen:info --flow:<flow-id> --name:<screen-id>
+flowkit page:info --flow:<flow-id> --name:<screen-id>
 ```
 
-Read-only. Prints the screen's `label`/`desc` (from `pageMeta`) and its import list, read directly from the `.tsx` file.
+Read-only. Prints the page's `label`/`desc` (from `pageMeta`) and its import list, read directly from the `.tsx` file.
 
 ### FlowPlan steps
 
@@ -559,7 +559,7 @@ Read-only. Prints the screen's `label`/`desc` (from `pageMeta`) and its import l
 flowkit add:step --flowplan:<flowplan-id> --screen:<screen-id> [--on:<element-id>] [--action:"..."] [--position:<n>]
 ```
 
-Appends `{ pageId, on?, actionNote? }` to the flowplan's `steps[]`. `screen-id` must already be registered somewhere in the workspace (across any flow) — on failure, prints a "did you mean" suggestion plus the full list of known screens. `--position` inserts at that 0-based index instead of the end; an unparseable or omitted `--position` appends to the end.
+Appends `{ pageId, on?, actionNote? }` to the flowplan's `steps[]`. `screen-id` must already be registered somewhere in the workspace (across any chapter) — on failure, prints a "did you mean" suggestion plus the full list of known pages. `--position` inserts at that 0-based index instead of the end; an unparseable or omitted `--position` appends to the end.
 
 ⚠️ Rewrites the `steps: [...]` block with a non-greedy regex — on a flowplan whose first step array contains a nested `forks[].steps[...]`, this can match the wrong closing bracket. Review the file after running this on a flowplan with forks.
 
@@ -577,7 +577,7 @@ Removes the step at the given 0-based index. ⚠️ **`--index` is required in p
 flowkit list:steps --flowplan:<flowplan-id>
 ```
 
-Read-only. Prints each step's index, screen id, `on`, and `actionNote`.
+Read-only. Prints each step's index, page id, `on`, and `actionNote`.
 
 #### `flowplan:info` — Show flowplan summary
 
@@ -645,10 +645,10 @@ flowkit list:exports --barrel:<path/to/index.ts>
 
 Read-only. Lists every `export { ... } from '...'` line in the barrel file.
 
-### `promote:flow` — Extract a fork into its own flowplan
+### `promote:chapter` — Extract a fork into its own flowplan
 
 ```bash
-flowkit promote:flow --flowplan:<path> --fork:"Fork label" [--as:<new-id>]
+flowkit promote:chapter --flowplan:<path> --fork:"Fork label" [--as:<new-id>]
 ```
 
 Finds the fork by an exact match on `label: "Fork label"` **(double-quoted only** — a single-quoted label in the source, like the ones in this doc's own [FlowPlan anatomy](#flowplan-anatomy) example, will not match) and writes its `steps[]` into a brand-new flowplan file. Does **not** edit the source file — it prints the exact `{ ref: "<new-id>" }` snippet to paste in by hand, replacing the fork. `--as` sets the new flowplan's id explicitly; otherwise it's derived by slugifying the fork label.
@@ -1043,7 +1043,7 @@ Commands grouped by item type. Click the heading to jump to the full section.
 | Command            | Description                                |
 | ------------------ | ------------------------------------------ |
 | `check`            | Run all 5 domain checkers, combined report |
-| `check:screens`    | Screen export shape / `pageMeta`           |
+| `check:pages`      | Page export shape / `pageMeta`             |
 | `check:config`     | Workspace config vs. `flowBook/` on disk   |
 | `check:components` | Component registry / barrel exports        |
 | `check:db`         | Mock db exports                            |
@@ -1053,15 +1053,15 @@ Commands grouped by item type. Click the heading to jump to the full section.
 
 | Command            | Alias | Description                            |
 | ------------------ | ----- | -------------------------------------- |
-| `create:flow`      | —     | Add a flow                             |
-| `remove:flow`      | —     | Remove a flow (`--force` if non-empty) |
-| `list:flows`       | —     | List flows                             |
-| `create:screen`    | —     | Add a screen to a flow                 |
-| `remove:screen`    | —     | Remove a screen                        |
-| `rename:screen`    | —     | Rename a screen                        |
-| `move:screen`      | —     | Move a screen to a different flow      |
-| `list:screens`     | —     | List screens                           |
-| `screen:info`      | —     | Show screen metadata                   |
+| `create:chapter`   | —     | Add a chapter                          |
+| `remove:chapter`   | —     | Remove a chapter (`--force` if non-empty) |
+| `list:chapters`    | —     | List chapters                          |
+| `create:page`      | —     | Add a page to a chapter                |
+| `remove:page`      | —     | Remove a page                          |
+| `rename:page`      | —     | Rename a page                          |
+| `move:page`        | —     | Move a page to a different chapter     |
+| `list:pages`       | —     | List pages                             |
+| `page:info`        | —     | Show page metadata                     |
 | `add:step`         | —     | Append a step to a flowplan            |
 | `remove:step`      | —     | Remove a step by index                 |
 | `list:steps`       | —     | List a flowplan's steps                |
@@ -1073,7 +1073,7 @@ Commands grouped by item type. Click the heading to jump to the full section.
 | `components:scan`  | —     | Sync the registry from disk            |
 | `add:export`       | —     | Add a barrel export                    |
 | `list:exports`     | —     | List a barrel's exports                |
-| `promote:flow`     | —     | Extract a fork into its own flowplan   |
+| `promote:chapter`  | —     | Extract a fork into its own flowplan   |
 
 ### [Sessions](#sessions-flowtracer--flowlens)
 

@@ -4,7 +4,7 @@ export type {
   CompiledFlowplan,
   CompiledStep,
   ResolvedPage,
-  ScreenResolver,
+  PageResolver,
 } from './compileFlowplan'
 export { compileFlowplan, FlowplanCompileError } from './compileFlowplan'
 export { default as MobilePlaybackBar } from './components/MobilePlaybackBar'

@@ -3,7 +3,7 @@ import { createContext } from 'react'
 /**
  * Context provided by FlowMaster to all screens rendered inside a flow.
  *
- * Screens access this via `useFlowNav()` from "@flowkit-shared/utils/useFlowNav".
+ * Screens access this via `useNav()` from "@flowkit-shared/utils/useNav".
  *
  * Navigation called through this context goes through FlowMaster's
  * commitNavigation — guards, animations, and the debugger all fire.

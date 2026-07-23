@@ -230,7 +230,7 @@ pendingSessionId, replayActive, enter, exit, selectSession }`. It sits **above**
 ### Replay engine
 
 `replayFromSnapshot(session, seq)` (`src/modes/flowlens/replayState.ts`) folds events
-≤ seq into `{ activeScreenId, db, devicePreset, orientation, connectionMode,
+≤ seq into `{ activePageId, db, devicePreset, orientation, connectionMode,
 networkSpeed, colorBlindMode, blurryVision, initialDb }`. `ReplayController`
 pushes that into the shared context via imperative setters, **guarded by
 `replayActive`** so replayed setters never re-record.

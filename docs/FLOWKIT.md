@@ -1,6 +1,6 @@
 # Flowkit
 
-A browser-based UI prototyping platform for building multi-screen, flow-based interactive previews. Works at any fidelity — quick wireframes, polished high-fidelity mockups, or production-ready component previews. Screens are React components. Flows are ordered sequences of screens. The CLI manages everything — you never touch the router by hand.
+A browser-based UI prototyping platform for building multi-screen, flow-based interactive previews. Works at any fidelity — quick wireframes, polished high-fidelity mockups, or production-ready component previews. Pages are React components. Chapters are ordered sequences of pages. The CLI manages everything — you never touch the router by hand.
 
 ---
 
@@ -86,47 +86,47 @@ flowkit/
 
 ---
 
-## Screen authoring: folders, identity, and visibility
+## Page authoring: folders, identity, and visibility
 
-Screen identity is derived entirely from a screen's **position** in `flowBook/`, never from its filename. The shared logic lives in `src/shared/utils/screenPathIdentity.js`, imported by both the repo-mode browser bundle and the flat/multi-workspace-mode Vite plugin so both contexts agree on the same rules.
+Page identity is derived entirely from a page's **position** in `flowBook/`, never from its filename. The shared logic lives in `src/shared/utils/screenPathIdentity.js`, imported by both the repo-mode browser bundle and the flat/multi-workspace-mode Vite plugin so both contexts agree on the same rules.
 
 ### Variable-depth folders
 
 ```
 flowBook/<flow>/.../<screen>/<File>.tsx
-flowBook/<File>.tsx                          ← 0 folders: flow = "misc", screen = filename
+flowBook/<File>.tsx                          ← 0 folders: chapter = "misc", page = filename
 ```
 
-- The **first** segment after `flowBook/` is always the flow id.
-- The **last** folder before the file is always the screen id.
-- Any folders in between are purely cosmetic/organizational — kept for on-disk display, ignored for identity. This replaces the old fixed 2-level requirement (`flowBook/<flow>/<screen>/`); a screen can now live arbitrarily deep.
-- A file with **zero** folders directly under `flowBook/` falls back to flow id `"misc"`, with the screen id taken from the filename (extension stripped).
-- The `Screen` filename suffix is no longer required anywhere — `create:screen` still generates `...Screen.tsx` by convention, but hand-authored files don't need to follow it.
+- The **first** segment after `flowBook/` is always the chapter id.
+- The **last** folder before the file is always the page id.
+- Any folders in between are purely cosmetic/organizational — kept for on-disk display, ignored for identity. This replaces the old fixed 2-level requirement (`flowBook/<flow>/<screen>/`); a page can now live arbitrarily deep.
+- A file with **zero** folders directly under `flowBook/` falls back to chapter id `"misc"`, with the page id taken from the filename (extension stripped).
+- The `Screen` filename suffix is no longer required anywhere — `create:page` generates `...Page.tsx` by convention, but hand-authored files don't need to follow it.
 
-### Composite screen ids
+### Composite page ids
 
-The registered, cross-flow-unique screen id is `${flowId}-${pageId}` (built by `makeScreenId()`). This makes ids collision-proof: two different flows can each have a screen folder literally named the same thing without colliding, since the flow id is baked into the composite.
+The registered, cross-chapter-unique page id is `${flowId}-${pageId}` (built by `makePageId()`). This makes ids collision-proof: two different chapters can each have a page folder literally named the same thing without colliding, since the chapter id is baked into the composite.
 
-- **Flowplan step `pageId` values, and any other global/cross-flow reference, use the composite form** (e.g. `onboarding-flow-welcome-screen`).
-- **`workspace.ts`'s `pageOrder` map is the one exception — it stays bare.** Since `pageOrder` is already keyed per-flow (`pageOrder['onboarding-flow'] = ['welcome-screen', ...]`), no composite prefix is needed there to avoid collisions.
+- **Flowplan step `pageId` values, and any other global/cross-chapter reference, use the composite form** (e.g. `onboarding-flow-welcome-screen`).
+- **`workspace.ts`'s `pageOrder` map is the one exception — it stays bare.** Since `pageOrder` is already keyed per-chapter (`pageOrder['onboarding-flow'] = ['welcome-screen', ...]`), no composite prefix is needed there to avoid collisions.
 
-### One real screen per folder
+### One real page per folder
 
-If a screen folder contains 2+ unprefixed candidate `.tsx`/`.jsx` files, the system deterministically picks the alphabetically-first one as the real screen and `flowkit check:screens` raises a non-blocking `screen/ambiguous-folder` warning pointing at the winner and suggesting the other file(s) be `_`-prefixed, renamed, or removed. This never fails the build.
+If a page folder contains 2+ unprefixed candidate `.tsx`/`.jsx` files, the system deterministically picks the alphabetically-first one as the real page and `flowkit check:pages` raises a non-blocking `page/ambiguous-folder` warning pointing at the winner and suggesting the other file(s) be `_`-prefixed, renamed, or removed. This never fails the build.
 
 ### Visibility: `_` (hidden) vs. `__` (non-existent)
 
 A single underscore prefix on a file or folder segment (`_name`) marks it **Hidden**: fully real — parsed, compiled, checked, playable, referenceable by flowplans — just excluded from the default Screens-tab browsing UI. A double underscore prefix (`__name`) marks it **non-existent**: excluded from everything — parsing, checks, flowplan reference resolution, and `flowkit status` counts.
 
-Visibility resolves across the whole path with **parent dominance**: if any ancestor segment in the chain has a `__` prefix, the entire subtree is non-existent regardless of what's inside it; otherwise, if any ancestor has a single `_`, the whole subtree is hidden. `flowkit list:screens` exposes this via `--hidden` (include hidden), `--all` (show every tier, labeled), and `--gone` (show only non-existent items — the one listing mode that scans disk directly, since non-existent items are excluded from `workspace.ts`'s `pageOrder` by definition).
+Visibility resolves across the whole path with **parent dominance**: if any ancestor segment in the chain has a `__` prefix, the entire subtree is non-existent regardless of what's inside it; otherwise, if any ancestor has a single `_`, the whole subtree is hidden. `flowkit list:pages` exposes this via `--hidden` (include hidden), `--all` (show every tier, labeled), and `--gone` (show only non-existent items — the one listing mode that scans disk directly, since non-existent items are excluded from `workspace.ts`'s `pageOrder` by definition).
 
 ### Variant filenames
 
-A screen (or shared component) file can declare variants via a filename suffix: `.variant-<serial>.tsx` or the shorthand `.v-<serial>.tsx` — both accepted, equivalent. The serial itself may contain hyphens (e.g. `WelcomeScreen.variant-red-theme.tsx`). A file with no suffix is the `"default"` variant.
+A page (or shared component) file can declare variants via a filename suffix: `.variant-<serial>.tsx` or the shorthand `.v-<serial>.tsx` — both accepted, equivalent. The serial itself may contain hyphens (e.g. `WelcomePage.variant-red-theme.tsx`). A file with no suffix is the `"default"` variant.
 
 ### Annotation tags
 
-Per-screen review badges are declared directly on the screen via `pageMeta.annotations?: AnnotationTag[]` — e.g. `annotations: [{ label: 'new', color: 'green', icon: 'Star' }]`. This replaces the old workspace-level (repo mode) / per-flow (flat mode) `_tags.ts` sidecar file, which has been fully retired with no backward compatibility. `pageMeta.annotations` is distinct from the pre-existing `pageMeta.tags?: string[]` — `tags` is an unrelated freeform filter/grouping-string concept; the two fields coexist and mean different things.
+Per-page review badges are declared directly on the page via `pageMeta.annotations?: AnnotationTag[]` — e.g. `annotations: [{ label: 'new', color: 'green', icon: 'Star' }]`. This replaces the old workspace-level (repo mode) / per-chapter (flat mode) `_tags.ts` sidecar file, which has been fully retired with no backward compatibility. `pageMeta.annotations` is distinct from the pre-existing `pageMeta.tags?: string[]` — `tags` is an unrelated freeform filter/grouping-string concept; the two fields coexist and mean different things.
 
 ---
 
@@ -148,7 +148,7 @@ Path aliases keep workspace code isolated from platform code and enforce the lay
 
 **Always use the most specific alias:** `@flowkit-shared/contexts/ThemeContext` beats `@flowkit/shared/contexts/ThemeContext`.
 
-**Common imports in screen files:**
+**Common imports in page files:**
 
 ```ts
 import type { PageProps } from '@flowkit/types'
@@ -156,7 +156,7 @@ import { useDashboard } from '@flowkit-shared/contexts/DashboardContext'
 import '@workspace/lib/design-system/tokens.css'
 ```
 
-Screens **do not need to import `db`** — it is injected as a prop by the canvas automatically.
+Pages **do not need to import `db`** — it is injected as a prop by the canvas automatically.
 
 ---
 
@@ -190,7 +190,7 @@ CSS cascade order: base → theme → dark mode → component styles → utiliti
 ```tsx
 import { Button, Card, Input } from '@flowkit-kit/components'
 
-export default function LoginScreen() {
+export default function LoginPage() {
   return (
     <Card>
       <Input placeholder="Email" />
@@ -266,11 +266,11 @@ Workspaces can be authored in plain JavaScript/JSX instead of TypeScript. The pl
 
 Set via the CLI: `flowkit nw:my-workspace --lang:js` (repo mode) — stores `language: "js"` on the workspace's entry in `src/workspaces.json`. The platform then picks up `.jsx` screen files and `.js` flowplan files.
 
-### Writing screens in JSX
+### Writing pages in JSX
 
 ```jsx
-// flowBook/home/home/HomeScreen.jsx
-export default function HomeScreen({ db }) {
+// flowBook/home/home/HomePage.jsx
+export default function HomePage({ db }) {
   return (
     <div>
       <button id="continue-btn">Continue</button>
@@ -279,11 +279,11 @@ export default function HomeScreen({ db }) {
 }
 ```
 
-For screen props:
+For page props:
 
 ```js
 /** @param {import('@flowkit/types').PageProps} props */
-export default function HomeScreen({ db }) { ... }
+export default function HomePage({ db }) { ... }
 ```
 
 ### Isolation guarantee
@@ -295,7 +295,7 @@ export default function HomeScreen({ db }) { ... }
 
 ## Router
 
-Workspaces have no `router.tsx`. Screens are discovered by `useWorkspaceHierarchy()` (`src/shared/utils/useWorkspaceHierarchy.ts`) via Vite glob from `flowBook/**`. The flowplan files (`defineFlow`) in `flowStories/*.ts` declare step sequences; no router file is generated or needed.
+Workspaces have no `router.tsx`. Pages are discovered by `useWorkspaceHierarchy()` (`src/shared/utils/useWorkspaceHierarchy.ts`) via Vite glob from `flowBook/**`. The flowplan files (`defineFlow`) in `flowStories/*.ts` declare step sequences; no router file is generated or needed.
 
 ---
 
@@ -309,7 +309,7 @@ export const user = { id: 'u1', name: '…', email: '…', plan: 'pro' }
 export const settings = { theme: 'dark', language: 'en' }
 ```
 
-`DashboardContext` imports it on startup and holds a live copy. Screens receive it as the `db` prop — no import needed. Mutations go through `updateDb` from `useDashboard()`, or preferably `useDb()` (`@flowkit-shared/utils`) — a thin wrapper with `get`/`has`/`set`/`remove`/`update` helpers that reject unsafe dot-paths (`__proto__`/`prototype`/`constructor`) instead of silently corrupting or no-opping. Raw `updateDb(fn)` still works but carries no such guard.
+`DashboardContext` imports it on startup and holds a live copy. Pages receive it as the `db` prop — no import needed. Mutations go through `updateDb` from `useDashboard()`, or preferably `useDb()` (`@flowkit-shared/utils`) — a thin wrapper with `get`/`has`/`set`/`remove`/`update` helpers that reject unsafe dot-paths (`__proto__`/`prototype`/`constructor`) instead of silently corrupting or no-opping. Raw `updateDb(fn)` still works but carries no such guard.
 
 ---
 
@@ -374,13 +374,13 @@ Read `canvasReducer.ts`'s `CanvasAction` union directly for the exact current ac
 | `H`                   | Toggle hand/pan tool lock (canvas must have focus)                    |
 | `Space` (hold)        | Temporary hand/pan tool (canvas must have focus)                      |
 | Middle mouse button   | Pan canvas                                                            |
-| `←` / `→`             | Previous / next screen                                                |
-| `Shift ←` / `Shift →` | Previous / next flow                                                  |
+| `←` / `→`             | Previous / next page                                                  |
+| `Shift ←` / `Shift →` | Previous / next chapter                                               |
 | `Shift 1–4`           | Switch right panel tabs (Info / Simulator / Flow Debugger / Feedback) |
 | `Shift ,` / `Shift .` | Previous / next sub-tab within the active panel tab                   |
 | `Shift S`             | Toggle left panel: Screens ↔ Flow Map                                 |
 | `Shift F`             | Focus the screen search input                                         |
-| `Shift G`             | Open Go-To overlay (search all flows and screens)                     |
+| `Shift G`             | Open Go-To overlay (search all chapters and pages)                    |
 | `Cmd /`               | Open Action Center (searchable command palette)                       |
 | `Cmd Shift ?`         | Open keyboard shortcuts reference                                     |
 
@@ -406,7 +406,7 @@ The feedback tab lets reviewers leave per-screen comments without leaving the br
 - Comments are attributed to **"Me"** while reviewing — author is set at export time
 - Each author gets a unique avatar color derived deterministically from their name
 - Team members defined in `src/features/feedback/components/teamMembers.ts` get suggested in the export author picker
-- Screens that have comments show a muted comment icon in the sidebar screen list
+- Pages that have comments show a muted comment icon in the sidebar page list
 - **Local export**: MD tile downloads a shareable Markdown report, JSON tile downloads a re-importable backup
 - **Cloud export**: toggle via Action Center (`Cmd /` → "Push Feedback to Cloud"). Requires a JSONBin **scoped Access Key** — `src/features/feedback/cloud-sync/jsonbin.ts` runs `assertNotMasterKey()` before every push/fetch and **throws, refusing the request**, if a master key is detected (checks for the `$2a$` bcrypt marker JSONBin master keys carry). This is an enforced rejection, not just a recommendation — a master key genuinely cannot be used here. Pushes JSON to JSONBin; share the returned bin URL for the recipient to import via the Import modal's "From Cloud" tab.
 
@@ -498,7 +498,7 @@ A button that calls a function with the full dashboard context:
 
 ## Entry guards
 
-Screens declare access rules in `pageMeta` — evaluated against the live `db`:
+Pages declare access rules in `pageMeta` — evaluated against the live `db`:
 
 ```ts
 export const pageMeta = {
@@ -508,9 +508,9 @@ export const pageMeta = {
 }
 ```
 
-`EntryGuard` type (`src/types/index.ts`): `(context: { db }) => boolean` — use `canEnter` to allow access only when a condition is true, `canNotEnter` to block access when a condition is true. Both can coexist on the same screen or flow; if either blocks, the guard fails.
+`EntryGuard` type (`src/types/index.ts`): `(context: { db }) => boolean` — use `canEnter` to allow access only when a condition is true, `canNotEnter` to block access when a condition is true. Both can coexist on the same page or chapter; if either blocks, the guard fails.
 
-Guards control whether the sidebar shows the screen as locked.
+Guards control whether the sidebar shows the page as locked.
 
 ---
 
@@ -556,7 +556,7 @@ For how an agent actually _works_ a workspace — the cold-start sequence, task 
 flowkit nw:<name>                    # Create workspace
 flowkit plan:ls                      # List all flowplans
 flowkit check:flowplans              # Validate flowplans — also runs as prebuild gate
-flowkit status                       # Workspace health: flows, screens, flowplans, sessions
+flowkit status                       # Workspace health: chapters, pages, flowplans, sessions
 flowkit export                       # Export as standalone HTML viewer
 flowkit handoff                      # Build developer handoff zip
 ```

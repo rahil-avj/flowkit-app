@@ -329,11 +329,11 @@ export function FeedbackTabProvider({
   }
 
   // Compute filters
-  const effectiveScreenId = filter.filterForCurrentScreen
+  const effectivePageId = filter.filterForCurrentScreen
     ? activeViewId.replace('-play', '')
     : filter.pageId
   const filteredComments = comments.filter(c => {
-    if (effectiveScreenId && c.pageId !== effectiveScreenId) return false
+    if (effectivePageId && c.pageId !== effectivePageId) return false
     if (filter.tags.size > 0) return c.tags.some(tag => filter.tags.has(tag))
     return true
   })
@@ -349,7 +349,7 @@ export function FeedbackTabProvider({
   // Sort groups by screen label, comments within each group by timestamp ascending
   const filteredGroupedComments = Object.fromEntries(
     Object.entries(grouped)
-      .sort(([, a], [, b]) => (a[0].screenLabel || '').localeCompare(b[0].screenLabel || ''))
+      .sort(([, a], [, b]) => (a[0].pageLabel || '').localeCompare(b[0].pageLabel || ''))
       .map(([id, cs]) => [id, [...cs].sort((a, b) => a.timestamp.localeCompare(b.timestamp))])
   )
 

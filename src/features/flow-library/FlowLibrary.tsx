@@ -76,9 +76,9 @@ export default function FlowLibrary({
 
   const screenGroups = useMemo(() => {
     if (!screenFilter) return null
-    const starts = filtered.filter(s => s.firstScreenId === screenFilter)
+    const starts = filtered.filter(s => s.firstPageId === screenFilter)
     const includes = filtered.filter(
-      s => s.firstScreenId !== screenFilter && s.screenIds.includes(screenFilter)
+      s => s.firstPageId !== screenFilter && s.pageIds.includes(screenFilter)
     )
     return { starts, includes }
   }, [filtered, screenFilter])
@@ -86,8 +86,8 @@ export default function FlowLibrary({
   if (selected) {
     const isSelectedPlaying =
       playback?.isGating && playback.activeFlowplan?.__flowplan.flowplanId === selected.id
-    const activeSourceScreenId = isSelectedPlaying
-      ? (playback?.activeFlowplan?.__flowplan.steps[playback.currentStepIndex]?.sourceScreenId ??
+    const activeSourcePageId = isSelectedPlaying
+      ? (playback?.activeFlowplan?.__flowplan.steps[playback.currentStepIndex]?.sourcePageId ??
         null)
       : null
     return (
@@ -99,7 +99,7 @@ export default function FlowLibrary({
             // Same as onStop below — must navigate OFF the `-play` runner view,
             // otherwise FlowMaster stays mounted with its already-compiled flow
             // and keeps rendering flowplan hints/captions after exit().
-            navigateTo(activeSourceScreenId ?? firstViewId ?? 'home')
+            navigateTo(activeSourcePageId ?? firstViewId ?? 'home')
           }
           setSelectedId(null)
         }}
@@ -110,7 +110,7 @@ export default function FlowLibrary({
           // active — not home, not back to this list. Known trade-off: the db
           // resets to the workspace default on exit(), so a screen authored
           // assuming accumulated flowplan db state may render sparsely here.
-          navigateTo(activeSourceScreenId ?? firstViewId ?? 'home')
+          navigateTo(activeSourcePageId ?? firstViewId ?? 'home')
         }}
       />
     )
@@ -284,18 +284,18 @@ function FlowDetail({ summary, onBack, onPlay, onStop }: FlowDetailProps) {
   const [view, setView] = useState<'steps' | 'canvas'>('steps')
   const playback = useFlowPlaybackOptional()
 
-  // Resolve the active sourceScreenId when this summary's flowplan is playing.
+  // Resolve the active sourcePageId when this summary's flowplan is playing.
   // compiledSteps[currentStepIndex].pageId is the compiled (possibly namespaced) id;
-  // sourceScreenId is the authored id that matches def.steps entries.
-  const activeSourceScreenId = useMemo(() => {
+  // sourcePageId is the authored id that matches def.steps entries.
+  const activeSourcePageId = useMemo(() => {
     if (!playback?.isGating) return null
     if (playback.activeFlowplan?.__flowplan.flowplanId !== summary.id) return null
     const compiledSteps = playback.activeFlowplan.__flowplan.steps
     const idx = playback.currentStepIndex
-    return compiledSteps[idx]?.sourceScreenId ?? null
+    return compiledSteps[idx]?.sourcePageId ?? null
   }, [playback, summary.id])
 
-  const isPlaying = activeSourceScreenId !== null
+  const isPlaying = activeSourcePageId !== null
 
   return (
     <div className="flex flex-col h-full">
@@ -404,10 +404,10 @@ function FlowDetail({ summary, onBack, onPlay, onStop }: FlowDetailProps) {
             steps={summary.def.steps}
             depth={0}
             index={[]}
-            activeSourceScreenId={activeSourceScreenId}
+            activeSourcePageId={activeSourcePageId}
           />
         ) : (
-          <FlowCanvas steps={summary.def.steps} activeSourceScreenId={activeSourceScreenId} />
+          <FlowCanvas steps={summary.def.steps} activeSourcePageId={activeSourcePageId} />
         )}
       </div>
     </div>
@@ -420,9 +420,9 @@ interface StepListProps {
   steps: FlowplanDef['steps']
   depth: number
   index: number[]
-  activeSourceScreenId: string | null
+  activeSourcePageId: string | null
 }
-function StepList({ steps, depth, index, activeSourceScreenId }: StepListProps) {
+function StepList({ steps, depth, index, activeSourcePageId }: StepListProps) {
   let stepNum = 0
   return (
     <div
@@ -447,7 +447,7 @@ function StepList({ steps, depth, index, activeSourceScreenId }: StepListProps) 
         const step = entry as FlowStep
         stepNum++
         const num = depth === 0 ? stepNum : null
-        const isActive = activeSourceScreenId !== null && step.pageId === activeSourceScreenId
+        const isActive = activeSourcePageId !== null && step.pageId === activeSourcePageId
 
         return (
           <StepRow
@@ -458,7 +458,7 @@ function StepList({ steps, depth, index, activeSourceScreenId }: StepListProps) 
             index={index}
             stepNum={stepNum}
             isActive={isActive}
-            activeSourceScreenId={activeSourceScreenId}
+            activeSourcePageId={activeSourcePageId}
           />
         )
       })}
@@ -473,7 +473,7 @@ interface StepRowProps {
   index: number[]
   stepNum: number
   isActive: boolean
-  activeSourceScreenId: string | null
+  activeSourcePageId: string | null
 }
 function StepRow({
   step,
@@ -482,7 +482,7 @@ function StepRow({
   index,
   stepNum,
   isActive,
-  activeSourceScreenId,
+  activeSourcePageId,
 }: StepRowProps) {
   const ref = useRef<HTMLDivElement>(null)
 
@@ -563,7 +563,7 @@ function StepRow({
             steps={fork.steps}
             depth={depth + 1}
             index={[...index, stepNum - 1, fi]}
-            activeSourceScreenId={activeSourceScreenId}
+            activeSourcePageId={activeSourcePageId}
           />
         </div>
       ))}

@@ -75,7 +75,7 @@ export default function AddCommentForm() {
           .filter((id, idx, arr) => arr.indexOf(id) === idx)
           .map(id => {
             const label =
-              comments.find(c => c.pageId === id)?.screenLabel ||
+              comments.find(c => c.pageId === id)?.pageLabel ||
               views.find(v => v.id === id)?.label ||
               id
             return (

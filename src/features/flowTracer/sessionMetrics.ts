@@ -53,17 +53,17 @@ export function computeSessionMetrics(session: SessionExport): SessionMetrics {
   const navBreakdown: Record<string, number> = {}
   const interactionBreakdown: Record<string, number> = {}
 
-  let currentScreenId = ''
+  let currentPageId = ''
   let currentScreenEnterTime = 0
 
   for (const ev of events) {
     if (ev.type === 'screen.visited') {
-      if (currentScreenId && currentScreenEnterTime > 0) {
-        screenDwells[currentScreenId] =
-          (screenDwells[currentScreenId] ?? 0) + (ev.timestamp - currentScreenEnterTime)
+      if (currentPageId && currentScreenEnterTime > 0) {
+        screenDwells[currentPageId] =
+          (screenDwells[currentPageId] ?? 0) + (ev.timestamp - currentScreenEnterTime)
       }
       const sid = ev.payload.pageId as string
-      currentScreenId = sid
+      currentPageId = sid
       currentScreenEnterTime = ev.timestamp
       screenVisits[sid] = screenVisits[sid] ?? []
       screenVisits[sid].push(ev.timestamp)
@@ -99,9 +99,9 @@ export function computeSessionMetrics(session: SessionExport): SessionMetrics {
     }
   }
 
-  if (currentScreenId && currentScreenEnterTime > 0 && meta.endTime) {
-    screenDwells[currentScreenId] =
-      (screenDwells[currentScreenId] ?? 0) + (meta.endTime - currentScreenEnterTime)
+  if (currentPageId && currentScreenEnterTime > 0 && meta.endTime) {
+    screenDwells[currentPageId] =
+      (screenDwells[currentPageId] ?? 0) + (meta.endTime - currentScreenEnterTime)
   }
 
   const screenMetrics: ScreenMetrics[] = Object.keys(screenVisits).map(sid => {

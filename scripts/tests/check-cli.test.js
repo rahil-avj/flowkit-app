@@ -41,8 +41,8 @@ describe('Suite C — flowkit check', () => {
     assert.match(result.stdout, /all clean/)
   })
 
-  it('C2 — check:screens/check:config/check:components/check:db/check:flowplans each run only their own domain', async () => {
-    for (const domain of ['screens', 'config', 'components', 'db', 'flowplans']) {
+  it('C2 — check:pages/check:config/check:components/check:db/check:flowplans each run only their own domain', async () => {
+    for (const domain of ['pages', 'config', 'components', 'db', 'flowplans']) {
       const result = await spawnCLI([`check:${domain}:${WS}`])
       assert.equal(result.code, 0, `${domain} — stderr: ${result.stderr}`)
       assert.match(result.stdout, new RegExp(`check:${domain}`), `${domain} — heading missing`)
@@ -64,20 +64,20 @@ describe('Suite C — flowkit check', () => {
     assert.deepEqual(parsed.results, [])
   })
 
-  it('C5 — check:flowplans catches a step referencing a nonexistent screenId → exit 1', async () => {
+  it('C5 — check:flowplans catches a step referencing a nonexistent pageId → exit 1', async () => {
     const fpPath = path.join(ROOT, 'workspaces', WS, FLOW_STORIES_DIRNAME, 'home-flow.ts')
     const original = fs.readFileSync(fpPath, 'utf8')
     try {
       const broken = original.replace(
-        /screenId: 'home-flow-home-screen'/,
-        "screenId: 'nonexistent-screen'"
+        /pageId: 'home-flow-home-screen'/,
+        "pageId: 'nonexistent-screen'"
       )
       assert.notEqual(broken, original, 'fixture setup failed — pattern not found in home-flow.ts')
       fs.writeFileSync(fpPath, broken)
 
       const result = await spawnCLI([`check:flowplans:${WS}`])
       assert.notEqual(result.code, 0)
-      assert.match(result.stdout, /flowplan\/invalid-screen/)
+      assert.match(result.stdout, /flowplan\/invalid-page/)
     } finally {
       fs.writeFileSync(fpPath, original)
     }

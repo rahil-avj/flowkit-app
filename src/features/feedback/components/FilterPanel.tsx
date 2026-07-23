@@ -52,7 +52,7 @@ export default function FilterPanel() {
         >
           <option value="">All screens</option>
           {Array.from(new Set(comments.map(c => c.pageId))).map(pageId => {
-            const label = comments.find(c => c.pageId === pageId)?.screenLabel || pageId
+            const label = comments.find(c => c.pageId === pageId)?.pageLabel || pageId
             return (
               <option key={pageId} value={pageId}>
                 {label}

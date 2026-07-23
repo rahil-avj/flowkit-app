@@ -89,14 +89,14 @@ function renderInFlow(
 // ─── Standalone (no FlowNavCtx provider) ───────────────────────────────────────
 
 describe('useAppNav — standalone (Screens tab, no flow)', () => {
-  it('N1. isFlow is false and flowState is undefined', () => {
+  it('N1. isChapter is false and state is undefined', () => {
     const outRef: { current: ProbeResult | null } = { current: null }
     renderStandalone(outRef)
-    expect(outRef.current!.isFlow).toBe(false)
-    expect(outRef.current!.flowState).toBeUndefined()
+    expect(outRef.current!.isChapter).toBe(false)
+    expect(outRef.current!.state).toBeUndefined()
   })
 
-  it("N2. navigateTo calls DashboardContext's navigateTo and does not throw (unlike useFlowNav(), which throws outside a flow)", () => {
+  it("N2. navigateTo calls DashboardContext's navigateTo and does not throw (unlike useNav(), which throws outside a flow)", () => {
     const outRef: { current: ProbeResult | null } = { current: null }
     renderStandalone(outRef)
     expect(() => act(() => outRef.current!.navigateTo('setup-screen'))).not.toThrow()
@@ -107,11 +107,11 @@ describe('useAppNav — standalone (Screens tab, no flow)', () => {
 // ─── In-flow (FlowNavCtx present) ───────────────────────────────────────────────
 
 describe('useAppNav — in-flow (rendered inside FlowMaster)', () => {
-  it("F1. isFlow is true and flowState is FlowNavCtx's flowState", () => {
+  it("F1. isChapter is true and state is FlowNavCtx's flowState", () => {
     const outRef: { current: ProbeResult | null } = { current: null }
     renderInFlow(outRef, makeFlowNavValue(vi.fn()))
-    expect(outRef.current!.isFlow).toBe(true)
-    expect(outRef.current!.flowState).toEqual({ sample: 'value' })
+    expect(outRef.current!.isChapter).toBe(true)
+    expect(outRef.current!.state).toEqual({ sample: 'value' })
   })
 
   it("F2. navigateTo calls FlowNavCtx's navigateTo, not DashboardContext's — this is the fix: no isFlow guard needed by the caller", () => {

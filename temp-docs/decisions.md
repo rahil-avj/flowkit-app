@@ -107,7 +107,7 @@ CLI-scaffolded under `flowkit arch`. Reason: flowplans are pure TS data, compile
 runtime `ChapterConfig`, and support forks/db-patches/step-level simulator overrides the old format
 can't express — the compiler boundary meant zero runtime changes were needed to add it.
 
-**`InteractionCtx` has 8 fields, not 3.** `{ activeScreenId, history, flowState, get, set, db,
+**`InteractionCtx` has 8 fields, not 3.** `{ activePageId, history, flowState, get, set, db,
 updateDb, effect }`. `get`/`set` give ergonomic sandbox access without exposing the full mutation
 API; `effect()` gives a named debugger-visible hook without coupling to db.
 

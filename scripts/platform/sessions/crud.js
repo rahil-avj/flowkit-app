@@ -13,8 +13,8 @@ import {
   readStudies,
   studyNameToId,
   sessionsRoot,
-  workspaceScreenIds,
-  sessionScreenIds,
+  workspacePageIds,
+  sessionPageIds,
 } from './_shared.js'
 
 // ─── sessions:ls ──────────────────────────────────────────────────────────────
@@ -68,7 +68,7 @@ export function cmdSessionsLs(val, args = []) {
       continue
     }
     const m = row.session.meta
-    const screens = sessionScreenIds(row.session).size
+    const screens = sessionPageIds(row.session).size
     totalQ += m.qualityScore ?? 0
     valid++
     const tag = m.isTestMode ? d(' [test]') : ''
@@ -131,8 +131,8 @@ export function cmdSessionsImport(val, args = []) {
     console.log(d(`  ! ${msg} (forced)`))
   }
 
-  const wsIds = workspaceScreenIds(ws)
-  const sessIds = [...sessionScreenIds(session)]
+  const wsIds = workspacePageIds(ws)
+  const sessIds = [...sessionPageIds(session)]
   const known = sessIds.filter(id => wsIds.has(id))
   if (sessIds.length > 0 && known.length === 0) {
     console.log(

@@ -153,23 +153,23 @@ export default function FlowLensMode({
   }, [])
 
   // ── Cross-workspace validation ───────────────────────────────────────────────
-  const validScreenIds = useMemo(() => new Set(views.map(v => v.id)), [views])
+  const validPageIds = useMemo(() => new Set(views.map(v => v.id)), [views])
   const replayDisabledReason = useMemo(() => {
     if (!selectedSession) return null
-    const screenIds = selectedSession.events
+    const pageIds = selectedSession.events
       .map(e => (e.payload.pageId ?? e.payload.to) as string | undefined)
       .filter((x): x is string => typeof x === 'string')
-    if (screenIds.length === 0) return null
-    const known = screenIds.filter(id => validScreenIds.has(id))
+    if (pageIds.length === 0) return null
+    const known = pageIds.filter(id => validPageIds.has(id))
     if (known.length === 0)
       return 'Recorded against a different workspace — replay is disabled, but analytics are available.'
     return null
-  }, [selectedSession, validScreenIds])
+  }, [selectedSession, validPageIds])
 
   const replayEnabled = !!selectedSession && !replayDisabledReason
-  const activeScreenId = useMemo(
+  const activePageId = useMemo(
     () =>
-      selectedSession ? replayFromSnapshot(selectedSession, currentSequenceId).activeScreenId : '',
+      selectedSession ? replayFromSnapshot(selectedSession, currentSequenceId).activePageId : '',
     [selectedSession, currentSequenceId]
   )
   const hasCursor = (selectedSession?.cursorSamples?.length ?? 0) > 0
@@ -188,7 +188,7 @@ export default function FlowLensMode({
         <CursorGhost
           session={selectedSession!}
           currentSequenceId={currentSequenceId}
-          activeScreenId={activeScreenId}
+          activePageId={activePageId}
           accent={FLOWLENS_ACCENT}
         />
       )}

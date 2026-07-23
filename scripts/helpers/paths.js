@@ -272,8 +272,8 @@ export function writeState(patch) {
  * existing scaffold's own default.
  */
 export function detectWorkspaceLanguage(wsDir) {
-  const flowsDir = path.join(wsDir, FLOW_BOOK_DIRNAME)
-  if (!fs.existsSync(flowsDir)) return 'ts'
+  const chaptersDir = path.join(wsDir, FLOW_BOOK_DIRNAME)
+  if (!fs.existsSync(chaptersDir)) return 'ts'
 
   const walk = dir => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -290,5 +290,5 @@ export function detectWorkspaceLanguage(wsDir) {
     return null
   }
 
-  return walk(flowsDir) ?? 'ts'
+  return walk(chaptersDir) ?? 'ts'
 }

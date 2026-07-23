@@ -8,7 +8,7 @@
 // `flowkit agent:sync` after platform changes to re-emit.
 //
 // Every fact below was verified against the platform source — keep it that way:
-//   nav      → src/shared/utils/useFlowNav.ts (navigateTo/goNext/goBack/isChapter/flowState)
+//   nav      → src/shared/utils/useNav.ts (navigateTo/goNext/goBack/isChapter/flowState)
 //   data     → src/shared/contexts/DashboardContext.tsx (db, updateDb, resetDb)
 //   screens  → src/types.ts PageProps / PageMeta
 //   flows    → src/types.ts FlowDef + OnMapEntry; declared in flowplans/*.ts
@@ -87,9 +87,9 @@ export function directives(ctx) {
       },
       {
         kind: 'to',
-        task: 'reorder flows',
+        task: 'reorder chapters',
         action:
-          'edit the `flows[]` array in `workspace.ts`, or use the **Manage tab** (right panel) to copy a terminal patch script',
+          'edit the `chapters[]` array in `workspace.ts`, or use the **Manage tab** (right panel) to copy a terminal patch script',
       },
       {
         kind: 'to',
@@ -118,7 +118,7 @@ export function directives(ctx) {
       {
         kind: 'to',
         task: 'navigate from screen logic during flow playback (state/async)',
-        action: '`const { navigateTo, goNext, goBack } = useFlowNav()`',
+        action: '`const { navigateTo, goNext, goBack } = useNav()`',
       },
       {
         kind: 'to',
@@ -127,7 +127,7 @@ export function directives(ctx) {
       },
       {
         kind: 'never',
-        text: "call `useFlowNav()` unconditionally in a screen meant to also work standalone — it throws when there's no FlowMaster ancestor (i.e. viewed from the Screens tab, no flow active)",
+        text: "call `useNav()` unconditionally in a screen meant to also work standalone — it throws when there's no FlowMaster ancestor (i.e. viewed from the Screens tab, no flow active)",
       },
       {
         kind: 'to',
@@ -137,7 +137,7 @@ export function directives(ctx) {
       },
       {
         kind: 'never',
-        text: "destructure `navigateTo` from `useDashboard()` directly and call it inside a screen that also relies on FlowMaster's guards/animations/session-replay during playback — use `useAppNav()` for a screen that needs to work both standalone and in-flow, or `useFlowNav()` if the screen is flow-only",
+        text: "destructure `navigateTo` from `useDashboard()` directly and call it inside a screen that also relies on FlowMaster's guards/animations/session-replay during playback — use `useAppNav()` for a screen that needs to work both standalone and in-flow, or `useNav()` if the screen is flow-only",
       },
     ],
   }
@@ -225,7 +225,7 @@ export function indexRows(_ctx) {
     },
     {
       task: 'Navigate programmatically',
-      action: '`useFlowNav()`',
+      action: '`useNav()`',
       detail: 'platform.md → Navigation',
     },
     {
@@ -239,8 +239,8 @@ export function indexRows(_ctx) {
       detail: 'platform.md → Guards',
     },
     {
-      task: 'Reorder flows',
-      action: 'edit `workspace.ts` → `flows[]`, or use **Manage tab** in right panel',
+      task: 'Reorder chapters',
+      action: 'edit `workspace.ts` → `chapters[]`, or use **Manage tab** in right panel',
       detail: 'platform.md → Flows',
     },
     {
@@ -274,7 +274,7 @@ export function platformSurfaces(ctx) {
     area: 'Flows (Flowplan hierarchy)',
     api: '`defineFlow({ id, name, steps[], homeScreen? })` — authored in `flowStories/<flow>.ts`',
     from: '`@flowkit-core/config` → `defineFlow`',
-    note: "Screen folders: `flowBook/<flow>/.../<screen>/` (variable depth — first/last segment count for identity, anything between is cosmetic). Flowplan step `pageId` values use the composite `<flow>-<screen>` id form; `workspace.ts`'s `pageOrder` stays bare. Ordering declared in `workspace.ts` → `projects.<proj>.flows[]`. `homeScreen` overrides the device home button while that plan is playing; workspace-level default is `workspace.ts` → `startPage`.",
+    note: "Page folders: `flowBook/<flow>/.../<screen>/` (variable depth — first/last segment count for identity, anything between is cosmetic). Flowplan step `pageId` values use the composite `<flow>-<screen>` id form; `workspace.ts`'s `pageOrder` stays bare. Ordering declared in `workspace.ts` → `projects.<proj>.chapters[]`. `homeScreen` overrides the device home button while that plan is playing; workspace-level default is `workspace.ts` → `startPage`.",
     doc: 'FLOWMASTER.md',
   }
 
@@ -289,8 +289,8 @@ export function platformSurfaces(ctx) {
   return [
     {
       area: 'Navigation',
-      api: '`useFlowNav()` → `navigateTo(target)`, `goNext()`, `goBack()`, `isChapter`, `flowState`',
-      from: '`@flowkit-shared/utils/useFlowNav`',
+      api: '`useNav()` → `navigateTo(target)`, `goNext()`, `goBack()`, `isChapter`, `flowState`',
+      from: '`@flowkit-shared/utils/useNav`',
       note: 'target = a screen id, "next", "back", or "__complete__"',
       doc: 'FLOWMASTER.md',
     },
@@ -298,7 +298,7 @@ export function platformSurfaces(ctx) {
       area: 'Data',
       api: '`useDashboard()` → `db`, `updateDb(fn)`, `resetDb()`, `navigateTo(id)`',
       from: '`@flowkit-shared/contexts/DashboardContext`',
-      note: 'db/updateDb/resetDb always safe; for navigateTo() prefer `useAppNav()` (see Navigation group above) — it works standalone and during flow playback with no `isChapter` check needed; use useFlowNav() instead for flow-only screens',
+      note: 'db/updateDb/resetDb always safe; for navigateTo() prefer `useAppNav()` (see Navigation group above) — it works standalone and during flow playback with no `isChapter` check needed; use useNav() instead for flow-only screens',
       doc: 'FLOWKIT.md',
     },
     {

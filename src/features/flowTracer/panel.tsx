@@ -374,9 +374,9 @@ export default function SessionsPanel({
           </div>
 
           {/* Current screen */}
-          {recorder.currentScreenId && (
+          {recorder.currentPageId && (
             <div className="text-ui-xs text-theme-text-muted mb-1.5">
-              Screen: <span className="text-theme-text-secondary">{recorder.currentScreenId}</span>
+              Screen: <span className="text-theme-text-secondary">{recorder.currentPageId}</span>
             </div>
           )}
 

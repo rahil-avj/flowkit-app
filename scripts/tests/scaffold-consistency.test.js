@@ -35,15 +35,15 @@ describe('Suite N — scaffold.js / create-flowkit-app demo-content parity', () 
     )
 
     const templateSrc = fs.readFileSync(path.join(ROOT, TEMPLATE_PATH), 'utf8')
-    const flowsArrayMatch = templateSrc.match(/flows:\s*\[([^\]]*)\]/)
-    assert.ok(flowsArrayMatch, `${TEMPLATE_PATH} has no flows: [...] array to compare against`)
-    const templateFlowCount = flowsArrayMatch[1].split(',').filter(s => s.trim()).length
+    const chaptersArrayMatch = templateSrc.match(/chapters:\s*\[([^\]]*)\]/)
+    assert.ok(chaptersArrayMatch, `${TEMPLATE_PATH} has no chapters: [...] array to compare against`)
+    const templateFlowCount = chaptersArrayMatch[1].split(',').filter(s => s.trim()).length
 
     assert.equal(
       flowIds.size,
       templateFlowCount,
       `scaffold.js has ${flowIds.size} demo flow(s) (${[...flowIds].join(', ')}) but ` +
-        `${TEMPLATE_PATH}'s flows: [...] array has ${templateFlowCount} — demo content has drifted`
+        `${TEMPLATE_PATH}'s chapters: [...] array has ${templateFlowCount} — demo content has drifted`
     )
   })
 

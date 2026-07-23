@@ -247,7 +247,7 @@ export interface InteractionRule {
 // "viewId" = workspace-level navigation (DashboardContext); "pageId" = flow-engine step identity (FlowEngine/FlowMaster). Both point at screen components but in different scopes.
 export type InteractionCtx = {
   /** The id of the screen that is currently active. */
-  activeScreenId: string
+  activePageId: string
   /** The navigation history for this flow session. */
   history: string[]
   /** The current flow-local sandbox state (see localData in ChapterConfig). */
@@ -484,7 +484,7 @@ export type FeedbackTag = (typeof FEEDBACK_TAGS)[number]
 export interface FeedbackComment {
   id: string
   pageId: string
-  screenLabel: string
+  pageLabel: string
   tags: FeedbackTag[]
   text: string
   timestamp: string
@@ -641,12 +641,12 @@ export interface FlowkitProjectConfig {
   /** Path to a default db preset file for this project. */
   db?: string
   /**
-   * Explicit flow ordering for the Screens tab and Flow Library.
-   * Values must match flow folder names (which equal flowplan ids after the Part 0 rename).
-   * Unlisted flows are appended after declared ones in discovery order.
+   * Explicit chapter ordering for the Screens tab and Flow Library.
+   * Values must match chapter folder names (which equal flowplan ids after the Part 0 rename).
+   * Unlisted chapters are appended after declared ones in discovery order.
    */
-  flows?: string[]
-  /** @deprecated Use `flows` instead. */
+  chapters?: string[]
+  /** @deprecated Use `chapters` instead. */
   modules?: string[]
   /**
    * Explicit screen ordering within each flow for the Screens tab sidebar.
@@ -664,8 +664,8 @@ export interface FlowkitProjectConfig {
 /** The root workspace manifest authored with defineConfig({ ... }). */
 export interface FlowkitConfig {
   workspace?: { name?: string; description?: string }
-  /** Flat-layout: explicit flow ordering at the workspace root (no projects layer). */
-  flows?: string[]
+  /** Flat-layout: explicit chapter ordering at the workspace root (no projects layer). */
+  chapters?: string[]
   /** Flat-layout: screen ordering per flow at the workspace root. */
   pageOrder?: Record<string, string[]>
   /** Nested-layout: per-project config (use when the workspace has a projects/ folder). */

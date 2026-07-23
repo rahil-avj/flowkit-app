@@ -26,7 +26,7 @@ Status: approved, not yet implemented.
 | `FlowkitProjectConfig.pageOrder`                                          | `.pageOrder`                                                |
 | `FlowkitProjectConfig.modules`                                            | **unchanged** — deprecated legacy shim, left alone          |
 | `WorkspaceHierarchyNode.kind: 'flow'                                      | 'screen'`                                                   | `'chapter' | 'page'` |
-| `InteractionCtx.activeScreenId`                                           | `.activePageId`                                             |
+| `InteractionCtx.activePageId`                                             | `.activePageId`                                             |
 | `FeedbackComment.pageId` / `.screenLabel`                                 | `.pageId` / `.pageLabel`                                    |
 | `AnnotationTag.pages` / `.flows`                                          | `.pages` / `.chapters`                                      |
 | `FlowNavContextValue`                                                     | `NavContextValue` (matches `useNav`)                        |
@@ -47,14 +47,14 @@ Status: approved, not yet implemented.
 
 | Current                                                                             | New                       |
 | ----------------------------------------------------------------------------------- | ------------------------- |
-| `makeScreenId`                                                                      | `makePageId`              |
+| `makePageId`                                                                        | `makePageId`              |
 | `parseScreenSegments`                                                               | `parsePageSegments`       |
 | `pickScreenFile`                                                                    | `pickPageFile`            |
 | `parseScreenPath`                                                                   | `parsePagePath`           |
 | `deriveScreenLabel`                                                                 | `derivePageLabel`         |
 | `cmdCreateScreen`/`Remove`/`Rename`/`Move`/`Info`                                   | `cmdCreatePage`/etc.      |
 | `cmdListScreens`                                                                    | `cmdListPages`            |
-| `isHiddenScreenId`                                                                  | `isHiddenPageId`          |
+| `isHiddenPageId`                                                                    | `isHiddenPageId`          |
 | `checkScreens`                                                                      | `checkPages`              |
 | `addScreen`/`removeScreen`/`renameScreen`/`moveScreen`/`listScreens`/`screenExists` | `addPage`/etc.            |
 | `cmdCreateFlow`/`Remove`/`List`                                                     | `cmdCreateChapter`/etc.   |
@@ -93,7 +93,7 @@ Status: approved, not yet implemented.
 | `config/flow-mismatch`                | `config/chapter-mismatch`   |
 | `config/empty-flow`                   | `config/empty-chapter`      |
 | `config/orphaned-id` / `orphaned-dir` | unchanged (already generic) |
-| `flowplan/invalid-screen`             | `flowplan/invalid-page`     |
+| `flowplan/invalid-page`               | `flowplan/invalid-page`     |
 
 ## Filename convention
 

@@ -34,28 +34,28 @@ ${b('Workspaces (multi-workspace consumer projects only):')}
   ${c('rename:workspace')} ${d('<old> <new>')}       Rename a workspace
 
 ${b('Scaffold (authoring):')}
-  ${c('create:flow')} ${d('--name:<id>')}            Add a flow + register in workspace.ts
-  ${c('create:screen')} ${d('--flow:<id> --name:<id>')}  Add a screen to a flow
+  ${c('create:chapter')} ${d('--name:<id>')}            Add a chapter + register in workspace.ts
+  ${c('create:page')} ${d('--flow:<id> --name:<id>')}  Add a page to a chapter
   ${c('create:flowplan')} ${d('--name:<id>')}         Add a flowplan script
   ${c('create:component')} ${d('--name:<PascalName> --path:<lib/components/...>')}   Add a workspace component
-  ${c('remove:flow')} ${d('--name:<flow-id> [--force]')}
-  ${c('remove:screen')} ${d('--flow:<id> --name:<screen-id>')}
+  ${c('remove:chapter')} ${d('--name:<flow-id> [--force]')}
+  ${c('remove:page')} ${d('--flow:<id> --name:<page-id>')}
   ${c('remove:flowplan')} ${d('--name:<flowplan-id> [--force]')}
   ${c('remove:component')} ${d('--name:<ComponentName>')}
   ${c('remove:step')} ${d('--flowplan:<id> --index:<n>')}
-  ${c('rename:screen')} ${d('--flow:<id> --name:<old-id> --to:<new-id>')}
-  ${c('move:screen')} ${d('--name:<id> --from-flow:<id> --to-flow:<id>')}
+  ${c('rename:page')} ${d('--flow:<id> --name:<old-id> --to:<new-id>')}
+  ${c('move:page')} ${d('--name:<id> --from-flow:<id> --to-flow:<id>')}
   ${c('add:step')} ${d('--flowplan:<id> --screen:<id>')}   Append a step to a flowplan
   ${c('add:export')} ${d('--barrel:<path> --name:<ExportName>')}   Add a barrel re-export
-  ${c('list:flows')}                        List flows in the workspace
-  ${c('list:screens')} ${d('[--flow:<id>]')}         List screens, optionally filtered by flow
+  ${c('list:chapters')}                        List chapters in the workspace
+  ${c('list:pages')} ${d('[--flow:<id>]')}         List pages, optionally filtered by chapter
   ${c('list:steps')} ${d('--flowplan:<id>')}         List a flowplan's steps
   ${c('list:exports')} ${d('--barrel:<path>')}       List a barrel's re-exports
-  ${c('screen:info')} ${d('--flow:<id> --name:<id>')}   Show screen metadata + flowplan refs
+  ${c('page:info')} ${d('--flow:<id> --name:<id>')}   Show page metadata + flowplan refs
   ${c('flowplan:info')} ${d('--name:<id>')}          Show flowplan steps
   ${c('components:ls')} / ${c('components:scan')}
   ${c('components:find')} ${d('--name:<ComponentName>')}
-  ${c('promote:flow')} ${d('--flowplan:<path> --fork:"<label>" [--as:<new-id>]')}   Extract a fork into its own flowplan
+  ${c('promote:chapter')} ${d('--flowplan:<path> --fork:"<label>" [--as:<new-id>]')}   Extract a fork into its own flowplan
 
   ${d('All scaffold commands accept --workspace:<name> to target a non-active workspace.')}
   ${d('pageOrder in workspace.ts controls display order; scaffold commands keep it in sync.')}

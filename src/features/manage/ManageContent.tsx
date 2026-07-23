@@ -127,7 +127,7 @@ export function ManageContent() {
         ) : (
           Object.entries(projectFlowMap).map(([project, flows]) => {
             const declaredOrder =
-              config.projects?.[project]?.flows ?? config.projects?.[project]?.modules ?? []
+              config.projects?.[project]?.chapters ?? config.projects?.[project]?.modules ?? []
             const ordered = [
               ...declaredOrder.filter(f => flows.includes(f)),
               ...flows.filter(f => !declaredOrder.includes(f)),

@@ -13,6 +13,6 @@ export type {
   CompiledFlowplan,
   CompiledStep,
   ResolvedPage,
-  ScreenResolver,
+  PageResolver,
 } from '../flowplan/compileFlowplan'
 export { compileFlowplan, FlowplanCompileError } from '../flowplan/compileFlowplan'

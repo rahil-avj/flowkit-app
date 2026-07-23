@@ -70,9 +70,9 @@ function FeedbackTabContent() {
   // We use the keys from filteredGroupedComments + raw activeViewId since we don't have ALL_VIEWS here.
   const getDefaultScreen = useCallback(() => {
     const cleanId = activeViewId.replace('-play', '')
-    // Prefer any existing comment's screenLabel for the clean id
+    // Prefer any existing comment's pageLabel for the clean id
     const existingEntry = Object.entries(filteredGroupedComments).find(([sid]) => sid === cleanId)
-    return { id: cleanId, label: existingEntry?.[1][0]?.screenLabel ?? cleanId }
+    return { id: cleanId, label: existingEntry?.[1][0]?.pageLabel ?? cleanId }
   }, [activeViewId, filteredGroupedComments])
 
   useEffect(() => {

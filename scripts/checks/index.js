@@ -6,7 +6,7 @@ import { workspacePath } from '../helpers/paths.js'
 import { resolveWorkspaceLoose as resolveWorkspace } from '../helpers/workspace-resolve.js'
 import { parseStringFlag } from '../helpers/args.js'
 import { createReport, printReport, printReportJson } from './reporter.js'
-import { checkScreens } from './screens.js'
+import { checkPages } from './pages.js'
 import { checkConfig } from './config.js'
 import { checkComponents } from './components.js'
 import { checkDb } from './db.js'
@@ -15,7 +15,7 @@ import { r, d } from '../helpers/colors.js'
 
 // Each fn takes (wsDir, report) and may be sync or async — awaited uniformly below.
 const DOMAINS = {
-  screens: checkScreens,
+  pages: checkPages,
   config: checkConfig,
   components: checkComponents,
   db: checkDb,

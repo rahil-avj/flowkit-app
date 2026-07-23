@@ -6,7 +6,7 @@ import type {
 } from '@flowkit-features/flowTracer/types'
 
 export interface ReplayState {
-  activeScreenId: string
+  activePageId: string
   db: Record<string, unknown>
   flowState: Record<string, unknown>
   devicePreset: string
@@ -41,7 +41,7 @@ export function replayFromSnapshot(session: SessionExport, targetSeq: number): R
 
   const base: ReplayState = snapshot
     ? {
-        activeScreenId: snapshot.activeViewId,
+        activePageId: snapshot.activeViewId,
         db: { ...snapshot.db },
         flowState: { ...snapshot.flowState },
         devicePreset: snapshot.devicePreset,
@@ -53,7 +53,7 @@ export function replayFromSnapshot(session: SessionExport, targetSeq: number): R
         initialDb: { ...snapshot.db },
       }
     : {
-        activeScreenId: '',
+        activePageId: '',
         db: {},
         flowState: {},
         devicePreset: '',
@@ -72,12 +72,12 @@ export function replayFromSnapshot(session: SessionExport, targetSeq: number): R
 
   // If we never saw an explicit screen.visited and have no snapshot, fall back
   // to the first navigation-ish event so the canvas isn't blank.
-  if (!base.activeScreenId) {
+  if (!base.activePageId) {
     const firstScreen = events.find(
       e => typeof e.payload.pageId === 'string' || typeof e.payload.to === 'string'
     )
     if (firstScreen) {
-      base.activeScreenId =
+      base.activePageId =
         (firstScreen.payload.pageId as string) ?? (firstScreen.payload.to as string) ?? ''
     }
   }
@@ -88,14 +88,14 @@ export function replayFromSnapshot(session: SessionExport, targetSeq: number): R
 function applyEvent(base: ReplayState, ev: SessionEvent) {
   switch (ev.type) {
     case 'screen.visited':
-      if (typeof ev.payload.pageId === 'string') base.activeScreenId = ev.payload.pageId
+      if (typeof ev.payload.pageId === 'string') base.activePageId = ev.payload.pageId
       break
     case 'navigation.programmatic':
     case 'navigation.sidebar-click':
     case 'navigation.flow-map-click':
     case 'sidebar.page-clicked':
-      if (typeof ev.payload.to === 'string') base.activeScreenId = ev.payload.to
-      else if (typeof ev.payload.pageId === 'string') base.activeScreenId = ev.payload.pageId
+      if (typeof ev.payload.to === 'string') base.activePageId = ev.payload.to
+      else if (typeof ev.payload.pageId === 'string') base.activePageId = ev.payload.pageId
       break
     case 'state.db-init':
       if (ev.payload.db && typeof ev.payload.db === 'object') {

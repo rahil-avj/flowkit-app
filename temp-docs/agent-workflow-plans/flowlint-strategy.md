@@ -94,7 +94,7 @@ Files: `workspaces/<ws>/flowplans/*.ts`
 
 | Rule ID                         | Check                                        | Severity |
 | ------------------------------- | -------------------------------------------- | -------- |
-| `flowplan/invalid-screen`       | Step `pageId` not found in workspace flows   | Error    |
+| `flowplan/invalid-page`         | Step `pageId` not found in workspace flows   | Error    |
 | `flowplan/id-filename-mismatch` | `defineFlow({ id })` doesn't match filename  | Error    |
 | `flowplan/empty-steps`          | Flowplan has zero steps                      | Warning  |
 | `flowplan/weak-step`            | Step has no `actionNote` and no `on` handler | Warning  |
@@ -141,7 +141,7 @@ ERROR [config/orphaned-id] flowkit.config.ts → pageOrder.auth
   Fix: flowkit create:screen --flow:auth --name:register
   Or:  flowkit config:remove-screen --flow:auth --screen:register
 
-ERROR [flowplan/invalid-screen] flowplans/auth.ts step[3]
+ERROR [flowplan/invalid-page] flowplans/auth.ts step[3]
   pageId 'sso-complete' not found in any flow
   Available auth screens: sign-in · sign-up · forgot-password · two-fa-verification
   Fix: update step pageId or run flowkit create:screen --flow:auth --name:sso-complete
@@ -190,7 +190,7 @@ Some errors are safe to auto-fix. Others require human/agent intent.
 | `flowplan/weak-step`        | Yes          | Add `actionNote: ''` stub                              |
 | `config/orphaned-id`        | No           | Agent must decide: create screen or remove from config |
 | `config/orphaned-dir`       | No           | Agent must decide: add to config or delete directory   |
-| `flowplan/invalid-screen`   | No           | Agent must decide: create screen or update step        |
+| `flowplan/invalid-page`     | No           | Agent must decide: create screen or update step        |
 | `screen/forbidden-import`   | No           | Requires understanding of intent                       |
 
 ---

@@ -83,7 +83,7 @@ interface FeedbackContextValue {
   comments: FeedbackComment[]
   addComment: (
     pageId: string,
-    screenLabel: string,
+    pageLabel: string,
     tags: FeedbackTag[],
     text: string,
     authorName?: string,
@@ -169,7 +169,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
 
   const addComment = (
     pageId: string,
-    screenLabel: string,
+    pageLabel: string,
     tags: FeedbackTag[],
     text: string,
     authorName?: string,
@@ -179,7 +179,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
     const newComment: FeedbackComment = {
       id,
       pageId,
-      screenLabel,
+      pageLabel,
       tags,
       text,
       timestamp: new Date().toISOString(),
@@ -227,18 +227,18 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
       screenComments[comment.pageId].push(comment)
     })
 
-    const screenIds = Object.keys(screenComments).sort()
+    const pageIds = Object.keys(screenComments).sort()
     let md = `# Flowkit Feedback\n`
     md += `Reviewer: ${reviewerName}\n`
     md += `Generated: ${generated} · ${totalCommentCount} comment${totalCommentCount !== 1 ? 's' : ''} across ${commentedScreenCount} screen${commentedScreenCount !== 1 ? 's' : ''}\n\n`
     md += `---\n\n`
 
-    screenIds.forEach(pageId => {
+    pageIds.forEach(pageId => {
       const screenComments_ = screenComments[pageId]
       if (screenComments_.length === 0) return
 
       const firstComment = screenComments_[0]
-      md += `## ${pageId} — ${firstComment.screenLabel}\n\n`
+      md += `## ${pageId} — ${firstComment.pageLabel}\n\n`
 
       screenComments_.forEach((c, idx) => {
         const time = new Date(c.timestamp).toLocaleString()
@@ -283,7 +283,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
       const headingMatch = headingLine.match(sectionRegex)
       if (!headingMatch) continue
       const pageId = headingMatch[1].trim()
-      const screenLabel = headingMatch[2].trim()
+      const pageLabel = headingMatch[2].trim()
 
       // Split section into individual comments by **Comment N** lines
       const commentBlocks = section.split(/\*\*Comment \d+\*\*/g).slice(1)
@@ -332,7 +332,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
         comments.push({
           id: `md-import-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           pageId,
-          screenLabel,
+          pageLabel,
           tags,
           text,
           timestamp,

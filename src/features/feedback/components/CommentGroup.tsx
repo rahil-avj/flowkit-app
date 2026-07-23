@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 
 interface CommentGroupProps {
   pageId: string
-  screenLabel: string
+  pageLabel: string
   screenExists: boolean
   isCurrentScreen: boolean
   isFirst?: boolean
@@ -14,7 +14,7 @@ interface CommentGroupProps {
 
 export default function CommentGroup({
   pageId,
-  screenLabel,
+  pageLabel,
   screenExists,
   isCurrentScreen,
   isFirst,
@@ -57,7 +57,7 @@ export default function CommentGroup({
               letterSpacing: '0.05em',
             }}
           >
-            {screenLabel || pageId}
+            {pageLabel || pageId}
           </span>
 
           {!screenExists && (
@@ -82,7 +82,7 @@ export default function CommentGroup({
               e.stopPropagation()
               onNavigate(pageId)
             }}
-            title={`Navigate to ${screenLabel}`}
+            title={`Navigate to ${pageLabel}`}
             className="flex items-center gap-1 shrink-0"
             style={{
               fontSize: scale.text.xxs,

@@ -33,7 +33,7 @@ function readConfig(wsDir) {
   // configs import it from the published 'flowkit' package. Hardcoding either
   // one in writeConfig() below would silently break the other mode's build
   // the next time any authoring command mutates the file (confirmed live:
-  // create:flow rewrote a flat-mode project's working import into the
+  // create:chapter rewrote a flat-mode project's working import into the
   // repo-mode path, and nothing caught it until `npm run build` failed).
   const importMatch = src.match(/^import\s+.*$/m)
   const importLine = importMatch ? importMatch[0] : defaultImportLine()
@@ -45,36 +45,36 @@ function readConfig(wsDir) {
   const raw = new Function(src)()
   return {
     workspace: raw.workspace || { name: path.basename(wsDir) },
-    flows: raw.flows || [],
+    chapters: raw.chapters || [],
     pageOrder: raw.pageOrder || {},
     _importLine: importLine,
   }
 }
 
-/** Quote a flow ID if it's not a valid JS identifier (e.g. contains hyphens). */
+/** Quote a chapter ID if it's not a valid JS identifier (e.g. contains hyphens). */
 function quoteKey(key) {
   return /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key) ? key : `'${key}'`
 }
 
-/** Format a pageOrder entry — inline for ≤4 screens, multiline for ≥5. */
-function formatScreenArray(screens) {
-  if (!screens || screens.length === 0) return '[]'
-  if (screens.length <= 4) {
-    return `[${screens.map(s => `'${s}'`).join(', ')}]`
+/** Format a pageOrder entry — inline for ≤4 pages, multiline for ≥5. */
+function formatScreenArray(pages) {
+  if (!pages || pages.length === 0) return '[]'
+  if (pages.length <= 4) {
+    return `[${pages.map(s => `'${s}'`).join(', ')}]`
   }
-  const inner = screens.map(s => `      '${s}',`).join('\n')
+  const inner = pages.map(s => `      '${s}',`).join('\n')
   return `[\n${inner}\n    ]`
 }
 
 /** Regenerate the entire workspace config file from a plain config object. */
 function writeConfig(wsDir, config) {
   const configPath = getConfigPath(wsDir)
-  const flowsStr = config.flows.map(f => `    '${f}',`).join('\n')
+  const chaptersStr = config.chapters.map(f => `    '${f}',`).join('\n')
 
   let soEntries = ''
   if (Object.keys(config.pageOrder).length > 0) {
     soEntries = Object.entries(config.pageOrder)
-      .map(([flow, screens]) => `    ${quoteKey(flow)}: ${formatScreenArray(screens)},`)
+      .map(([chapter, pages]) => `    ${quoteKey(chapter)}: ${formatScreenArray(pages)},`)
       .join('\n')
   }
 
@@ -83,8 +83,8 @@ function writeConfig(wsDir, config) {
     ``,
     `export default defineConfig({`,
     `  workspace: { name: ${asJsStringLiteral(config.workspace.name)} },`,
-    `  flows: [`,
-    flowsStr,
+    `  chapters: [`,
+    chaptersStr,
     `  ],`,
   ]
 
@@ -104,86 +104,86 @@ function writeConfig(wsDir, config) {
 
 export { readConfig as readWorkspaceConfig }
 
-export function addFlow(wsDir, flowId) {
+export function addChapter(wsDir, chapterId) {
   const config = readConfig(wsDir)
-  if (config.flows.includes(flowId)) throw new Error(`Flow '${flowId}' already exists`)
-  config.flows.push(flowId)
-  config.pageOrder[flowId] = []
+  if (config.chapters.includes(chapterId)) throw new Error(`Chapter '${chapterId}' already exists`)
+  config.chapters.push(chapterId)
+  config.pageOrder[chapterId] = []
   writeConfig(wsDir, config)
 }
 
-export function removeFlow(wsDir, flowId) {
+export function removeChapter(wsDir, chapterId) {
   const config = readConfig(wsDir)
-  config.flows = config.flows.filter(f => f !== flowId)
-  delete config.pageOrder[flowId]
+  config.chapters = config.chapters.filter(f => f !== chapterId)
+  delete config.pageOrder[chapterId]
   writeConfig(wsDir, config)
 }
 
-export function addScreen(wsDir, flowId, pageId, position) {
+export function addPage(wsDir, chapterId, pageId, position) {
   const config = readConfig(wsDir)
-  if (!config.pageOrder[flowId]) config.pageOrder[flowId] = []
-  if (config.pageOrder[flowId].includes(pageId)) {
-    throw new Error(`Screen '${pageId}' already exists in flow '${flowId}'`)
+  if (!config.pageOrder[chapterId]) config.pageOrder[chapterId] = []
+  if (config.pageOrder[chapterId].includes(pageId)) {
+    throw new Error(`Page '${pageId}' already exists in chapter '${chapterId}'`)
   }
   if (position !== undefined && position !== null && position >= 0) {
-    config.pageOrder[flowId].splice(position, 0, pageId)
+    config.pageOrder[chapterId].splice(position, 0, pageId)
   } else {
-    config.pageOrder[flowId].push(pageId)
+    config.pageOrder[chapterId].push(pageId)
   }
   writeConfig(wsDir, config)
 }
 
-export function removeScreen(wsDir, flowId, pageId) {
+export function removePage(wsDir, chapterId, pageId) {
   const config = readConfig(wsDir)
-  if (!config.pageOrder[flowId]) return
-  config.pageOrder[flowId] = config.pageOrder[flowId].filter(s => s !== pageId)
+  if (!config.pageOrder[chapterId]) return
+  config.pageOrder[chapterId] = config.pageOrder[chapterId].filter(s => s !== pageId)
   writeConfig(wsDir, config)
 }
 
-export function renameScreen(wsDir, flowId, oldId, newId) {
+export function renamePage(wsDir, chapterId, oldId, newId) {
   const config = readConfig(wsDir)
-  const screens = config.pageOrder[flowId]
-  if (!screens) throw new Error(`Flow '${flowId}' not found in config`)
-  const idx = screens.indexOf(oldId)
-  if (idx === -1) throw new Error(`Screen '${oldId}' not found in flow '${flowId}'`)
-  config.pageOrder[flowId][idx] = newId
+  const pages = config.pageOrder[chapterId]
+  if (!pages) throw new Error(`Chapter '${chapterId}' not found in config`)
+  const idx = pages.indexOf(oldId)
+  if (idx === -1) throw new Error(`Page '${oldId}' not found in chapter '${chapterId}'`)
+  config.pageOrder[chapterId][idx] = newId
   writeConfig(wsDir, config)
 }
 
-export function moveScreen(wsDir, pageId, fromFlowId, toFlowId) {
-  if (fromFlowId === toFlowId) {
-    throw new Error(`Screen '${pageId}' is already in flow '${fromFlowId}'`)
+export function movePage(wsDir, pageId, fromChapterId, toChapterId) {
+  if (fromChapterId === toChapterId) {
+    throw new Error(`Page '${pageId}' is already in chapter '${fromChapterId}'`)
   }
   const config = readConfig(wsDir)
-  const fromScreens = config.pageOrder[fromFlowId] || []
-  const fromIdx = fromScreens.indexOf(pageId)
-  if (fromIdx === -1) throw new Error(`Screen '${pageId}' not found in flow '${fromFlowId}'`)
-  if (config.pageOrder[toFlowId]?.includes(pageId)) {
-    throw new Error(`Screen '${pageId}' already exists in flow '${toFlowId}'`)
+  const fromPages = config.pageOrder[fromChapterId] || []
+  const fromIdx = fromPages.indexOf(pageId)
+  if (fromIdx === -1) throw new Error(`Page '${pageId}' not found in chapter '${fromChapterId}'`)
+  if (config.pageOrder[toChapterId]?.includes(pageId)) {
+    throw new Error(`Page '${pageId}' already exists in chapter '${toChapterId}'`)
   }
-  config.pageOrder[fromFlowId].splice(fromIdx, 1)
-  if (!config.pageOrder[toFlowId]) config.pageOrder[toFlowId] = []
-  config.pageOrder[toFlowId].push(pageId)
+  config.pageOrder[fromChapterId].splice(fromIdx, 1)
+  if (!config.pageOrder[toChapterId]) config.pageOrder[toChapterId] = []
+  config.pageOrder[toChapterId].push(pageId)
   writeConfig(wsDir, config)
 }
 
-/** List all screenIds across all flows (or just one flow). */
-export function listScreens(wsDir, flowId) {
+/** List all pageIds across all chapters (or just one chapter). */
+export function listPages(wsDir, chapterId) {
   const config = readConfig(wsDir)
-  if (flowId) {
-    return { [flowId]: config.pageOrder[flowId] || [] }
+  if (chapterId) {
+    return { [chapterId]: config.pageOrder[chapterId] || [] }
   }
   return config.pageOrder
 }
 
 /** Check if a pageId exists anywhere in the workspace config. */
-export function screenExists(wsDir, pageId) {
+export function pageExists(wsDir, pageId) {
   const config = readConfig(wsDir)
-  return Object.values(config.pageOrder).some(screens => screens.includes(pageId))
+  return Object.values(config.pageOrder).some(pages => pages.includes(pageId))
 }
 
-/** Check if a flowId exists in the workspace config. */
-export function flowExists(wsDir, flowId) {
+/** Check if a chapterId exists in the workspace config. */
+export function chapterExists(wsDir, chapterId) {
   const config = readConfig(wsDir)
-  return config.flows.includes(flowId)
+  return config.chapters.includes(chapterId)
 }

@@ -5,8 +5,8 @@ import { workspacePath } from '../../helpers/paths.js'
 import { FLOW_BOOK_DIRNAME } from '../../helpers/config-filenames.js'
 import {
   isNonExistent,
-  parseScreenSegments,
-  makeScreenId,
+  parsePageSegments,
+  makePageId,
 } from '../../../src/shared/utils/screenPathIdentity.js'
 
 // ── Path helpers ─────────────────────────────────────────────────────────────
@@ -131,21 +131,21 @@ export function readSession(file) {
   return { ok: true, session: data }
 }
 
-// ── Screen id helpers ─────────────────────────────────────────────────────────
+// ── Page id helpers ─────────────────────────────────────────────────────────
 
 /**
- * Recursively walks a flow-designs folder (variable depth), collecting real screen-candidate
- * files. Mirrors scripts/checks/screens.js's walkScreenFiles — `__`-prefixed segments are
+ * Recursively walks a flowBook folder (variable depth), collecting real page-candidate
+ * files. Mirrors scripts/checks/pages.js's walkPageFiles — `__`-prefixed segments are
  * pruned entirely (never descended into), matching "as if it doesn't exist".
  */
-function walkScreenFiles(dir, segments) {
+function walkPageFiles(dir, segments) {
   const results = []
   for (const entry of fs.readdirSync(dir)) {
     if (isNonExistent(entry)) continue
     const full = path.join(dir, entry)
     const nextSegments = [...segments, entry]
     if (fs.statSync(full).isDirectory()) {
-      results.push(...walkScreenFiles(full, nextSegments))
+      results.push(...walkPageFiles(full, nextSegments))
     } else if (/\.(tsx|jsx)$/.test(entry)) {
       results.push({ segments: nextSegments, fullPath: full })
     }
@@ -154,28 +154,28 @@ function walkScreenFiles(dir, segments) {
 }
 
 /**
- * Screen ids the workspace actually defines, in the same composite `${flow}-${screen}`
- * form produced by the app's makeScreenId/useWorkspaceHierarchy — this is what
- * sessionScreenIds() extracts from recorded session events (payload.pageId/.to), so
+ * Page ids the workspace actually defines, in the same composite `${chapter}-${page}`
+ * form produced by the app's makePageId/useWorkspaceHierarchy — this is what
+ * sessionPageIds() extracts from recorded session events (payload.pageId/.to), so
  * the two sets must use the same id shape to compare correctly. Hidden (`_`-prefixed)
- * screens are still included here (a session may legitimately reference one); only
- * non-existent (`__`-prefixed) segments are excluded, via walkScreenFiles' pruning.
+ * pages are still included here (a session may legitimately reference one); only
+ * non-existent (`__`-prefixed) segments are excluded, via walkPageFiles' pruning.
  */
-export function workspaceScreenIds(ws) {
-  const flowsDir = path.join(workspacePath(ws), FLOW_BOOK_DIRNAME)
+export function workspacePageIds(ws) {
+  const chaptersDir = path.join(workspacePath(ws), FLOW_BOOK_DIRNAME)
   const ids = new Set()
-  if (!fs.existsSync(flowsDir)) return ids
-  for (const { segments } of walkScreenFiles(flowsDir, [])) {
+  if (!fs.existsSync(chaptersDir)) return ids
+  for (const { segments } of walkPageFiles(chaptersDir, [])) {
     if (segments[segments.length - 1] === 'router.tsx') continue
-    const parsed = parseScreenSegments(segments)
+    const parsed = parsePageSegments(segments)
     if (!parsed) continue
-    ids.add(makeScreenId(parsed.flow, parsed.page))
+    ids.add(makePageId(parsed.chapter, parsed.page))
   }
   return ids
 }
 
 /** Screen ids referenced by a session's events. */
-export function sessionScreenIds(session) {
+export function sessionPageIds(session) {
   const ids = new Set()
   for (const e of session.events) {
     const id = e.payload?.pageId ?? e.payload?.to

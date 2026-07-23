@@ -252,7 +252,7 @@ function SessionContent({
     () => replayFromSnapshot(session, currentSequenceId),
     [session, currentSequenceId]
   )
-  const replayScreen = replayState.activeScreenId
+  const replayScreen = replayState.activePageId
 
   return (
     <>

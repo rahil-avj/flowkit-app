@@ -17,18 +17,18 @@ import { isNonExistent, resolveVisibility } from '../../src/shared/utils/screenP
 // resolvable — identity functions are all any of these files actually need at check-time.
 const SHIM_SPECIFIERS = ['flowkit', '@flowkit-core/config']
 
-const SCREEN_EXTS = ['.tsx', '.jsx']
+const PAGE_EXTS = ['.tsx', '.jsx']
 
 /**
- * Finds every screen-folder name (the last folder segment directly containing a real
- * screen file) anywhere under `flowDir`, at any depth. `__`-prefixed folders are pruned
+ * Finds every page-folder name (the last folder segment directly containing a real
+ * page file) anywhere under `chapterDir`, at any depth. `__`-prefixed folders are pruned
  * from traversal entirely (as if they don't exist). Returns a Map<name, visibility> where
  * visibility ('normal'|'hidden') applies parent-dominance over the full segment chain
- * (from directly under flowDir down to the screen folder itself) — e.g. a screen folder
+ * (from directly under chapterDir down to the page folder itself) — e.g. a page folder
  * named 'details' nested under a `_secret/` cosmetic ancestor is itself reported as
  * 'hidden', matching resolveVisibility's semantics used everywhere else in the checks.
  */
-function findScreenDirNames(flowDir) {
+function findPageDirNames(chapterDir) {
   const result = new Map()
   const walk = (dir, segments) => {
     let entries
@@ -37,13 +37,13 @@ function findScreenDirNames(flowDir) {
     } catch {
       return
     }
-    const hasScreenFile = entries.some(
+    const hasPageFile = entries.some(
       e =>
         !isNonExistent(e) &&
-        SCREEN_EXTS.some(ext => e.endsWith(ext)) &&
+        PAGE_EXTS.some(ext => e.endsWith(ext)) &&
         fs.statSync(path.join(dir, e)).isFile()
     )
-    if (hasScreenFile) {
+    if (hasPageFile) {
       const visibility = resolveVisibility(segments)
       if (visibility !== 'non-existent') {
         result.set(path.basename(dir), visibility === 'hidden' ? 'hidden' : 'normal')
@@ -55,9 +55,9 @@ function findScreenDirNames(flowDir) {
       if (fs.statSync(full).isDirectory()) walk(full, [...segments, entry])
     }
   }
-  for (const entry of fs.readdirSync(flowDir)) {
+  for (const entry of fs.readdirSync(chapterDir)) {
     if (isNonExistent(entry)) continue
-    const full = path.join(flowDir, entry)
+    const full = path.join(chapterDir, entry)
     if (fs.statSync(full).isDirectory()) walk(full, [entry])
   }
   return result
@@ -111,65 +111,65 @@ export async function checkConfig(wsDir, report) {
   const config = await readWorkspaceConfig(wsDir)
   if (!config) return // no config file, or it doesn't parse — nothing to cross-reference
 
-  const flows = config.flows ?? []
+  const chapters = config.chapters ?? []
   const pageOrder = config.pageOrder ?? {}
-  const flowsDir = path.join(wsDir, FLOW_BOOK_DIRNAME)
+  const chaptersDir = path.join(wsDir, FLOW_BOOK_DIRNAME)
 
-  for (const flowId of Object.keys(pageOrder)) {
-    if (!flows.includes(flowId)) {
+  for (const chapterId of Object.keys(pageOrder)) {
+    if (!chapters.includes(chapterId)) {
       report.add({
-        ruleId: 'config/flow-mismatch',
+        ruleId: 'config/chapter-mismatch',
         severity: 'error',
         file: WORKSPACE_CONFIG_FILENAME,
-        message: `pageOrder has an entry for flow '${flowId}', but it's not listed in flows[].`,
-        fix: `Add '${flowId}' to flows[], or remove its pageOrder entry.`,
+        message: `pageOrder has an entry for chapter '${chapterId}', but it's not listed in chapters[].`,
+        fix: `Add '${chapterId}' to chapters[], or remove its pageOrder entry.`,
       })
       continue
     }
 
-    const screenIds = pageOrder[flowId] ?? []
-    if (screenIds.length === 0) {
+    const pageIds = pageOrder[chapterId] ?? []
+    if (pageIds.length === 0) {
       report.add({
-        ruleId: 'config/empty-flow',
+        ruleId: 'config/empty-chapter',
         severity: 'warning',
         file: WORKSPACE_CONFIG_FILENAME,
-        message: `Flow '${flowId}' has no screens in pageOrder.`,
-        fix: `flowkit create:screen --flow:${flowId} --name:<id>`,
+        message: `Chapter '${chapterId}' has no pages in pageOrder.`,
+        fix: `flowkit create:page --flow:${chapterId} --name:<id>`,
       })
       continue
     }
 
-    // Screen folders can now sit at any depth ≥1 under the flow dir (cosmetic
-    // folders in between are allowed) — pageOrder still stores bare, flow-scoped
-    // screen ids (the LAST folder segment), so find each one anywhere under flowDir.
-    const flowDir = path.join(flowsDir, flowId)
-    const screenDirNames = fs.existsSync(flowDir) ? findScreenDirNames(flowDir) : new Map()
+    // Page folders can now sit at any depth ≥1 under the chapter dir (cosmetic
+    // folders in between are allowed) — pageOrder still stores bare, chapter-scoped
+    // page ids (the LAST folder segment), so find each one anywhere under chapterDir.
+    const chapterDir = path.join(chaptersDir, chapterId)
+    const pageDirNames = fs.existsSync(chapterDir) ? findPageDirNames(chapterDir) : new Map()
 
-    for (const pageId of screenIds) {
-      if (!screenDirNames.has(pageId)) {
+    for (const pageId of pageIds) {
+      if (!pageDirNames.has(pageId)) {
         report.add({
           ruleId: 'config/orphaned-id',
           severity: 'error',
           file: WORKSPACE_CONFIG_FILENAME,
-          message: `pageOrder.${flowId} lists '${pageId}', which has no matching directory.`,
-          fix: `Expected: ${FLOW_BOOK_DIRNAME}/${flowId}/.../${pageId}/`,
-          clifix: `flowkit create:screen --flow:${flowId} --name:${pageId}`,
+          message: `pageOrder.${chapterId} lists '${pageId}', which has no matching directory.`,
+          fix: `Expected: ${FLOW_BOOK_DIRNAME}/${chapterId}/.../${pageId}/`,
+          clifix: `flowkit create:page --flow:${chapterId} --name:${pageId}`,
         })
       }
     }
 
     // Directories present on disk but never registered in pageOrder. `_`/`__`-prefixed
-    // folders (or any `_`/`__`-prefixed ancestor of the screen folder) are intentionally
+    // folders (or any `_`/`__`-prefixed ancestor of the page folder) are intentionally
     // author-hidden/non-existent, not orphaned — skip both.
-    for (const [dirName, visibility] of screenDirNames) {
+    for (const [dirName, visibility] of pageDirNames) {
       if (visibility === 'hidden') continue
-      if (!screenIds.includes(dirName)) {
+      if (!pageIds.includes(dirName)) {
         report.add({
           ruleId: 'config/orphaned-dir',
           severity: 'warning',
           file: WORKSPACE_CONFIG_FILENAME,
-          message: `A screen directory named '${dirName}' exists under ${FLOW_BOOK_DIRNAME}/${flowId}/ but is not listed in pageOrder.${flowId}.`,
-          fix: `Add '${dirName}' to pageOrder.${flowId}, or remove the directory if unused.`,
+          message: `A page directory named '${dirName}' exists under ${FLOW_BOOK_DIRNAME}/${chapterId}/ but is not listed in pageOrder.${chapterId}.`,
+          fix: `Add '${dirName}' to pageOrder.${chapterId}, or remove the directory if unused.`,
         })
       }
     }

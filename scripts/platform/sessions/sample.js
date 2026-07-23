@@ -3,11 +3,11 @@ import fs from 'fs'
 import path from 'path'
 import { g, r, d, c } from '../../helpers/colors.js'
 import { resolveWorkspace } from '../../helpers/workspace-resolve.js'
-import { libraryDir, workspaceScreenIds } from './_shared.js'
+import { libraryDir, workspacePageIds } from './_shared.js'
 
 export function cmdSessionsSample(val) {
   const ws = resolveWorkspace(val)
-  const screens = [...workspaceScreenIds(ws)]
+  const screens = [...workspacePageIds(ws)]
   if (screens.length === 0) {
     console.error(r(`✗ "${ws}" has no screens to sample from — create a flow first.`))
     process.exit(1)

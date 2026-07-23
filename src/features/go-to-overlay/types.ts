@@ -6,5 +6,5 @@ export interface GoToItemMeta {
   /** Parent flow id — present for screen items; the flow id itself for flow items. */
   flowId?: string
   /** First screen id in the flow — present for flow items. */
-  firstScreenId?: string
+  firstPageId?: string
 }

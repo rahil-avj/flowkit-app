@@ -263,7 +263,7 @@ export function ScreenInfoContent({
       hasTag: currentHasTag,
       tags: currentTags,
       filePath: derivedPath,
-      screenLabel: activeView.label,
+      pageLabel: activeView.label,
       ...updates,
     })
   }

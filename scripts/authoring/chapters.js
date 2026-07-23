@@ -1,4 +1,4 @@
-// Authoring command: CRUD for flows (create/remove/list).
+// Authoring command: CRUD for chapters (create/remove/list).
 import fs from 'fs'
 import path from 'path'
 import { parseStringFlag } from '../helpers/args.js'
@@ -7,15 +7,15 @@ import { workspacePath, assertScopedWorkspaceDir } from '../helpers/paths.js'
 import { assertKebab } from '../helpers/validate.js'
 import { g, r, b, d } from '../helpers/colors.js'
 import {
-  addFlow,
-  removeFlow,
+  addChapter,
+  removeChapter,
   readWorkspaceConfig,
-  flowExists,
+  chapterExists,
 } from '../authoring-support/config-patch.js'
 import { prompt, selectFromList } from '../helpers/prompt.js'
 import { WORKSPACE_CONFIG_FILENAME, FLOW_BOOK_DIRNAME } from '../helpers/config-filenames.js'
 
-export async function cmdCreateFlow(_val, args = []) {
+export async function cmdCreateChapter(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
@@ -26,10 +26,10 @@ export async function cmdCreateFlow(_val, args = []) {
       input: process.stdin,
       output: process.stdout,
     })
-    flowId = await prompt(rl, 'Flow ID (kebab-case): ')
+    flowId = await prompt(rl, 'Chapter ID (kebab-case): ')
     rl.close()
     if (!flowId) {
-      console.error(r('✗ Flow name is required'))
+      console.error(r('✗ Chapter name is required'))
       process.exit(1)
     }
   }
@@ -41,8 +41,8 @@ export async function cmdCreateFlow(_val, args = []) {
     process.exit(1)
   }
 
-  if (flowExists(wsDir, flowId)) {
-    console.error(r(`✗ Flow '${flowId}' already exists`))
+  if (chapterExists(wsDir, flowId)) {
+    console.error(r(`✗ Chapter '${flowId}' already exists`))
     process.exit(1)
   }
 
@@ -50,12 +50,12 @@ export async function cmdCreateFlow(_val, args = []) {
 
   try {
     fs.mkdirSync(flowDir, { recursive: true })
-    addFlow(wsDir, flowId)
-    console.log(g(`✓ Flow created:  ${FLOW_BOOK_DIRNAME}/${flowId}/`))
-    console.log(g(`✓ Registered:    ${WORKSPACE_CONFIG_FILENAME} → flows[] + pageOrder`))
+    addChapter(wsDir, flowId)
+    console.log(g(`✓ Chapter created:  ${FLOW_BOOK_DIRNAME}/${flowId}/`))
+    console.log(g(`✓ Registered:       ${WORKSPACE_CONFIG_FILENAME} → chapters[] + pageOrder`))
     console.log('')
     console.log(
-      d(`Next: flowkit create:screen --flow:${flowId} --name:<first-screen> --label:"Screen Name"`)
+      d(`Next: flowkit create:page --flow:${flowId} --name:<first-page> --label:"Page Name"`)
     )
   } catch (e) {
     // Rollback on failure
@@ -65,7 +65,7 @@ export async function cmdCreateFlow(_val, args = []) {
   }
 }
 
-export async function cmdRemoveFlow(_val, args = []) {
+export async function cmdRemoveChapter(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
@@ -73,7 +73,7 @@ export async function cmdRemoveFlow(_val, args = []) {
   const force = args.includes('--force')
 
   if (!flowId) {
-    console.error(r('✗ --name:<flow-id> is required'))
+    console.error(r('✗ --name:<chapter-id> is required'))
     process.exit(1)
   }
   try {
@@ -83,48 +83,48 @@ export async function cmdRemoveFlow(_val, args = []) {
     process.exit(1)
   }
 
-  if (!flowExists(wsDir, flowId)) {
-    console.error(r(`✗ Flow '${flowId}' not found in workspace '${wsName}'`))
+  if (!chapterExists(wsDir, flowId)) {
+    console.error(r(`✗ Chapter '${flowId}' not found in workspace '${wsName}'`))
     process.exit(1)
   }
 
   const flowDir = path.join(wsDir, FLOW_BOOK_DIRNAME, flowId)
   if (fs.existsSync(flowDir)) {
-    const screens = fs
+    const pages = fs
       .readdirSync(flowDir)
       .filter(f => fs.statSync(path.join(flowDir, f)).isDirectory())
-    if (screens.length > 0 && !force) {
+    if (pages.length > 0 && !force) {
       console.error(
-        r(`✗ Flow '${flowId}' has ${screens.length} screen(s). Use --force to delete them.`)
+        r(`✗ Chapter '${flowId}' has ${pages.length} page(s). Use --force to delete them.`)
       )
       process.exit(1)
     }
   }
 
-  removeFlow(wsDir, flowId)
+  removeChapter(wsDir, flowId)
   if (fs.existsSync(flowDir)) fs.rmSync(flowDir, { recursive: true, force: true })
-  console.log(g(`✓ Flow removed:  ${FLOW_BOOK_DIRNAME}/${flowId}/`))
-  console.log(g(`✓ Unregistered:  ${WORKSPACE_CONFIG_FILENAME}`))
+  console.log(g(`✓ Chapter removed:  ${FLOW_BOOK_DIRNAME}/${flowId}/`))
+  console.log(g(`✓ Unregistered:     ${WORKSPACE_CONFIG_FILENAME}`))
 }
 
-export async function cmdListFlows(_val, args = []) {
+export async function cmdListChapters(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
   const config = readWorkspaceConfig(wsDir)
 
-  if (config.flows.length === 0) {
-    console.log(d(`No flows in workspace '${wsName}'`))
-    console.log(d('Create one: flowkit create:flow --name:<flow-id>'))
+  if (config.chapters.length === 0) {
+    console.log(d(`No chapters in workspace '${wsName}'`))
+    console.log(d('Create one: flowkit create:chapter --name:<chapter-id>'))
     return
   }
 
-  console.log(b(`Flows  [${wsName}]\n`))
-  for (const flowId of config.flows) {
-    const screens = config.pageOrder[flowId] || []
-    const count = String(screens.length).padStart(2)
-    console.log(`  ${flowId.padEnd(28)} ${d(`${count} screen${screens.length !== 1 ? 's' : ''}`)}`)
+  console.log(b(`Chapters  [${wsName}]\n`))
+  for (const flowId of config.chapters) {
+    const pages = config.pageOrder[flowId] || []
+    const count = String(pages.length).padStart(2)
+    console.log(`  ${flowId.padEnd(28)} ${d(`${count} page${pages.length !== 1 ? 's' : ''}`)}`)
   }
   console.log('')
-  console.log(d(`Total: ${config.flows.length} flow${config.flows.length !== 1 ? 's' : ''}`))
+  console.log(d(`Total: ${config.chapters.length} chapter${config.chapters.length !== 1 ? 's' : ''}`))
 }

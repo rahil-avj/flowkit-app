@@ -52,16 +52,16 @@ export function shouldShowControl(
   }
 
   if (onlyForScreen) {
-    const currentScreenId =
+    const currentPageId =
       activeFlowDebugInfo && activeFlowDebugInfo.history.length > 0
         ? activeFlowDebugInfo.history[activeFlowDebugInfo.history.length - 1]
         : activeViewId
     const screens = Array.isArray(onlyForScreen) ? onlyForScreen : [onlyForScreen]
     const normalize = (s: string) => s.toLowerCase().replace(/[\s-_]/g, '')
-    const normalizedCurrent = normalize(currentScreenId || '')
+    const normalizedCurrent = normalize(currentPageId || '')
     const match = screens.some(s => {
       const norm = normalize(s)
-      return norm === normalizedCurrent || s === currentScreenId
+      return norm === normalizedCurrent || s === currentPageId
     })
     if (!match) {
       return false

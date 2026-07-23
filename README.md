@@ -1,6 +1,6 @@
 # Flowkit
 
-A browser-based UI prototyping platform for building multi-screen, flow-based interactive previews. Screens are React components. Flows are ordered sequences of screens with conditional transitions and guard rules. The CLI manages everything.
+A browser-based UI prototyping platform for building multi-screen, flow-based interactive previews. Pages are React components. Chapters are ordered sequences of pages with conditional transitions and guard rules. The CLI manages everything.
 
 ---
 
@@ -23,7 +23,7 @@ Flowkit gives you a live canvas with:
 - **Device mockup** — phone, tablet, desktop, wearable with correct safe areas
 - **Flow engine** — conditional navigation, local sandbox state, mock database mutations
 - **Simulator** — color-blind vision modes, connection/network conditions, blur
-- **Feedback** — per-screen comment wall with tags, screenshots, export/import to cloud
+- **Feedback** — per-page comment wall with tags, screenshots, export/import to cloud
 - **Debugger** — live view of flow state, transition history, db activity
 - **FlowLens** — session replay, cursor heatmaps, funnel analytics, and multi-session reports
 - **Mobile canvas** — full feature parity on touch devices via a bottom-sheet layout
@@ -32,7 +32,7 @@ Flowkit gives you a live canvas with:
 
 ## Workspace setup (this repo)
 
-A workspace is a folder under `workspaces/`. It contains your flows, components, mock database, and design tokens — isolated from the platform and from other workspaces.
+A workspace is a folder under `workspaces/`. It contains your chapters, components, mock database, and design tokens — isolated from the platform and from other workspaces.
 
 ```bash
 flowkit nw:my-app    # create workspace
@@ -78,9 +78,9 @@ The rest of the CLI reference below (authoring commands, sessions, export/handof
 
 ---
 
-## Writing a screen
+## Writing a page
 
-Screens are plain React components. Props are injected automatically — no context imports needed. Import path differs by mode: `@flowkit/types` inside this repo's own `workspaces/<name>/`, `'flowkit'` in a project scaffolded by `create-flowkit-app`/`create-flowkit-workspace`.
+Pages are plain React components. Props are injected automatically — no context imports needed. Import path differs by mode: `@flowkit/types` inside this repo's own `workspaces/<name>/`, `'flowkit'` in a project scaffolded by `create-flowkit-app`/`create-flowkit-workspace`.
 
 ```tsx
 // this repo (repo mode)
@@ -89,7 +89,7 @@ import type { PageProps } from '@flowkit/types'
 // scaffolded consumer project (flat/multi-workspace mode)
 import type { PageProps } from 'flowkit'
 
-export default function WelcomeScreen({ onNext, onBack, db }: PageProps) {
+export default function WelcomePage({ onNext, onBack, db }: PageProps) {
   return (
     <div>
       <p>Hello, {db?.user?.name}</p>
@@ -103,26 +103,26 @@ export const pageMeta = { id: 'welcome', label: 'Welcome' }
 ```
 
 `PageProps` is one of two navigation conventions and only populated during active flowplan
-playback. For a screen that should also be freely explorable in the Screens tab (no flow active),
-navigate by screen id via `useAppNav()` instead — no `isChapter` prop, no manual guard needed:
+playback. For a page that should also be freely explorable in the Screens tab (no chapter active),
+navigate by page id via `useAppNav()` instead — no `isChapter` prop, no manual guard needed:
 
 ```tsx
 import { useAppNav } from '@flowkit-shared/utils' // repo mode; 'flowkit' in a scaffolded project
 
-export default function WelcomeScreen() {
+export default function WelcomePage() {
   const { navigateTo } = useAppNav()
   return <button onClick={() => navigateTo('setup-screen')}>Get Started</button>
 }
 ```
 
-`useAppNav()` calls the correct navigation function automatically whether the screen is standalone
-or inside a flow — safe to call unconditionally, unlike wiring `useDashboard().navigateTo()` by hand.
+`useAppNav()` calls the correct navigation function automatically whether the page is standalone
+or inside a chapter — safe to call unconditionally, unlike wiring `useDashboard().navigateTo()` by hand.
 
 ---
 
 ## Flow config
 
-Flows are defined as **flowplans** under `workspaces/<name>/flowStories/` (repo mode) or `flowStories/` at the workspace root (consumer mode) — directory renamed from `flowplans/`; the CLI verb `check:flowplans` keeps its existing spelling regardless. Each flowplan is a `FlowplanDef` — a typed, ordered sequence of steps with optional db patches, forks, and entry guards. Step `pageId` values use the composite `${flowId}-${pageId}` form:
+Chapters are defined as **flowplans** under `workspaces/<name>/flowStories/` (repo mode) or `flowStories/` at the workspace root (consumer mode) — directory renamed from `flowplans/`; the CLI verb `check:flowplans` keeps its existing spelling regardless. Each flowplan is a `FlowplanDef` — a typed, ordered sequence of steps with optional db patches, forks, and entry guards. Step `pageId` values use the composite `${flowId}-${pageId}` form:
 
 ```ts
 // this repo (repo mode)
@@ -157,7 +157,7 @@ The flowplan compiler (`compileFlowplan.ts`) converts this at runtime into a `Ch
 | `flowkit status`                           | Workspace health snapshot                                                                                          |
 | `flowkit export`                           | Export as standalone HTML viewer (guided flow; always ships full codebase)                                         |
 | `flowkit handoff`                          | Build developer handoff zip                                                                                        |
-| `flowkit check` / `flowkit check:<domain>` | Validate authored content — screens/config/components/db/flowplans (`check:flowplans` runs automatically on build) |
+| `flowkit check` / `flowkit check:<domain>` | Validate authored content — pages/config/components/db/flowplans (`check:flowplans` runs automatically on build) |
 | `flowkit sessions:brief`                   | Agent analytics brief from committed sessions                                                                      |
 | `flowkit convert:multi`                    | Convert a flat consumer project to multi-workspace mode                                                            |
 | `flowkit convert:flat`                     | Collapse a multi-workspace consumer project back to flat                                                           |
@@ -220,8 +220,8 @@ flowkit handoff
 | `Cmd +` / `Cmd -`     | Zoom in / out                |
 | `Cmd 0`               | Reset to 100% zoom           |
 | `Cmd Shift 0`         | Fit device to screen         |
-| `←` / `→`             | Navigate screens             |
-| `Shift ←` / `Shift →` | Navigate flows               |
+| `←` / `→`             | Navigate pages               |
+| `Shift ←` / `Shift →` | Navigate chapters            |
 | `Shift 1–4`           | Switch right panel tabs      |
 | `Shift S`             | Toggle Screens ↔ Flow Map    |
 | `Shift F`             | Focus screen search          |
@@ -247,7 +247,7 @@ src/
     feedback/                  # comment wall, cloud push via JSONBin, export/import
     figma-export/              # FigmaExportView — multi-screen canvas grid (Cmd+Alt+Shift+P)
     flow-debugger/             # db inspector, flow state viewer
-    flow-library/              # flow/screen hierarchy, flow canvas, compileFlowplan
+    flow-library/              # chapter/page hierarchy, flow canvas, compileFlowplan
     flowTracer/                # session recorder, IndexedDB storage, FlowLens bridge
       context/                 # SessionRecorderProvider — state machine, event hooks
       components/              # SessionCard, SessionInspect, CountdownOverlay, overlays, settings

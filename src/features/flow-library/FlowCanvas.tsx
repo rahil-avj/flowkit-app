@@ -7,10 +7,10 @@ import { useEffect, useRef } from 'react'
 
 export default function FlowCanvas({
   steps,
-  activeSourceScreenId = null,
+  activeSourcePageId = null,
 }: {
   steps: FlowplanDef['steps']
-  activeSourceScreenId?: string | null
+  activeSourcePageId?: string | null
 }) {
   const { theme, scale } = useTheme()
   return (
@@ -20,7 +20,7 @@ export default function FlowCanvas({
         theme={theme}
         scale={scale}
         depth={0}
-        activeSourceScreenId={activeSourceScreenId}
+        activeSourcePageId={activeSourcePageId}
       />
       <TerminalCap theme={theme} scale={scale} />
     </div>
@@ -32,13 +32,13 @@ function Sequence({
   theme,
   scale,
   depth,
-  activeSourceScreenId,
+  activeSourcePageId,
 }: {
   steps: FlowplanDef['steps']
   theme: ReturnType<typeof useTheme>['theme']
   scale: ReturnType<typeof useTheme>['scale']
   depth: number
-  activeSourceScreenId: string | null
+  activeSourcePageId: string | null
 }) {
   return (
     <>
@@ -56,7 +56,7 @@ function Sequence({
         }
         const step = entry as FlowStep
         const forks = (step.forks as Fork[] | undefined) ?? []
-        const isActive = activeSourceScreenId !== null && step.pageId === activeSourceScreenId
+        const isActive = activeSourcePageId !== null && step.pageId === activeSourcePageId
         return (
           <div key={i} className="flex flex-col items-start">
             <Connector theme={theme} hide={i === 0 && depth === 0} active={isActive} />
@@ -76,7 +76,7 @@ function Sequence({
                       fork={fork}
                       theme={theme}
                       scale={scale}
-                      activeSourceScreenId={activeSourceScreenId}
+                      activeSourcePageId={activeSourcePageId}
                     />
                   ))}
                 </div>
@@ -175,12 +175,12 @@ function ForkBranch({
   fork,
   theme,
   scale,
-  activeSourceScreenId,
+  activeSourcePageId,
 }: {
   fork: Fork
   theme: ReturnType<typeof useTheme>['theme']
   scale: ReturnType<typeof useTheme>['scale']
-  activeSourceScreenId: string | null
+  activeSourcePageId: string | null
 }) {
   const terminal = fork.mergesTo !== 'next'
   return (
@@ -213,7 +213,7 @@ function ForkBranch({
           theme={theme}
           scale={scale}
           depth={1}
-          activeSourceScreenId={activeSourceScreenId}
+          activeSourcePageId={activeSourcePageId}
         />
       </div>
     </div>

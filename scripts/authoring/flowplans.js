@@ -8,7 +8,7 @@ import { assertKebab } from '../helpers/validate.js'
 import { g, r, b, d, c } from '../helpers/colors.js'
 import { readWorkspaceConfig } from '../authoring-support/config-patch.js'
 import { FLOW_STORIES_DIRNAME } from '../helpers/config-filenames.js'
-import { makeScreenId } from '../../src/shared/utils/screenPathIdentity.js'
+import { makePageId } from '../../src/shared/utils/screenPathIdentity.js'
 
 function toDisplayName(kebab) {
   return kebab
@@ -183,7 +183,7 @@ export async function cmdAddStep(_val, args = []) {
     console.error(d(`  Available screens: ${allScreens.join(', ')}`))
     process.exit(1)
   }
-  const compositeScreenId = makeScreenId(owningFlow, pageId)
+  const compositePageId = makePageId(owningFlow, pageId)
 
   const fpPath = flowplanPath(wsDir, fpId)
   if (!fs.existsSync(fpPath)) {
@@ -192,7 +192,7 @@ export async function cmdAddStep(_val, args = []) {
     process.exit(1)
   }
 
-  const step = { pageId: compositeScreenId }
+  const step = { pageId: compositePageId }
   if (on) step.on = on
   if (actionNote) step.actionNote = actionNote
 

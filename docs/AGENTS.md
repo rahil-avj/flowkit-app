@@ -77,7 +77,7 @@ Example (from a generated `rules.md`):
 ```
 NEVER reference flowBook/router.tsx or _playFlow.ts — flat-flowplan workspaces don't have them
 ALWAYS read/mutate data via const db = useDb()
-TO add a screen → create flowBook/<flow>/<screen-slug>/<ScreenName>.tsx, then add a step in flowStories/<flow>.ts
+TO add a page → create flowBook/<flow>/<screen-slug>/<ScreenName>.tsx, then add a step in flowStories/<flow>.ts
 ```
 
 > ⚠️ **Generator drift as of this writing:** the example above is illustrative — `scripts/platform/agent-spec.js`, which actually generates each workspace's `rules.md`/`.agent/*`/`AGENTS.md`, still emits hardcoded `flows/`/`flowplans/` strings (not yet updated to `flowBook/`/`flowStories/`). See this doc's own note on the agent-spec generator further down.
@@ -90,8 +90,8 @@ The few hardest rules are inlined into the memory file so they're loaded before 
 
 | Rule                                                                                                                                             | Why                                                                                                                                                                                                                                                                                                                  |
 | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Never call `useDashboard()`'s `navigateTo` directly inside a screen that relies on FlowMaster's guards/animations/recording during flow playback | Use `useFlowNav()` (or id-wiring) inside a flow-only screen so FlowMaster's guards, animations, and recorded `flow.transition` fire. `useAppNav()` (`@flowkit-shared/utils`) is the correct way to make a screen navigable both standalone from the Screens tab and during flow playback — see "Navigation" below.   |
-| Never hand-write flow/screen files from scratch                                                                                                  | Copy an existing screen's boilerplate — the structure and exports must be consistent.                                                                                                                                                                                                                                |
+| Never call `useDashboard()`'s `navigateTo` directly inside a page that relies on FlowMaster's guards/animations/recording during chapter playback | Use `useNav()` (or id-wiring) inside a chapter-only page so FlowMaster's guards, animations, and recorded `flow.transition` fire. `useAppNav()` (`@flowkit-shared/utils`) is the correct way to make a page navigable both standalone from the Screens tab and during chapter playback — see "Navigation" below.   |
+| Never hand-write chapter/page files from scratch                                                                                                  | Copy an existing page's boilerplate — the structure and exports must be consistent.                                                                                                                                                                                                                                |
 | Never edit platform source (`src/` in repo mode, `node_modules/flowkit/` in consumer mode)                                                       | That's the shared platform engine, not workspace content.                                                                                                                                                                                                                                                            |
 | Never hardcode hex colors                                                                                                                        | Use `lib/design-system/tokens.css` vars or `useTheme()` tokens so kit/theme switching works.                                                                                                                                                                                                                         |
 | Always use the right import for the mode you're in                                                                                               | Repo mode: `@flowkit/`/`@workspace/` aliases (renamed from `@platform` 2026-07-12). Consumer mode: import directly from `'flowkit'` — the `@flowkit*`/`@workspace` aliases only exist inside this monorepo, not in a scaffolded project. Relative `../../` paths break across the workspace boundary in either mode. |
@@ -100,7 +100,7 @@ The few hardest rules are inlined into the memory file so they're loaded before 
 
 ## Workspace format
 
-Workspaces use the **flat flowplan format**: `flowBook/<flow>/<screen>/<Screen>.tsx` + `flowStories/*.ts` (directories renamed from `flows/`/`flowplans/`; the CLI verbs like `check:flowplans`/`watch:flows` keep their existing names regardless). Screen folders may nest to any depth under `flowBook/<flow>/` — see FLOWKIT.md's screen-authoring section for the full identity/visibility rules. There is no `_playFlow.ts`, no `router.tsx`, no `projects/` directory (unless you've deliberately opted into the nested-layout `projects` field in `workspace.ts` — see CLI.md).
+Workspaces use the **flat flowplan format**: `flowBook/<flow>/<screen>/<Screen>.tsx` + `flowStories/*.ts` (directories renamed from `flows/`/`flowplans/`; the CLI verbs like `check:flowplans`/`watch:flows` keep their existing names regardless). Page folders may nest to any depth under `flowBook/<flow>/` — see FLOWKIT.md's page-authoring section for the full identity/visibility rules. There is no `_playFlow.ts`, no `router.tsx`, no `projects/` directory (unless you've deliberately opted into the nested-layout `projects` field in `workspace.ts` — see CLI.md).
 
 ---
 
@@ -108,15 +108,15 @@ Workspaces use the **flat flowplan format**: `flowBook/<flow>/<screen>/<Screen>.
 
 The canonical way to do each common thing. (The INDEX routes here; the reference docs have full detail.)
 
-### Add a screen (flat flowplan format)
+### Add a page (flat flowplan format)
 
-1. Create the screen folder and component:
+1. Create the page folder and component:
 
 ```
 flowBook/<flow>/<screen-slug>/<ScreenName>.tsx
 ```
 
-Boilerplate (copy from an existing screen, then fill the body):
+Boilerplate (copy from an existing page, then fill the body):
 
 ```tsx
 // repo mode
@@ -125,13 +125,13 @@ import type { PageProps } from '@flowkit/types'
 import type { PageProps } from 'flowkit'
 
 export const pageMeta = {
-  desc: 'Short description of what this screen does',
+  desc: 'Short description of what this page does',
 }
 
-export default function <ScreenName>Screen({ db }: PageProps) {
+export default function <ScreenName>Page({ db }: PageProps) {
   return (
     <div className="flex flex-col h-full">
-      {/* screen content */}
+      {/* page content */}
       <button id="primary-cta">Continue</button>
     </div>
   )
@@ -144,11 +144,11 @@ export default function <ScreenName>Screen({ db }: PageProps) {
 { pageId: '<flow>-<screen-slug>', on: 'primary-cta', actionNote: 'Taps Continue' },
 ```
 
-(`pageId` here is the composite `${flowId}-${pageId}` form — see FLOWKIT.md's screen-authoring section. `workspace.ts`'s `pageOrder` map, by contrast, stores the bare `<screen-slug>`.)
+(`pageId` here is the composite `${flowId}-${pageId}` form — see FLOWKIT.md's page-authoring section. `workspace.ts`'s `pageOrder` map, by contrast, stores the bare `<screen-slug>`.)
 
-Or use the CLI, which handles both steps and works in all three modes: `flowkit create:screen --flow:<flow-id> --name:<screen-slug>` then `flowkit add:step --flowplan:<flow-id> --screen:<screen-slug> --action:"..."`.
+Or use the CLI, which handles both steps and works in all three modes: `flowkit create:page --flow:<flow-id> --name:<screen-slug>` then `flowkit add:step --flowplan:<flow-id> --screen:<screen-slug> --action:"..."`.
 
-> **To remove a screen:** `flowkit remove:screen --flow:<flow-id> --name:<screen-slug>` (unregisters it and deletes the directory — safer than a manual `rm -rf`, since it also updates `workspace.ts`).
+> **To remove a page:** `flowkit remove:page --flow:<flow-id> --name:<screen-slug>` (unregisters it and deletes the directory — safer than a manual `rm -rf`, since it also updates `workspace.ts`).
 
 ### Add a flowplan
 
@@ -172,42 +172,42 @@ Drop a `.ts` file into `flowStories/` using `defineFlow()`, or run `flowkit crea
 },
 ```
 
-### Navigate from screen logic (state / async) — repo mode only
+### Navigate from page logic (state / async) — repo mode only
 
 ```ts
-const { navigateTo, goNext, goBack } = useFlowNav()
+const { navigateTo, goNext, goBack } = useNav()
 const submit = async () => {
   if (await ok()) navigateTo('confirmation')
 }
 ```
 
-`useFlowNav()` throws if the screen has no `FlowMaster` ancestor — flow playback only. Not
+`useNav()` throws if the page has no `FlowMaster` ancestor — chapter playback only. Not
 available in consumer mode (see below).
 
-### Make a screen also navigable from the Screens tab (no flow active) — repo mode only
+### Make a page also navigable from the Screens tab (no chapter active) — repo mode only
 
 ```ts
 import { useAppNav } from '@flowkit-shared/utils'
 
-export default function HomeScreen() {
+export default function HomePage() {
   const { navigateTo } = useAppNav()
   return <button onClick={() => navigateTo('detail')}>Open</button>
 }
 ```
 
 `useAppNav()` reads whichever navigation context actually applies — FlowMaster's flow-aware
-`navigateTo` when this screen is rendered inside a flow, `DashboardContext`'s otherwise — so calling
+`navigateTo` when this page is rendered inside a chapter, `DashboardContext`'s otherwise — so calling
 it unconditionally is correct in both places. No `isChapter` prop, no guard. `@flowkit-shared/utils`
 is a repo-mode-only path alias — not exported from the public `flowkit` package.
 
-### Navigate from a screen — consumer mode (flat/multi-workspace)
+### Navigate from a page — consumer mode (flat/multi-workspace)
 
-There is no navigation hook. A screen receives `onAction?`, `onNext?`, `onBack?` as props
-(all `undefined` unless the screen is currently playing inside a flow — always optional-chain
+There is no navigation hook. A page receives `onAction?`, `onNext?`, `onBack?` as props
+(all `undefined` unless the page is currently playing inside a chapter — always optional-chain
 them):
 
 ```ts
-export default function HomeScreen({ onAction }: PageProps) {
+export default function HomePage({ onAction }: PageProps) {
   return <button onClick={() => onAction?.('open-detail')}>Open</button>
 }
 ```
@@ -234,9 +234,9 @@ Seed data lives in `lib/data/db.ts`. → FLOWKIT.md (Mock database)
 
 ### Read / mutate data — consumer mode (flat/multi-workspace)
 
-A screen's `db` prop (`PageProps.db`) is **read-only** and `undefined` outside flow
+A page's `db` prop (`PageProps.db`) is **read-only** and `undefined` outside chapter
 playback — there is no `useDashboard()`/`updateDb` hook here. Mutation happens in the
-flowplan, not the screen: give the interactive element an `id`, then add a
+flowplan, not the page: give the interactive element an `id`, then add a
 `ctx.updateDb()` call in that flowplan's `interactions[id].do`:
 
 ```ts
@@ -308,9 +308,9 @@ flowkit lr                           # alias for lens:report
 ### Check workspace health
 
 ```bash
-flowkit status          # flows, screens, flowplans, sessions, feedback, agent
-flowkit check           # validate all authored content (screens/config/components/db/flowplans) — exits 1 on error
-flowkit check:<domain>  # validate just one domain — screens/config/components/db/flowplans
+flowkit status          # chapters, pages, flowplans, sessions, feedback, agent
+flowkit check           # validate all authored content (pages/config/components/db/flowplans) — exits 1 on error
+flowkit check:<domain>  # validate just one domain — pages/config/components/db/flowplans
 flowkit plan:ls         # list all flowplans with file paths
 ```
 
@@ -344,7 +344,7 @@ flowkit agent:sync:<ws>            # a specific workspace (repo mode)
 ## What the agent owns vs. what's generated
 
 - **Owns / edits freely:** everything at the workspace's own root — `flowBook/`, `flowStories/`,
-  `lib/`, and `.agent/project.md` (the product brief).
+  `lib/`, and `.agent/project.md` (the product brief). (Chapters/pages live under `flowBook/`.)
 - **Generated (don't hand-edit):** `.agent/INDEX.md`, `.agent/rules.md`, `.agent/platform.md`,
   the memory file. Regenerate via `agent:sync`.
 - **Off-limits:** platform source — `src/`/`scripts/` in repo mode, `node_modules/flowkit/` in

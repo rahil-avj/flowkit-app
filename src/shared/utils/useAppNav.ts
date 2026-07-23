@@ -17,7 +17,7 @@ export interface AppNav {
 
 /**
  * The one hook screens use for direct navigation — no isChapter prop, no manual
- * guard. Unlike useFlowNav(), this never throws outside a flow: it reads
+ * guard. Unlike useNav(), this never throws outside a flow: it reads
  * FlowNavCtx non-throwing and falls back to DashboardContext when absent, so
  * a screen calling navigateTo() here can never accidentally reach the wrong
  * navigation state machine by omission.

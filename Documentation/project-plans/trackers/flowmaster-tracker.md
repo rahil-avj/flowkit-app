@@ -34,7 +34,7 @@ FlowMaster is the flow execution engine. Its job is to take an authored flow def
 
 #### `InteractionCtx` (full shape)
 
-`activeScreenId`, `history`, `flowState`, `get(key)`, `set(key, value)`, `db`, `updateDb(updater)`, `effect(name)`
+`activePageId`, `history`, `flowState`, `get(key)`, `set(key, value)`, `db`, `updateDb(updater)`, `effect(name)`
 
 #### Guards
 
@@ -99,8 +99,8 @@ Append-only. Most recent at top.
 
 ## 2026-06-26 — `InteractionCtx` has 8 fields, not 3
 
-**Decision:** `InteractionCtx` type is `{ activeScreenId, history, flowState, get, set, db, updateDb, effect }`. The `goTo` resolver and `do` handler both receive the full ctx.
-**Reason:** `get`/`set` provide ergonomic sandbox access without exposing the full state mutation API; `effect()` gives a named hook for side-effects visible in the Flow Debugger without coupling to db; `activeScreenId` and `history` enable conditional navigation without external state.
+**Decision:** `InteractionCtx` type is `{ activePageId, history, flowState, get, set, db, updateDb, effect }`. The `goTo` resolver and `do` handler both receive the full ctx.
+**Reason:** `get`/`set` provide ergonomic sandbox access without exposing the full state mutation API; `effect()` gives a named hook for side-effects visible in the Flow Debugger without coupling to db; `activePageId` and `history` enable conditional navigation without external state.
 **Source:** `src/types/index.ts:237–262`
 
 ---

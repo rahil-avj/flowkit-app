@@ -41,7 +41,7 @@ interface SessionRecorderValue {
   // Live monitor state (cleared on stop)
   recentEvents: SessionEvent[]
   elapsedMs: number
-  currentScreenId: string | null
+  currentPageId: string | null
 
   // Lifecycle
   startRecording: (name?: string, tags?: string[], testMode?: boolean) => void
@@ -115,7 +115,7 @@ export function SessionRecorderProvider({
   // Live monitor state
   const [recentEvents, setRecentEvents] = useState<SessionEvent[]>([])
   const [elapsedMs, setElapsedMs] = useState(0)
-  const [currentScreenId, setCurrentScreenId] = useState<string | null>(null)
+  const [currentPageId, setCurrentPageId] = useState<string | null>(null)
   const recentEventsRef = useRef<SessionEvent[]>([])
   const elapsedIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const elapsedStartRef = useRef<number>(0)
@@ -224,7 +224,7 @@ export function SessionRecorderProvider({
     recentEventsRef.current = []
     setRecentEvents([])
     setElapsedMs(0)
-    setCurrentScreenId(null)
+    setCurrentPageId(null)
     elapsedAccRef.current = 0
   }, [])
 
@@ -333,7 +333,7 @@ export function SessionRecorderProvider({
       if (type === 'flow.entered') flowEntryCountRef.current += 1
       if (type === 'screen.visited') {
         screenCountRef.current += 1
-        setCurrentScreenId((payload.pageId as string) ?? (payload.viewId as string) ?? null)
+        setCurrentPageId((payload.pageId as string) ?? (payload.viewId as string) ?? null)
       }
       if (type === 'session.remark') {
         remarksRef.current.push({ text: (payload.text as string) ?? '', timestamp: Date.now() })
@@ -579,7 +579,7 @@ export function SessionRecorderProvider({
       activeSessionId: sessionId,
       recentEvents,
       elapsedMs,
-      currentScreenId,
+      currentPageId,
       isTestModeRef,
       startRecording,
       pauseRecording,
@@ -606,7 +606,7 @@ export function SessionRecorderProvider({
       isTestModeState,
       recentEvents,
       elapsedMs,
-      currentScreenId,
+      currentPageId,
       isTestModeRef,
       startRecording,
       pauseRecording,

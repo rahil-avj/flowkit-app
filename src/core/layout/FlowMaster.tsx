@@ -25,7 +25,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
   // ─── Flowplan playback integration ───────────────────────────────────────────
   // A compiled flowplan carries a `__flowplan` field; flows without it leave
   // the entire playback branch dormant. Derived from `flow` directly (not from
-  // the engine's activeScreenId) so this is available BEFORE useFlowEngine is
+  // the engine's activePageId) so this is available BEFORE useFlowEngine is
   // called — the engine needs currentOn/currentNext/strictMode to build its gate.
   const flowplan = (flow as Partial<CompiledFlowplan>).__flowplan
   const playback = useFlowPlaybackOptional()
@@ -40,11 +40,11 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
   } = useFlowplanSettings()
 
   // The engine needs the flowplan gate (which depends on the CURRENT step, i.e.
-  // activeScreenId) but activeScreenId is only known once the engine itself has
+  // activePageId) but activePageId is only known once the engine itself has
   // run. Broken via a ref: the gate reads the latest resolved step off a ref that
   // FlowMaster updates every render (see the sync effect below), so the engine
   // always has a fresh gate without a circular render dependency or a second
-  // hook instance. useFlowEngine's activeScreenId is read via engine.activeScreenId
+  // hook instance. useFlowEngine's activePageId is read via engine.activePageId
   // AFTER the single hook call below; the ref exists solely so `commitNavigation`
   // (built during THIS call to useFlowEngine) can look up an up-to-date step.
   const currentStepRef = useRef<{
@@ -76,7 +76,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
   const {
     activeScreenIndex,
     activeScreen,
-    activeScreenId,
+    activePageId,
     localState,
     transitionLog,
     animClass,
@@ -92,12 +92,12 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
     history,
   } = engine
 
-  // The current flowplan step, derived SYNCHRONOUSLY from activeScreenId + the
+  // The current flowplan step, derived SYNCHRONOUSLY from activePageId + the
   // compiled step list (FlowMaster is the source of truth for the active screen;
   // the context never looks the step up itself). Used by the patch effect, the
   // gating handler, and the actionNote caption.
   const currentStepIndex = flowplan
-    ? flowplan.steps.findIndex(s => s.pageId === activeScreenId)
+    ? flowplan.steps.findIndex(s => s.pageId === activePageId)
     : -1
   const currentStep =
     flowplan && currentStepIndex >= 0 ? flowplan.steps[currentStepIndex] : undefined
@@ -119,7 +119,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
   const { missing: elementCheckMissing } = useFlowplanElementCheck(screenContainerRef, {
     flowplanId: flowplan?.flowplanId,
     stepIndex: currentStepIndex,
-    pageId: activeScreenId,
+    pageId: activePageId,
     on: currentOn,
   })
 
@@ -184,7 +184,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
 
   // ── Planned-element highlight (Show Hints): a persistent (not one-shot) glow
   // on the element the current step expects to be tapped. Unlike flashOffScript,
-  // this must have explicit cleanup tied to element identity — activeScreenId is
+  // this must have explicit cleanup tied to element identity — activePageId is
   // in the deps (even though currentOn derives from it) so cleanup-then-reapply
   // happens on every screen transition, not just when the currentOn string value
   // differs. Without this, a Hotspot button (outside the per-screen
@@ -195,7 +195,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
     const el = screenContainerRef.current?.querySelector<HTMLElement>(`#${CSS.escape(currentOn)}`)
     el?.classList.add('fm-planned-highlight')
     return () => el?.classList.remove('fm-planned-highlight')
-  }, [flowplan, showHints, blindMode, currentOn, activeScreenId, screenContainerRef])
+  }, [flowplan, showHints, blindMode, currentOn, activePageId, screenContainerRef])
 
   // ── Diverged Hint (Blind Mode only): a soft, low-emphasis warning shown after
   // a delay of no progress toward the next planned step. Must resolve
@@ -219,17 +219,17 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
         ? currentNext({ db: engine.buildCtx().db, flowState: localState })
         : currentNext
     divergedTimerRef.current = setTimeout(() => {
-      if (activeScreenId !== expectedNext) setDiverged(true)
+      if (activePageId !== expectedNext) setDiverged(true)
     }, 9000)
     return () => {
       if (divergedTimerRef.current) clearTimeout(divergedTimerRef.current)
       if (divergedResetRef.current) clearTimeout(divergedResetRef.current)
     }
     // engine/localState/db intentionally omitted from the trigger set — this
-    // timer should reset only on genuine progress (activeScreenId change) or
+    // timer should reset only on genuine progress (activePageId change) or
     // relevant setting changes, not on every localState mutation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flowplan, blindMode, divergedHint, currentNext, activeScreenId])
+  }, [flowplan, blindMode, divergedHint, currentNext, activePageId])
 
   // ── Blind Mode pass/fail: edge-validity check against the compiled step
   // graph, NOT a linear sequence diff — flowplan.steps is a flattened array
@@ -354,7 +354,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
       recorderOpt?.logEvent('interaction.frustrated-click', {
         x: e.clientX,
         y: e.clientY,
-        pageId: activeScreenId,
+        pageId: activePageId,
         flowId: flow.id,
         ...(nearestFkId ? { elementId: nearestFkId } : {}),
       })
@@ -369,7 +369,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
       commitNavigation,
       setIsAutoPlayPaused,
       recorderOpt,
-      activeScreenId,
+      activePageId,
       flowplan,
       currentOn,
       currentNext,
@@ -456,13 +456,13 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
         y,
         screenW: rect.width,
         screenH: rect.height,
-        pageId: activeScreenId,
+        pageId: activePageId,
         timestamp: performance.now(),
       })
     }
     rafId = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(rafId)
-  }, [recorderOpt, screenContainerRef, activeScreenId])
+  }, [recorderOpt, screenContainerRef, activePageId])
 
   // ─── Guard / null checks ──────────────────────────────────────────────────
   if (!isAllowed || !activeScreen) return null
@@ -546,10 +546,10 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
             }
           : {})}
       >
-        {/* Active screen wrapped in FlowNavCtx so useFlowNav() works inside */}
+        {/* Active screen wrapped in FlowNavCtx so useNav() works inside */}
         <FlowNavCtx.Provider value={flowNavValue}>
           <PanelErrorBoundary
-            key={activeScreenId}
+            key={activePageId}
             fallback={
               <div className="flex items-center justify-center text-xs opacity-40 size-full">
                 Screen crashed — check the console
@@ -561,7 +561,7 @@ export default function FlowMaster({ flow }: { flow: ChapterConfig }) {
                 stack: error.stack,
                 componentStack: info.componentStack,
                 boundary: 'panel:screen',
-                pageId: activeScreenId,
+                pageId: activePageId,
               })
             }
           >

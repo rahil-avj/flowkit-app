@@ -15,7 +15,7 @@ import React, { createContext, useCallback, useContext, useMemo, useRef, useStat
 //   • Track the active compiled flowplan + current step + gating flag.
 //   • Inject the flowplan's deep-copied baseline db on enter (silent — via
 //     DashboardContext.flowPlaySetDb, so recordings aren't polluted).
-//   • Apply per-step db patches as the flow navigates (Phase 4 calls applyStepByScreenId).
+//   • Apply per-step db patches as the flow navigates (Phase 4 calls applyStepByPageId).
 //   • Restore the workspace db on exit (resetDb).
 //
 // RB4 guard: playback is disabled while FlowLens replay is active (two silent db
@@ -84,7 +84,7 @@ export function FlowPlaybackProvider({ children }: { children: React.ReactNode }
       if (replayActive) return // RB4: don't fight FlowLens replay.
       // Inject a deep copy of the baseline db (source flowplan is never mutated).
       // Step 0's patch is NOT applied here — FlowMaster's per-screen effect fires
-      // applyStepByScreenId for the first screen on mount, so every step's patch
+      // applyStepByPageId for the first screen on mount, so every step's patch
       // (including step 0) flows through ONE code path (no double-application).
       const copy = applyDotPathPatch(rawDb, {}) // returns a fresh clone
       baselineDbRef.current = rawDb

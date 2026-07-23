@@ -8,9 +8,9 @@ FlowMaster is Flowkit's flow engine — a proper state machine giving you condit
 
 ## Mental model
 
-- **Screens are dumb** — they render UI. They never know what screen comes next.
+- **Pages are dumb** — they render UI. They never know what page comes next.
 - **Flowplans are smart** — `flowStories/<flow>.ts` owns all routing logic via `steps[]`. FlowMaster reads it and drives navigation.
-- **Two kinds of state** — `flowState` (per-flow sandbox, reset when the flow exits) and `db` (global mock db, persists across the session).
+- **Two kinds of state** — `flowState` (per-chapter sandbox, reset when the chapter exits) and `db` (global mock db, persists across the session).
 
 ---
 
@@ -36,7 +36,7 @@ workspaces/<ws>/
         ConfirmationScreen.tsx
 ```
 
-Screens are discovered at runtime by `useWorkspaceHierarchy()` via Vite glob — no router file is generated or needed. Screen folders can nest to any depth under `flowBook/<flow>/` (extra cosmetic folders in between are ignored for identity), and the registered, cross-flow-unique screen id is the composite `${flowId}-${pageId}` — see [FLOWKIT.md](FLOWKIT.md#screen-authoring-folders-identity-and-visibility) for the full identity/visibility rules. The step examples below use bare ids for brevity; in a real flowplan, `pageId` values are the composite form.
+Pages are discovered at runtime by `useWorkspaceHierarchy()` via Vite glob — no router file is generated or needed. Page folders can nest to any depth under `flowBook/<flow>/` (extra cosmetic folders in between are ignored for identity), and the registered, cross-chapter-unique page id is the composite `${flowId}-${pageId}` — see [FLOWKIT.md](FLOWKIT.md#page-authoring-folders-identity-and-visibility) for the full identity/visibility rules. The step examples below use bare ids for brevity; in a real flowplan, `pageId` values are the composite form.
 
 ---
 
@@ -128,9 +128,9 @@ export default defineFlow({
 
 ---
 
-## Screen component
+## Page component
 
-Screens render UI and give elements ids. Navigation is wired in the flowplan — screens never import routing logic.
+Pages render UI and give elements ids. Navigation is wired in the flowplan — pages never import routing logic.
 
 ```tsx
 import type { PageProps } from '@flowkit/types'
@@ -140,7 +140,7 @@ interface MyDb {
   user: { name: string }
 }
 
-export default function CartScreen({ db }: PageProps<unknown, MyDb>) {
+export default function CartPage({ db }: PageProps<unknown, MyDb>) {
   return (
     <div>
       <p>Hello, {db?.user?.name}</p>
@@ -163,27 +163,27 @@ export const pageMeta = {
 | Prop        | Type                       | Description                                                                  |
 | ----------- | -------------------------- | ---------------------------------------------------------------------------- |
 | `isChapter` | `boolean`                  | `true` when rendered inside FlowMaster                                       |
-| `flowState` | `TState`                   | Local sandbox state for this flow                                            |
+| `flowState` | `TState`                   | Local sandbox state for this chapter                                         |
 | `db`        | `TDb`                      | Global mock db (live reference)                                              |
 | `onAction`  | `(name, payload?) => void` | Trigger a named interaction programmatically (form submits, async callbacks) |
-| `onNext`    | `() => void`               | Advance to the next screen in order                                          |
-| `onBack`    | `() => void`               | Go to the previous screen                                                    |
+| `onNext`    | `() => void`               | Advance to the next page in order                                           |
+| `onBack`    | `() => void`               | Go to the previous page                                                     |
 
-> Prefer element `id` + flowplan `on:` over `onAction`/`onNext`/`onBack` for simple taps — it keeps screens free of routing logic.
+> Prefer element `id` + flowplan `on:` over `onAction`/`onNext`/`onBack` for simple taps — it keeps pages free of routing logic.
 
-> **Screens tab vs. Flows tab:** `onAction`/`onNext`/`onBack` are only wired up during flowplan playback (Flows tab / FlowMaster) — those callbacks are `undefined` when a screen is viewed standalone from the **Screens tab**, so `onClick={() => onNext?.()}`-style handlers no-op silently there. That's by design, not a bug. If a screen should also be freely clickable from the Screens tab, use `useAppNav()` instead: `const { navigateTo } = useAppNav(); onClick={() => navigateTo(id)}` (see "Navigate from screen logic" below). `useAppNav()` picks the flow-aware `navigateTo` automatically when the screen is rendered inside a flow, so it's always safe to call unconditionally — no `isChapter` check needed in the screen's own code.
+> **Screens tab vs. Flows tab:** `onAction`/`onNext`/`onBack` are only wired up during flowplan playback (Flows tab / FlowMaster) — those callbacks are `undefined` when a page is viewed standalone from the **Screens tab**, so `onClick={() => onNext?.()}`-style handlers no-op silently there. That's by design, not a bug. If a page should also be freely clickable from the Screens tab, use `useAppNav()` instead: `const { navigateTo } = useAppNav(); onClick={() => navigateTo(id)}` (see "Navigate from screen logic" below). `useAppNav()` picks the flow-aware `navigateTo` automatically when the page is rendered inside a chapter, so it's always safe to call unconditionally — no `isChapter` check needed in the page's own code.
 
 ### `pageMeta` fields
 
 | Field          | Type                  | Purpose                                                                         |
 | -------------- | --------------------- | ------------------------------------------------------------------------------- |
-| `id`           | `string`              | Screen identifier (optional; auto-derived from file name if omitted)            |
+| `id`           | `string`              | Page identifier (optional; auto-derived from file name if omitted)             |
 | `label`        | `string`              | Display name (optional; defaults to derived from component name)                |
 | `desc`         | `string`              | Short description shown in the sidebar                                          |
 | `devNotes`     | `string`              | Developer notes (not shown in sidebar)                                          |
 | `tags`         | `string[]`            | Filtering tags. Conventions: `role:`, `type:`, `state:`, `platform:`, `status:` |
 | `hasTag`       | `string`              | Sidebar badge label                                                             |
-| `isStandalone` | `boolean`             | Entry-point screen — not reached via back-nav                                   |
+| `isStandalone` | `boolean`             | Entry-point page — not reached via back-nav                                     |
 | `canEnter`     | `({ db }) => boolean` | Allow guard — sidebar shows lock icon when `false`                              |
 | `canNotEnter`  | `({ db }) => boolean` | Block guard — sidebar shows lock icon when `true`                               |
 | `variantLabel` | `string`              | Human-readable label for A/B variants (only for `.variant.<serial>.tsx` files)  |
@@ -203,18 +203,18 @@ export const pageMeta = {
 }
 ```
 
-Screen-level guards are surfaced in the sidebar as a lock icon.
+Page-level guards are surfaced in the sidebar as a lock icon.
 
 ---
 
 ## Navigate from screen logic
 
-For state-driven or async navigation (after a form submit, API call, etc.) use `useFlowNav()`:
+For state-driven or async navigation (after a form submit, API call, etc.) use `useNav()`:
 
 ```ts
-import { useFlowNav } from '@flowkit-shared/utils'
+import { useNav } from '@flowkit-shared/utils'
 
-const { navigateTo, goNext, goBack } = useFlowNav()
+const { navigateTo, goNext, goBack } = useNav()
 
 const submit = async () => {
   await save()
@@ -222,11 +222,11 @@ const submit = async () => {
 }
 ```
 
-Targets: a screen id, `"next"`, `"back"`, or `"complete"`.
+Targets: a page id, `"next"`, `"back"`, or `"complete"`.
 
-> **During flow playback**, use `useFlowNav()`, not `useDashboard()`'s `navigateTo` — guards, animations, and session replay only fire through FlowMaster's `commitNavigation`. `useFlowNav()` itself throws if called from a screen with no `FlowMaster` ancestor (i.e. previewed standalone from the Screens tab), so it isn't a drop-in replacement there.
+> **During flow playback**, use `useNav()`, not `useDashboard()`'s `navigateTo` — guards, animations, and session replay only fire through FlowMaster's `commitNavigation`. `useNav()` itself throws if called from a page with no `FlowMaster` ancestor (i.e. previewed standalone from the Screens tab), so it isn't a drop-in replacement there.
 >
-> A screen that should **also** be freely clickable from the Screens tab (no flow active) should call `useAppNav()` (`@flowkit-shared/utils`) instead of `useFlowNav()` or `useDashboard()` directly: `const { navigateTo } = useAppNav(); onClick={() => navigateTo(id)}`. `useAppNav()` reads whichever navigation context actually applies — FlowMaster's flow-aware one when rendered inside a flow, `DashboardContext`'s otherwise — so the same call is correct in both places with no `isChapter` check written by the screen. See `scripts/helpers/scaffold.js`'s demo screens for the pattern.
+> A page that should **also** be freely clickable from the Screens tab (no chapter active) should call `useAppNav()` (`@flowkit-shared/utils`) instead of `useNav()` or `useDashboard()` directly: `const { navigateTo } = useAppNav(); onClick={() => navigateTo(id)}`. `useAppNav()` reads whichever navigation context actually applies — FlowMaster's flow-aware one when rendered inside a chapter, `DashboardContext`'s otherwise — so the same call is correct in both places with no `isChapter` check written by the page. See `scripts/helpers/scaffold.js`'s demo pages for the pattern.
 
 ---
 
@@ -234,7 +234,7 @@ Targets: a screen id, `"next"`, `"back"`, or `"complete"`.
 
 The debugger panel (right sidebar → Debugger tab) shows:
 
-- **Journey** — screen navigation log with timestamps
+- **Journey** — page navigation log with timestamps
 - **Rules** — fired step interactions and their resolved targets
 - **State** — current `flowState` snapshot
 - **Logs** — `updateDb` calls with before/after snapshots
@@ -260,7 +260,7 @@ Cursor positions are sampled (rAF, throttled) when the `cursorTracking` channel 
 ```bash
 flowkit plan:ls            # list all flowplans
 flowkit check:flowplans    # validates flowplan structure/step references; also runs as prebuild gate
-flowkit status             # workspace health: flows, screens, flowplans, sessions
+flowkit status             # workspace health: chapters, pages, flowplans, sessions
 ```
 
-Add screens manually: create `flowBook/<flow>/<screen>/<ScreenName>.tsx` (the filename doesn't need the `Screen` suffix — identity comes from the folder, not the file), add a step to `flowStories/<flow>.ts`. `useWorkspaceHierarchy()` discovers screens automatically — no build step needed.
+Add pages manually: create `flowBook/<flow>/<screen>/<ScreenName>.tsx` (the filename doesn't need the `Screen`/`Page` suffix — identity comes from the folder, not the file), add a step to `flowStories/<flow>.ts`. `useWorkspaceHierarchy()` discovers pages automatically — no build step needed.

@@ -30,7 +30,7 @@ import {
   type CompiledFlowplan,
   compileFlowplan,
   type ResolvedPage,
-  type ScreenResolver,
+  type PageResolver,
 } from '@flowkit-features/flowplan/compileFlowplan'
 import { useFlowPlaybackOptional } from '@flowkit-features/flowplan/FlowPlaybackContext'
 import { DEVICE_PRESETS } from '@flowkit-shared/components/devices'
@@ -185,7 +185,7 @@ export interface WorkspaceHierarchyResult {
   /** pageId → active annotation tags (expiresAt filtered). */
   tagsByScreen: Map<string, AnnotationTag[]>
   /** Author-set default screen id from workspace.ts (`startPage`), if any. */
-  startScreenId?: string
+  startPageId?: string
   /** Author-set default device preset label from workspace.ts (`defaultDevice`), if valid. */
   defaultDeviceLabel?: string
   /** Author-set default orientation from workspace.ts (`defaultOrientation`), if any. */
@@ -198,11 +198,11 @@ function resolveConfigDefaults(
   config: FlowkitConfig,
   screensById: Map<string, unknown>
 ): {
-  startScreenId?: string
+  startPageId?: string
   defaultDeviceLabel?: string
   defaultOrientation?: 'portrait' | 'landscape'
 } {
-  const startScreenId =
+  const startPageId =
     config.startPage && screensById.has(config.startPage) ? config.startPage : undefined
 
   const resolvedDevicePreset = config.defaultDevice
@@ -216,7 +216,7 @@ function resolveConfigDefaults(
         ? 'portrait'
         : undefined
 
-  return { startScreenId, defaultDeviceLabel, defaultOrientation }
+  return { startPageId, defaultDeviceLabel, defaultOrientation }
 }
 
 // ─── Flat mode builder (uses virtual modules, no path parsing needed) ───────────
@@ -265,7 +265,7 @@ function buildFlatHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   const hasHierarchy = screensById.size > 0 || registry.size > 0
 
   // 3. Screen resolver
-  const resolve: ScreenResolver = (pageId: string): ResolvedPage | undefined => {
+  const resolve: PageResolver = (pageId: string): ResolvedPage | undefined => {
     const rec = screensById.get(pageId)
     if (!rec) return undefined
     return { id: rec.id, label: rec.label, component: rec.component }
@@ -273,7 +273,7 @@ function buildFlatHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
 
   // 4. Flow library Chapters
   const declaredIds =
-    config.flows ?? Object.values(config.projects ?? {}).flatMap(p => p.flows ?? p.modules ?? [])
+    config.chapters ?? Object.values(config.projects ?? {}).flatMap(p => p.chapters ?? p.modules ?? [])
   const allDefs = [...registry.values()]
   const orderedDefs = [
     ...declaredIds.filter(id => registry.has(id)).map(id => registry.get(id)!),
@@ -299,11 +299,11 @@ function buildFlatHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   const tree = buildTree([...screensById.values()], config, activeWorkspace)
 
   // 7. Tags — sourced directly from each screen's own pageMeta.annotations.
-  const metaByScreenId = new Map<string, PageMeta | undefined>()
+  const metaByPageId = new Map<string, PageMeta | undefined>()
   for (const entry of _virtualScreenList) {
-    metaByScreenId.set(makePageId(entry.flow, entry.pageId), _virtualScreenMeta[entry.key])
+    metaByPageId.set(makePageId(entry.flow, entry.pageId), _virtualScreenMeta[entry.key])
   }
-  const tagsByScreen = buildTagsMap(metaByScreenId)
+  const tagsByScreen = buildTagsMap(metaByPageId)
 
   return {
     flows,
@@ -446,7 +446,7 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   const hasHierarchy = screensById.size > 0 || registry.size > 0
 
   // 4. Screen resolver injected into the compiler.
-  const resolve: ScreenResolver = (pageId: string): ResolvedPage | undefined => {
+  const resolve: PageResolver = (pageId: string): ResolvedPage | undefined => {
     const rec = screensById.get(pageId)
     if (!rec) return undefined
     return { id: rec.id, label: rec.label, component: rec.component }
@@ -455,7 +455,7 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
   // 5. Flow library Chapters — one per flowplan, with a `-play` runner child.
   //    Flat layout: order from config.flows[]. Nested: from config.projects[*].flows[].
   const declaredIds =
-    config.flows ?? Object.values(config.projects ?? {}).flatMap(p => p.flows ?? p.modules ?? [])
+    config.chapters ?? Object.values(config.projects ?? {}).flatMap(p => p.chapters ?? p.modules ?? [])
   const allDefs = [...registry.values()]
   const orderedDefs = [
     ...declaredIds.filter(id => registry.has(id)).map(id => registry.get(id)!),
@@ -482,14 +482,14 @@ function buildHierarchy(activeWorkspace: string): WorkspaceHierarchyResult {
 
   // 8. Tags — sourced directly from each screen's own pageMeta.annotations
   //    (screenMetaModules is already eagerly globbed above, keyed by full workspace path).
-  const metaByScreenId = new Map<string, PageMeta | undefined>()
+  const metaByPageId = new Map<string, PageMeta | undefined>()
   for (const [screenKey, files] of variantsByScreen) {
     const [flow, screen] = screenKey.split('::')
     const def = files.find(f => f.serial === 'default') ?? files[0]
     const metaKey = `${wsPrefix}${def.filePath}`
-    metaByScreenId.set(makePageId(flow, screen), screenMetaModules[metaKey])
+    metaByPageId.set(makePageId(flow, screen), screenMetaModules[metaKey])
   }
-  const tagsByScreen = buildTagsMap(metaByScreenId)
+  const tagsByScreen = buildTagsMap(metaByPageId)
 
   return {
     flows,
@@ -521,7 +521,7 @@ function buildTree(
     // Nested layout: config.projects[project].flows + .pageOrder
     const projCfg = config.projects?.[project]
     const declaredOrder: string[] =
-      (project === wsName ? config.flows : undefined) ?? projCfg?.flows ?? projCfg?.modules ?? []
+      (project === wsName ? config.chapters : undefined) ?? projCfg?.chapters ?? projCfg?.modules ?? []
     const flowEntries = [...flowsMap.entries()]
     const orderedFlows: [string, WireframeView[]][] = [
       ...declaredOrder
@@ -572,7 +572,7 @@ function buildTree(
 
 function makeFlowplanRunner(
   def: FlowplanDef,
-  resolve: ScreenResolver,
+  resolve: PageResolver,
   registry: Map<string, FlowplanDef>
 ): React.ComponentType {
   return function FlowplanRunner() {
@@ -627,12 +627,12 @@ function makeFlowplanRunner(
 /**
  * Builds pageId → active annotations (expiresAt filtered) directly from each screen's
  * own pageMeta.annotations — replaces the old workspace-level `_tags.ts` sidecar file.
- * `metaByScreenId` maps a screen's final id (flowname-screenname) to its parsed PageMeta.
+ * `metaByPageId` maps a screen's final id (flowname-screenname) to its parsed PageMeta.
  */
-function buildTagsMap(metaByScreenId: Map<string, PageMeta | undefined>): Map<string, AnnotationTag[]> {
+function buildTagsMap(metaByPageId: Map<string, PageMeta | undefined>): Map<string, AnnotationTag[]> {
   const today = new Date().toISOString().slice(0, 10)
   const map = new Map<string, AnnotationTag[]>()
-  for (const [pageId, meta] of metaByScreenId) {
+  for (const [pageId, meta] of metaByPageId) {
     const active = (meta?.annotations ?? []).filter(t => !t.expiresAt || t.expiresAt > today)
     if (active.length > 0) map.set(pageId, active)
   }

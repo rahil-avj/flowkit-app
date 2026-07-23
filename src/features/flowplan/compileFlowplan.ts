@@ -17,7 +17,7 @@ import { get } from '@flowkit-shared/utils/dbHelpers'
 // patches) map onto the engine's primitives:
 //
 //   • steps[]            → ChapterConfig.pages[]  (flat, ordered, deduped)
-//   • sequential advance → interactions["<advanceId>"] = { goTo: "<nextScreenId>" }
+//   • sequential advance → interactions["<advanceId>"] = { goTo: "<nextPageId>" }
 //   • forks              → a function-valued goTo (engine calls it with {db,flowState})
 //   • mergesTo:"next"    → last branch step advances to the parent's next step
 //   • terminal fork      → last branch step advances to "__complete__"
@@ -30,7 +30,7 @@ import { get } from '@flowkit-shared/utils/dbHelpers'
 // PURE: no React, no DOM, no loader imports. Screens + the plan registry are
 // injected so this is fully unit-testable.
 
-/** Minimal resolved-screen shape the compiler needs from the workspace loader. */
+/** Minimal resolved-page shape the compiler needs from the workspace loader. */
 export interface ResolvedPage {
   id: string
   label: string
@@ -38,7 +38,7 @@ export interface ResolvedPage {
   component: React.ComponentType<any>
 }
 
-export type ScreenResolver = (pageId: string) => ResolvedPage | undefined
+export type PageResolver = (pageId: string) => ResolvedPage | undefined
 
 /**
  * Per-screen playback metadata, indexed by the COMPILED screen id (which may be
@@ -48,7 +48,7 @@ export interface CompiledStep {
   /** The compiled (possibly namespaced) screen id this step renders. */
   pageId: string
   /** Original authored pageId (pre-namespacing) — for resolver/debug. */
-  sourceScreenId: string
+  sourcePageId: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   db?: Record<string, any>
   actionNote?: string
@@ -85,7 +85,7 @@ class FlowplanCompileError extends Error {}
 // a compiled page id, "__complete__", or a function (fork) returning one.
 interface FlatStep {
   compiledId: string
-  sourceScreenId: string
+  sourcePageId: string
   page: ResolvedPage
   step: FlowStep
   next: InteractionRule['goTo']
@@ -101,7 +101,7 @@ interface FlatStep {
 function flatten(
   entries: FlowplanDef['steps'],
   parentNext: InteractionRule['goTo'],
-  resolve: ScreenResolver,
+  resolve: PageResolver,
   registry: Map<string, FlowplanDef>,
   visited: Set<string>,
   prefix: string,
@@ -111,7 +111,7 @@ function flatten(
   // step's sequential successor before wiring forks.
   const level: {
     compiledId: string
-    sourceScreenId: string
+    sourcePageId: string
     page: ResolvedPage
     step: FlowStep
   }[] = []
@@ -134,7 +134,7 @@ function flatten(
       if (!page) throw new FlowplanCompileError(`page not found: "${entry.pageId}"`)
       level.push({
         compiledId: `${pfx}${entry.pageId}`,
-        sourceScreenId: entry.pageId,
+        sourcePageId: entry.pageId,
         page,
         step: entry,
       })
@@ -157,7 +157,7 @@ function flatten(
 
     out.push({
       compiledId: cur.compiledId,
-      sourceScreenId: cur.sourceScreenId,
+      sourcePageId: cur.sourcePageId,
       page: cur.page,
       step: cur.step,
       next,
@@ -186,7 +186,7 @@ function flatten(
 function buildForkResolver(
   forks: Fork[],
   fallback: InteractionRule['goTo'],
-  resolve: ScreenResolver,
+  resolve: PageResolver,
   registry: Map<string, FlowplanDef>,
   visited: Set<string>,
   prefix: string
@@ -194,7 +194,7 @@ function buildForkResolver(
   // Precompute each fork's first compiled screen id (respecting ref namespacing).
   const branches = forks.map(fork => ({
     fork,
-    firstId: firstCompiledScreenId(fork, resolve, registry, visited, prefix),
+    firstId: firstCompiledPageId(fork, resolve, registry, visited, prefix),
   }))
   const fallbackStr = typeof fallback === 'string' ? fallback : undefined
   return ({ db }) => {
@@ -208,9 +208,9 @@ function buildForkResolver(
 }
 
 /** Resolve the compiled id of a fork branch's first screen (for navigation). */
-function firstCompiledScreenId(
+function firstCompiledPageId(
   fork: Fork,
-  _resolve: ScreenResolver,
+  _resolve: PageResolver,
   registry: Map<string, FlowplanDef>,
   _visited: Set<string>,
   prefix: string
@@ -248,7 +248,7 @@ function forkMatches(fork: Fork, db: Record<string, any>): boolean {
  */
 export function compileFlowplan(
   plan: FlowplanDef,
-  resolve: ScreenResolver,
+  resolve: PageResolver,
   registry: Map<string, FlowplanDef>,
   visited: Set<string> = new Set([plan.id])
 ): CompiledFlowplan {
@@ -299,7 +299,7 @@ export function compileFlowplan(
     }
     steps.push({
       pageId: fs.compiledId,
-      sourceScreenId: fs.sourceScreenId,
+      sourcePageId: fs.sourcePageId,
       db: fs.step.db,
       actionNote: fs.step.actionNote,
       decisionNote: fs.step.decisionNote,

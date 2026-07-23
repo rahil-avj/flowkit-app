@@ -20,7 +20,7 @@ export function cmdStatus(wsArg) {
     process.exit(1)
   }
 
-  const flowsDir = path.join(wsDir, FLOW_BOOK_DIRNAME)
+  const chaptersDir = path.join(wsDir, FLOW_BOOK_DIRNAME)
   console.log('')
   console.log(b(` Status — ${ws}`))
   console.log(d(' ────────────────────────────────────────────'))
@@ -53,10 +53,10 @@ export function cmdStatus(wsArg) {
   // Flows + screens: flowBook/<flow>/.../<screen>/<Screen>.tsx (variable depth)
   let flowCount = 0,
     screenCount = 0
-  if (fs.existsSync(flowsDir)) {
-    for (const folder of fs.readdirSync(flowsDir)) {
+  if (fs.existsSync(chaptersDir)) {
+    for (const folder of fs.readdirSync(chaptersDir)) {
       if (isNonExistent(folder)) continue
-      const full = path.join(flowsDir, folder)
+      const full = path.join(chaptersDir, folder)
       if (!fs.statSync(full).isDirectory()) continue
       const total = countScreenFiles(full)
       if (total > 0) {

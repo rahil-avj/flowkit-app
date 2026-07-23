@@ -28,9 +28,9 @@ import {
   FLOW_STORIES_DIRNAME,
 } from './config-filenames.js'
 import {
-  makeScreenId,
-  parseScreenSegments,
-  pickScreenFile,
+  makePageId,
+  parsePageSegments,
+  pickPageFile,
 } from '../../src/shared/utils/screenPathIdentity.js'
 
 // src/ directory of the flowkit package — resolved relative to this plugin file.
@@ -123,31 +123,31 @@ async function genScreens(config, cwd) {
   const found = await globFiles(`${FLOW_BOOK_DIRNAME}/**/*.tsx`, cwd)
 
   // Parse every candidate file via the shared identity module, drop non-existent
-  // ('__') entries entirely, and group by (flow, screen, variant) so ambiguous
+  // ('__') entries entirely, and group by (chapter, page, variant) so ambiguous
   // folders (multiple real candidate files for the same slot) can be resolved
-  // deterministically via pickScreenFile — same as repo mode.
-  const bySlot = new Map() // `${flow}::${screen}::${variant}` -> [{ rel, abs, fileName, info }]
+  // deterministically via pickPageFile — same as repo mode.
+  const bySlot = new Map() // `${chapter}::${page}::${variant}` -> [{ rel, abs, fileName, info }]
   for (const rel of found) {
     const segments = rel.split(/[/\\]/).slice(1) // drop the flowBook/ root segment
-    const info = parseScreenSegments(segments)
-    if (!info) continue // not a recognized screen-file extension
+    const info = parsePageSegments(segments)
+    if (!info) continue // not a recognized page-file extension
     if (info.visibility === 'non-existent') continue // '__' — excluded entirely
 
     const fileName = segments[segments.length - 1]
-    const slotKey = `${info.flow}::${info.page}::${info.variant}`
+    const slotKey = `${info.chapter}::${info.page}::${info.variant}`
     const list = bySlot.get(slotKey) ?? []
     list.push({ rel, abs: path.resolve(cwd, rel), fileName, info })
     bySlot.set(slotKey, list)
   }
 
-  // Collect structured screen entries — one per resolved (flow, screen, variant) slot.
+  // Collect structured page entries — one per resolved (chapter, page, variant) slot.
   const entries = [] // { key, flow, pageId, abs, visibility }
   for (const [, candidates] of bySlot) {
-    const { chosen } = pickScreenFile(candidates.map(c => c.fileName))
+    const { chosen } = pickPageFile(candidates.map(c => c.fileName))
     const winner = candidates.find(c => c.fileName === chosen) ?? candidates[0]
-    const { flow, screen, visibility } = winner.info
-    const key = makeScreenId(flow, screen)
-    entries.push({ key, flow, pageId: screen, abs: winner.abs, visibility })
+    const { chapter, page, visibility } = winner.info
+    const key = makePageId(chapter, page)
+    entries.push({ key, flow: chapter, pageId: page, abs: winner.abs, visibility })
   }
 
   // Apply declared pageOrder (per flow) as a display-order hint, same convention

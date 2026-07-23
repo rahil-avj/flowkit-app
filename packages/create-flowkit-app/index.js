@@ -315,9 +315,9 @@ function writeAgentsMd(dir) {
     `# ${projectName}
 
 A [FlowKit](https://github.com/rahil-avj/flowkit-app) author project — this repo is
-**content only** (screens, flowplans, mock data). The platform engine lives in
+**content only** (pages, flowplans, mock data). The platform engine lives in
 \`node_modules/flowkit/\` and is not yours to edit. FlowKit exists to let you build and
-demo realistic multi-screen product flows — with working navigation, mock data, and a
+demo realistic multi-page product flows — with working navigation, mock data, and a
 reviewer-facing simulator — without standing up a backend or a router by hand.
 
 This file is intentionally short. It tells you where to look and the rules that don't
@@ -340,43 +340,43 @@ guessing from adjacent code.
 
 ## Project layout
 
-- \`${FLOW_BOOK_DIRNAME}/<flow>/<screen-id>/<ScreenName>.tsx\` — one component per screen, default-exports
-  the screen and a named \`pageMeta\` (\`{ id, label, desc? }\`, optional
+- \`${FLOW_BOOK_DIRNAME}/<flow>/<page-id>/<PageName>.tsx\` — one component per page, default-exports
+  the page and a named \`pageMeta\` (\`{ id, label, desc? }\`, optional
   \`canEnter\`/\`canNotEnter\`: \`({ db }) => boolean\`). Receives \`PageProps\` from
   \`'flowkit'\` — \`onAction?\`, \`onNext?\`, \`onBack?\`, \`isChapter?\`, \`flowState?\`, and a
-  **read-only** \`db?\`. **All of these are \`undefined\` when the screen is previewed
+  **read-only** \`db?\`. **All of these are \`undefined\` when the page is previewed
   standalone** (outside an active flow) — always optional-chain (\`db?.user?.name\`), never
   assume they're present.
 - \`${FLOW_STORIES_DIRNAME}/<flow>.ts\` — playback scripts authored with \`defineFlow()\` from \`'flowkit'\`:
   an ordered \`steps[]\` of \`{ pageId, on?, actionNote? }\` (\`on\` matches a DOM element id
-  in the screen, wired via event delegation — no \`onClick\` needed on that element), or a
+  in the page, wired via event delegation — no \`onClick\` needed on that element), or a
   richer \`interactions\` map keyed by element id (\`{ trigger, goTo, do?, animation?, delay? }\`).
-  Conditional forks (\`forks[]\`) and db mutation both live here, not in the screen component
+  Conditional forks (\`forks[]\`) and db mutation both live here, not in the page component
   — see \`docs/CLI.md\` for the full shape.
 - \`lib/data/db.ts\` — the mock database: plain named exports, the initial state only. A
-  screen never mutates it directly — mutation happens via \`ctx.updateDb(db => { ... })\`
+  page never mutates it directly — mutation happens via \`ctx.updateDb(db => { ... })\`
   inside a flowplan's \`interactions[id].do\`, never as a module-level singleton edit.
 - \`lib/design-system/tokens.css\` — CSS custom properties for theming. Starts **empty** (no
-  UI kit pre-installed) even though scaffolded demo screens already reference \`theme-*\`
+  UI kit pre-installed) even though scaffolded demo pages already reference \`theme-*\`
   Tailwind classes — this is expected pre-kit state, not a bug. Resolve it in your first
   session (see below), not by inventing token values ad hoc.
-- \`${WORKSPACE_CONFIG_FILENAME}\` — the manifest (\`defineConfig()\` from \`'flowkit'\`): flow/screen
+- \`${WORKSPACE_CONFIG_FILENAME}\` — the manifest (\`defineConfig()\` from \`'flowkit'\`): flow/page
   ordering, \`startPage\`, \`defaultDevice\`/\`defaultOrientation\`. Check this first when a flow
-  or screen seems "missing" from the UI — it's usually an ordering/registration issue here,
-  not a bug in the screen itself.
+  or page seems "missing" from the UI — it's usually an ordering/registration issue here,
+  not a bug in the page itself.
 
 The Vite plugin (\`flowkit/vite\`) generates virtual modules
 (\`virtual:flowkit/config|screens|flowplans|workspace\`) from \`${WORKSPACE_CONFIG_FILENAME}\` plus
-filesystem globs over \`${FLOW_BOOK_DIRNAME}/\`/\`${FLOW_STORIES_DIRNAME}/\` — this is what makes screens discoverable
+filesystem globs over \`${FLOW_BOOK_DIRNAME}/\`/\`${FLOW_STORIES_DIRNAME}/\` — this is what makes pages discoverable
 without a hand-written router. \`INEFFECTIVE_DYNAMIC_IMPORT\` build warnings are expected and
-suppressed deliberately in \`vite.config.ts\` (screens are both statically listed for
+suppressed deliberately in \`vite.config.ts\` (pages are both statically listed for
 type-checking and dynamically imported for code-splitting).
 
 ## Workspaces
 
 This project is in **flat mode** — the project root is the one implicit workspace, no
 \`workspaces/\` folder. If you need more than one independent workspace (separate
-flows/screens/lib per app or client), convert to multi-workspace mode:
+flows/pages/lib per app or client), convert to multi-workspace mode:
 
 - \`npx flowkit convert:multi\` — split this project into multiple sibling workspace folders
 - After converting: \`npx flowkit create:workspace <name>\` / \`remove:workspace <name>\` /
@@ -391,10 +391,10 @@ the live, always-current command list for this project's exact mode. \`docs/CLI.
 fuller written reference.
 
 \`\`\`
-npx flowkit status                              # flow/screen/flowplan/session health snapshot
+npx flowkit status                              # flow/page/flowplan/session health snapshot
 npx flowkit check                               # validate all authored content, exits 1 on error
-npx flowkit create:screen --flow:<id> --name:<screen-id>
-npx flowkit add:step --flowplan:<id> --screen:<screen-id> [--on:<element-id>]
+npx flowkit create:page --flow:<id> --name:<page-id>
+npx flowkit add:step --flowplan:<id> --screen:<page-id> [--on:<element-id>]
 npx flowkit sessions:ls                         # list recorded sessions
 npx flowkit export                              # build standalone HTML viewer → dist/
 \`\`\`
@@ -412,32 +412,32 @@ default behavior, no exceptions. **TO** \`<task>\` **→** \`<action>\` = the on
 a common task — check here before improvising.
 
 - **NEVER** edit \`node_modules/flowkit/\` — that's the platform engine, not workspace content.
-- **NEVER** mutate \`db\` from inside a screen component — there is no mutate function on
+- **NEVER** mutate \`db\` from inside a page component — there is no mutate function on
   \`PageProps\`; \`db\` there is read-only. Mutation only happens via \`ctx.updateDb()\`
   inside a flowplan's \`interactions[id].do\`.
-- **NEVER** hand-write a new flow/screen file from scratch — copy an existing screen's
-  boilerplate (or use \`flowkit create:screen\`) so exports stay consistent with what the
+- **NEVER** hand-write a new flow/page file from scratch — copy an existing page's
+  boilerplate (or use \`flowkit create:page\`) so exports stay consistent with what the
   Vite plugin expects.
 - **NEVER** hardcode hex colors — use \`lib/design-system/tokens.css\` vars.
 - **NEVER** assume a bare \`flowkit\` binary resolves — prefer \`npx flowkit\` unless you've
   confirmed (\`which flowkit\`) a global link.
-- **ALWAYS** optional-chain \`db\`/\`onAction\`/\`onNext\`/\`onBack\`/\`flowState\` in a screen —
-  every one of them is \`undefined\` when that screen is previewed standalone, not just
+- **ALWAYS** optional-chain \`db\`/\`onAction\`/\`onNext\`/\`onBack\`/\`flowState\` in a page —
+  every one of them is \`undefined\` when that page is previewed standalone, not just
   during flow playback.
 - **ALWAYS** use Tailwind utility classes for static styling; reach for \`style={{}}\` only
   for runtime-computed values.
-- **ALWAYS** route structural changes (new screen, new flowplan step, workspace conversion)
+- **ALWAYS** route structural changes (new page, new flowplan step, workspace conversion)
   through the \`flowkit\` CLI rather than hand-editing generated wiring.
-- **TO** add a screen **→** \`flowkit create:screen --flow:<id> --name:<screen-id>\`, then
-  \`flowkit add:step --flowplan:<id> --screen:<screen-id>\` to wire it into playback.
+- **TO** add a page **→** \`flowkit create:page --flow:<id> --name:<page-id>\`, then
+  \`flowkit add:step --flowplan:<id> --screen:<page-id>\` to wire it into playback.
 - **TO** wire a tap interaction **→** give the element a plain DOM \`id\` and add a matching
   \`{ pageId, on: '<id>' }\` step in the flowplan (no \`onClick\` needed) — or, for
   conditional/db-mutating logic, add an \`interactions['<id>']\` entry with \`goTo\`/\`do\` in
   the flowplan instead.
-- **TO** navigate imperatively from inside a screen (async/state-driven, not a tap) **→**
+- **TO** navigate imperatively from inside a page (async/state-driven, not a tap) **→**
   call the injected \`onAction?.('name')\` / \`onNext?.()\` / \`onBack?.()\` — these only fire
   during flow playback (\`isChapter\` is true); they're safely no-ops (undefined) otherwise.
-- **TO** gate access to a screen **→** export \`canEnter\`/\`canNotEnter\` on \`pageMeta\`:
+- **TO** gate access to a page **→** export \`canEnter\`/\`canNotEnter\` on \`pageMeta\`:
   \`({ db }) => boolean\`.
 - **TO** add a reviewer-facing toggle **→** add a \`SimulatorControl\` object
   (\`{ label, path, type, ... }\`) to the flowplan's \`simulator.controls\` array — this is
@@ -465,7 +465,7 @@ writing any code. Keep it conversational, one or two questions at a time, not a 
 
 Once you have these answers, act on them immediately — set up
 \`lib/design-system/tokens.css\` and whatever component approach fits, then get to the
-actual flows/screens. Don't re-run this interview later; refer back to what you learned.
+actual flows/pages. Don't re-run this interview later; refer back to what you learned.
 `
   )
 }
@@ -509,10 +509,10 @@ npm run build    # production build
 
 ## Project layout
 
-- \`${FLOW_BOOK_DIRNAME}/\` — screen components, organized by flow then screen name
-- \`${FLOW_STORIES_DIRNAME}/\` — playback scripts (sequences of screens with interaction definitions)
+- \`${FLOW_BOOK_DIRNAME}/\` — page components, organized by flow then page name
+- \`${FLOW_STORIES_DIRNAME}/\` — playback scripts (sequences of pages with interaction definitions)
 - \`lib/\` — shared data, components, and utilities
-- \`${WORKSPACE_CONFIG_FILENAME}\` — flow and screen registration
+- \`${WORKSPACE_CONFIG_FILENAME}\` — flow and page registration
 
 See \`docs/CLI.md\` for the full \`flowkit\` CLI command reference, and \`AGENTS.md\`
 if you're working with an AI coding agent on this project.

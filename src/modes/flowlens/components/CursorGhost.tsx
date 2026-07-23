@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 interface Props {
   session: SessionExport
   currentSequenceId: number
-  activeScreenId: string
+  activePageId: string
   accent: string
 }
 
@@ -14,7 +14,7 @@ interface Props {
  * positioned over the live device mockup (#mockup-container in PreviewCanvas).
  * Renders via portal into the mockup so it tracks the real, zoomed screen.
  */
-export default function CursorGhost({ session, currentSequenceId, activeScreenId, accent }: Props) {
+export default function CursorGhost({ session, currentSequenceId, activePageId, accent }: Props) {
   const [host, setHost] = useState<HTMLElement | null>(null)
 
   // The mockup container is owned by PreviewCanvas; find the screen surface to
@@ -24,16 +24,16 @@ export default function CursorGhost({ session, currentSequenceId, activeScreenId
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHost(document.querySelector<HTMLElement>('#mockup-container'))
     return () => setHost(null)
-  }, [activeScreenId])
+  }, [activePageId])
 
   const cursor = useMemo(() => {
     const samples = session.cursorSamples ?? []
     if (samples.length === 0) return null
     const before = samples.filter(s => s.sequenceId <= currentSequenceId)
     const sample = before.length ? before[before.length - 1] : samples[0]
-    if (sample.pageId !== activeScreenId) return null
+    if (sample.pageId !== activePageId) return null
     return { x: sample.x / sample.screenW, y: sample.y / sample.screenH }
-  }, [session.cursorSamples, currentSequenceId, activeScreenId])
+  }, [session.cursorSamples, currentSequenceId, activePageId])
 
   if (!host || !cursor) return null
 

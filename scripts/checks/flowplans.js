@@ -4,7 +4,7 @@
 //
 // Known gap, deliberate: fork-nested steps (the `label:`+`steps:[...]` sub-objects
 // scripts/authoring/promote-flow.js text-matches by regex) are NOT walked by
-// `flowplan/invalid-screen` below — forks aren't part of FlowplanDef's typed `steps[]`
+// `flowplan/invalid-page` below — forks aren't part of FlowplanDef's typed `steps[]`
 // union (src/types/index.ts's FlowplanStepEntry is FlowStep | FlowplanRef, neither of
 // which models a fork's nested structure), and promote-flow.js's own fork-detection is
 // itself regex-based rather than a stable, reusable AST shape. Revisit once forks have a
@@ -16,8 +16,8 @@ import { FLOW_BOOK_DIRNAME, FLOW_STORIES_DIRNAME } from '../helpers/config-filen
 import {
   isNonExistent,
   resolveVisibility,
-  parseScreenSegments,
-  makeScreenId,
+  parsePageSegments,
+  makePageId,
 } from '../../src/shared/utils/screenPathIdentity.js'
 
 function listFlowplanFiles(wsDir) {
@@ -30,27 +30,27 @@ function listFlowplanFiles(wsDir) {
 }
 
 /** True for a plain FlowStep entry (has pageId) — excludes FlowplanRef ({ ref }) entries. */
-function isScreenStep(entry) {
+function isPageStep(entry) {
   return entry && typeof entry === 'object' && typeof entry.pageId === 'string'
 }
 
 const SCREEN_EXTS = ['.tsx', '.jsx']
 
 /**
- * Recursively walks the flow-designs root collecting every real screen-candidate file at
+ * Recursively walks the flow-designs root collecting every real page-candidate file at
  * any depth ≥1, mirroring checks/screens.js's walk. `__`-prefixed folders/files are pruned
  * from traversal entirely (never included, as if they don't exist) — so a flowplan step
- * referencing a `__`-hidden screen naturally fails flowplan/invalid-screen below with no
+ * referencing a `__`-hidden page naturally fails flowplan/invalid-page below with no
  * special-casing needed.
  */
-function walkScreenFiles(dir, segments) {
+function walkPageFiles(dir, segments) {
   const results = []
   for (const entry of fs.readdirSync(dir)) {
     if (isNonExistent(entry)) continue
     const full = path.join(dir, entry)
     const nextSegments = [...segments, entry]
     if (fs.statSync(full).isDirectory()) {
-      results.push(...walkScreenFiles(full, nextSegments))
+      results.push(...walkPageFiles(full, nextSegments))
     } else if (SCREEN_EXTS.some(ext => entry.endsWith(ext))) {
       results.push(nextSegments)
     }
@@ -58,17 +58,17 @@ function walkScreenFiles(dir, segments) {
   return results
 }
 
-/** Collects every known screen id, in the collision-proof `flow-screen` composite form
- * (makeScreenId), across the whole workspace. `__`-hidden screens are never included. */
-function collectAllScreenIds(wsDir) {
-  const flowsDir = path.join(wsDir, FLOW_BOOK_DIRNAME)
+/** Collects every known page id, in the collision-proof `chapters-page` composite form
+ * (makePageId), across the whole workspace. `__`-hidden screens are never included. */
+function collectAllPageIds(wsDir) {
+  const chaptersDir = path.join(wsDir, FLOW_BOOK_DIRNAME)
   const ids = new Set()
-  if (!fs.existsSync(flowsDir)) return ids
-  for (const segments of walkScreenFiles(flowsDir, [])) {
+  if (!fs.existsSync(chaptersDir)) return ids
+  for (const segments of walkPageFiles(chaptersDir, [])) {
     if (resolveVisibility(segments) === 'non-existent') continue // belt-and-suspenders
-    const parsed = parseScreenSegments(segments)
+    const parsed = parsePageSegments(segments)
     if (!parsed) continue
-    ids.add(makeScreenId(parsed.flow, parsed.page))
+    ids.add(makePageId(parsed.chapter, parsed.page))
   }
   return ids
 }
@@ -92,7 +92,7 @@ export async function checkFlowplans(wsDir, report) {
     return
   }
 
-  const knownScreenIds = collectAllScreenIds(wsDir)
+  const knownPageIds = collectAllPageIds(wsDir)
 
   for (const { file, fullPath } of files) {
     const relPath = path.relative(wsDir, fullPath)
@@ -125,21 +125,21 @@ export async function checkFlowplans(wsDir, report) {
         severity: 'warning',
         file: relPath,
         message: 'Flowplan has zero steps.',
-        fix: `flowkit add:step --flowplan:${expectedId} --screen:<id>`,
+        fix: `flowkit add:step --flowplan:${expectedId} --page:<id>`,
       })
       continue
     }
 
     steps.forEach((step, i) => {
-      if (!isScreenStep(step)) return // a FlowplanRef ({ ref }) — nothing to validate here
+      if (!isPageStep(step)) return // a FlowplanRef ({ ref }) — nothing to validate here
 
-      if (!knownScreenIds.has(step.pageId)) {
+      if (!knownPageIds.has(step.pageId)) {
         report.add({
-          ruleId: 'flowplan/invalid-screen',
+          ruleId: 'flowplan/invalid-page',
           severity: 'error',
           file: relPath,
-          message: `step[${i}]'s pageId '${step.pageId}' is not a real screen in this workspace. Expected the 'flow-screen' composite id form (see makeScreenId).`,
-          fix: 'Update the step to reference a real, composite flow-screen id.',
+          message: `step[${i}]'s pageId '${step.pageId}' is not a real page in this workspace. Expected the 'chapter-page' composite id form (see makePageId).`,
+          fix: 'Update the step to reference a real, composite chapter-page id.',
         })
       }
 

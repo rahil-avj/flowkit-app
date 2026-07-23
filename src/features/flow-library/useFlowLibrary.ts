@@ -24,9 +24,9 @@ export interface FlowSummary {
   stepCount: number
   forkCount: number
   /** Compiled screen ids this flow touches (Starts/Includes filtering). */
-  screenIds: string[]
+  pageIds: string[]
   /** First step's pageId (for the "Starts" group). */
-  firstScreenId?: string
+  firstPageId?: string
   def: FlowplanDef
 }
 
@@ -56,7 +56,7 @@ function analyze(
   }
 }
 
-function firstScreenId(
+function firstPageId(
   def: FlowplanDef,
   registry: Map<string, FlowplanDef>,
   seen: Set<string>
@@ -66,7 +66,7 @@ function firstScreenId(
   if (isFlowplanRef(first)) {
     if (seen.has(first.ref)) return undefined
     const ref = registry.get(first.ref)
-    return ref ? firstScreenId(ref, registry, new Set([...seen, first.ref])) : undefined
+    return ref ? firstPageId(ref, registry, new Set([...seen, first.ref])) : undefined
   }
   return (first as FlowStep).pageId
 }
@@ -79,7 +79,7 @@ export interface FlowLibraryData {
    * Union of all screen ids referenced by any flowplan step.
    * Used by ScreensHierarchy to dim uncovered screens.
    */
-  coveredScreenIds: Set<string>
+  coveredPageIds: Set<string>
   /** O(1) screen lookup by id. Derived from views. */
   screenById: Map<string, WireframeView>
 }
@@ -90,17 +90,17 @@ export function useFlowLibrary(): FlowLibraryData {
 
   return useMemo(() => {
     const config = getWorkspaceConfig(activeWorkspace)
-    const order = Object.values(config.projects ?? {}).flatMap(p => p.flows ?? p.modules ?? [])
+    const order = Object.values(config.projects ?? {}).flatMap(p => p.chapters ?? p.modules ?? [])
 
     const summaries: FlowSummary[] = []
     const tagSet = new Set<string>()
-    const coveredScreenIds = new Set<string>()
+    const coveredPageIds = new Set<string>()
 
     for (const def of registry.values()) {
       const acc = { steps: 0, forks: 0, pages: new Set<string>() }
       analyze(def.steps, registry, new Set([def.id]), acc)
       ;(def.tags ?? []).forEach(t => tagSet.add(t))
-      acc.pages.forEach(id => coveredScreenIds.add(id))
+      acc.pages.forEach(id => coveredPageIds.add(id))
       summaries.push({
         id: def.id,
         name: def.name,
@@ -108,8 +108,8 @@ export function useFlowLibrary(): FlowLibraryData {
         tags: def.tags ?? [],
         stepCount: acc.steps,
         forkCount: acc.forks,
-        screenIds: [...acc.pages],
-        firstScreenId: firstScreenId(def, registry, new Set([def.id])),
+        pageIds: [...acc.pages],
+        firstPageId: firstPageId(def, registry, new Set([def.id])),
         def,
       })
     }
@@ -125,6 +125,6 @@ export function useFlowLibrary(): FlowLibraryData {
 
     const screenById = new Map<string, WireframeView>(views.map(v => [v.id, v]))
 
-    return { summaries, allTags: [...tagSet].sort(), coveredScreenIds, screenById }
+    return { summaries, allTags: [...tagSet].sort(), coveredPageIds, screenById }
   }, [registry, views, activeWorkspace])
 }

@@ -36,13 +36,13 @@ function useGoToHandlers({ flows, activeViewId, navigateTo, onClose }: Props) {
       } else if (meta?.kind === 'flow') {
         dispatchExplorerCommand({ type: 'switchTab', tab: 'screens' })
         if (meta.flowId) {
-          const firstScreenId = meta.firstScreenId ?? ''
+          const firstPageId = meta.firstPageId ?? ''
           dispatchExplorerCommand({
             type: 'expandAndHighlight',
             flowId: meta.flowId,
-            pageId: firstScreenId,
+            pageId: firstPageId,
           })
-          if (firstScreenId) navigateTo(firstScreenId)
+          if (firstPageId) navigateTo(firstPageId)
         }
       } else if (meta?.kind === 'flowplan') {
         dispatchExplorerCommand({ type: 'switchTab', tab: 'flows' })

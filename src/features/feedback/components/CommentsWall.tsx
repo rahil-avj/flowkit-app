@@ -90,7 +90,7 @@ export default function CommentsWall() {
           <CommentGroup
             key={pageId}
             pageId={pageId}
-            screenLabel={screenComments[0].screenLabel}
+            pageLabel={screenComments[0].pageLabel}
             screenExists={screenExists}
             isCurrentScreen={isCurrentScreen}
             isFirst={index === 0}

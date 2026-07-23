@@ -190,7 +190,7 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
   const openSheet = useCallback(() => setActiveTab(t => t ?? 'explore'), [])
 
   const activeView = views.find(v => v.id === activeViewId)
-  const screenLabel = activeView?.label ?? activeViewId
+  const pageLabel = activeView?.label ?? activeViewId
   const kitTheme = workspaceConfig.kit ?? 'apple'
 
   const colorFilter = colorBlindMode !== 'none' ? COLOR_BLIND_FILTERS[colorBlindMode] : undefined
@@ -289,10 +289,10 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
       <MobilePlaybackBar
         onStop={() => {
           if (!playback?.isGating) return
-          const sourceScreenId =
-            playback.activeFlowplan?.__flowplan.steps[playback.currentStepIndex]?.sourceScreenId
+          const sourcePageId =
+            playback.activeFlowplan?.__flowplan.steps[playback.currentStepIndex]?.sourcePageId
           playback.exit()
-          navigateTo(sourceScreenId ?? firstViewId ?? 'home')
+          navigateTo(sourcePageId ?? firstViewId ?? 'home')
         }}
       />
 
@@ -320,7 +320,7 @@ export default function MobileCanvas({ flows, views }: MobileCanvasProps) {
           className="pointer-events-none text-ui-sm font-semibold text-white/40 leading-tight"
           style={{ textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
         >
-          {screenLabel}
+          {pageLabel}
         </span>
       </div>
 

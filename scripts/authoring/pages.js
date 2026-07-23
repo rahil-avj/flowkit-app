@@ -1,4 +1,4 @@
-// Authoring command: CRUD for screens within a flow (create/remove/rename/move/list/info).
+// Authoring command: CRUD for pages within a flow (create/remove/rename/move/list/info).
 import fs from 'fs'
 import path from 'path'
 import { parseStringFlag } from '../helpers/args.js'
@@ -13,19 +13,19 @@ import { asJsStringLiteral, assertKebab } from '../helpers/validate.js'
 import { g, r, b, d, c } from '../helpers/colors.js'
 import {
   readWorkspaceConfig,
-  addScreen,
-  removeScreen,
-  renameScreen,
-  moveScreen,
-  screenExists,
-  listScreens,
+  addPage,
+  removePage,
+  renamePage,
+  movePage,
+  pageExists,
+  listPages,
 } from '../authoring-support/config-patch.js'
 import {
   WORKSPACE_CONFIG_FILENAME,
   FLOW_BOOK_DIRNAME,
   FLOW_STORIES_DIRNAME,
 } from '../helpers/config-filenames.js'
-import { makeScreenId, isNonExistent, isHidden } from '../../src/shared/utils/screenPathIdentity.js'
+import { makePageId, isNonExistent, isHidden } from '../../src/shared/utils/screenPathIdentity.js'
 
 /** kebab-case → PascalCase: 'sign-in' → 'SignIn' */
 function toPascal(kebab) {
@@ -43,19 +43,19 @@ function toTitleLabel(kebab) {
     .join(' ')
 }
 
-function screenTemplate(pascalName, label, isJs) {
+function pageTemplate(pascalName, label, isJs) {
   // onNext/db are prefixed with _ — the placeholder body doesn't use either yet,
   // and this project's tsconfig has noUnusedLocals: true, which flags unused
   // destructured bindings (TS6198) even though they're real, usable props the
-  // author will wire up as they build the screen out. Not applicable in JS
+  // author will wire up as they build the page out. Not applicable in JS
   // mode (no tsconfig noUnusedLocals to satisfy), so the JS variant skips it.
   const header = isJs ? '' : `${resolveTypeImport('PageProps')}\n\n`
   const propsDestructure = isJs ? '{ onNext, db }' : '{ onNext: _onNext, db: _db }'
   const propsType = isJs ? '' : ': PageProps'
-  return `${header}export default function ${pascalName}Screen(${propsDestructure}${propsType}) {
+  return `${header}export default function ${pascalName}Page(${propsDestructure}${propsType}) {
   return (
     <div className="flex flex-col h-full bg-theme-base">
-      {/* Build your screen here */}
+      {/* Build your page here */}
     </div>
   )
 }
@@ -79,7 +79,7 @@ function findFlowplanRefs(wsDir, pageId) {
     .map(f => f.replace('.ts', ''))
 }
 
-export async function cmdCreateScreen(_val, args = []) {
+export async function cmdCreatePage(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
@@ -88,30 +88,28 @@ export async function cmdCreateScreen(_val, args = []) {
   let label = parseStringFlag(args, 'label')
 
   if (!flowId || !pageId) {
-    console.error(r('✗ --flow:<flow-id> and --name:<screen-id> are required'))
-    console.error(
-      d('  Example: flowkit create:screen --flow:auth --name:sign-in --label:"Sign In"')
-    )
+    console.error(r('✗ --flow:<flow-id> and --name:<page-id> are required'))
+    console.error(d('  Example: flowkit create:page --flow:auth --name:sign-in --label:"Sign In"'))
     process.exit(1)
   }
 
   try {
     flowId = assertKebab(flowId, 'flow')
-    pageId = assertKebab(pageId, 'screen name')
+    pageId = assertKebab(pageId, 'page name')
   } catch (e) {
     console.error(r(`✗ ${e.message}`))
     process.exit(1)
   }
 
   const config = readWorkspaceConfig(wsDir)
-  if (!config.flows.includes(flowId)) {
+  if (!config.chapters.includes(flowId)) {
     console.error(r(`✗ Flow '${flowId}' not found in workspace '${wsName}'`))
-    console.error(d(`  Create it first: flowkit create:flow --name:${flowId}`))
+    console.error(d(`  Create it first: flowkit create:chapter --name:${flowId}`))
     process.exit(1)
   }
 
-  if (screenExists(wsDir, pageId)) {
-    console.error(r(`✗ Screen '${pageId}' already exists in workspace '${wsName}'`))
+  if (pageExists(wsDir, pageId)) {
+    console.error(r(`✗ Page '${pageId}' already exists in workspace '${wsName}'`))
     process.exit(1)
   }
 
@@ -120,31 +118,31 @@ export async function cmdCreateScreen(_val, args = []) {
   const isJs = detectWorkspaceLanguage(wsDir) === 'js'
   const ext = isJs ? 'jsx' : 'tsx'
   const pascalName = toPascal(pageId)
-  // The CLI always creates the standard 2-level shape (flow/screen, no cosmetic
+  // The CLI always creates the standard 2-level shape (flow/page, no cosmetic
   // folders in between) — variable-depth nesting is a hand-authoring capability,
   // not something this command needs to produce itself.
-  const screenDir = path.join(wsDir, FLOW_BOOK_DIRNAME, flowId, pageId)
-  // "Screen" suffix is no longer REQUIRED anywhere (screenPathIdentity.js derives
+  const pageDir = path.join(wsDir, FLOW_BOOK_DIRNAME, flowId, pageId)
+  // "Page" suffix is no longer REQUIRED anywhere (screenPathIdentity.js derives
   // identity from folders, not filename) — but we keep generating it as the CLI's
   // own friendly convention default, since it costs nothing and reads clearly.
-  const screenFile = path.join(screenDir, `${pascalName}Screen.${ext}`)
+  const pageFile = path.join(pageDir, `${pascalName}Page.${ext}`)
   // Collision-proof display/registration id: `${flowId}-${pageId}` — see
-  // screenPathIdentity.js's makeScreenId(). config-patch.js's pageOrder map is
+  // screenPathIdentity.js's makePageId(). config-patch.js's pageOrder map is
   // already flow-scoped (pageOrder[flowId] = [...]) so it stores the bare
-  // pageId internally without risk of cross-flow collision; makeScreenId is
+  // pageId internally without risk of cross-flow collision; makePageId is
   // only needed where an id is shown to the user or would be compared globally.
-  const fullScreenId = makeScreenId(flowId, pageId)
+  const fullPageId = makePageId(flowId, pageId)
 
   try {
-    fs.mkdirSync(screenDir, { recursive: true })
-    fs.writeFileSync(screenFile, screenTemplate(pascalName, label, isJs))
-    addScreen(wsDir, flowId, pageId)
+    fs.mkdirSync(pageDir, { recursive: true })
+    fs.writeFileSync(pageFile, pageTemplate(pascalName, label, isJs))
+    addPage(wsDir, flowId, pageId)
     console.log(g(`✓ Directory:  ${FLOW_BOOK_DIRNAME}/${flowId}/${pageId}/`))
     console.log(
-      g(`✓ Screen:     ${FLOW_BOOK_DIRNAME}/${flowId}/${pageId}/${pascalName}Screen.${ext}`)
+      g(`✓ Page:       ${FLOW_BOOK_DIRNAME}/${flowId}/${pageId}/${pascalName}Page.${ext}`)
     )
     console.log(
-      g(`✓ Registered: ${WORKSPACE_CONFIG_FILENAME} → pageOrder.${flowId}[] (id: ${fullScreenId})`)
+      g(`✓ Registered: ${WORKSPACE_CONFIG_FILENAME} → pageOrder.${flowId}[] (id: ${fullPageId})`)
     )
     console.log('')
     console.log(
@@ -153,13 +151,13 @@ export async function cmdCreateScreen(_val, args = []) {
       )
     )
   } catch (e) {
-    if (fs.existsSync(screenDir)) fs.rmSync(screenDir, { recursive: true, force: true })
+    if (fs.existsSync(pageDir)) fs.rmSync(pageDir, { recursive: true, force: true })
     console.error(r(`✗ Failed: ${e.message}`))
     process.exit(1)
   }
 }
 
-export async function cmdRemoveScreen(_val, args = []) {
+export async function cmdRemovePage(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
@@ -167,12 +165,12 @@ export async function cmdRemoveScreen(_val, args = []) {
   let pageId = parseStringFlag(args, 'name')
 
   if (!flowId || !pageId) {
-    console.error(r('✗ --flow:<flow-id> and --name:<screen-id> are required'))
+    console.error(r('✗ --flow:<flow-id> and --name:<page-id> are required'))
     process.exit(1)
   }
   try {
     flowId = assertKebab(flowId, 'flow')
-    pageId = assertKebab(pageId, 'screen name')
+    pageId = assertKebab(pageId, 'page name')
   } catch (e) {
     console.error(r(`✗ ${e.message}`))
     process.exit(1)
@@ -181,27 +179,27 @@ export async function cmdRemoveScreen(_val, args = []) {
   const refs = findFlowplanRefs(wsDir, pageId)
   if (refs.length > 0) {
     console.log(r(`⚠  Warning: flowplan(s) reference '${pageId}': ${refs.join(', ')}`))
-    console.log(r('   Update those flowplans after removing this screen.'))
+    console.log(r('   Update those flowplans after removing this page.'))
   }
 
-  removeScreen(wsDir, flowId, pageId)
+  removePage(wsDir, flowId, pageId)
 
   // Keeping the CLI's own 2-level assumption for locating the folder to delete
-  // (flowBook/<flow>/<screen>/) — a screen this command created is always
-  // here; a hand-authored screen nested deeper (cosmetic folders in between)
+  // (flowBook/<flow>/<page>/) — a page this command created is always
+  // here; a hand-authored page nested deeper (cosmetic folders in between)
   // is an advanced/manual case this command does not attempt to locate or
   // remove in this pass.
-  const screenDir = path.join(wsDir, FLOW_BOOK_DIRNAME, flowId, pageId)
-  if (fs.existsSync(screenDir)) fs.rmSync(screenDir, { recursive: true, force: true })
+  const pageDir = path.join(wsDir, FLOW_BOOK_DIRNAME, flowId, pageId)
+  if (fs.existsSync(pageDir)) fs.rmSync(pageDir, { recursive: true, force: true })
 
-  const fullScreenId = makeScreenId(flowId, pageId)
+  const fullPageId = makePageId(flowId, pageId)
   console.log(g(`✓ Removed:      ${FLOW_BOOK_DIRNAME}/${flowId}/${pageId}/`))
   console.log(
-    g(`✓ Unregistered: ${WORKSPACE_CONFIG_FILENAME} → pageOrder.${flowId}[] (id: ${fullScreenId})`)
+    g(`✓ Unregistered: ${WORKSPACE_CONFIG_FILENAME} → pageOrder.${flowId}[] (id: ${fullPageId})`)
   )
 }
 
-export async function cmdRenameScreen(_val, args = []) {
+export async function cmdRenamePage(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
@@ -223,36 +221,36 @@ export async function cmdRenameScreen(_val, args = []) {
     process.exit(1)
   }
 
-  // Same 2-level assumption as cmdRemoveScreen/cmdMoveScreen — see comment there.
+  // Same 2-level assumption as cmdRemovePage/cmdMovePage — see comment there.
   const oldDir = path.join(wsDir, FLOW_BOOK_DIRNAME, flowId, oldId)
   const newDir = path.join(wsDir, FLOW_BOOK_DIRNAME, flowId, newId)
 
   if (!fs.existsSync(oldDir)) {
-    console.error(r(`✗ Screen directory not found: ${FLOW_BOOK_DIRNAME}/${flowId}/${oldId}/`))
+    console.error(r(`✗ Page directory not found: ${FLOW_BOOK_DIRNAME}/${flowId}/${oldId}/`))
     process.exit(1)
   }
-  if (newId !== oldId && screenExists(wsDir, newId)) {
-    console.error(r(`✗ Screen '${newId}' already exists in workspace '${wsName}'`))
+  if (newId !== oldId && pageExists(wsDir, newId)) {
+    console.error(r(`✗ Page '${newId}' already exists in workspace '${wsName}'`))
     process.exit(1)
   }
 
-  // The "Screen" suffix is no longer a REQUIREMENT for hand-authored files, but
-  // this rename command still assumes it because the CLI's own create:screen
+  // The "Page" suffix is no longer a REQUIREMENT for hand-authored files, but
+  // this rename command still assumes it because the CLI's own create:page
   // always generates it — this regex-based function-name patch only needs to
   // stay in sync with what this file itself produces, not with every possible
-  // hand-authored filename. A screen that was hand-renamed away from the
-  // "Screen" suffix convention won't be found here and rename will fall through
+  // hand-authored filename. A page that was hand-renamed away from the
+  // "Page" suffix convention won't be found here and rename will fall through
   // to the "not found" branch below (fileContentPatched stays false, no crash).
   const oldPascal = toPascal(oldId)
   const newPascal = toPascal(newId)
   const ext =
-    ['tsx', 'jsx'].find(e => fs.existsSync(path.join(oldDir, `${oldPascal}Screen.${e}`))) ?? 'tsx'
-  const oldFile = path.join(oldDir, `${oldPascal}Screen.${ext}`)
-  const newFile = path.join(oldDir, `${newPascal}Screen.${ext}`)
+    ['tsx', 'jsx'].find(e => fs.existsSync(path.join(oldDir, `${oldPascal}Page.${e}`))) ?? 'tsx'
+  const oldFile = path.join(oldDir, `${oldPascal}Page.${ext}`)
+  const newFile = path.join(oldDir, `${newPascal}Page.${ext}`)
 
   // Steps below mutate the filesystem and then the config; if any step past
   // the first throws, roll back everything already applied so a failure never
-  // leaves the screen file/dir renamed while workspace.ts still points at the
+  // leaves the page file/dir renamed while workspace.ts still points at the
   // old id (or vice versa).
   let fileContentPatched = false
   let filePatchedBackup = null
@@ -262,8 +260,8 @@ export async function cmdRenameScreen(_val, args = []) {
     if (fs.existsSync(oldFile)) {
       filePatchedBackup = fs.readFileSync(oldFile, 'utf8')
       const patched = filePatchedBackup.replace(
-        new RegExp(`export default function ${oldPascal}Screen\\b`),
-        `export default function ${newPascal}Screen`
+        new RegExp(`export default function ${oldPascal}Page\\b`),
+        `export default function ${newPascal}Page`
       )
       fs.writeFileSync(oldFile, patched)
       fileContentPatched = true
@@ -274,7 +272,7 @@ export async function cmdRenameScreen(_val, args = []) {
     }
     fs.renameSync(oldDir, newDir)
     dirRenamed = true
-    renameScreen(wsDir, flowId, oldId, newId)
+    renamePage(wsDir, flowId, oldId, newId)
   } catch (e) {
     if (dirRenamed) fs.renameSync(newDir, oldDir)
     if (fileRenamed) fs.renameSync(newFile, oldFile)
@@ -288,7 +286,7 @@ export async function cmdRenameScreen(_val, args = []) {
   const refs = findFlowplanRefs(wsDir, oldId)
   if (refs.length > 0) {
     console.log(r(`⚠  Warning: flowplan(s) still reference '${oldId}': ${refs.join(', ')}`))
-    console.log(r(`   Update step screenIds from '${oldId}' to '${newId}'.`))
+    console.log(r(`   Update step pageIds from '${oldId}' to '${newId}'.`))
   }
 
   console.log(
@@ -296,15 +294,15 @@ export async function cmdRenameScreen(_val, args = []) {
       `✓ Renamed:   ${FLOW_BOOK_DIRNAME}/${flowId}/${oldId}/ → ${FLOW_BOOK_DIRNAME}/${flowId}/${newId}/`
     )
   )
-  console.log(g(`✓ Renamed:   ${oldPascal}Screen.${ext} → ${newPascal}Screen.${ext}`))
+  console.log(g(`✓ Renamed:   ${oldPascal}Page.${ext} → ${newPascal}Page.${ext}`))
   console.log(
     g(
-      `✓ Updated:   ${WORKSPACE_CONFIG_FILENAME} → pageOrder.${flowId}[] (id: ${makeScreenId(flowId, oldId)} → ${makeScreenId(flowId, newId)})`
+      `✓ Updated:   ${WORKSPACE_CONFIG_FILENAME} → pageOrder.${flowId}[] (id: ${makePageId(flowId, oldId)} → ${makePageId(flowId, newId)})`
     )
   )
 }
 
-export async function cmdMoveScreen(_val, args = []) {
+export async function cmdMovePage(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
@@ -313,7 +311,7 @@ export async function cmdMoveScreen(_val, args = []) {
   let toFlow = parseStringFlag(args, 'to-flow')
 
   if (!pageId || !fromFlow || !toFlow) {
-    console.error(r('✗ --name:<screen-id> --from-flow:<id> --to-flow:<id> are required'))
+    console.error(r('✗ --name:<page-id> --from-flow:<id> --to-flow:<id> are required'))
     process.exit(1)
   }
   try {
@@ -326,21 +324,21 @@ export async function cmdMoveScreen(_val, args = []) {
   }
 
   if (fromFlow === toFlow) {
-    console.error(r(`✗ Screen '${pageId}' is already in flow '${fromFlow}'`))
+    console.error(r(`✗ Page '${pageId}' is already in flow '${fromFlow}'`))
     process.exit(1)
   }
 
-  // Same 2-level assumption as cmdRemoveScreen/cmdRenameScreen — see comment there.
+  // Same 2-level assumption as cmdRemovePage/cmdRenamePage — see comment there.
   const fromDir = path.join(wsDir, FLOW_BOOK_DIRNAME, fromFlow, pageId)
   const toDir = path.join(wsDir, FLOW_BOOK_DIRNAME, toFlow, pageId)
 
   if (!fs.existsSync(fromDir)) {
-    console.error(r(`✗ Screen not found: ${FLOW_BOOK_DIRNAME}/${fromFlow}/${pageId}/`))
+    console.error(r(`✗ Page not found: ${FLOW_BOOK_DIRNAME}/${fromFlow}/${pageId}/`))
     process.exit(1)
   }
   if (fs.existsSync(toDir)) {
     console.error(
-      r(`✗ Screen already exists at destination: ${FLOW_BOOK_DIRNAME}/${toFlow}/${pageId}/`)
+      r(`✗ Page already exists at destination: ${FLOW_BOOK_DIRNAME}/${toFlow}/${pageId}/`)
     )
     process.exit(1)
   }
@@ -348,12 +346,12 @@ export async function cmdMoveScreen(_val, args = []) {
   const toFlowDir = path.join(wsDir, FLOW_BOOK_DIRNAME, toFlow)
   if (!fs.existsSync(toFlowDir)) {
     console.error(r(`✗ Destination flow '${toFlow}' directory not found`))
-    console.error(d(`  Create it first: flowkit create:flow --name:${toFlow}`))
+    console.error(d(`  Create it first: flowkit create:chapter --name:${toFlow}`))
     process.exit(1)
   }
 
   fs.renameSync(fromDir, toDir)
-  moveScreen(wsDir, pageId, fromFlow, toFlow)
+  movePage(wsDir, pageId, fromFlow, toFlow)
 
   console.log(
     g(
@@ -362,30 +360,30 @@ export async function cmdMoveScreen(_val, args = []) {
   )
   console.log(
     g(
-      `✓ Updated: ${WORKSPACE_CONFIG_FILENAME} (removed '${makeScreenId(fromFlow, pageId)}' from '${fromFlow}', added '${makeScreenId(toFlow, pageId)}' to '${toFlow}')`
+      `✓ Updated: ${WORKSPACE_CONFIG_FILENAME} (removed '${makePageId(fromFlow, pageId)}' from '${fromFlow}', added '${makePageId(toFlow, pageId)}' to '${toFlow}')`
     )
   )
 }
 
 /**
- * Registered screenIds are the bare screen-folder name (pageOrder is keyed
- * per-flow already, so no makeScreenId() prefix is stored internally — see
- * config-patch.js). A hidden screen's folder is literally named '_something',
+ * Registered pageIds are the bare page-folder name (pageOrder is keyed
+ * per-flow already, so no makePageId() prefix is stored internally — see
+ * config-patch.js). A hidden page's folder is literally named '_something',
  * so the registered pageId itself carries the single-'_' prefix; this just
  * re-uses screenPathIdentity.js's isHidden() on that raw id string.
  */
-function isHiddenScreenId(pageId) {
+function isHiddenPageId(pageId) {
   return isHidden(pageId)
 }
 
 /**
  * Walks flowBook/ on disk looking for '__'-prefixed folder/file segments —
  * non-existent items are excluded from pageOrder entirely (they're not
- * "registered" screens at all, by design), so `--gone` is the one listing mode
+ * "registered" pages at all, by design), so `--gone` is the one listing mode
  * that can't be answered from workspace config and must scan the filesystem
  * directly. Returns a flat list of { flow, relPath } — relPath is the path
  * under flowBook/<flow>/ for display, kept as raw segments (not otherwise
- * parsed/identified) since a non-existent item has no real screen id.
+ * parsed/identified) since a non-existent item has no real page id.
  */
 function findGoneItems(wsDir) {
   const root = path.join(wsDir, FLOW_BOOK_DIRNAME)
@@ -425,14 +423,14 @@ function findGoneItems(wsDir) {
   return results
 }
 
-export async function cmdListScreens(_val, args = []) {
+export async function cmdListPages(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
   const filterFlow = parseStringFlag(args, 'flow')
   // Presence-flags, consistent with the `args.includes('--flag')` convention
   // used elsewhere in this codebase (e.g. scripts/checks/index.js's --json,
-  // scripts/authoring/flows.js's --force) — no dedicated boolean-flag helper
+  // scripts/authoring/chapters.js's --force) — no dedicated boolean-flag helper
   // exists in helpers/args.js, so this matches existing practice rather than
   // inventing a new one.
   const showHidden = args.includes('--hidden')
@@ -440,8 +438,8 @@ export async function cmdListScreens(_val, args = []) {
   const showGoneOnly = args.includes('--gone')
 
   const config = readWorkspaceConfig(wsDir)
-  const pageOrder = listScreens(wsDir, filterFlow || undefined)
-  const flows = filterFlow ? [filterFlow] : config.flows
+  const pageOrder = listPages(wsDir, filterFlow || undefined)
+  const flows = filterFlow ? [filterFlow] : config.chapters
 
   // --gone is a fully separate mode: registered pageOrder has no concept of
   // non-existent items (they're excluded from config by definition), so this
@@ -466,30 +464,30 @@ export async function cmdListScreens(_val, args = []) {
     return
   }
 
-  // registered pageOrder only ever contains normal + hidden screens (never
+  // registered pageOrder only ever contains normal + hidden pages (never
   // '__' ones) — visibility here is folder-name-only (single '_' prefix on the
   // pageId's own folder segment). This does not walk cosmetic in-between
   // folders for hidden-ness the way screenPathIdentity.js's full
-  // resolveVisibility() does, since the CLI's own registered screens are
+  // resolveVisibility() does, since the CLI's own registered pages are
   // always the plain 2-level shape; a hand-authored deeper path with a hidden
   // cosmetic ancestor folder isn't reflected in pageOrder in the first place.
   const modeLabel = showAll ? ' — all tiers' : showHidden ? ' — including hidden' : ''
-  console.log(b(`Screens  [${wsName}]${filterFlow ? ` — flow: ${filterFlow}` : ''}${modeLabel}\n`))
+  console.log(b(`Pages  [${wsName}]${filterFlow ? ` — flow: ${filterFlow}` : ''}${modeLabel}\n`))
 
   let total = 0
   let hiddenTotal = 0
   for (const flowId of flows) {
-    const screens = pageOrder[flowId] || []
-    const visible = screens.filter(
-      s => !isNonExistent(s) && (showAll || showHidden || !isHiddenScreenId(s))
+    const pages = pageOrder[flowId] || []
+    const visible = pages.filter(
+      s => !isNonExistent(s) && (showAll || showHidden || !isHiddenPageId(s))
     )
     console.log(`  ${c(flowId)}  ${d(`(${visible.length})`)}`)
     visible.forEach((s, i) => {
-      const hiddenTag = isHiddenScreenId(s) ? d(' (hidden)') : ''
+      const hiddenTag = isHiddenPageId(s) ? d(' (hidden)') : ''
       console.log(`    ${d(`${i + 1}.`)} ${s}${hiddenTag}`)
-      if (isHiddenScreenId(s)) hiddenTotal++
+      if (isHiddenPageId(s)) hiddenTotal++
     })
-    if (visible.length === 0) console.log(d('    (no screens)'))
+    if (visible.length === 0) console.log(d('    (no pages)'))
     total += visible.length
     console.log('')
   }
@@ -507,13 +505,13 @@ export async function cmdListScreens(_val, args = []) {
 
   console.log(
     d(
-      `Total: ${total} screen${total !== 1 ? 's' : ''} across ${flows.length} flow${flows.length !== 1 ? 's' : ''}` +
+      `Total: ${total} page${total !== 1 ? 's' : ''} across ${flows.length} flow${flows.length !== 1 ? 's' : ''}` +
         (hiddenTotal > 0 ? ` (${hiddenTotal} hidden)` : '')
     )
   )
 }
 
-export async function cmdScreenInfo(_val, args = []) {
+export async function cmdPageInfo(_val, args = []) {
   const wsName = resolveWorkspace(parseStringFlag(args, 'workspace'))
   const wsDir = workspacePath(wsName)
   assertScopedWorkspaceDir(wsDir, wsName)
@@ -521,36 +519,34 @@ export async function cmdScreenInfo(_val, args = []) {
   const pageId = parseStringFlag(args, 'name')
 
   if (!flowId || !pageId) {
-    console.error(r('✗ --flow:<id> and --name:<screen-id> are required'))
+    console.error(r('✗ --flow:<id> and --name:<page-id> are required'))
     process.exit(1)
   }
 
   const pascalName = toPascal(pageId)
-  // Same 2-level assumption as remove/rename/move — see comment on cmdRemoveScreen.
-  const screenDir = path.join(wsDir, FLOW_BOOK_DIRNAME, flowId, pageId)
-  const ext = ['tsx', 'jsx'].find(e =>
-    fs.existsSync(path.join(screenDir, `${pascalName}Screen.${e}`))
-  )
+  // Same 2-level assumption as remove/rename/move — see comment on cmdRemovePage.
+  const pageDir = path.join(wsDir, FLOW_BOOK_DIRNAME, flowId, pageId)
+  const ext = ['tsx', 'jsx'].find(e => fs.existsSync(path.join(pageDir, `${pascalName}Page.${e}`)))
 
   if (!ext) {
     console.error(
-      r(`✗ Screen file not found: ${FLOW_BOOK_DIRNAME}/${flowId}/${pageId}/${pascalName}Screen.tsx`)
+      r(`✗ Page file not found: ${FLOW_BOOK_DIRNAME}/${flowId}/${pageId}/${pascalName}Page.tsx`)
     )
     process.exit(1)
   }
-  const screenFile = path.join(screenDir, `${pascalName}Screen.${ext}`)
+  const pageFile = path.join(pageDir, `${pascalName}Page.${ext}`)
 
-  const src = fs.readFileSync(screenFile, 'utf8')
+  const src = fs.readFileSync(pageFile, 'utf8')
 
   const labelMatch = src.match(/label:\s*['"]([^'"]+)['"]/)
   const descMatch = src.match(/desc:\s*['"]([^'"]*)['"]/)
   const imports = [...src.matchAll(/^import\s+.*from\s+['"]([^'"]+)['"]/gm)].map(m => m[1])
 
-  const fullScreenId = makeScreenId(flowId, pageId)
-  console.log(b(`Screen: ${pascalName}Screen\n`))
+  const fullPageId = makePageId(flowId, pageId)
+  console.log(b(`Page: ${pascalName}Page\n`))
   console.log(`  Flow:      ${flowId}`)
-  console.log(`  Screen ID: ${pageId}  ${d(`(${fullScreenId})`)}`)
-  console.log(`  File:      ${FLOW_BOOK_DIRNAME}/${flowId}/${pageId}/${pascalName}Screen.${ext}`)
+  console.log(`  Page ID:   ${pageId}  ${d(`(${fullPageId})`)}`)
+  console.log(`  File:      ${FLOW_BOOK_DIRNAME}/${flowId}/${pageId}/${pascalName}Page.${ext}`)
   console.log(`  Label:     ${labelMatch ? labelMatch[1] : d('(not set)')}`)
   console.log(`  Desc:      ${descMatch && descMatch[1] ? descMatch[1] : d('(not set)')}`)
   if (imports.length > 0) {

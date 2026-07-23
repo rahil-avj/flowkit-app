@@ -8,7 +8,7 @@ import { useContext } from 'react'
  * commitNavigation — guards, animations, and the debugger all fire.
  *
  * Use this when navigation depends on internal screen state or async results:
- *   const { navigateTo } = useFlowNav();
+ *   const { navigateTo } = useNav();
  *   const handleSubmit = async () => {
  *     await save();
  *     navigateTo("next");
@@ -19,11 +19,11 @@ import { useContext } from 'react'
  *
  * @throws If called outside a FlowMaster-rendered screen.
  */
-export function useFlowNav(): FlowNavContextValue {
+export function useNav(): FlowNavContextValue {
   const ctx = useContext(FlowNavCtx)
   if (!ctx) {
     throw new Error(
-      'useFlowNav() was called outside a FlowMaster. ' +
+      'useNav() was called outside a FlowMaster. ' +
         'This hook only works inside screens rendered by a flow. ' +
         'For data access use useDashboard() instead.'
     )

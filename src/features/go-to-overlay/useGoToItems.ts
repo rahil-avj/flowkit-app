@@ -39,8 +39,8 @@ export function useGoToItems({ flows, activeViewId, query }: Options): PaletteGr
           const screenChildren = (flowNode.children ?? []).filter(n => n.kind === 'screen')
 
           if (!q || flowLabel.toLowerCase().includes(q)) {
-            const firstScreenId = screenChildren[0]?.id
-            const meta: GoToItemMeta = { kind: 'flow', flowId, firstScreenId }
+            const firstPageId = screenChildren[0]?.id
+            const meta: GoToItemMeta = { kind: 'flow', flowId, firstPageId }
             flowItems.push({
               id: `flow:${flowId}`,
               label: flowLabel,
@@ -80,7 +80,7 @@ export function useGoToItems({ flows, activeViewId, query }: Options): PaletteGr
           const meta: GoToItemMeta = {
             kind: 'flow',
             flowId: flow.id,
-            firstScreenId: screens[0]?.id,
+            firstPageId: screens[0]?.id,
           }
           flowItems.push({
             id: `flow:${flow.id}`,

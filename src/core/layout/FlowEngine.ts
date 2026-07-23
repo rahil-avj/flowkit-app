@@ -70,7 +70,7 @@ export interface FlowEngineReturn {
   // State
   activeScreenIndex: number
   activeScreen: ChapterConfig['pages'][number] | undefined
-  activeScreenId: string // T5: tags cursor.sample events
+  activePageId: string // T5: tags cursor.sample events
   history: string[]
   localState: Record<string, unknown>
   transitionLog: TransitionLogEntry[]
@@ -196,8 +196,8 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
 
   // ─── Sync debugger ────────────────────────────────────────────────────────
   const activeScreen = flow.pages[activeScreenIndex]
-  const activeScreenId = activeScreen?.id ?? activeScreen?.label ?? ''
-  const activeScreenLabel = activeScreenId
+  const activePageId = activeScreen?.id ?? activeScreen?.label ?? ''
+  const activeScreenLabel = activePageId
 
   useEffect(() => {
     if (!isAllowed) return
@@ -295,7 +295,7 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
   // ─── Build InteractionCtx ─────────────────────────────────────────────────
   const buildCtx = useCallback(
     (): InteractionCtx => ({
-      activeScreenId,
+      activePageId,
       history,
       flowState: localState,
       get: key => localState[key],
@@ -304,7 +304,7 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
       updateDb,
       effect: name => setEffects(prev => [...prev, name]),
     }),
-    [activeScreenId, history, localState, db, updateDb]
+    [activePageId, history, localState, db, updateDb]
   )
 
   // ─── Core navigation commit ───────────────────────────────────────────────
@@ -548,7 +548,7 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
       recorder.current?.logEvent('interaction.tap', {
         elementId,
         trigger: triggerName,
-        pageId: activeScreenId,
+        pageId: activePageId,
         flowId: flow.id,
         ...(fkId ? { fkId } : {}),
       })
@@ -558,7 +558,7 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
           rule.do(ctx)
           recorder.current?.logEvent('interaction.effect', {
             elementId,
-            pageId: activeScreenId,
+            pageId: activePageId,
             flowId: flow.id,
           })
         } catch (e: unknown) {
@@ -679,7 +679,7 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
     autoTimerRef.current = setTimeout(() => {
       const timestamp = new Date().toLocaleTimeString()
       recorder.current?.logEvent('navigation.auto-advance', {
-        pageId: activeScreenId,
+        pageId: activePageId,
         delayMs: delay,
         flowId: flow.id,
       })
@@ -688,7 +688,7 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
     return () => {
       if (autoTimerRef.current) clearTimeout(autoTimerRef.current)
     }
-    // activeScreenId is derived from activeScreenIndex + activeScreen (already in
+    // activePageId is derived from activeScreenIndex + activeScreen (already in
     // deps), so adding it would be redundant. recorder.current is a stable ref.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -793,7 +793,7 @@ export function useFlowEngine(flow: ChapterConfig, options?: FlowEngineOptions):
   return {
     activeScreenIndex,
     activeScreen,
-    activeScreenId,
+    activePageId,
     history,
     localState,
     transitionLog,

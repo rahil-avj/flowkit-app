@@ -14,7 +14,7 @@ export function generateScreenMetaPatch(
   const patches = JSON.stringify(
     entries.map(e => ({
       filePath: e.filePath, // already root-relative (set by ScreenInfoContent as derivedPath)
-      label: e.screenLabel,
+      label: e.pageLabel,
       desc: e.desc,
       devNotes: e.devNotes,
       isStandalone: e.isStandalone ?? false,

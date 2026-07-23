@@ -57,7 +57,7 @@ export default function ScreensHierarchy({
   const { tree, tagsByScreen } = useWorkspaceHierarchy(activeWorkspace)
 
   const { comments } = useFeedback()
-  const commentedScreenIds = useMemo(() => new Set(comments.map(c => c.pageId)), [comments])
+  const commentedPageIds = useMemo(() => new Set(comments.map(c => c.pageId)), [comments])
 
   const [internalSearch, setInternalSearch] = useState('')
   const search = searchProp ?? internalSearch
@@ -139,7 +139,7 @@ export default function ScreensHierarchy({
               activeViewId={activeViewId}
               navigateTo={navigateTo}
               screenMatches={screenMatches}
-              commentedScreens={commentedScreenIds}
+              commentedScreens={commentedPageIds}
               tagsByScreen={tagsByScreen}
               onFindInLibrary={onFindInLibrary}
             />

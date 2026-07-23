@@ -286,9 +286,9 @@ function writeAgentsMd(dir) {
     `# ${projectName}
 
 A [FlowKit](https://github.com/rahil-avj/flowkit-app) multi-workspace author project —
-this repo is **content only** (screens, flowplans, mock data per workspace). The platform
+this repo is **content only** (pages, flowplans, mock data per workspace). The platform
 engine lives in \`node_modules/flowkit/\` and is not yours to edit. FlowKit exists to let
-you build and demo realistic multi-screen product flows — with working navigation, mock
+you build and demo realistic multi-page product flows — with working navigation, mock
 data, and a reviewer-facing simulator — without standing up a backend or a router by hand.
 
 This file is intentionally short. It tells you where to look and the rules that don't
@@ -314,32 +314,32 @@ guessing from adjacent code.
 Each top-level folder (starting with \`${DEFAULT_WORKSPACE_NAME}/\`) is an independent
 workspace with its own:
 
-- \`<workspace>/${FLOW_BOOK_DIRNAME}/<flow>/<screen-id>/<ScreenName>.tsx\` — one component per screen,
-  default-exports the screen and a named \`pageMeta\` (\`{ id, label, desc? }\`, optional
+- \`<workspace>/${FLOW_BOOK_DIRNAME}/<flow>/<page-id>/<PageName>.tsx\` — one component per page,
+  default-exports the page and a named \`pageMeta\` (\`{ id, label, desc? }\`, optional
   \`canEnter\`/\`canNotEnter\`: \`({ db }) => boolean\`). Receives \`PageProps\` from
   \`'flowkit'\` — \`onAction?\`, \`onNext?\`, \`onBack?\`, \`isChapter?\`, \`flowState?\`, and a
-  **read-only** \`db?\`. **All of these are \`undefined\` when the screen is previewed
+  **read-only** \`db?\`. **All of these are \`undefined\` when the page is previewed
   standalone** (outside an active flow) — always optional-chain (\`db?.user?.name\`), never
   assume they're present.
 - \`<workspace>/${FLOW_STORIES_DIRNAME}/<flow>.ts\` — playback scripts authored with \`defineFlow()\` from
   \`'flowkit'\`: an ordered \`steps[]\` of \`{ pageId, on?, actionNote? }\` (\`on\` matches a DOM
-  element id in the screen, wired via event delegation — no \`onClick\` needed on that
+  element id in the page, wired via event delegation — no \`onClick\` needed on that
   element), or a richer \`interactions\` map keyed by element id
   (\`{ trigger, goTo, do?, animation?, delay? }\`). Conditional forks (\`forks[]\`) and db
-  mutation both live here, not in the screen component — see \`docs/CLI.md\` for the full
+  mutation both live here, not in the page component — see \`docs/CLI.md\` for the full
   shape.
 - \`<workspace>/lib/data/db.ts\` — that workspace's mock database: plain named exports, the
-  initial state only. A screen never mutates it directly — mutation happens via
+  initial state only. A page never mutates it directly — mutation happens via
   \`ctx.updateDb(db => { ... })\` inside a flowplan's \`interactions[id].do\`, never as a
   module-level singleton edit.
 - \`<workspace>/lib/design-system/tokens.css\` — CSS custom properties for theming. Starts
-  **empty** per workspace (no UI kit pre-installed) even though scaffolded demo screens
+  **empty** per workspace (no UI kit pre-installed) even though scaffolded demo pages
   already reference \`theme-*\` Tailwind classes — this is expected pre-kit state, not a bug.
   Resolve it in your first session (see below), not by inventing token values ad hoc.
 - \`<workspace>/${WORKSPACE_CONFIG_FILENAME}\` — that workspace's manifest (\`defineConfig()\`
-  from \`'flowkit'\`): flow/screen ordering, \`startPage\`, \`defaultDevice\`/\`defaultOrientation\`.
-  Check this first when a flow or screen seems "missing" from the UI — it's usually an
-  ordering/registration issue here, not a bug in the screen itself.
+  from \`'flowkit'\`): flow/page ordering, \`startPage\`, \`defaultDevice\`/\`defaultOrientation\`.
+  Check this first when a flow or page seems "missing" from the UI — it's usually an
+  ordering/registration issue here, not a bug in the page itself.
 
 Workspaces are otherwise independent — no shared state between them except what you build
 yourself. \`docs/\` (see the "Where to look" table above) lives once at the project root,
@@ -366,8 +366,8 @@ fuller written reference.
 \`\`\`
 npx flowkit status                                          # health snapshot
 npx flowkit check                                           # validate authored content, exits 1 on error
-npx flowkit create:screen --workspace:<ws> --flow:<id> --name:<screen-id>
-npx flowkit add:step --workspace:<ws> --flowplan:<id> --screen:<screen-id> [--on:<element-id>]
+npx flowkit create:page --workspace:<ws> --flow:<id> --name:<page-id>
+npx flowkit add:step --workspace:<ws> --flowplan:<id> --screen:<page-id> [--on:<element-id>]
 npx flowkit sessions:ls                                     # list recorded sessions
 npx flowkit export                                          # build standalone HTML viewer → dist/
 \`\`\`
@@ -385,35 +385,35 @@ default behavior, no exceptions. **TO** \`<task>\` **→** \`<action>\` = the on
 a common task — check here before improvising.
 
 - **NEVER** edit \`node_modules/flowkit/\` — that's the platform engine, not workspace content.
-- **NEVER** mutate \`db\` from inside a screen component — there is no mutate function on
+- **NEVER** mutate \`db\` from inside a page component — there is no mutate function on
   \`PageProps\`; \`db\` there is read-only. Mutation only happens via \`ctx.updateDb()\`
   inside a flowplan's \`interactions[id].do\`.
-- **NEVER** hand-write a new flow/screen file from scratch — copy an existing screen's
-  boilerplate (or use \`flowkit create:screen\`) so exports stay consistent with what the
+- **NEVER** hand-write a new flow/page file from scratch — copy an existing page's
+  boilerplate (or use \`flowkit create:page\`) so exports stay consistent with what the
   Vite plugin expects.
 - **NEVER** hardcode hex colors — use that workspace's \`lib/design-system/tokens.css\` vars.
 - **NEVER** assume a bare \`flowkit\` binary resolves — prefer \`npx flowkit\` unless you've
   confirmed (\`which flowkit\`) a global link.
-- **ALWAYS** optional-chain \`db\`/\`onAction\`/\`onNext\`/\`onBack\`/\`flowState\` in a screen —
-  every one of them is \`undefined\` when that screen is previewed standalone, not just
+- **ALWAYS** optional-chain \`db\`/\`onAction\`/\`onNext\`/\`onBack\`/\`flowState\` in a page —
+  every one of them is \`undefined\` when that page is previewed standalone, not just
   during flow playback.
 - **ALWAYS** use Tailwind utility classes for static styling; reach for \`style={{}}\` only
   for runtime-computed values.
-- **ALWAYS** route structural changes (new screen, new flowplan step, new workspace) through
+- **ALWAYS** route structural changes (new page, new flowplan step, new workspace) through
   the \`flowkit\` CLI rather than hand-editing generated wiring.
 - **ALWAYS** pass \`--workspace:<name>\` explicitly on authoring commands once more than one
   workspace exists — don't assume the default target.
-- **TO** add a screen **→** \`flowkit create:screen --workspace:<ws> --flow:<id> --name:<screen-id>\`,
-  then \`flowkit add:step --workspace:<ws> --flowplan:<id> --screen:<screen-id>\` to wire it
+- **TO** add a page **→** \`flowkit create:page --workspace:<ws> --flow:<id> --name:<page-id>\`,
+  then \`flowkit add:step --workspace:<ws> --flowplan:<id> --screen:<page-id>\` to wire it
   into playback.
 - **TO** wire a tap interaction **→** give the element a plain DOM \`id\` and add a matching
   \`{ pageId, on: '<id>' }\` step in that workspace's flowplan (no \`onClick\` needed) — or,
   for conditional/db-mutating logic, add an \`interactions['<id>']\` entry with \`goTo\`/\`do\`
   in the flowplan instead.
-- **TO** navigate imperatively from inside a screen (async/state-driven, not a tap) **→**
+- **TO** navigate imperatively from inside a page (async/state-driven, not a tap) **→**
   call the injected \`onAction?.('name')\` / \`onNext?.()\` / \`onBack?.()\` — these only fire
   during flow playback (\`isChapter\` is true); they're safely no-ops (undefined) otherwise.
-- **TO** gate access to a screen **→** export \`canEnter\`/\`canNotEnter\` on \`pageMeta\`:
+- **TO** gate access to a page **→** export \`canEnter\`/\`canNotEnter\` on \`pageMeta\`:
   \`({ db }) => boolean\`.
 - **TO** add a reviewer-facing toggle **→** add a \`SimulatorControl\` object
   (\`{ label, path, type, ... }\`) to that flowplan's \`simulator.controls\` array — this is
@@ -443,7 +443,7 @@ writing any code. Keep it conversational, one or two questions at a time, not a 
 
 Once you have these answers, act on them immediately — set up
 \`${DEFAULT_WORKSPACE_NAME}/lib/design-system/tokens.css\` and whatever component approach
-fits, then get to the actual flows/screens. Don't re-run this interview later in the
+fits, then get to the actual flows/pages. Don't re-run this interview later in the
 project; refer back to what you learned instead.
 `
   )

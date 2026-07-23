@@ -10,7 +10,7 @@ export interface PatchScript {
 /** One screen's pending metadata edits — passed to generateScreenMetaPatch. */
 export interface ScreenMetaPatchEntry {
   filePath: string
-  screenLabel: string
+  pageLabel: string
   desc: string
   devNotes: string
   isStandalone?: boolean

@@ -43,7 +43,7 @@ export function writeFlowkitConfig(dir, workspaceName) {
 
 export default defineConfig({
   workspace: { name: '${workspaceName}' },
-  flows: ['onboarding', 'home'],
+  chapters: ['onboarding', 'home'],
   pageOrder: {
     onboarding: ['welcome', 'setup', 'ready'],
     home: ['home', 'detail'],
@@ -107,7 +107,7 @@ export function writeWelcomeScreen(dir, language) {
     isJs,
     `import type { PageProps } from 'flowkit'`,
     'PageProps',
-    `export default function WelcomeScreen({ onAction }__PROPS__) {
+    `export default function WelcomePage({ onAction }__PROPS__) {
   return (
     <div className="flex flex-col h-full bg-theme-base">
       <div className="flex flex-col items-center justify-center flex-1 gap-4 p-6">
@@ -118,7 +118,7 @@ export function writeWelcomeScreen(dir, language) {
           Welcome to FlowKit
         </h1>
         <p className="text-ui-sm text-theme-text-secondary text-center max-w-xs">
-          This project shows how screens read from db, use theme tokens, and wire interactions via
+          This project shows how pages read from db, use theme tokens, and wire interactions via
           flowplan steps.
         </p>
       </div>
@@ -143,7 +143,7 @@ export const pageMeta = {
 }
 `
   )
-  writeScreen(dir, 'onboarding', 'welcome', 'WelcomeScreen', isJs, content)
+  writeScreen(dir, 'onboarding', 'welcome', 'WelcomePage', isJs, content)
 }
 
 export function writeSetupScreen(dir, language) {
@@ -152,7 +152,7 @@ export function writeSetupScreen(dir, language) {
     isJs,
     `import type { PageProps } from 'flowkit'`,
     'PageProps',
-    `export default function SetupScreen({ onAction, db }__PROPS__) {
+    `export default function SetupPage({ onAction, db }__PROPS__) {
   // db is typed Record<string, unknown> in PageProps — loosen it here,
   // same convention repo-mode's useDashboard() hook already uses (db: Record<string, any>).
   const anyDb = ${isJs ? 'db' : 'db as any // eslint-disable-line @typescript-eslint/no-explicit-any'}
@@ -197,7 +197,7 @@ export function writeSetupScreen(dir, language) {
 export const pageMeta = { id: 'setup', label: 'Setup Screen' }
 `
   )
-  writeScreen(dir, 'onboarding', 'setup', 'SetupScreen', isJs, content)
+  writeScreen(dir, 'onboarding', 'setup', 'SetupPage', isJs, content)
 }
 
 export function writeReadyScreen(dir, language) {
@@ -206,7 +206,7 @@ export function writeReadyScreen(dir, language) {
     isJs,
     `import type { PageProps } from 'flowkit'`,
     'PageProps',
-    `export default function ReadyScreen({ onAction, db }__PROPS__) {
+    `export default function ReadyPage({ onAction, db }__PROPS__) {
   // db is typed Record<string, unknown> in PageProps — loosen it here,
   // same convention repo-mode's useDashboard() hook already uses (db: Record<string, any>).
   const anyDb = ${isJs ? 'db' : 'db as any // eslint-disable-line @typescript-eslint/no-explicit-any'}
@@ -236,7 +236,7 @@ export function writeReadyScreen(dir, language) {
 export const pageMeta = { id: 'ready', label: 'Ready Screen' }
 `
   )
-  writeScreen(dir, 'onboarding', 'ready', 'ReadyScreen', isJs, content)
+  writeScreen(dir, 'onboarding', 'ready', 'ReadyPage', isJs, content)
 }
 
 export function writeHomeScreen(dir, language) {
@@ -249,7 +249,7 @@ export function writeHomeScreen(dir, language) {
     isJs,
     `import type { PageProps } from 'flowkit'`,
     'PageProps',
-    `export default function HomeScreen({ onAction, db }__PROPS__) {
+    `export default function HomePage({ onAction, db }__PROPS__) {
   // db is typed Record<string, unknown> in PageProps — loosen it here,
   // same convention repo-mode's useDashboard() hook already uses (db: Record<string, any>).
   const anyDb = ${dbCast}
@@ -292,7 +292,7 @@ export function writeHomeScreen(dir, language) {
 export const pageMeta = { id: 'home', label: 'Home Screen' }
 `
   )
-  writeScreen(dir, 'home', 'home', 'HomeScreen', isJs, content)
+  writeScreen(dir, 'home', 'home', 'HomePage', isJs, content)
 }
 
 export function writeDetailScreen(dir, language) {
@@ -302,7 +302,7 @@ export function writeDetailScreen(dir, language) {
     isJs,
     `import type { PageProps } from 'flowkit'`,
     'PageProps',
-    `export default function DetailScreen({ onAction, db }__PROPS__) {
+    `export default function DetailPage({ onAction, db }__PROPS__) {
   // db is typed Record<string, unknown> in PageProps — loosen it here,
   // same convention repo-mode's useDashboard() hook already uses (db: Record<string, any>).
   const anyDb = ${dbCast}
@@ -344,7 +344,7 @@ export function writeDetailScreen(dir, language) {
 export const pageMeta = { id: 'detail', label: 'Detail Screen' }
 `
   )
-  writeScreen(dir, 'home', 'detail', 'DetailScreen', isJs, content)
+  writeScreen(dir, 'home', 'detail', 'DetailPage', isJs, content)
 }
 
 export function writeDb(dir) {

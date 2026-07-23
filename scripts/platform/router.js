@@ -26,15 +26,15 @@ import { cmdFeedbackImport, cmdFeedbackDump, cmdFeedbackLs } from './feedback.js
 import { cmdHelp } from './help.js'
 import { cmdVersion } from './version.js'
 import { cmdStatus } from './status.js'
-import { cmdCreateFlow, cmdRemoveFlow, cmdListFlows } from '../authoring/flows.js'
+import { cmdCreateChapter, cmdRemoveChapter, cmdListChapters } from '../authoring/chapters.js'
 import {
-  cmdCreateScreen,
-  cmdRemoveScreen,
-  cmdRenameScreen,
-  cmdMoveScreen,
-  cmdListScreens,
-  cmdScreenInfo,
-} from '../authoring/screens.js'
+  cmdCreatePage,
+  cmdRemovePage,
+  cmdRenamePage,
+  cmdMovePage,
+  cmdListPages,
+  cmdPageInfo,
+} from '../authoring/pages.js'
 import {
   cmdCreateFlowplan,
   cmdRemoveFlowplan,
@@ -52,7 +52,7 @@ import {
   cmdAddExport,
   cmdListExports,
 } from '../authoring/components.js'
-import { cmdPromoteFlow } from '../authoring/promote-flow.js'
+import { cmdPromoteChapter } from '../authoring/promote-chapter.js'
 import {
   cmdConvertMulti,
   cmdConvertFlat,
@@ -235,8 +235,8 @@ export async function route(argv) {
     }
   } else if (p.cmd === 'create') {
     const sub = p.val
-    if (sub === 'flow') await cmdCreateFlow('', rest)
-    else if (sub === 'screen') await cmdCreateScreen('', rest)
+    if (sub === 'chapter') await cmdCreateChapter('', rest)
+    else if (sub === 'page') await cmdCreatePage('', rest)
     else if (sub === 'flowplan') await cmdCreateFlowplan('', rest)
     else if (sub === 'component') await cmdCreateComponent('', rest)
     else if (sub === 'workspace') await cmdAddWorkspace('', rest)
@@ -246,8 +246,8 @@ export async function route(argv) {
     }
   } else if (p.cmd === 'remove') {
     const sub = p.val
-    if (sub === 'flow') await cmdRemoveFlow('', rest)
-    else if (sub === 'screen') await cmdRemoveScreen('', rest)
+    if (sub === 'chapter') await cmdRemoveChapter('', rest)
+    else if (sub === 'page') await cmdRemovePage('', rest)
     else if (sub === 'flowplan') await cmdRemoveFlowplan('', rest)
     else if (sub === 'component') await cmdRemoveComponent('', rest)
     else if (sub === 'step') await cmdRemoveStep('', rest)
@@ -266,8 +266,8 @@ export async function route(argv) {
     }
   } else if (p.cmd === 'list') {
     const sub = p.val
-    if (sub === 'flows') await cmdListFlows('', rest)
-    else if (sub === 'screens') await cmdListScreens('', rest)
+    if (sub === 'chapters') await cmdListChapters('', rest)
+    else if (sub === 'pages') await cmdListPages('', rest)
     else if (sub === 'steps') await cmdListSteps('', rest)
     else if (sub === 'exports') await cmdListExports('', rest)
     else {
@@ -275,20 +275,20 @@ export async function route(argv) {
       process.exit(1)
     }
   } else if (p.cmd === 'rename') {
-    if (p.val === 'screen') await cmdRenameScreen('', rest)
+    if (p.val === 'page') await cmdRenamePage('', rest)
     else if (p.val === 'workspace') await cmdRenameWorkspace('', rest)
     else {
       console.error(r(`✗ Unknown: rename:${p.val}`))
       process.exit(1)
     }
   } else if (p.cmd === 'promote') {
-    if (p.val === 'flow') await cmdPromoteFlow('', rest)
+    if (p.val === 'chapter') await cmdPromoteChapter('', rest)
     else {
       console.error(r(`✗ Unknown: promote:${p.val}`))
       process.exit(1)
     }
   } else if (p.cmd === 'move') {
-    if (p.val === 'screen') await cmdMoveScreen('', rest)
+    if (p.val === 'page') await cmdMovePage('', rest)
     else {
       console.error(r(`✗ Unknown: move:${p.val}`))
       process.exit(1)
@@ -300,10 +300,10 @@ export async function route(argv) {
       console.error(r(`✗ Unknown: add:${p.val}`))
       process.exit(1)
     }
-  } else if (p.cmd === 'screen') {
-    if (p.val === 'info') await cmdScreenInfo('', rest)
+  } else if (p.cmd === 'page') {
+    if (p.val === 'info') await cmdPageInfo('', rest)
     else {
-      console.error(r(`✗ Unknown: screen:${p.val}`))
+      console.error(r(`✗ Unknown: page:${p.val}`))
       process.exit(1)
     }
   } else if (p.cmd === 'flowplan') {
