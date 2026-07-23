@@ -3,11 +3,8 @@ import fs from 'fs'
 import path from 'path'
 import { workspacePath } from '../../helpers/paths.js'
 import { FLOW_BOOK_DIRNAME } from '../../helpers/config-filenames.js'
-import {
-  isNonExistent,
-  parsePageSegments,
-  makePageId,
-} from '../../../src/shared/utils/pagePathIdentity.js'
+import { walkPageFiles } from '../../helpers/page-walk.js'
+import { parsePageSegments, makePageId } from '../../../src/shared/utils/pagePathIdentity.js'
 
 // ── Path helpers ─────────────────────────────────────────────────────────────
 
@@ -132,26 +129,6 @@ export function readSession(file) {
 }
 
 // ── Page id helpers ─────────────────────────────────────────────────────────
-
-/**
- * Recursively walks a flowBook folder (variable depth), collecting real page-candidate
- * files. Mirrors scripts/checks/pages.js's walkPageFiles — `__`-prefixed segments are
- * pruned entirely (never descended into), matching "as if it doesn't exist".
- */
-function walkPageFiles(dir, segments) {
-  const results = []
-  for (const entry of fs.readdirSync(dir)) {
-    if (isNonExistent(entry)) continue
-    const full = path.join(dir, entry)
-    const nextSegments = [...segments, entry]
-    if (fs.statSync(full).isDirectory()) {
-      results.push(...walkPageFiles(full, nextSegments))
-    } else if (/\.(tsx|jsx)$/.test(entry)) {
-      results.push({ segments: nextSegments, fullPath: full })
-    }
-  }
-  return results
-}
 
 /**
  * Page ids the workspace actually defines, in the same composite `${chapter}-${page}`

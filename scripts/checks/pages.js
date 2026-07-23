@@ -9,38 +9,13 @@ import fs from 'fs'
 import path from 'path'
 import { parseTopLevel, hasDefaultFunctionExport, findExportedObjectLiteral } from './ts-parse.js'
 import { FLOW_BOOK_DIRNAME } from '../helpers/config-filenames.js'
+import { walkPageFiles } from '../helpers/page-walk.js'
 import {
-  isNonExistent,
   resolveVisibility,
   parsePageSegments,
   makePageId,
   pickPageFile,
 } from '../../src/shared/utils/pagePathIdentity.js'
-
-const PAGE_EXTS = ['.tsx', '.jsx']
-
-/**
- * Recursively walks `dir` (relative segment chain tracked in `segments`) collecting every
- * real page-candidate file found at any depth ≥1. `__`-prefixed folders are pruned
- * entirely (never descended into) rather than filtered post-hoc, matching the "as if it
- * doesn't exist" requirement. Returns a flat list of { segments, fullPath }, where
- * `segments` is the full chain from directly under the flowBook root down to the
- * filename (suitable for both parsePageSegments and resolveVisibility).
- */
-function walkPageFiles(dir, segments) {
-  const results = []
-  for (const entry of fs.readdirSync(dir)) {
-    if (isNonExistent(entry)) continue // prune — never read, never AST-parsed, never reported
-    const full = path.join(dir, entry)
-    const nextSegments = [...segments, entry]
-    if (fs.statSync(full).isDirectory()) {
-      results.push(...walkPageFiles(full, nextSegments))
-    } else if (PAGE_EXTS.some(ext => entry.endsWith(ext))) {
-      results.push({ segments: nextSegments, fullPath: full })
-    }
-  }
-  return results
-}
 
 /** Runs page-domain rules for one workspace. Appends findings to `report`. */
 export function checkPages(wsDir, report) {

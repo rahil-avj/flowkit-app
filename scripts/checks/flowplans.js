@@ -13,8 +13,8 @@ import fs from 'fs'
 import path from 'path'
 import { readFlowplanModule } from './config.js'
 import { FLOW_BOOK_DIRNAME, FLOW_STORIES_DIRNAME } from '../helpers/config-filenames.js'
+import { walkPageFiles } from '../helpers/page-walk.js'
 import {
-  isNonExistent,
   resolveVisibility,
   parsePageSegments,
   makePageId,
@@ -34,37 +34,13 @@ function isPageStep(entry) {
   return entry && typeof entry === 'object' && typeof entry.pageId === 'string'
 }
 
-const SCREEN_EXTS = ['.tsx', '.jsx']
-
-/**
- * Recursively walks the flow-designs root collecting every real page-candidate file at
- * any depth ≥1, mirroring checks/screens.js's walk. `__`-prefixed folders/files are pruned
- * from traversal entirely (never included, as if they don't exist) — so a flowStory step
- * referencing a `__`-hidden page naturally fails flowStory/invalid-page below with no
- * special-casing needed.
- */
-function walkPageFiles(dir, segments) {
-  const results = []
-  for (const entry of fs.readdirSync(dir)) {
-    if (isNonExistent(entry)) continue
-    const full = path.join(dir, entry)
-    const nextSegments = [...segments, entry]
-    if (fs.statSync(full).isDirectory()) {
-      results.push(...walkPageFiles(full, nextSegments))
-    } else if (SCREEN_EXTS.some(ext => entry.endsWith(ext))) {
-      results.push(nextSegments)
-    }
-  }
-  return results
-}
-
 /** Collects every known page id, in the collision-proof `chapters-page` composite form
  * (makePageId), across the whole workspace. `__`-hidden screens are never included. */
 function collectAllPageIds(wsDir) {
   const chaptersDir = path.join(wsDir, FLOW_BOOK_DIRNAME)
   const ids = new Set()
   if (!fs.existsSync(chaptersDir)) return ids
-  for (const segments of walkPageFiles(chaptersDir, [])) {
+  for (const { segments } of walkPageFiles(chaptersDir, [])) {
     if (resolveVisibility(segments) === 'non-existent') continue // belt-and-suspenders
     const parsed = parsePageSegments(segments)
     if (!parsed) continue
