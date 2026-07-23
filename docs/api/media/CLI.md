@@ -89,7 +89,7 @@ Creates a new workspace under `workspaces/<name>/` with the full folder structur
 
 ```
 workspaces/<name>/
-  flows/                  ← demo flow + screen (flat format)
+  flowBook/            ← demo flow + screen (was `flows/`)
   components/
     ui/
     layout/
@@ -159,6 +159,10 @@ export default defineConfig({
 
   // Explicit screen ordering within each flow for the Screens tab sidebar.
   // Unlisted screens are appended after declared ones, alphabetically.
+  // NOTE: unlike flowplan step `screenId`s (which use the composite
+  // `${flowId}-${screenId}` form), screenOrder's arrays stay BARE screen ids —
+  // this map is already flow-scoped by its own outer key, so no prefix is
+  // needed to avoid collisions here. See Screen identity below.
   screenOrder: {
     'onboarding-flow': ['welcome-screen', 'setup-screen', 'ready-screen'],
     'home-flow': ['home-screen', 'detail-screen'],
@@ -202,7 +206,9 @@ flowkit watch:<name>
 flowkit watch:flows:<name>   # same — the "flows:" prefix is stripped
 ```
 
-Switches to the workspace, starts the dev server (`npm run dev`), then watches `workspaces/<name>/flows/` for `.ts`/`.tsx` changes. Press `Ctrl+C` to stop.
+Switches to the workspace, starts the dev server (`npm run dev`), then watches `workspaces/<name>/flowBook/` for `.ts`/`.tsx` changes. Press `Ctrl+C` to stop.
+
+> The `watch` / `watch:flows` command names are unchanged even though the folder they watch was renamed from `flows/` to `flowBook/` — this is intentional, not an inconsistency to fix.
 
 > This is the CLI-level watcher (Node.js `fs.watch`). The Vite plugin watcher (`VITE_ENABLE_FLOWKIT_WATCH=true`) is a separate mechanism that runs inside the dev server.
 
@@ -217,8 +223,8 @@ flowkit status:<name>
 
 Prints a compact health report for the active workspace:
 
-- Flow count + total screen count (counts `flows/<flow>/<screen>/` subfolders)
-- FlowPlan count (from `flowplans/*.ts`)
+- Flow count + total screen count (counts screen files under `flowBook/<flow>/`, at any nesting depth; hidden `_`-prefixed items are counted, non-existent `__`-prefixed items are not — see [Screen visibility](#screen-visibility-hidden-vs-non-existent) below)
+- FlowPlan count (from `flowStories/*.ts`)
 - Session library: count + whether FlowLens module is present
 - Feedback: committed comment count (from `.flowkit-feedback.json`)
 - Agent: agent type + spec version (from `.agent/.agent-meta.json`)
@@ -247,7 +253,7 @@ flowkit convert:multi
 flowkit convert:multi --name:my-workspace
 ```
 
-Wraps the project root's `workspace.ts`/`index.ts`/`flows/`/`flowplans/`/`lib/` (plus `.flowkit/`, `.agent/`, `.flowkit-feedback.json` if present) into a new folder — `workspace-1/` by default, or `--name:<id>`. Rewrites `vite.config.ts` to the multi-workspace template and sets `package.json`'s `flowkit.mode`/`flowkit.workspaces` accordingly. Staged move with rollback — a failure partway through leaves the project exactly as it was before running the command, confirmed via induced-failure test.
+Wraps the project root's `workspace.ts`/`index.ts`/`flowBook/`/`flowStories/`/`lib/` (plus `.flowkit/`, `.agent/`, `.flowkit-feedback.json` if present) into a new folder — `workspace-1/` by default, or `--name:<id>`. Rewrites `vite.config.ts` to the multi-workspace template and sets `package.json`'s `flowkit.mode`/`flowkit.workspaces` accordingly. Staged move with rollback — a failure partway through leaves the project exactly as it was before running the command, confirmed via induced-failure test.
 
 Prints a hint for adding another workspace afterward; does **not** scaffold a second workspace itself.
 
@@ -293,7 +299,7 @@ Multi-workspace mode only. Renames the folder and updates `flowkit.workspaces` i
 
 FlowPlans are TypeScript files that define scripted journeys with conditional forks, db patches, and action notes. They are compiled at runtime by `compileFlowplan.ts`.
 
-**Storage location:** `workspaces/<ws>/flowplans/<Name>.ts` (repo mode) or `flowplans/<Name>.ts` at the workspace root (consumer mode — flat: project root; multi-workspace: inside the workspace's own folder).
+**Storage location:** `workspaces/<ws>/flowStories/<Name>.ts` (repo mode) or `flowStories/<Name>.ts` at the workspace root (consumer mode — flat: project root; multi-workspace: inside the workspace's own folder). (Directory renamed from `flowplans/` — the CLI verbs `check:flowplans`/`plan:ls`/`fp:ls` keep their existing spelling regardless.)
 
 ### FlowPlan anatomy
 
@@ -332,7 +338,7 @@ export default defineFlow({
 
   steps: [
     {
-      screenId: 'product-detail', // required — id of the screen to show
+      screenId: 'checkout-flow-product-detail', // required — composite `${flowId}-${screenId}` id of the screen to show
       on: 'add-to-cart', // element id whose tap advances this step (omit = tap-anywhere)
       actionNote: 'Taps Add to Cart', // what the user does (shown during playback)
       decisionNote: 'Entry point.', // narrative context (shown in step list)
@@ -340,7 +346,7 @@ export default defineFlow({
       db: { 'cart.count': 1 }, // step-level db patch applied when this step activates
     },
     {
-      screenId: 'cart',
+      screenId: 'checkout-flow-cart',
       on: 'checkout',
       actionNote: 'Reviews cart, taps Checkout',
       // Conditional branch — forks are evaluated using the db at this step
@@ -348,13 +354,13 @@ export default defineFlow({
         {
           label: 'Empty cart',
           db: { 'cart.count': 0 }, // db condition that takes this branch
-          steps: [{ screenId: 'cart-empty', actionNote: 'Sees empty state' }],
+          steps: [{ screenId: 'checkout-flow-cart-empty', actionNote: 'Sees empty state' }],
           // mergesTo: "next",  // rejoin the main flow after the fork; omit = terminal branch
         },
       ],
     },
     {
-      screenId: 'order-confirmation',
+      screenId: 'checkout-flow-order-confirmation',
       actionNote: 'Sees confirmation',
       decisionNote: 'End of happy path.',
     },
@@ -369,7 +375,7 @@ export default defineFlow({
 
 | Field          | Purpose                                                        |
 | -------------- | -------------------------------------------------------------- |
-| `screenId`     | Id of the screen to show (required)                            |
+| `screenId`     | Composite `${flowId}-${screenId}` id of the screen to show (required) — see [Screen identity](#screen-identity-composite-ids) below |
 | `on`           | Element id whose tap advances this step; omit for tap-anywhere |
 | `actionNote`   | What the user does — shown as caption during playback          |
 | `decisionNote` | Narrative note shown in the step list                          |
@@ -405,8 +411,8 @@ Domain-specific linter for authored content — validates flowkit's own structur
 
 | Domain     | Command            | Checks                                                                                       |
 | ---------- | ------------------ | -------------------------------------------------------------------------------------------- |
-| Screens    | `check:screens`    | Default export shape, `screenMeta` presence/shape, id/directory match                        |
-| Config     | `check:config`     | `workspace.ts`'s `flows[]`/`screenOrder` consistency against `flows/` on disk                |
+| Screens    | `check:screens`    | Default export shape, `screenMeta` presence/shape, id/directory match, ambiguous screen folders |
+| Config     | `check:config`     | `workspace.ts`'s `flows[]`/`screenOrder` consistency against `flowBook/` on disk           |
 | Components | `check:components` | `.flowkit/components.json` registry vs. files on disk, barrel export consistency             |
 | DB         | `check:db`         | `lib/data/db.ts`/`db.js` has at least one export                                             |
 | FlowPlans  | `check:flowplans`  | Parseable, `id` matches filename, non-empty `steps[]`, step `screenId`s exist, step guidance |
@@ -418,9 +424,11 @@ Flags:
 - `--json` — machine-readable output (`{ workspace, errors, warnings, results }`) instead of the human-readable report
 - `--workspace:<name>` — target a non-active workspace when running all domains (`check` with no domain)
 
-Exit code 0 if clean or only warnings, 1 if any error-severity finding. `check:flowplans` is wired into `npm run prebuild` — a broken or missing flowplan blocks the production build (including an empty-but-existing `flowplans/` directory, which is treated as suspicious rather than silently passing).
+Exit code 0 if clean or only warnings, 1 if any error-severity finding. `check:flowplans` is wired into `npm run prebuild` — a broken or missing flowplan blocks the production build (including an empty-but-existing `flowStories/` directory, which is treated as suspicious rather than silently passing). (`check:flowplans` keeps its existing name even though the directory it validates was renamed from `flowplans/` to `flowStories/` — intentional, not an oversight.)
 
 Findings include a `ruleId` (e.g. `screen/missing-meta`, `flowplan/invalid-screen`), `severity` (`error`/`warning`), the offending `file`, a `message`, and where possible a `fix` (manual instructions) or `clifix` (an exact CLI command to run).
+
+**`screen/ambiguous-folder` (warning, non-blocking):** raised by `check:screens` when a screen folder contains 2+ unprefixed candidate `.tsx`/`.jsx` files. The alphabetically-first file is deterministically picked as the real screen; the finding names the winner and suggests `_`-prefixing, deleting, or renaming the other file(s) to remove the ambiguity. Never fails the build.
 
 ---
 
@@ -442,7 +450,7 @@ Work identically across all three modes. "Active workspace" (the default when `-
 flowkit create:flow --name:<flow-id>
 ```
 
-Creates `flows/<flow-id>/` and registers it in `workspace.ts` (`flows[]` + an empty `screenOrder[flow-id]`). If `--name` is omitted, prompts interactively. Rolls back the created directory if registration fails.
+Creates `flowBook/<flow-id>/` and registers it in `workspace.ts` (`flows[]` + an empty `screenOrder[flow-id]`). If `--name` is omitted, prompts interactively. Rolls back the created directory if registration fails.
 
 Prints `Next: flowkit create:screen --flow:<flow-id> --name:<first-screen> --label:"Screen Name"` on success.
 
@@ -452,7 +460,7 @@ Prints `Next: flowkit create:screen --flow:<flow-id> --name:<first-screen> --lab
 flowkit remove:flow --name:<flow-id> [--force]
 ```
 
-Unregisters the flow from `workspace.ts` and deletes `flows/<flow-id>/`. Refuses if the flow directory contains any screens unless `--force` is passed.
+Unregisters the flow from `workspace.ts` and deletes `flowBook/<flow-id>/`. Refuses if the flow directory contains any screens unless `--force` is passed.
 
 #### `list:flows` — List flows
 
@@ -466,13 +474,37 @@ Read-only. Lists every flow with its screen count and a total.
 
 Screen ids are **unique across the whole workspace**, not just within their flow — `create:screen`/`rename:screen` both check this.
 
+#### Screen identity (composite ids)
+
+A screen's identity is derived from its position in `flowBook/`, never from its filename:
+
+```
+flowBook/<flow>/.../<screen>/<File>.tsx
+```
+
+- The **first** path segment after `flowBook/` is the flow id.
+- The **last** folder before the file is the screen id.
+- Any folders in between are purely cosmetic/organizational — ignored for identity, kept only for on-disk display.
+- A file directly at `flowBook/<File>.tsx` (no folders at all) falls back to flow id `"misc"`, with the screen id taken from the filename minus extension.
+- Screen files no longer need to end in a literal `Screen` suffix — `create:screen` still generates `...Screen.tsx` by convention/default, but hand-authored files aren't required to follow it.
+
+The registered, globally-unique screen id is a **composite**: `${flowId}-${screenId}`. This makes ids collision-proof across flows — two different flows can each have a screen folder literally named the same thing without colliding. Flowplan step `screenId` values (and any other cross-flow/global reference) use this composite form. `workspace.ts`'s `screenOrder` map is the one exception — it stays **bare** (screen id only, no flow prefix), because that map is already flow-scoped by its own outer key (`screenOrder['onboarding-flow'] = ['welcome-screen', ...]`).
+
+**One real screen per folder:** if 2+ unprefixed candidate `.tsx`/`.jsx` files exist in the same screen folder, the alphabetically-first one is deterministically picked as the real screen, and `flowkit check:screens` reports a non-blocking `screen/ambiguous-folder` warning naming the winner and suggesting you `_`-prefix, remove, or rename the others. This never fails the build.
+
+#### Screen visibility (hidden vs. non-existent)
+
+A single underscore prefix (`_name`) on a file or folder segment marks it **Hidden**: still fully parsed, compiled, checked, playable, and referenceable by flowplans — just excluded from the default Screens-tab browsing UI. A double underscore prefix (`__name`) marks it **non-existent**: excluded from everything — parsing, checks, flowplan reference resolution, and `flowkit status` counts.
+
+Visibility is resolved across the whole path, with parent dominance: if *any* ancestor segment has a `__` prefix, the entire subtree is non-existent regardless of what's inside it; otherwise, if any ancestor has a single `_`, the whole subtree is hidden.
+
 #### `create:screen` — Add a screen to a flow
 
 ```bash
 flowkit create:screen --flow:<flow-id> --name:<screen-id> [--label:"Display Label"]
 ```
 
-Creates `flows/<flow-id>/<screen-id>/<PascalName>Screen.tsx` from a template and registers it in `workspace.ts` (`screenOrder.<flow-id>[]`). The flow must already exist. `--label` defaults to a Title Case version of the screen id if omitted.
+Creates `flowBook/<flow-id>/<screen-id>/<PascalName>Screen.tsx` from a template and registers it in `workspace.ts` (`screenOrder.<flow-id>[]`, storing the bare screen id). The flow must already exist. `--label` defaults to a Title Case version of the screen id if omitted. The CLI always generates the standard 2-level shape (`<flow>/<screen>/`, no cosmetic folders in between) — variable-depth nesting with cosmetic folders is a hand-authoring capability, not something this command produces itself.
 
 Prints `Next: flowkit add:step --flowplan:<flow-id> --screen:<screen-id> --action:"..."` on success.
 
@@ -482,7 +514,7 @@ Prints `Next: flowkit add:step --flowplan:<flow-id> --screen:<screen-id> --actio
 flowkit remove:screen --flow:<flow-id> --name:<screen-id>
 ```
 
-Unregisters the screen and deletes its directory. If any flowplan still references the screen id, prints a warning listing the affected flowplans but does not block the removal or edit them for you.
+Unregisters the screen and deletes its directory. If any flowplan still references the screen id, prints a warning listing the affected flowplans but does not block the removal or edit them for you. Assumes the CLI's own 2-level shape (`flowBook/<flow>/<screen>/`) — a hand-authored screen nested deeper under cosmetic folders isn't located or removed by this command.
 
 #### `rename:screen` — Rename a screen
 
@@ -490,7 +522,7 @@ Unregisters the screen and deletes its directory. If any flowplan still referenc
 flowkit rename:screen --flow:<flow-id> --name:<old-id> --to:<new-id>
 ```
 
-Renames the directory and the `.tsx` file (including the exported component function name), and updates `screenOrder`. The new id must not already exist anywhere in the workspace. Like `remove:screen`, warns about but does not update flowplan references to the old id.
+Renames the directory and the `.tsx` file (including the exported component function name), and updates `screenOrder`. The new id must not already exist anywhere in the workspace. Like `remove:screen`, warns about but does not update flowplan references to the old id. The filename patch assumes the CLI's own `...Screen.<ext>` naming convention; a screen hand-renamed away from that suffix won't be matched and the rename falls through to a "not found" error rather than crashing.
 
 #### `move:screen` — Move a screen to a different flow
 
@@ -504,9 +536,12 @@ Moves the screen's directory and updates `screenOrder` on both flows. The destin
 
 ```bash
 flowkit list:screens [--flow:<flow-id>]
+flowkit list:screens --hidden           # also show `_`-prefixed hidden screens
+flowkit list:screens --all              # show every visibility tier, labeled
+flowkit list:screens --gone             # show ONLY `__`-prefixed non-existent items
 ```
 
-Read-only. Lists screens grouped by flow, or just the one flow if `--flow` is given.
+Read-only. Lists screens grouped by flow, or just the one flow if `--flow` is given. By default, hidden (`_`-prefixed) screens are omitted from the list; `--hidden` includes them (tagged `(hidden)`); `--all` shows hidden screens plus a separate non-existent (`__`) section; `--gone` is the dedicated way to find non-existent items, since they're excluded from every other listing mode by design (they're not "registered" screens at all) — this flag scans the filesystem directly rather than reading `workspace.ts`.
 
 #### `screen:info` — Show screen metadata
 
@@ -1009,7 +1044,7 @@ Commands grouped by item type. Click the heading to jump to the full section.
 | ------------------ | ------------------------------------------ |
 | `check`            | Run all 5 domain checkers, combined report |
 | `check:screens`    | Screen export shape / `screenMeta`         |
-| `check:config`     | Workspace config vs. `flows/` on disk      |
+| `check:config`     | Workspace config vs. `flowBook/` on disk |
 | `check:components` | Component registry / barrel exports        |
 | `check:db`         | Mock db exports                            |
 | `check:flowplans`  | FlowPlan structure / step references       |

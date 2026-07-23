@@ -27,7 +27,7 @@ instead of destructuring these props.</p>
 <li><span id="tstate"><span class="tsd-kind-type-parameter">TState</span> <span class="tsd-signature-keyword">extends</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span> = <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></span></li>
 <li><span id="tdb"><span class="tsd-kind-type-parameter">TDb</span> <span class="tsd-signature-keyword">extends</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span> = <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></span></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/fc8f21b60dc063a2804c69997bbddeb0784dc4bf/src/types/index.ts#L413">types/index.ts:413</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/6670711fbb0310fb75ff238ee9628a9a98b65830/src/types/index.ts#L420">types/index.ts:420</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -53,21 +53,21 @@ Use optional chaining: db?.user?.name
 (db is undefined when the screen is previewed outside a flow)</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/fc8f21b60dc063a2804c69997bbddeb0784dc4bf/src/types/index.ts#L438">types/index.ts:438</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/6670711fbb0310fb75ff238ee9628a9a98b65830/src/types/index.ts#L445">types/index.ts:445</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="flowstate"><code class="tsd-tag">Optional</code><span>flow<wbr/>State</span><a href="#flowstate" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">flowState</span><span class="tsd-signature-symbol">?:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#tstate">TState</a></div>
 <div class="tsd-comment tsd-typography"><p>The current flow-local sandbox state. Read-only — mutate via ctx.set() in interactions.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/fc8f21b60dc063a2804c69997bbddeb0784dc4bf/src/types/index.ts#L432">types/index.ts:432</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/6670711fbb0310fb75ff238ee9628a9a98b65830/src/types/index.ts#L439">types/index.ts:439</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="isflow"><code class="tsd-tag">Optional</code><span>is<wbr/>Flow</span><a href="#isflow" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">isFlow</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span></div>
 <div class="tsd-comment tsd-typography"><p>True when this screen is rendered inside FlowMaster (vs. standalone preview).</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/fc8f21b60dc063a2804c69997bbddeb0784dc4bf/src/types/index.ts#L430">types/index.ts:430</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/6670711fbb0310fb75ff238ee9628a9a98b65830/src/types/index.ts#L437">types/index.ts:437</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="onaction"><code class="tsd-tag">Optional</code><span>on<wbr/>Action</span><a href="#onaction" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">onAction</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">actionName</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">payload</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></div>
@@ -77,21 +77,21 @@ or be &quot;next&quot; / &quot;back&quot; for sequential navigation.</p>
 <p>Example: onAction?.(&quot;submit&quot;, { email: &quot;...&quot; })</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/fc8f21b60dc063a2804c69997bbddeb0784dc4bf/src/types/index.ts#L424">types/index.ts:424</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/6670711fbb0310fb75ff238ee9628a9a98b65830/src/types/index.ts#L431">types/index.ts:431</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="onback"><code class="tsd-tag">Optional</code><span>on<wbr/>Back</span><a href="#onback" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">onBack</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></div>
 <div class="tsd-comment tsd-typography"><p>Go back to the previous screen.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/fc8f21b60dc063a2804c69997bbddeb0784dc4bf/src/types/index.ts#L428">types/index.ts:428</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/6670711fbb0310fb75ff238ee9628a9a98b65830/src/types/index.ts#L435">types/index.ts:435</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="onnext"><code class="tsd-tag">Optional</code><span>on<wbr/>Next</span><a href="#onnext" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">onNext</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">void</span></div>
 <div class="tsd-comment tsd-typography"><p>Advance to the next screen (sequential fallback).</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/fc8f21b60dc063a2804c69997bbddeb0784dc4bf/src/types/index.ts#L426">types/index.ts:426</a></li></ul></aside></section></section></details></div>
+<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/6670711fbb0310fb75ff238ee9628a9a98b65830/src/types/index.ts#L433">types/index.ts:433</a></li></ul></aside></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">

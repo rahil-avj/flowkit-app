@@ -9,7 +9,7 @@ FlowMaster is Flowkit's flow engine — a proper state machine giving you condit
 ## Mental model
 
 - **Screens are dumb** — they render UI. They never know what screen comes next.
-- **Flowplans are smart** — `flowplans/<flow>.ts` owns all routing logic via `steps[]`. FlowMaster reads it and drives navigation.
+- **Flowplans are smart** — `flowStories/<flow>.ts` owns all routing logic via `steps[]`. FlowMaster reads it and drives navigation.
 - **Two kinds of state** — `flowState` (per-flow sandbox, reset when the flow exits) and `db` (global mock db, persists across the session).
 
 ---
@@ -18,10 +18,10 @@ FlowMaster is Flowkit's flow engine — a proper state machine giving you condit
 
 ```
 workspaces/<ws>/
-  flowplans/
+  flowStories/                ← was `flowplans/`
     auth.ts               ← defineFlow({ id, steps: […] })
     checkout.ts
-  flows/
+  flowBook/             ← was `flows/`
     auth/
       sign-in/
         SignInScreen.tsx
@@ -36,7 +36,7 @@ workspaces/<ws>/
         ConfirmationScreen.tsx
 ```
 
-Screens are discovered at runtime by `useWorkspaceHierarchy()` via Vite glob — no router file is generated or needed.
+Screens are discovered at runtime by `useWorkspaceHierarchy()` via Vite glob — no router file is generated or needed. Screen folders can nest to any depth under `flowBook/<flow>/` (extra cosmetic folders in between are ignored for identity), and the registered, cross-flow-unique screen id is the composite `${flowId}-${screenId}` — see [FLOWKIT.md](FLOWKIT.md#screen-authoring-folders-identity-and-visibility) for the full identity/visibility rules. The step examples below use bare ids for brevity; in a real flowplan, `screenId` values are the composite form.
 
 ---
 
@@ -104,7 +104,7 @@ export default defineFlow({
 
 | Field          | Purpose                                                        |
 | -------------- | -------------------------------------------------------------- |
-| `screenId`     | Id of the screen to show (required)                            |
+| `screenId`     | Composite `${flowId}-${screenId}` id of the screen to show (required) |
 | `on`           | Element id whose tap advances this step; omit for tap-anywhere |
 | `actionNote`   | What the user does — shown as caption during playback          |
 | `decisionNote` | Narrative note shown in the step list                          |
@@ -263,4 +263,4 @@ flowkit check:flowplans    # validates flowplan structure/step references; also 
 flowkit status             # workspace health: flows, screens, flowplans, sessions
 ```
 
-Add screens manually: create `flows/<flow>/<screen>/<ScreenName>.tsx`, add a step to `flowplans/<flow>.ts`. `useWorkspaceHierarchy()` discovers screens automatically — no build step needed.
+Add screens manually: create `flowBook/<flow>/<screen>/<ScreenName>.tsx` (the filename doesn't need the `Screen` suffix — identity comes from the folder, not the file), add a step to `flowStories/<flow>.ts`. `useWorkspaceHierarchy()` discovers screens automatically — no build step needed.

@@ -75,10 +75,12 @@ Rules are written as machine-unambiguous directives, not prose to interpret:
 Example (from a generated `rules.md`):
 
 ```
-NEVER reference flows/router.tsx or _playFlow.ts — flat-flowplan workspaces don't have them
+NEVER reference flowBook/router.tsx or _playFlow.ts — flat-flowplan workspaces don't have them
 ALWAYS read/mutate data via const db = useDb()
-TO add a screen → create flows/<flow>/<screen-slug>/<ScreenName>.tsx, then add a step in flowplans/<flow>.ts
+TO add a screen → create flowBook/<flow>/<screen-slug>/<ScreenName>.tsx, then add a step in flowStories/<flow>.ts
 ```
+
+> ⚠️ **Generator drift as of this writing:** the example above is illustrative — `scripts/platform/agent-spec.js`, which actually generates each workspace's `rules.md`/`.agent/*`/`AGENTS.md`, still emits hardcoded `flows/`/`flowplans/` strings (not yet updated to `flowBook/`/`flowStories/`). See this doc's own note on the agent-spec generator further down.
 
 The few hardest rules are inlined into the memory file so they're loaded before any file read.
 
@@ -98,7 +100,7 @@ The few hardest rules are inlined into the memory file so they're loaded before 
 
 ## Workspace format
 
-Workspaces use the **flat flowplan format**: `flows/<flow>/<screen>/<Screen>.tsx` + `flowplans/*.ts`. There is no `_playFlow.ts`, no `router.tsx`, no `projects/` directory (unless you've deliberately opted into the nested-layout `projects` field in `workspace.ts` — see CLI.md).
+Workspaces use the **flat flowplan format**: `flowBook/<flow>/<screen>/<Screen>.tsx` + `flowStories/*.ts` (directories renamed from `flows/`/`flowplans/`; the CLI verbs like `check:flowplans`/`watch:flows` keep their existing names regardless). Screen folders may nest to any depth under `flowBook/<flow>/` — see FLOWKIT.md's screen-authoring section for the full identity/visibility rules. There is no `_playFlow.ts`, no `router.tsx`, no `projects/` directory (unless you've deliberately opted into the nested-layout `projects` field in `workspace.ts` — see CLI.md).
 
 ---
 
@@ -111,7 +113,7 @@ The canonical way to do each common thing. (The INDEX routes here; the reference
 1. Create the screen folder and component:
 
 ```
-flows/<flow>/<screen-slug>/<ScreenName>.tsx
+flowBook/<flow>/<screen-slug>/<ScreenName>.tsx
 ```
 
 Boilerplate (copy from an existing screen, then fill the body):
@@ -136,11 +138,13 @@ export default function <ScreenName>Screen({ db }: FlowScreenProps) {
 }
 ```
 
-2. Add a step to `flowplans/<flow>.ts`:
+2. Add a step to `flowStories/<flow>.ts`:
 
 ```ts
-{ screenId: '<screen-slug>', on: 'primary-cta', actionNote: 'Taps Continue' },
+{ screenId: '<flow>-<screen-slug>', on: 'primary-cta', actionNote: 'Taps Continue' },
 ```
+
+(`screenId` here is the composite `${flowId}-${screenId}` form — see FLOWKIT.md's screen-authoring section. `workspace.ts`'s `screenOrder` map, by contrast, stores the bare `<screen-slug>`.)
 
 Or use the CLI, which handles both steps and works in all three modes: `flowkit create:screen --flow:<flow-id> --name:<screen-slug>` then `flowkit add:step --flowplan:<flow-id> --screen:<screen-slug> --action:"..."`.
 
@@ -148,7 +152,7 @@ Or use the CLI, which handles both steps and works in all three modes: `flowkit 
 
 ### Add a flowplan
 
-Drop a `.ts` file into `flowplans/` using `defineFlow()`, or run `flowkit create:flowplan --name:<flow-id>`. Run `flowkit plan:ls` to confirm it's discovered, `flowkit check:flowplans` to validate.
+Drop a `.ts` file into `flowStories/` using `defineFlow()`, or run `flowkit create:flowplan --name:<flow-id>`. Run `flowkit plan:ls` to confirm it's discovered, `flowkit check:flowplans` to validate. (`check:flowplans` keeps its existing name even though the directory it validates is `flowStories/`, not `flowplans/`.)
 
 ### Add a flowplan step with a conditional fork
 
@@ -236,7 +240,7 @@ flowplan, not the screen: give the interactive element an `id`, then add a
 `ctx.updateDb()` call in that flowplan's `interactions[id].do`:
 
 ```ts
-// flowplans/<flow>.ts
+// flowStories/<flow>.ts
 interactions: {
   'add-to-cart': {
     trigger: 'tap',
@@ -339,7 +343,7 @@ flowkit agent:sync:<ws>            # a specific workspace (repo mode)
 
 ## What the agent owns vs. what's generated
 
-- **Owns / edits freely:** everything at the workspace's own root — `flows/`, `flowplans/`,
+- **Owns / edits freely:** everything at the workspace's own root — `flowBook/`, `flowStories/`,
   `lib/`, and `.agent/project.md` (the product brief).
 - **Generated (don't hand-edit):** `.agent/INDEX.md`, `.agent/rules.md`, `.agent/platform.md`,
   the memory file. Regenerate via `agent:sync`.

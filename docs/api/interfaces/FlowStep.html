@@ -15,7 +15,7 @@
 </div></section>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">FlowStep</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#actionnote">actionNote</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#annotation">annotation</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#db">db</a><span class="tsd-signature-symbol">?:</span> <a href="../types/DotPathPatch.html" class="tsd-signature-type tsd-kind-type-alias">DotPathPatch</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#decisionnote">decisionNote</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#forks">forks</a><span class="tsd-signature-symbol">?:</span> <a href="Fork.html" class="tsd-signature-type tsd-kind-interface">Fork</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#on">on</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#screenid">screenId</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#simulator">simulator</a><span class="tsd-signature-symbol">?:</span> <a href="StepSimulatorOverride.html" class="tsd-signature-type tsd-kind-interface">StepSimulatorOverride</a><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/fc8f21b60dc063a2804c69997bbddeb0784dc4bf/src/types/index.ts#L567">types/index.ts:567</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/6670711fbb0310fb75ff238ee9628a9a98b65830/src/types/index.ts#L574">types/index.ts:574</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -41,35 +41,35 @@
 <div class="tsd-comment tsd-typography"><p>What the user does here. Shown as an overlay caption during playback.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/fc8f21b60dc063a2804c69997bbddeb0784dc4bf/src/types/index.ts#L580">types/index.ts:580</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/6670711fbb0310fb75ff238ee9628a9a98b65830/src/types/index.ts#L587">types/index.ts:587</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="annotation"><code class="tsd-tag">Optional</code><span>annotation</span><a href="#annotation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">annotation</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div>
 <div class="tsd-comment tsd-typography"><p>Free-text sticky note shown on the canvas node and in the step list.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/fc8f21b60dc063a2804c69997bbddeb0784dc4bf/src/types/index.ts#L584">types/index.ts:584</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/6670711fbb0310fb75ff238ee9628a9a98b65830/src/types/index.ts#L591">types/index.ts:591</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="db"><code class="tsd-tag">Optional</code><span>db</span><a href="#db" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">db</span><span class="tsd-signature-symbol">?:</span> <a href="../types/DotPathPatch.html" class="tsd-signature-type tsd-kind-type-alias">DotPathPatch</a></div>
 <div class="tsd-comment tsd-typography"><p>Dot-path patch merged onto the flow db copy when this step activates.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/fc8f21b60dc063a2804c69997bbddeb0784dc4bf/src/types/index.ts#L578">types/index.ts:578</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/6670711fbb0310fb75ff238ee9628a9a98b65830/src/types/index.ts#L585">types/index.ts:585</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="decisionnote"><code class="tsd-tag">Optional</code><span>decision<wbr/>Note</span><a href="#decisionnote" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">decisionNote</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div>
 <div class="tsd-comment tsd-typography"><p>Narrative note about the decision/context. Shown in the step list.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/fc8f21b60dc063a2804c69997bbddeb0784dc4bf/src/types/index.ts#L582">types/index.ts:582</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/6670711fbb0310fb75ff238ee9628a9a98b65830/src/types/index.ts#L589">types/index.ts:589</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="forks"><code class="tsd-tag">Optional</code><span>forks</span><a href="#forks" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">forks</span><span class="tsd-signature-symbol">?:</span> <a href="Fork.html" class="tsd-signature-type tsd-kind-interface">Fork</a><span class="tsd-signature-symbol">[]</span></div>
 <div class="tsd-comment tsd-typography"><p>Inline if/else branches. Recursive to any depth.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/fc8f21b60dc063a2804c69997bbddeb0784dc4bf/src/types/index.ts#L588">types/index.ts:588</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/6670711fbb0310fb75ff238ee9628a9a98b65830/src/types/index.ts#L595">types/index.ts:595</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="on"><code class="tsd-tag">Optional</code><span>on</span><a href="#on" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">on</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div>
@@ -79,21 +79,21 @@ advance interaction on this id, and gating treats it as the planned tap.
 Omit to advance on tap-anywhere (simple/sequential screens).</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/fc8f21b60dc063a2804c69997bbddeb0784dc4bf/src/types/index.ts#L576">types/index.ts:576</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/6670711fbb0310fb75ff238ee9628a9a98b65830/src/types/index.ts#L583">types/index.ts:583</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="screenid"><span>screen<wbr/>Id</span><a href="#screenid" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">screenId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 <div class="tsd-comment tsd-typography"><p>Id of the screen to show. Must resolve to a registered workspace screen.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/fc8f21b60dc063a2804c69997bbddeb0784dc4bf/src/types/index.ts#L569">types/index.ts:569</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/6670711fbb0310fb75ff238ee9628a9a98b65830/src/types/index.ts#L576">types/index.ts:576</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="simulator"><code class="tsd-tag">Optional</code><span>simulator</span><a href="#simulator" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">simulator</span><span class="tsd-signature-symbol">?:</span> <a href="StepSimulatorOverride.html" class="tsd-signature-type tsd-kind-interface">StepSimulatorOverride</a></div>
 <div class="tsd-comment tsd-typography"><p>Adjusts which simulator controls are visible at this step.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/fc8f21b60dc063a2804c69997bbddeb0784dc4bf/src/types/index.ts#L586">types/index.ts:586</a></li></ul></aside></section></section></details></div>
+<li>Defined in <a href="https://github.com/Rahil316/flowkit-app/blob/6670711fbb0310fb75ff238ee9628a9a98b65830/src/types/index.ts#L593">types/index.ts:593</a></li></ul></aside></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">

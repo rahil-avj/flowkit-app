@@ -52,12 +52,13 @@ flowkit/
     main.tsx / App.tsx          ← React entry
   workspaces/                   ← One folder per workspace (repo mode only)
     <name>/
-      flowplans/                ← Flowplan files (defineFlow)
+      flowStories/                ← Flowplan files (defineFlow) — was `flowplans/`
         <flow>.ts
-      flows/                    ← Flow screen folders
+      flowBook/              ← Flow screen folders — was `flows/`; variable depth, see below
         <flow>/
-          <screen>/
-            <ScreenName>.tsx    ← Screen component
+          .../                  ← any number of cosmetic/organizational folders (optional)
+            <screen>/
+              <File>.tsx        ← Screen component — no "Screen" filename suffix required
       lib/
         data/db.ts              ← Mock database (named exports)
         data/simulator.tsx      ← Custom simulator controls
@@ -81,7 +82,51 @@ flowkit/
   Documentation/                 ← Dev-only docs, never shipped in the npm package
 ```
 
-> **Consumer mode (flat / multi-workspace)** has a different layout — no `workspaces/` directory, `workspace.ts`/`flows/`/`flowplans/`/`lib/` sit at the project root (flat) or at each sibling workspace folder's own root (multi-workspace). See [CLI.md](CLI.md) for the full breakdown.
+> **Consumer mode (flat / multi-workspace)** has a different layout — no `workspaces/` directory, `workspace.ts`/`flowBook/`/`flowStories/`/`lib/` sit at the project root (flat) or at each sibling workspace folder's own root (multi-workspace). See [CLI.md](CLI.md) for the full breakdown.
+
+---
+
+## Screen authoring: folders, identity, and visibility
+
+Screen identity is derived entirely from a screen's **position** in `flowBook/`, never from its filename. The shared logic lives in `src/shared/utils/screenPathIdentity.js`, imported by both the repo-mode browser bundle and the flat/multi-workspace-mode Vite plugin so both contexts agree on the same rules.
+
+### Variable-depth folders
+
+```
+flowBook/<flow>/.../<screen>/<File>.tsx
+flowBook/<File>.tsx                          ← 0 folders: flow = "misc", screen = filename
+```
+
+- The **first** segment after `flowBook/` is always the flow id.
+- The **last** folder before the file is always the screen id.
+- Any folders in between are purely cosmetic/organizational — kept for on-disk display, ignored for identity. This replaces the old fixed 2-level requirement (`flowBook/<flow>/<screen>/`); a screen can now live arbitrarily deep.
+- A file with **zero** folders directly under `flowBook/` falls back to flow id `"misc"`, with the screen id taken from the filename (extension stripped).
+- The `Screen` filename suffix is no longer required anywhere — `create:screen` still generates `...Screen.tsx` by convention, but hand-authored files don't need to follow it.
+
+### Composite screen ids
+
+The registered, cross-flow-unique screen id is `${flowId}-${screenId}` (built by `makeScreenId()`). This makes ids collision-proof: two different flows can each have a screen folder literally named the same thing without colliding, since the flow id is baked into the composite.
+
+- **Flowplan step `screenId` values, and any other global/cross-flow reference, use the composite form** (e.g. `onboarding-flow-welcome-screen`).
+- **`workspace.ts`'s `screenOrder` map is the one exception — it stays bare.** Since `screenOrder` is already keyed per-flow (`screenOrder['onboarding-flow'] = ['welcome-screen', ...]`), no composite prefix is needed there to avoid collisions.
+
+### One real screen per folder
+
+If a screen folder contains 2+ unprefixed candidate `.tsx`/`.jsx` files, the system deterministically picks the alphabetically-first one as the real screen and `flowkit check:screens` raises a non-blocking `screen/ambiguous-folder` warning pointing at the winner and suggesting the other file(s) be `_`-prefixed, renamed, or removed. This never fails the build.
+
+### Visibility: `_` (hidden) vs. `__` (non-existent)
+
+A single underscore prefix on a file or folder segment (`_name`) marks it **Hidden**: fully real — parsed, compiled, checked, playable, referenceable by flowplans — just excluded from the default Screens-tab browsing UI. A double underscore prefix (`__name`) marks it **non-existent**: excluded from everything — parsing, checks, flowplan reference resolution, and `flowkit status` counts.
+
+Visibility resolves across the whole path with **parent dominance**: if any ancestor segment in the chain has a `__` prefix, the entire subtree is non-existent regardless of what's inside it; otherwise, if any ancestor has a single `_`, the whole subtree is hidden. `flowkit list:screens` exposes this via `--hidden` (include hidden), `--all` (show every tier, labeled), and `--gone` (show only non-existent items — the one listing mode that scans disk directly, since non-existent items are excluded from `workspace.ts`'s `screenOrder` by definition).
+
+### Variant filenames
+
+A screen (or shared component) file can declare variants via a filename suffix: `.variant-<serial>.tsx` or the shorthand `.v-<serial>.tsx` — both accepted, equivalent. The serial itself may contain hyphens (e.g. `WelcomeScreen.variant-red-theme.tsx`). A file with no suffix is the `"default"` variant.
+
+### Annotation tags
+
+Per-screen review badges are declared directly on the screen via `screenMeta.annotations?: AnnotationTag[]` — e.g. `annotations: [{ label: 'new', color: 'green', icon: 'Star' }]`. This replaces the old workspace-level (repo mode) / per-flow (flat mode) `_tags.ts` sidecar file, which has been fully retired with no backward compatibility. `screenMeta.annotations` is distinct from the pre-existing `screenMeta.tags?: string[]` — `tags` is an unrelated freeform filter/grouping-string concept; the two fields coexist and mean different things.
 
 ---
 
@@ -224,7 +269,7 @@ Set via the CLI: `flowkit nw:my-workspace --lang:js` (repo mode) — stores `lan
 ### Writing screens in JSX
 
 ```jsx
-// flows/home/home/HomeScreen.jsx
+// flowBook/home/home/HomeScreen.jsx
 export default function HomeScreen({ db }) {
   return (
     <div>
@@ -250,7 +295,7 @@ export default function HomeScreen({ db }) { ... }
 
 ## Router
 
-Workspaces have no `router.tsx`. Screens are discovered by `useWorkspaceHierarchy()` (`src/shared/utils/useWorkspaceHierarchy.ts`) via Vite glob from `flows/**`. The flowplan files (`defineFlow`) in `flowplans/*.ts` declare step sequences; no router file is generated or needed.
+Workspaces have no `router.tsx`. Screens are discovered by `useWorkspaceHierarchy()` (`src/shared/utils/useWorkspaceHierarchy.ts`) via Vite glob from `flowBook/**`. The flowplan files (`defineFlow`) in `flowStories/*.ts` declare step sequences; no router file is generated or needed.
 
 ---
 
