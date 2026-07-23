@@ -217,10 +217,12 @@ function writePackageJson(dir, name, language) {
       build: 'vite build',
       preview: 'vite preview',
     },
-    devDependencies: {
-      flowkit: FLOWKIT_DEP,
+    dependencies: {
       react: '^19.0.0',
       'react-dom': '^19.0.0',
+    },
+    devDependencies: {
+      flowkit: FLOWKIT_DEP,
       vite: '^8.0.0',
       '@vitejs/plugin-react': '^6.0.0',
       tailwindcss: '^4.0.0',
@@ -278,6 +280,7 @@ function writeTsConfig(dir) {
           noUnusedParameters: true,
           noFallthroughCasesInSwitch: true,
           skipLibCheck: true,
+          noEmit: true,
         },
         include: ['flows', 'flowplans', 'lib', WORKSPACE_CONFIG_FILENAME, 'vite.config.ts'],
       },
